@@ -33,8 +33,9 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.transform.{AffineTransformation, LinearTransformation}
 
 import java.time.LocalTime
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.TimeUnit
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.MilliSecond
 
 /**
  * This object handles casting of Genesis-specific data types
@@ -45,8 +46,7 @@ object ParadigmValueCaster extends ValueCaster
 {
     // ATTRIBUTES    --------------
     
-    private implicit val timeUnit: TimeUnit = TimeUnit.MILLISECONDS
-	private lazy val milli = 1.millis
+    private implicit val timeUnit: TimeUnit = MilliSecond
     
     override lazy val conversions = Set[Conversion](
         // Conversions to String
@@ -316,7 +316,7 @@ object ParadigmValueCaster extends ValueCaster
         case _ => None
     }
     
-    private def durationOf(value: Value): Option[FiniteDuration] = value.dataType match {
+    private def durationOf(value: Value): Option[Duration] = value.dataType match {
         case RotationType =>
             // Each 360 degree rotation represents 24 hours
             val rot = value.getRotation.clockwise.circles
@@ -354,18 +354,18 @@ object ParadigmValueCaster extends ValueCaster
             Some(Pair[Value](b.position: Value, b.size: Value))
         case Matrix2DType => Some(value.getMatrix2D.xyPair.map { v => v })
         case LinearVelocityType =>
-            val v = value.getLinearVelocity
-            v.duration.finite.map { d => Pair(v.amount, d) }
-        case Velocity2DType => pairOf(value.getVelocity2D)
-        case Velocity3DType => pairOf(value.getVelocity3D)
-        case LinearAccelerationType => pairOf(value.getLinearAcceleration)
-        case Acceleration2DType => pairOf(value.getAcceleration2D)
-        case Acceleration3DType => pairOf(value.getAcceleration3D)
+	        val v = value.getLinearVelocity
+	        Some(Pair(v.amount, v.duration))
+        case Velocity2DType => Some(pairOf[Vector2D](value.getVelocity2D))
+        case Velocity3DType => Some(pairOf[Vector3D](value.getVelocity3D))
+        case LinearAccelerationType => Some(pairOf[LinearVelocity](value.getLinearAcceleration))
+        case Acceleration2DType => Some(pairOf(value.getAcceleration2D))
+        case Acceleration3DType => Some(pairOf(value.getAcceleration3D))
         case _ => None
     }
     private def pairOf(vector: HasDoubleDimensions): Pair[Value] = vector.xyPair.map { d => d }
-    private def pairOf[A <: ValueConvertible](change: Change[A, _]) =
-        change.duration.finite.map { d => Pair[Value](change.amount.toValue, d) }
+    private def pairOf[A <: ValueConvertible](change: Change[A, _]): Pair[Value] =
+	    Pair[Value](change.amount.toValue, change.duration)
     
     private def modelOf(value: Value): Option[Model] = value.dataType match {
         case Vector2DType => Some(value.getVector2D.toModel)
@@ -539,7 +539,7 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def linearVelocityOf(value: Value): Option[LinearVelocity] = value.dataType match {
-        case DoubleType => Some(LinearVelocity(value.getDouble))
+        case DoubleType => Some(LinearVelocity.of(value.getDouble))
         case PairType =>
             val p = value.getPair
             p.first.double.flatMap { amount => p.second.duration.map { LinearVelocity(amount, _) } }
@@ -554,7 +554,7 @@ object ParadigmValueCaster extends ValueCaster
         case PairType =>
             value.tryTupleWith { _.tryVector2D } { _.tryDuration }.toOption
                 .map { case (amount, duration) => Velocity2D(amount, duration) }
-        case Vector2DType => Some(Velocity2D(value.getVector2D))
+        case Vector2DType => Some(Velocity2D.of(value.getVector2D))
         case Velocity3DType => Some(value.getVelocity3D.in2D)
         case Acceleration2DType => Some(value.getAcceleration2D.perMilliSecond)
         case ModelType => Velocity2D(value.getModel).toOption
@@ -564,7 +564,7 @@ object ParadigmValueCaster extends ValueCaster
     private def velocity3DOf(value: Value): Option[Velocity3D] = value.dataType match {
         case PairType =>
             value.tryTupleWith { _.tryVector3D } { _.tryDuration }.toOption.map { case (a, d) => Velocity3D(a, d) }
-        case Vector3DType => Some(Velocity3D(value.getVector3D))
+        case Vector3DType => Some(Velocity3D.of(value.getVector3D))
         case Velocity2DType => Some(value.getVelocity2D.in3D)
         case Acceleration3DType => Some(value.getAcceleration3D.perMilliSecond)
         case ModelType => Velocity3D(value.getModel).toOption
@@ -572,11 +572,11 @@ object ParadigmValueCaster extends ValueCaster
     }
     
     private def linearAccelerationOf(value: Value): Option[LinearAcceleration] = value.dataType match {
-        case DoubleType => Some(LinearAcceleration(value.getDouble))
+        case DoubleType => Some(LinearAcceleration.ofSquare(value.getDouble))
         case PairType =>
             value.tryTupleWith { _.tryLinearVelocity } { _.tryDuration }.toOption
                 .map { case (a, d) => LinearAcceleration(a, d) }
-        case LinearVelocityType => Some(LinearAcceleration(value.getLinearVelocity, milli))
+        case LinearVelocityType => Some(LinearAcceleration.of(value.getLinearVelocity))
         case Acceleration2DType => Some(value.getAcceleration2D.linear)
         case Acceleration3DType => Some(value.getAcceleration3D.linear)
         case ModelType => LinearAcceleration(value.getModel).toOption
@@ -586,8 +586,8 @@ object ParadigmValueCaster extends ValueCaster
     private def acceleration2DOf(value: Value): Option[Acceleration2D] = value.dataType match {
         case PairType =>
             value.tryTupleWith { _.tryVelocity2D } { _.tryDuration }.toOption.map { case (a, d) => Acceleration2D(a, d) }
-        case Vector2DType => Some(Acceleration2D(value.getVector2D))
-        case Velocity2DType => Some(Acceleration2D(value.getVelocity2D, milli))
+        case Vector2DType => Some(Acceleration2D.ofSquare(value.getVector2D))
+        case Velocity2DType => Some(Acceleration2D.of(value.getVelocity2D))
         case Acceleration3DType => Some(value.getAcceleration3D.in2D)
         case ModelType => Acceleration2D(value.getModel).toOption
         case _ => None
@@ -596,8 +596,8 @@ object ParadigmValueCaster extends ValueCaster
     private def acceleration3DOf(value: Value): Option[Acceleration3D] = value.dataType match {
         case PairType =>
             value.tryTupleWith { _.tryVelocity3D } { _.tryDuration }.toOption.map { case (a, d) => Acceleration3D(a, d) }
-        case Vector3DType => Some(Acceleration3D(value.getVector3D))
-        case Velocity3DType => Some(Acceleration3D(value.getVelocity3D, milli))
+        case Vector3DType => Some(Acceleration3D.ofSquare(value.getVector3D))
+        case Velocity3DType => Some(Acceleration3D.of(value.getVelocity3D))
         case Acceleration2DType => Some(value.getAcceleration2D.in3D)
         case ModelType => Acceleration3D(value.getModel).toOption
         case _ => None

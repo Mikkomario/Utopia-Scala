@@ -1,16 +1,20 @@
 package utopia.flow.time
 
+import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.operator.ordering.SelfComparable
-import utopia.flow.time.TimeUnit.{Day, Hour, JTimeUnit, MicroSecond, MilliSecond, Minute, NanoSecond, Second, Week}
+import utopia.flow.operator.sign.Sign.{Negative, Positive}
+import utopia.flow.time.Duration.SDuration
+import utopia.flow.time.TimeUnit.{Hour, JTimeUnit, MicroSecond, MilliSecond, Minute, NanoSecond, Second}
+import utopia.flow.time.{Duration, Month, Year, YearMonth}
 
 import java.time._
+import java.time.chrono.ChronoPeriod
 import java.time.format.DateTimeFormatter
 import java.time.temporal.{ChronoUnit, TemporalAmount}
-import scala.concurrent.duration
 import scala.concurrent.duration.FiniteDuration
 import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
   * This object contains some extensions for java's time classes
@@ -19,18 +23,118 @@ import scala.util.Try
   * */
 object TimeExtensions
 {
-	// TYPES    ---------------------------
+	// IMPLICIT ---------------------------
 	
 	/**
-	  * Scala's Duration data type. May be useful in situations where java.time.Duration is imported.
-	  */
-	type SDuration = scala.concurrent.duration.Duration
+	 * Implicitly converts a Java time unit to a [[ChronoUnit]]
+	 * @param unit Unit to convert
+	 * @return Converted time unit
+	 */
+	implicit def timeUnitToChronoUnit(unit: JTimeUnit): ChronoUnit = unit match {
+		case java.util.concurrent.TimeUnit.NANOSECONDS => ChronoUnit.NANOS
+		case java.util.concurrent.TimeUnit.MICROSECONDS => ChronoUnit.MICROS
+		case java.util.concurrent.TimeUnit.MILLISECONDS => ChronoUnit.MILLIS
+		case java.util.concurrent.TimeUnit.SECONDS => ChronoUnit.SECONDS
+		case java.util.concurrent.TimeUnit.MINUTES => ChronoUnit.MINUTES
+		case java.util.concurrent.TimeUnit.HOURS => ChronoUnit.HOURS
+		case java.util.concurrent.TimeUnit.DAYS => ChronoUnit.DAYS
+	}
+	
+	// implicit def durationToJava(duration: Duration): JDuration = duration.toJava
+	// implicit def durationToScala(duration: Duration): SDuration = duration.toScala
 	
 	
 	// EXTENSIONS   -----------------------
 	
+	/**
+	 * Provides + and - functions related to durations
+	 * @tparam Repr Type of this class
+	 */
+	trait CanAppendJavaDuration[+Repr] extends Any with Combinable[Duration, Repr]
+	{
+		// ABSTRACT -----------------------
+		
+		/**
+		 * @return Maximum value of this type
+		 */
+		protected def _max: Repr
+		/**
+		 * @return Minimum value of this type
+		 */
+		protected def _min: Repr
+		
+		/**
+		 * @param amount Amount of time to add to this instant
+		 * @return A copy of this instant after the specified duration
+		 */
+		def +(amount: TemporalAmount): Repr
+		/**
+		 * @param amount Amount of time to subtract from this instant
+		 * @return A copy of this instant before the specified duration
+		 */
+		def -(amount: TemporalAmount): Repr
+		
+		/**
+		 * @param amount Amount to add to this instant
+		 * @param unit Unit in which 'amount' is given
+		 * @return A copy of this instant after the specified duration
+		 */
+		protected def _plus(amount: Long, unit: JTimeUnit): Repr
+		
+		
+		// OTHER    -----------------------
+		
+		/**
+		 * @param amount Amount of duration to move this instant
+		 * @return An instant after specified duration has passed from this instant
+		 */
+		def +(amount: FiniteDuration) = _plus(amount.length, amount.unit)
+		/**
+		 * @param amount Amount of duration to advance this instant (may be infinite)
+		 * @return An instant after 'amount' from this instant. Maximum instant if the specified duration is infinite.
+		 */
+		def +(amount: SDuration): Repr = amount match {
+			case d: FiniteDuration => this + d
+			case scala.concurrent.duration.Duration.Inf => _max
+			case scala.concurrent.duration.Duration.MinusInf => _min
+			case _ => throw new IllegalArgumentException(s"Can't add $amount")
+		}
+		/**
+		 * @param amount Amount of duration to advance this instant (may be infinite)
+		 * @return An instant after 'amount' from this instant. Maximum instant if the specified duration is infinite.
+		 */
+		def +(amount: Duration): Repr = amount.tryLengthOrJava match {
+			case Success(Right((amount, unit))) =>
+				val (multiplier, jUnit) = unit.toJava
+				_plus(amount * multiplier, jUnit)
+				
+			case Success(Left(jDuration)) => this + jDuration
+			case Failure(error) =>
+				amount.sign match {
+					case Positive => _max
+					case Negative => _min
+					case _ => throw error
+				}
+		}
+		/**
+		 * @param amount Amount of time to subtract
+		 * @return The instant before this instant by specified duration
+		 */
+		def -(amount: FiniteDuration) = this + (-amount)
+		/**
+		 * @param duration Amount of time to subtract (may be infinite)
+		 * @return An instant before this one by the specified duration (minimum instant if the duration is infinite)
+		 */
+		def -(duration: SDuration): Repr = this + (-duration)
+		/**
+		 * @param duration Amount of time to subtract (may be infinite)
+		 * @return An instant before this one by the specified duration (minimum instant if the duration is infinite)
+		 */
+		def -(duration: Duration): Repr = this + (-duration)
+	}
+	
 	implicit class ExtendedInstant(val i: Instant)
-		extends AnyVal with SelfComparable[Instant] with ApproxEquals[Instant]
+		extends AnyVal with SelfComparable[Instant] with ApproxEquals[Instant] with CanAppendJavaDuration[Instant]
 	{
 		// COMPUTED --------------------------
 		
@@ -71,30 +175,17 @@ object TimeExtensions
 		
 		override def self = i
 		
-		override def compareTo(o: Instant) = i.compareTo(o)
+		override protected def _max: Instant = Instant.MAX
+		override protected def _min: Instant = Instant.MIN
 		
+		override def compareTo(o: Instant) = i.compareTo(o)
 		/**
 		  * @param other Another instant
 		  * @return Whether these two instants are the same, milliseconds-wise
 		  */
 		override def ~==(other: Instant) = i.toEpochMilli == other.toEpochMilli
 		
-		
-		// OTHER	--------------------------
-		
-		/**
-		  * Converts this instant to a string using specified formatter. If the formatter doesn't support instant
-		  * naturally, converts this instant to local date time before converting to string
-		  * @param formatter A date time formatter
-		  * @return Formatted string representation of this instant
-		  */
-		def toStringWith(formatter: DateTimeFormatter) =
-			Try { formatter.format(i) }.getOrElse { formatter.format(toLocalDateTime) }
-		
-		/**
-		  * An instant after the specified duration has passed from this instant
-		  */
-		def +(amount: TemporalAmount) = {
+		override def +(amount: TemporalAmount) = {
 			amount match {
 				case period: Period =>
 					// Long time periods are a bit tricky because the actual length of traversed time depends on
@@ -109,25 +200,7 @@ object TimeExtensions
 				case _ => i.plus(amount)
 			}
 		}
-		/**
-		  * @param amount Amount of duration to move this instant
-		  * @return An instant after specified duration has passed from this instant
-		  */
-		def +(amount: FiniteDuration) = i.plus(amount.length, amount.unit)
-		/**
-		  * @param amount Amount of duration to advance this instant (may be infinite)
-		  * @return An instant after 'amount' from this instant. Maximum instant if the specified duration is infinite.
-		  */
-		def +(amount: SDuration): Instant = amount match {
-			case d: FiniteDuration => this + d
-			case scala.concurrent.duration.Duration.Inf => Instant.MAX
-			case scala.concurrent.duration.Duration.MinusInf => Instant.MIN
-			case _ => throw new IllegalArgumentException(s"Can't add $amount")
-		}
-		/**
-		  * An instant before the specified duration
-		  */
-		def -(amount: TemporalAmount) = amount match {
+		override def -(amount: TemporalAmount) = amount match {
 			case period: Period =>
 				// See + for explanation
 				if (period.getMonths != 0 || period.getYears != 0)
@@ -137,34 +210,34 @@ object TimeExtensions
 			
 			case _ => i.minus(amount)
 		}
+		
+		override protected def _plus(amount: Long, unit: JTimeUnit): Instant = i.plus(amount, unit)
+		
+		
+		// OTHER	--------------------------
+		
 		/**
-		  * @param amount Amount of time to subtract
-		  * @return The instant before this instant by specified duration
+		  * Converts this instant to a string using specified formatter. If the formatter doesn't support instant
+		  * naturally, converts this instant to local date time before converting to string
+		  * @param formatter A date time formatter
+		  * @return Formatted string representation of this instant
 		  */
-		def -(amount: FiniteDuration) = i.minus(amount.length, amount.unit)
-		/**
-		  * @param duration Amount of time to subtract (may be infinite)
-		  * @return An instant before this one by the specified duration (minimum instant if the duration is infinite)
-		  */
-		def -(duration: SDuration): Instant = duration match {
-			case d: FiniteDuration => this - d
-			case scala.concurrent.duration.Duration.Inf => Instant.MIN
-			case scala.concurrent.duration.Duration.MinusInf => Instant.MAX
-			case _ => throw new IllegalArgumentException(s"Can't subtract $duration")
-		}
+		def toStringWith(formatter: DateTimeFormatter) =
+			Try { formatter.format(i) }.getOrElse { formatter.format(toLocalDateTime) }
+		
 		/**
 		  * Finds the difference (duration) between the two time instances
 		  */
-		def -(time: Instant) = Duration.between(time, i)
-		
+		def -(time: Instant): Duration = java.time.Duration.between(time, i)
 		/**
 		  * @param other Another instant
 		  * @return Time period from this instant to the other
 		  */
-		def until(other: Instant) = other - i
+		def until(other: Instant): Duration = other - i
 	}
 	
-	implicit class ExtendedLocalDateTime(val d: LocalDateTime) extends AnyVal with SelfComparable[LocalDateTime]
+	implicit class ExtendedLocalDateTime(val d: LocalDateTime)
+		extends AnyVal with SelfComparable[LocalDateTime] with CanAppendJavaDuration[LocalDateTime]
 	{
 		// COMPUTED	------------------------------
 		
@@ -180,6 +253,11 @@ object TimeExtensions
 		
 		override def compareTo(o: LocalDateTime) = d.compareTo(o)
 		
+		override protected def _max: LocalDateTime = LocalDateTime.MAX
+		override protected def _min: LocalDateTime = LocalDateTime.MIN
+		
+		override protected def _plus(amount: Long, unit: JTimeUnit): LocalDateTime = d.plus(amount, unit)
+		
 		
 		// OTHER	------------------------------
 		
@@ -193,21 +271,7 @@ object TimeExtensions
 		  * @return A time 'length' before this one
 		  */
 		def -(length: TemporalAmount) = d.minus(length)
-		/**
-		  * @param duration A duration of time
-		  * @return Copy of this date time after the specified amount of duration has passed
-		  */
-		def +(duration: SDuration) = duration match {
-			case duration: FiniteDuration => d.plus(duration.length, duration.unit)
-			case scala.concurrent.duration.Duration.Inf => LocalDateTime.MAX
-			case scala.concurrent.duration.Duration.MinusInf => LocalDateTime.MIN
-			case _ => throw new IllegalArgumentException(s"Can't append $duration to a local date time instance")
-		}
-		/**
-		  * @param duration A duration of time
-		  * @return Copy of this date time before teh specified amount of duration had passed
-		  */
-		def -(duration: SDuration) = this + (-duration)
+		
 		/**
 		  * @param days A period of days
 		  * @return A date time 'days' days after this one
@@ -218,23 +282,17 @@ object TimeExtensions
 		  * @return A date time 'days' days before this one
 		  */
 		def -(days: Days) = d.minusDays(days.length)
+		
 		/**
 		  * @param other Another local date time
 		  * @return The duration between these two times
 		  */
-		def -(other: LocalDateTime) = Duration.between(other, d)
+		def -(other: LocalDateTime): Duration = java.time.Duration.between(other, d)
 		/**
 		  * @param other Another local date time
 		  * @return The duration from this time point to the second time point
 		  */
-		def until(other: LocalDateTime) = other - d
-	}
-	
-	implicit class ExtendedDuration(val d: Duration) extends AnyVal with SelfComparable[Duration]
-	{
-		override def self = d
-		
-		override def compareTo(o: Duration) = d.compareTo(o)
+		def until(other: LocalDateTime): Duration = other - d
 	}
 	
 	implicit class ExtendedScalaDuration(val d: SDuration) extends AnyVal
@@ -242,161 +300,18 @@ object TimeExtensions
 		// COMPUTED -------------------------------
 		
 		/**
-		  * @return Whether this duration is an infinite duration.
-		  *         Note: Also returns true in case of Duration.Undefined.
-		  */
-		def isInfinite = !d.isFinite
-		
-		/**
 		  * @return A finite version of this duration. None for infinite durations.
 		  */
+		@deprecated("Deprecated for removal. Please use .ifFinite instead", "v2.7")
 		def finite = d match {
 			case f: FiniteDuration => Some(f)
 			case d => if (d.isFinite) Some(FiniteDuration(d.length, d.unit)) else None
 		}
-		/**
-		 * @return A finite version of this duration. Zero for infinite / invalid durations.
-		 */
-		def finiteOrZero = finite.getOrElse(scala.concurrent.duration.Duration.Zero)
-		
-		/**
-		  * @return Describes this duration in a suitable unit and precision
-		  */
-		def description: String = d match {
-			case d: FiniteDuration =>
-				if (d.length == 0)
-					s"0s"
-				else {
-					val seconds = d.toPreciseSeconds
-					if (seconds.abs < 0.1) {
-						val millis = d.toPreciseMillis
-						if (millis < 0.1)
-							s"${ d.toNanos } nanos"
-						else if (millis < 1)
-							f"$millis%1.2f millis"
-						else
-							s"${ millis.toInt.toString } millis"
-					}
-					else if (seconds.abs >= 120) {
-						val hoursPart = (seconds / 3600).toInt
-						val minutesPart = ((seconds % 3600) / 60).toInt
-						val secondsPart = (seconds % 60).toInt
-						
-						if (hoursPart.abs > 72) {
-							if (hoursPart.abs > 504) {
-								val weeks = d.toPreciseWeeks
-								f"$weeks%1.2f weeks"
-							}
-							else {
-								val hours = d.toPreciseHours
-								val daysPart = (hours / 24.0).toInt
-								val dayHoursPart = hours % 24
-								if (dayHoursPart >= 23.995)
-									s"${ daysPart + 1 } days"
-								else if (dayHoursPart <= -23.995)
-									s"${ daysPart - 1 } days"
-								else if (dayHoursPart.abs >= 0.005)
-									f"$daysPart days $dayHoursPart%1.2f hours"
-								else
-									s"$daysPart days"
-							}
-						}
-						else if (hoursPart != 0)
-							s"$hoursPart h $minutesPart min"
-						else
-							s"$minutesPart min $secondsPart s"
-					}
-					else
-						f"$seconds%1.2f seconds"
-				}
-			case scala.concurrent.duration.Duration.Inf => "infinite"
-			case scala.concurrent.duration.Duration.MinusInf => "negative infinity"
-			case scala.concurrent.duration.Duration.Undefined => "undefined"
-			case _ => d.toString
-		}
-		
-		
-		// OTHER    ----------------------------------
-		
-		/**
-		  * @param threshold A time threshold
-		  * @return Whether this duration has passed since that time threshold
-		  */
-		def hasPassedSince(threshold: Instant) = finite match {
-			case Some(d) => Now >= threshold + d
-			case None => d < duration.Duration.Zero
-		}
-		/**
-		  * @param threshold A time threshold
-		  * @return Whether this duration has passed since that time threshold
-		  */
-		def hasPassedSince(threshold: LocalDateTime) = finite match {
-			case Some(d) => Now.toLocalDateTime >= threshold + d
-			case None => d < duration.Duration.Zero
-		}
-	}
-	
-	implicit class ExtendedFiniteDuration(val d: FiniteDuration) extends AnyVal
-	{
-		/**
-		  * @return This duration in milliseconds, but with double precision (converted from nanoseconds)
-		  */
-		def toPreciseMillis = to(MilliSecond)
-		/**
-		  * @return This duration in seconds, but with double precision (converted from nanoseconds)
-		  */
-		def toPreciseSeconds = to(Second)
-		/**
-		  * @return This duration in minutes, but with double precision (converted from nanoseconds)
-		  */
-		def toPreciseMinutes = to(Minute)
-		/**
-		  * @return This duration in hours, but with double precision (converted from nanoseconds)
-		  */
-		def toPreciseHours = to(Hour)
-		/**
-		  * @return This duration in days, but with double precision (converted from nanoseconds)
-		  */
-		def toPreciseDays = to(Day)
-		/**
-		  * @return This duration in weeks, but with double precision (converted from nanoseconds)
-		  */
-		def toPreciseWeeks = to(Week)
-		
-		/**
-		  * @param unit Targeted time unit
-		  * @return The number of specified units in this duration
-		  */
-		def to(unit: TimeUnit) = unit.countIn(d)
-		
-		/**
-		  * @param instant Origin instant
-		  * @return An instant 'this' before the origin instant
-		  */
-		def before(instant: Instant) = instant - d
-		/**
-		  * @param instant Origin instant
-		  * @return An instant 'this' after the origin instant
-		  */
-		def after(instant: Instant) = instant + d
-		
-		/**
-		  * @param date Origin date time
-		  * @return A date time 'this' before the origin date time
-		  */
-		def before(date: LocalDateTime) = date - d
-		/**
-		  * @param date Origin date time
-		  * @return A date time 'this' after the origin date time
-		  */
-		def after(date: LocalDateTime) = date + d
 	}
 	
 	implicit class ExtendedLocalDate(val d: LocalDate)
-		extends AnyVal with SelfComparable[LocalDate]
+		extends AnyVal with SelfComparable[LocalDate] with CanAppendJavaDuration[LocalDateTime]
 	{
-		import utopia.flow.time.{Month, Year}
-		
 		// COMPUTED	-------------------------
 		
 		/**
@@ -469,7 +384,15 @@ object TimeExtensions
 		
 		override def self = d
 		
+		override protected def _max: LocalDateTime = LocalDateTime.MAX
+		override protected def _min: LocalDateTime = LocalDateTime.MIN
+		
 		override def compareTo(o: LocalDate) = d.compareTo(o)
+		
+		override def +(amount: TemporalAmount): LocalDateTime = d.atStartOfDay() + amount
+		override def -(amount: TemporalAmount): LocalDateTime = d.atStartOfDay() - amount
+		
+		override protected def _plus(amount: Long, unit: JTimeUnit): LocalDateTime = d.atStartOfDay().plus(amount, unit)
 		
 		
 		// OTHER	------------------------
@@ -482,18 +405,6 @@ object TimeExtensions
 		def +(timePeriod: Period) = d.plus(timePeriod)
 		def +(days: Days) = d.plusDays(days.length)
 		/**
-		  * Adds a time duration to this date
-		  * @param duration A time duration
-		  * @return a datetime based on this date and added time duration
-		  */
-		def +(duration: Duration) = d.atStartOfDay().plus(duration)
-		/**
-		  * Adds a time duration to this date
-		  * @param duration A time duration
-		  * @return a datetime based on this date and added time duration
-		  */
-		def +(duration: FiniteDuration): LocalDateTime = this + (duration: Duration)
-		/**
 		  * @param time A time element
 		  * @return This date at specified time
 		  */
@@ -505,29 +416,17 @@ object TimeExtensions
 		def +(days: Int) = d.plusDays(days)
 		
 		/**
-		  * Subtracts a number of days to this date. Eg. 2.1.2001 + 3 hours would be 2.1.2001 03:00.
+		  * Subtracts a number of days to this date. E.g. 2.1.2001 + 3 hours would be 2.1.2001 03:00.
 		  * @param timePeriod A time period to subtract
 		  * @return A modified copy of this date
 		  */
 		def -(timePeriod: Period) = d.minus(timePeriod)
 		def -(days: Days) = d.minusDays(days.length)
 		/**
-		  * Subtracts a time duration to this date. Eg. 2.1.2001 - 3 hours would be 1.1.2001 21:00.
-		  * @param duration A time duration
-		  * @return a datetime based on this date and subtracted time duration
-		  */
-		def -(duration: Duration) = d.atStartOfDay().minus(duration)
-		/**
 		  * @param other Another date
 		  * @return Time period between these two dates (from specified date to this date)
 		  */
 		def -(other: LocalDate) = Days((d.toEpochDay - other.toEpochDay).toInt)
-		/**
-		  * Subtracts a time duration to this date. Eg. 2.1.2001 - 3 hours would be 1.1.2001 21:00.
-		  * @param duration A time duration
-		  * @return a datetime based on this date and subtracted time duration
-		  */
-		def -(duration: FiniteDuration): LocalDateTime = this - (duration: Duration)
 		/**
 		  * @param time A time element
 		  * @return A date time received from subtracting specified time amount from this date's 00:00
@@ -571,7 +470,8 @@ object TimeExtensions
 		def toExclusive(other: LocalDate) = DateRange.exclusive(d, other)
 	}
 	
-	implicit class ExtendedLocalTime(val t: LocalTime) extends AnyVal with SelfComparable[LocalTime]
+	implicit class ExtendedLocalTime(val t: LocalTime)
+		extends AnyVal with SelfComparable[LocalTime] with CanAppendJavaDuration[LocalTime]
 	{
 		// COMPUTED	----------------------
 		
@@ -579,7 +479,11 @@ object TimeExtensions
 		  * @return A duration based on this time element (from the beginning of day)
 		  */
 		def toDuration = {
-			if (t.getNano == 0)
+			if (t.getMinute == 0)
+				t.getHour.hours
+			else if (t.getSecond == 0)
+				Minute(t.getHour * 60 + t.getMinute)
+			else if (t.getNano == 0)
 				t.toSecondOfDay.seconds
 			else
 				t.toNanoOfDay.nanos
@@ -590,27 +494,33 @@ object TimeExtensions
 		
 		override def self = t
 		
+		override protected def _max: LocalTime = LocalTime.MAX
+		override protected def _min: LocalTime = LocalTime.MIN
+		
 		override def compareTo(o: LocalTime) = t.compareTo(o)
+		
+		override def +(amount: TemporalAmount): LocalTime = amount match {
+			case _: Period => t
+			case _: ChronoPeriod => t
+			case amount => t.plus(amount)
+		}
+		override def -(amount: TemporalAmount): LocalTime = amount match {
+			case _: Period => t
+			case _: ChronoPeriod => t
+			case amount => t.minus(amount)
+		}
+		
+		override protected def _plus(amount: Long, unit: JTimeUnit): LocalTime =
+			if (unit == java.util.concurrent.TimeUnit.DAYS) t else t.plus(amount, unit)
 		
 		
 		// OTHER	----------------------
 		
 		/**
-		  * @param other Another time
-		  * @return Duration from 'other' to this. Negative if 'other' comes after this.
-		  */
+		 * @param other Another time
+		 * @return Duration from 'other' to this. Negative if 'other' comes after this.
+		 */
 		def -(other: LocalTime) = toDuration - other.toDuration
-		/**
-		  * @param duration a duration
-		  * @return A copy of this time shifted by 'duration' to past
-		  */
-		def -(duration: Duration) = t.minus(duration)
-		
-		/**
-		  * @param duration a duration
-		  * @return A copy of this time shifted by 'duration' to future
-		  */
-		def +(duration: Duration) = t.plus(duration)
 	}
 	
 	implicit class ExtendedPeriod(val p: Period) extends AnyVal with SelfComparable[Period]
@@ -638,34 +548,6 @@ object TimeExtensions
 		def -(days: Days) = p.minusDays(days.length)
 	}
 	
-	/**
-	  * Provides numeric functions for instances of [[scala.concurrent.duration.Duration]].
-	  * Note The * (i.e. times) implementation doesn't correctly yield unit to the power of two,
-	  * as that is not supported by the current data type structures.
-	  * @param unit Unit in which comparisons and other functions are performed.
-	  *             Affects, toX & fromX -functions, for example.
-	  */
-	case class DurationIsNumericIn(unit: TimeUnit) extends Numeric[scala.concurrent.duration.Duration]
-	{
-		override def fromInt(x: Int): duration.Duration = unit(x)
-		override def parseString(str: String): Option[duration.Duration] = str.toDoubleOption.map { unit(_) }
-		
-		override def toInt(x: duration.Duration): Int = unit.countIn(x).toInt
-		override def toLong(x: duration.Duration): Long = unit.countIn(x).toLong
-		override def toFloat(x: duration.Duration): Float = unit.countIn(x).toFloat
-		override def toDouble(x: duration.Duration): Double = unit.countIn(x)
-		
-		override def negate(x: duration.Duration): duration.Duration = x.neg()
-		
-		override def plus(x: duration.Duration, y: duration.Duration): duration.Duration = x.plus(y)
-		override def minus(x: duration.Duration, y: duration.Duration): duration.Duration = x.minus(y)
-		
-		override def times(x: duration.Duration, y: duration.Duration): duration.Duration =
-			unit(unit.countIn(x) * unit.countIn(y))
-		
-		override def compare(x: duration.Duration, y: duration.Duration): Int = x.compareTo(y)
-	}
-	
 	trait TimeNumber extends Any
 	{
 		// ABSTRACT ------------------------------
@@ -674,7 +556,7 @@ object TimeExtensions
 		  * @param unit Targeted unit of time
 		  * @return This number of specified units of time
 		  */
-		def *(unit: TimeUnit): FiniteDuration
+		def *(unit: TimeUnit): Duration
 		
 		
 		// COMPUTED ------------------------------
@@ -707,8 +589,6 @@ object TimeExtensions
 	
 	implicit class IntAsTimeNumber(val i: Int) extends AnyVal with TimeNumber
 	{
-		import utopia.flow.time.{Month, Year, YearMonth}
-		
 		// COMPUTED ------------------------
 		
 		/**
@@ -748,7 +628,7 @@ object TimeExtensions
 		
 		// IMPLEMENTED  --------------------
 		
-		override def *(unit: TimeUnit): FiniteDuration = unit(i)
+		override def *(unit: TimeUnit): Duration = unit(i)
 		
 		
 		// OTHER    ------------------------
@@ -807,46 +687,11 @@ object TimeExtensions
 	{
 		// IMPLEMENTED  --------------------
 		
-		override def *(unit: TimeUnit): FiniteDuration = unit(d)
+		override def *(unit: TimeUnit): Duration = unit(d)
 	}
 	
 	implicit class LongAsTimeNumber(val l: Long) extends AnyVal with TimeNumber
 	{
-		override def *(unit: TimeUnit): FiniteDuration = unit(l)
+		override def *(unit: TimeUnit): Duration = unit(l)
 	}
-	
-	/**
-	  * Implicitly converts a Java time unit to a [[ChronoUnit]]
-	  * @param unit Unit to convert
-	  * @return Converted time unit
-	  */
-	implicit def timeUnitToChronoUnit(unit: JTimeUnit): ChronoUnit = unit match {
-		case java.util.concurrent.TimeUnit.NANOSECONDS => ChronoUnit.NANOS
-		case java.util.concurrent.TimeUnit.MICROSECONDS => ChronoUnit.MICROS
-		case java.util.concurrent.TimeUnit.MILLISECONDS => ChronoUnit.MILLIS
-		case java.util.concurrent.TimeUnit.SECONDS => ChronoUnit.SECONDS
-		case java.util.concurrent.TimeUnit.MINUTES => ChronoUnit.MINUTES
-		case java.util.concurrent.TimeUnit.HOURS => ChronoUnit.HOURS
-		case java.util.concurrent.TimeUnit.DAYS => ChronoUnit.DAYS
-	}
-	
-	/**
-	  * Converts a java duration to a scala duration
-	  */
-	implicit def javaDurationToScalaDuration(duration: java.time.Duration): FiniteDuration = {
-		val secondsPart = Second(duration.getSeconds)
-		if (duration.getNano == 0)
-			secondsPart
-		else
-			secondsPart + NanoSecond(duration.getNano)
-	}
-	implicit def javaDurationToExtendedScalaDuration(duration: java.time.Duration): ExtendedScalaDuration =
-		javaDurationToScalaDuration(duration)
-	implicit def javaDurationToExtendedFiniteDuration(duration: java.time.Duration): ExtendedFiniteDuration =
-		javaDurationToScalaDuration(duration)
-	/**
-	  * Converts a finite scala duration to a java duration
-	  */
-	implicit def scalaDurationToJavaDuration(duration: FiniteDuration): Duration =
-		java.time.Duration.of(duration.length, duration.unit)
 }

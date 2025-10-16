@@ -11,7 +11,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object ImageCache
 {
@@ -24,7 +24,7 @@ object ImageCache
 	  *            (used for logging image read-failures as well as possibly other more unexpected errors)
 	  * @return A cache for read images
 	  */
-	def apply(imageReadDirectory: Path, cacheDuration: FiniteDuration = 3.minutes)
+	def apply(imageReadDirectory: Path, cacheDuration: Duration = 3.minutes)
 	         (implicit exc: ExecutionContext, log: Logger) =
 		mapping(imageReadDirectory, cacheDuration)(Identity)
 	/**
@@ -38,7 +38,7 @@ object ImageCache
 	  * @return A cache that yields icons
 	  */
 	def icons(imageReadDirectory: Path, standardIconSize: Option[Size] = None,
-	          cacheDuration: FiniteDuration = 3.minutes)
+	          cacheDuration: Duration = 3.minutes)
 	         (implicit exc: ExecutionContext, log: Logger) =
 	{
 		val f = standardIconSize match {
@@ -59,7 +59,7 @@ object ImageCache
 	  * @tparam A Type of cached items (mapping results)
 	  * @return A cache for reading processed items
 	  */
-	def mapping[A <: AnyRef](imageReadDirectory: Path, cacheDuration: FiniteDuration = 3.minutes)
+	def mapping[A <: AnyRef](imageReadDirectory: Path, cacheDuration: Duration = 3.minutes)
 	                        (f: Image => A)
 	                        (implicit exc: ExecutionContext, log: Logger) =
 		new ImageCache[A](imageReadDirectory, cacheDuration)(f)
@@ -75,7 +75,7 @@ object ImageCache
   * @param exc Implicit execution context used for scheduling cache releases
  * @param log Implicit logging implementation for possible icon read failures
   */
-class ImageCache[+A <: AnyRef](val imageReadDirectory: Path,cacheDuration: FiniteDuration = 3.minutes)
+class ImageCache[+A <: AnyRef](val imageReadDirectory: Path,cacheDuration: Duration = 3.minutes)
                               (f: Image => A)
                               (implicit exc: ExecutionContext, log: Logger)
 	extends Cache[String, A]

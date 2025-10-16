@@ -24,7 +24,7 @@ import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 object TypeOrSearch
@@ -54,7 +54,7 @@ object TypeOrSearch
 	          addButtonIcon: Option[SingleColorIcon] = None, selectButtonText: LocalizedString = LocalizedString.empty,
 	          selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
 	          textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
-	          searchDelay: Duration = Duration.Zero)
+	          searchDelay: Duration = Duration.zero)
 	         (optionsForInput: String => Future[Seq[String]])
 	         (implicit context: StaticTextContext, scrollingContext: ScrollingContext,
 	          animationContext: AnimationContext, exc: ExecutionContext, logger: Logger) =
@@ -86,7 +86,7 @@ class TypeOrSearch
  addButtonIcon: Option[SingleColorIcon] = None, selectButtonText: LocalizedString = LocalizedString.empty,
  selectButtonIcon: Option[SingleColorIcon] = None, optimalSelectionAreaLength: Option[Double] = None,
  textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
- searchDelay: Duration = Duration.Zero)
+ searchDelay: Duration = Duration.zero)
 (optionsForInput: String => Future[Seq[String]])
 (implicit scrollingContext: ScrollingContext, animationContext: AnimationContext, exc: ExecutionContext, logger: Logger)
 	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], Changing[Vector[String]]]
@@ -134,7 +134,7 @@ class TypeOrSearch
 	// INITIAL CODE ----------------------------
 	
 	// Updates selectable values when search field content updates (possibly delayed)
-	(if (searchDelay > Duration.Zero) textField.valuePointer.delayedBy(searchDelay) else textField.valuePointer)
+	(if (searchDelay.isPositive) textField.valuePointer.delayedBy(searchDelay) else textField.valuePointer)
 		// TODO: Consider using .mapAsync instead
 		.mapToFuture[Seq[String]](Vector())(optionsForInput).addListener { event =>
 			// Won't include already selected items

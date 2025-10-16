@@ -1,13 +1,10 @@
 package utopia.exodus.database
 
-import utopia.citadel.database.deletion.CitadelDataDeletionRules
 import utopia.citadel.database.deletion.CitadelDataDeletionRules.defaultHistoryDuration
 import utopia.exodus.database.model.auth.TokenModel
 import utopia.flow.collection.immutable.{Empty, Pair}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.vault.model.immutable.DataDeletionRule
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * An object used for acquiring data deletion rules concerning Exodus-specific tables
@@ -26,7 +23,7 @@ object ExodusDataDeletionRules
 	/**
 	  * @return Deletion rules that don't keep historical records of Exodus-specific resources
 	  */
-	def noHistory = sameForAll(Duration.Zero)
+	def noHistory = sameForAll(Duration.zero)
 	
 	
 	// OTHER    ---------------------------------
@@ -36,7 +33,7 @@ object ExodusDataDeletionRules
 	  * @param token Authorization token history duration (default = 30 days)
 	  * @return Data deletion rules for Exodus-specific tables/resources
 	  */
-	def custom(token: Duration = defaultHistoryDuration) = token.finite match {
+	def custom(token: Duration = defaultHistoryDuration) = token.ifFinite match {
 		case Some(duration) =>
 			val tokenModel = TokenModel
 			Pair(
@@ -51,5 +48,5 @@ object ExodusDataDeletionRules
 	  * @param historyDuration History duration to use for all Exodus-specific resources
 	  * @return Exodus-specific data deletion rules
 	  */
-	def sameForAll(historyDuration: FiniteDuration) = custom(historyDuration)
+	def sameForAll(historyDuration: Duration) = custom(historyDuration)
 }

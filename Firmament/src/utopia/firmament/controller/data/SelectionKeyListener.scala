@@ -16,7 +16,7 @@ import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListe
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 object SelectionKeyListener
@@ -240,7 +240,7 @@ class SelectionKeyListener(keysPointer: Changing[Map[Int, Sign]], enabledFlag: F
 				scrollDirectionP.update { _.filterNot { _ == direction } }
 		}
 	
-	override def act(duration: FiniteDuration) = {
+	override def act(duration: Duration) = {
 		// Action events are processed only when a button is being held down
 		scrollDirectionP.value.foreach { direction =>
 			// Moves towards the next "tick"
@@ -248,7 +248,7 @@ class SelectionKeyListener(keysPointer: Changing[Map[Int, Sign]], enabledFlag: F
 			
 			// Checks whether there should be any, or multiple, "ticks" during this action event
 			var move = 0
-			while (remainingDelay <= Duration.Zero) {
+			while (remainingDelay.isNotPositive) {
 				move += 1
 				remainingDelay += nextDelay max minScrollDelay
 				nextDelay *= scrollDelayModifier

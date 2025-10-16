@@ -2,9 +2,8 @@ package utopia.reach.container
 
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.combine.{Combinable, LinearScalable}
-import utopia.flow.time.TimeExtensions._
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
+import utopia.flow.util.Mutate
 
 /**
   * An enumeration for different component hierarchy revalidation implementation approaches
@@ -27,7 +26,7 @@ sealed trait RevalidationStyle
 	/**
 	  * @return The minimum and the maximum delay before the revalidation shall be performed after calling revalidate()
 	  */
-	def delay: Span[FiniteDuration]
+	def delay: Span[Duration]
 	
 	
 	// COMPUTED ---------------------
@@ -88,10 +87,10 @@ object RevalidationStyle
 		
 		override def isImmediate: Boolean = true
 		override def isAsynchronous: Boolean = !blocks
-		override def delay: Span[FiniteDuration] = Span(Duration.Zero, Duration.Zero)
+		override def delay: Span[Duration] = Span(Duration.zero, Duration.zero)
 		
-		override def minDelay = Duration.Zero
-		override def maxDelay = Duration.Zero
+		override def minDelay = Duration.zero
+		override def maxDelay = Duration.zero
 	}
 	
 	object Delayed
@@ -101,35 +100,39 @@ object RevalidationStyle
 		  *               initiation of the revalidation process
 		  * @return A new revalidation style where revalidation is delayed by the specified amount
 		  */
-		def by(amount: FiniteDuration) = apply(Span(amount, amount))
+		def by(amount: Duration) = apply(Span(amount, amount))
 		/**
 		  * @param atLeast Minimum delay
 		  * @param atMost Maximum delay
 		  * @return A revalidation style where the revalidation is performed between 'atLeast' and 'atMost' after
 		  *         the call on revalidate(). Revalidation is delayed when revalidate() is called repeatedly.
 		  */
-		def by(atLeast: FiniteDuration, atMost: FiniteDuration) = apply(Span(atLeast, atMost))
+		def by(atLeast: Duration, atMost: Duration) = apply(Span(atLeast, atMost))
 	}
 	/**
 	  * A revalidation approach where the revalidation implementation is delayed
 	  * @param by How much the revalidation shall be delayed (minimum & maximum)
 	  */
-	case class Delayed(by: Span[FiniteDuration])
-		extends RevalidationStyle with LinearScalable[Delayed] with Combinable[FiniteDuration, Delayed]
+	case class Delayed(by: Span[Duration])
+		extends RevalidationStyle with LinearScalable[Delayed] with Combinable[Duration, Delayed]
 	{
 		// IMPLEMENTED  -------------------------
 		
-		override def isImmediate: Boolean = minDelay <= Duration.Zero
+		override def isImmediate: Boolean = minDelay.isNotPositive
 		override def isAsynchronous: Boolean = true
 		
-		override def delay: Span[FiniteDuration] = by
+		override def delay: Span[Duration] = by
 		
 		override def self: Delayed = this
 		
-		override def *(mod: Double): Delayed =
-			map { d => (d * mod).finite.getOrElse { throw new IllegalArgumentException(s"Scaling duration by $mod") } }
+		override def *(mod: Double): Delayed = map { d =>
+			val result = d * mod
+			if (result.isInfinite)
+				throw new IllegalArgumentException(s"Scaling duration by $mod")
+			result
+		}
 		
-		override def +(other: FiniteDuration): Delayed = map { _ + other }
+		override def +(other: Duration): Delayed = map { _ + other }
 		
 		
 		// OTHER    ----------------------------
@@ -138,17 +141,17 @@ object RevalidationStyle
 		  * @param delay A new minimum delay
 		  * @return A copy of this approach with the specified minimum delay
 		  */
-		def withMinDelay(delay: FiniteDuration) = Delayed(Span(delay, delay max maxDelay))
+		def withMinDelay(delay: Duration) = Delayed(Span(delay, delay max maxDelay))
 		/**
 		  * @param delay A new maximum delay
 		  * @return A copy of this approach with the specified maximum delay
 		  */
-		def withMaxDelay(delay: FiniteDuration) = Delayed(Span(delay min minDelay, delay))
+		def withMaxDelay(delay: Duration) = Delayed(Span(delay min minDelay, delay))
 		
 		/**
 		  * @param f A mapping function
 		  * @return A copy of this approach with mapped delay
 		  */
-		def map(f: FiniteDuration => FiniteDuration) = Delayed(by.mapEnds(f).ascending)
+		def map(f: Mutate[Duration]) = Delayed(by.mapEnds(f).ascending)
 	}
 }

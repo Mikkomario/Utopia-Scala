@@ -9,7 +9,7 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.NumericVectorLike
 import utopia.paradigm.shape.template.{Dimensional, VectorProjectable}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Represents a change in velocity over a time period

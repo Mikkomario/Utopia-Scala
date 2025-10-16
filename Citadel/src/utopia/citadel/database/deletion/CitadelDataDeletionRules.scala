@@ -3,10 +3,9 @@ package utopia.citadel.database.deletion
 import utopia.citadel.database.model.description.DescriptionModel
 import utopia.citadel.database.model.organization.{InvitationModel, MemberRoleLinkModel, MembershipModel}
 import utopia.citadel.database.model.user.UserSettingsModel
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
-import utopia.vault.nosql.storable.deprecation.TimeDeprecatable
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.vault.model.template.DeprecatesAfter
 
 /**
   * Provides deletion rules for Citadel database data
@@ -33,7 +32,7 @@ object CitadelDataDeletionRules
 	/**
 	  * @return A set of deletion rules that doesn't keep expired / deprecated items in the database for long
 	  */
-	def noHistory = sameForAll(Duration.Zero)
+	def noHistory = sameForAll(Duration.zero)
 	
 	
 	// OTHER    -----------------------------------
@@ -68,7 +67,7 @@ object CitadelDataDeletionRules
 	  * @param historyDuration The amount of time deprecated / expired data is kept in the database
 	  * @return A new set of deletion rules
 	  */
-	def sameForAll(historyDuration: FiniteDuration) =
+	def sameForAll(historyDuration: Duration) =
 		custom(historyDuration, historyDuration, historyDuration, historyDuration, historyDuration)
 	
 	/**
@@ -77,6 +76,6 @@ object CitadelDataDeletionRules
 	  * @param duration History duration
 	  * @return A deletion rule. None if history duration is infinite.
 	  */
-	def deprecation(model: TimeDeprecatable, duration: Duration) =
-		duration.finite.map(model.deletionAfterDeprecation)
+	def deprecation(model: DeprecatesAfter, duration: Duration) =
+		duration.ifFinite.map(model.deletionAfterDeprecation)
 }

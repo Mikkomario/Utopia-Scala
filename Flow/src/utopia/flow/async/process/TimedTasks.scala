@@ -9,7 +9,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Now, Today, WeekDay}
+import utopia.flow.time.{Duration, Now, Today, WeekDay}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
@@ -17,7 +17,6 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -213,7 +212,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 	  * @param task Task to run
 	  * @tparam U Arbitrary result type
 	  */
-	def addLoop[U](interval: FiniteDuration)(task: => U) = add(Now + interval) {
+	def addLoop[U](interval: Duration)(task: => U) = add(Now + interval) {
 		task
 		Now + interval
 	}

@@ -11,7 +11,7 @@ import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Tests LoopingProcess and Loop
@@ -26,7 +26,7 @@ object LoopTest2 extends App
 	println("Running DelayTest...")
 	
 	var waitStart = Now.toInstant
-	def testTime(minPassed: FiniteDuration, maxPassed: FiniteDuration) = {
+	def testTime(minPassed: Duration, maxPassed: Duration) = {
 		val passed = Now - waitStart
 		assert(passed > minPassed)
 		assert(passed < maxPassed)

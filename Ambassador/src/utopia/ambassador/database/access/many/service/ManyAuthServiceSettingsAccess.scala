@@ -4,16 +4,15 @@ import utopia.ambassador.database.factory.service.AuthServiceSettingsFactory
 import utopia.ambassador.database.model.service.AuthServiceSettingsModel
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.Minute
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-import scala.concurrent.duration.FiniteDuration
-
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 object ManyAuthServiceSettingsAccess extends ViewFactory[ManyAuthServiceSettingsAccess]
 {
@@ -99,50 +98,26 @@ trait ManyAuthServiceSettingsAccess
 	/**
 	  * preparationTokenDurations of the accessible AuthServiceSettings
 	  */
-	def preparationTokenDurations(implicit connection: Connection) = {
-		pullColumn(model.preparationTokenDurationColumn).flatMap { value => value.long.map 
-		{
-			 FiniteDuration(_, 
-					TimeUnit.MINUTES) 
-		}
-			}
-	}
+	def preparationTokenDurations(implicit connection: Connection) =
+		pullColumn(model.preparationTokenDurationColumn).flatMap { value => value.long.map(Minute.apply) }
 	
 	/**
 	  * redirectTokenDurations of the accessible AuthServiceSettings
 	  */
-	def redirectTokenDurations(implicit connection: Connection) = {
-		pullColumn(model.redirectTokenDurationColumn).flatMap { value => value.long.map 
-		{
-			 FiniteDuration(_, 
-					TimeUnit.MINUTES) 
-		}
-			}
-	}
+	def redirectTokenDurations(implicit connection: Connection) =
+		pullColumn(model.redirectTokenDurationColumn).flatMap { value => value.long.map(Minute.apply) }
 	
 	/**
 	  * incompleteAuthTokenDurations of the accessible AuthServiceSettings
 	  */
-	def incompleteAuthTokenDurations(implicit connection: Connection) = {
-		pullColumn(model.incompleteAuthTokenDurationColumn).flatMap { value => value.long.map 
-		{
-			 FiniteDuration(_, 
-					TimeUnit.MINUTES) 
-		}
-			}
-	}
+	def incompleteAuthTokenDurations(implicit connection: Connection) =
+		pullColumn(model.incompleteAuthTokenDurationColumn).flatMap { value => value.long.map(Minute.apply) }
 	
 	/**
 	  * DefaultSessionDurations of the accessible AuthServiceSettings
 	  */
-	def defaultSessionDurations(implicit connection: Connection) = {
-		pullColumn(model.defaultSessionDurationColumn).flatMap { value => value.long.map 
-		{
-			 FiniteDuration(_,
-					TimeUnit.MINUTES) 
-		}
-			}
-	}
+	def defaultSessionDurations(implicit connection: Connection) =
+		pullColumn(model.defaultSessionDurationColumn).flatMap { value => value.long.map(Minute.apply) }
 	
 	/**
 	  * creationTimes of the accessible AuthServiceSettings
@@ -215,8 +190,8 @@ trait ManyAuthServiceSettingsAccess
 	  * @param newDefaultSessionDuration A new DefaultSessionDuration to assign
 	  * @return Whether any AuthServiceSettings instance was affected
 	  */
-	def defaultSessionDurations_=(newDefaultSessionDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.defaultSessionDurationColumn, newDefaultSessionDuration.toUnit(TimeUnit.MINUTES))
+	def defaultSessionDurations_=(newDefaultSessionDuration: Duration)(implicit connection: Connection) =
+		putColumn(model.defaultSessionDurationColumn, newDefaultSessionDuration.toMinutes)
 	
 	/**
 	  * Updates the incompleteAuthRedirectUrl of the targeted AuthServiceSettings instance(s)
@@ -231,25 +206,25 @@ trait ManyAuthServiceSettingsAccess
 	  * @param newIncompleteAuthTokenDuration A new incompleteAuthTokenDuration to assign
 	  * @return Whether any AuthServiceSettings instance was affected
 	  */
-	def incompleteAuthTokenDurations_=(newIncompleteAuthTokenDuration: FiniteDuration)(implicit connection: Connection) = 
+	def incompleteAuthTokenDurations_=(newIncompleteAuthTokenDuration: Duration)(implicit connection: Connection) =
 		putColumn(model.incompleteAuthTokenDurationColumn, 
-			newIncompleteAuthTokenDuration.toUnit(TimeUnit.MINUTES))
+			newIncompleteAuthTokenDuration.toMinutes)
 	
 	/**
 	  * Updates the preparationTokenDuration of the targeted AuthServiceSettings instance(s)
 	  * @param newPreparationTokenDuration A new preparationTokenDuration to assign
 	  * @return Whether any AuthServiceSettings instance was affected
 	  */
-	def preparationTokenDurations_=(newPreparationTokenDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.preparationTokenDurationColumn, newPreparationTokenDuration.toUnit(TimeUnit.MINUTES))
+	def preparationTokenDurations_=(newPreparationTokenDuration: Duration)(implicit connection: Connection) =
+		putColumn(model.preparationTokenDurationColumn, newPreparationTokenDuration.toMinutes)
 	
 	/**
 	  * Updates the redirectTokenDuration of the targeted AuthServiceSettings instance(s)
 	  * @param newRedirectTokenDuration A new redirectTokenDuration to assign
 	  * @return Whether any AuthServiceSettings instance was affected
 	  */
-	def redirectTokenDurations_=(newRedirectTokenDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.redirectTokenDurationColumn, newRedirectTokenDuration.toUnit(TimeUnit.MINUTES))
+	def redirectTokenDurations_=(newRedirectTokenDuration: Duration)(implicit connection: Connection) =
+		putColumn(model.redirectTokenDurationColumn, newRedirectTokenDuration.toMinutes)
 	
 	/**
 	  * Updates the redirectUrl of the targeted AuthServiceSettings instance(s)

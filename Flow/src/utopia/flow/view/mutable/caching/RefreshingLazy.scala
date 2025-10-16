@@ -4,18 +4,10 @@ import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object RefreshingLazy
 {
-	/**
-	  * Creates a new lazy container which refreshes its contents after it has existed for the specified time
-	  * @param threshold Item maximum duration
-	  * @param make A function for generating new items
-	  * @tparam A Type of stored item
-	  * @return A new refreshing lazy container
-	  */
-	def after[A](threshold: FiniteDuration)(make: => A) = new RefreshingLazy[A](make)(_ => threshold)
 	/**
 	  * Creates a new lazy container which refreshes its contents after it has existed for the specified time
 	  * @param threshold Item maximum duration - If infinite, creates a simpler lazy container
@@ -23,9 +15,8 @@ object RefreshingLazy
 	  * @tparam A Type of stored item
 	  * @return A new lazy container
 	  */
-	def after[A](threshold: Duration)(make: => A): ResettableLazy[A] = threshold.finite match
-	{
-		case Some(finiteDuration) => after(finiteDuration)(make)
+	def after[A](threshold: Duration)(make: => A): ResettableLazy[A] = threshold.ifFinite match {
+		case Some(finiteDuration) => new RefreshingLazy[A](make)(_ => finiteDuration)
 		case None => ResettableLazy(make)
 	}
 	
@@ -62,21 +53,18 @@ class RefreshingLazy[+A](generator: => A)(expirationPerItem: A => Duration) exte
 		cache.reset()
 	}
 	
-	override def current =
-	{
+	override def current = {
 		if (nextResetThreshold.forall { _.forall { _.isFuture } })
 			cache.current
 		else
 			None
 	}
-	override def value =
-	{
+	override def value = {
 		// Resets value first, if necessary
 		// Case: Current value is no longer valid => Requests a new value and schedules a new refresh
-		if (nextResetThreshold.forall { _.exists { _.isPast } })
-		{
+		if (nextResetThreshold.forall { _.exists { _.isPast } }) {
 			val result = cache.newValue()
-			nextResetThreshold = Some(expirationPerItem(result).finite.map { Now + _ })
+			nextResetThreshold = Some(expirationPerItem(result).ifFinite.map { Now + _ })
 			result
 		}
 		// Case: Current value is still valid => uses that

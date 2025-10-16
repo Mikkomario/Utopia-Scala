@@ -8,7 +8,7 @@ import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.template.Handleable
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 @deprecated("Replaced with a new version", "v1.5")
 object CollisionHandler
@@ -58,7 +58,7 @@ class CollisionHandler(targetHandler: CollisionTargetHandler, initialListeners: 
     
     // IMPLEMENTED    ------------------
     
-    override def act(duration: FiniteDuration) = {
+    override def act(duration: Duration) = {
         // Makes sure collisions are up-to-date
         updateCollisions()
         // Informs listeners of active collisions

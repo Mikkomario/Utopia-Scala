@@ -7,7 +7,7 @@ import utopia.paradigm.enumeration.OriginType.Relative
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
  * Common trait for events that represent mouse movement
@@ -26,7 +26,7 @@ trait MouseMoveEventLike[+Repr] extends MouseEvent[Repr]
     /**
       * @return The duration of this movement (based on action events)
       */
-    def duration: FiniteDuration
+    def duration: Duration
     
     /**
       * @param positions New mouse positions (start & end) to assign

@@ -3,7 +3,7 @@ package utopia.paradigm.animation.transform
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.AnimatedTransform.{AndTransform, StaticTransform}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Animations are transformations that can be repeated and are applied over time

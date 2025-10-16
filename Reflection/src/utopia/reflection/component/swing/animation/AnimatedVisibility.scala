@@ -16,7 +16,7 @@ import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 import utopia.reflection.event.{Visibility, VisibilityChange, VisibilityState}
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 object AnimatedVisibility
@@ -46,7 +46,7 @@ object AnimatedVisibility
 class AnimatedVisibility[C <: AwtStackable](val display: C, actorHandler: ActorHandler,
                                             transitionAxis: Option[Axis2D] = None,
                                             initialState: VisibilityState = Invisible,
-                                            duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                            duration: Duration = ComponentCreationDefaults.transitionDuration,
                                             maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
                                             useFading: Boolean = true)
 										   (implicit exc: ExecutionContext)

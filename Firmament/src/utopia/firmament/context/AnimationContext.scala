@@ -3,7 +3,7 @@ package utopia.firmament.context
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Fps
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object AnimationContext
 {
@@ -17,7 +17,7 @@ object AnimationContext
 	  * @return A new animation context instance
 	  */
 	def apply(actorHandler: ActorHandler,
-	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+	          animationDuration: Duration = ComponentCreationDefaults.transitionDuration,
 	          maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 	          useFadingInAnimations: Boolean = true): AnimationContext =
 		_AnimationContext(actorHandler, animationDuration, maxAnimationRefreshRate, useFadingInAnimations)
@@ -26,7 +26,7 @@ object AnimationContext
 	// NESTED   -----------------------
 	
 	private case class _AnimationContext(actorHandler: ActorHandler,
-	                                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+	                                     animationDuration: Duration = ComponentCreationDefaults.transitionDuration,
 	                                     maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 	                                     useFadingInAnimations: Boolean = true)
 		extends AnimationContext
@@ -42,7 +42,7 @@ trait AnimationContext
 	/**
 	  * @return Duration of a singular animation by default
 	  */
-	def animationDuration: FiniteDuration
+	def animationDuration: Duration
 	
 	/**
 	  * @return Whether fading should be used in animations

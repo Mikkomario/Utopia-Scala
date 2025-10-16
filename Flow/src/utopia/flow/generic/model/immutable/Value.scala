@@ -1,20 +1,19 @@
 package utopia.flow.generic.model.immutable
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ConversionHandler
-import utopia.flow.parse.json.{JsonConvertible, JsonValueConverter}
-import utopia.flow.time.{Days, Month, Today, Year, YearMonth}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{AnyType, BooleanType, DaysType, DoubleType, DurationType, FloatType, InstantType, IntType, LocalDateTimeType, LocalDateType, LocalTimeType, LongType, ModelType, MonthType, PairType, StringType, VectorType, YearMonthType, YearType}
-import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.parse.json.{JsonConvertible, JsonValueConverter}
+import utopia.flow.time._
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.collection.mutable
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
 
 object Value
@@ -114,7 +113,7 @@ case class Value(content: Option[Any], dataType: DataType)
      */
     override def toString = string.getOrElse("")
     
-    override implicit def equalsFunction: EqualsFunction[Value] = Value.convertToEqual
+    override implicit def approxEqualsFunction: EqualsFunction[Value] = Value.convertToEqual
     
     override def appendToJson(jsonBuilder: mutable.StringBuilder) = JsonValueConverter(this) match {
         case Some(json) => jsonBuilder ++= json
@@ -249,7 +248,7 @@ case class Value(content: Option[Any], dataType: DataType)
     def localDate = objectValue(LocalDateType).map { _.asInstanceOf[LocalDate]}
     def localTime = objectValue(LocalTimeType).map { _.asInstanceOf[LocalTime]}
     def localDateTime = objectValue(LocalDateTimeType).map { _.asInstanceOf[LocalDateTime]}
-    def duration = objectValue(DurationType).map { _.asInstanceOf[FiniteDuration] }
+    def duration = objectValue(DurationType).map { _.asInstanceOf[Duration] }
     def days = objectValue(DaysType).map { _.asInstanceOf[Days] }
     def year = objectValue(YearType).map { _.asInstanceOf[Year] }
     def month = objectValue(MonthType).map { _.asInstanceOf[Month] }
@@ -268,7 +267,7 @@ case class Value(content: Option[Any], dataType: DataType)
     def localDateOr(default: => LocalDate = Today) = localDate.getOrElse(default)
     def localTimeOr(default: => LocalTime = LocalTime.now()) = localTime.getOrElse(default)
     def localDateTimeOr(default: => LocalDateTime = LocalDateTime.now()) = localDateTime.getOrElse(default)
-    def durationOr(default: => FiniteDuration = Duration.Zero) = duration.getOrElse(default)
+    def durationOr(default: => Duration = Duration.zero): Duration = duration.getOrElse(default)
     def daysOr(default: => Days = Days.zero) = days.getOrElse(default)
     def yearOr(default: => Year = Today.year) = year.getOrElse(default)
     def monthOr(default: => Month = Today.month) = month.getOrElse(default)

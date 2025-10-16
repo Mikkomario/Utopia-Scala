@@ -1,11 +1,10 @@
 package utopia.exodus.database.factory.auth
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.ExodusTables
 import utopia.exodus.model.partial.auth.TokenTypeData
 import utopia.exodus.model.stored.auth.TokenType
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.TimeUnit.Minute
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
 /**
@@ -23,7 +22,7 @@ object TokenTypeFactory extends FromValidatedRowModelFactory[TokenType]
 	
 	override def fromValidatedModel(valid: Model) = 
 		TokenType(valid("id").getInt, TokenTypeData(valid("name").getString, 
-			valid("durationMinutes").long.map { FiniteDuration(_, TimeUnit.MINUTES) }, 
+			valid("durationMinutes").long.map(Minute.apply),
 			valid("refreshedTypeId").int, valid("created").getInstant, valid("isSingleUseOnly").getBoolean))
 }
 

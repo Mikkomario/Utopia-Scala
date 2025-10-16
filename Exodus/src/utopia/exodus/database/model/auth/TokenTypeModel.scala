@@ -1,15 +1,15 @@
 package utopia.exodus.database.model.auth
 
-import java.time.Instant
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.factory.auth.TokenTypeFactory
 import utopia.exodus.model.partial.auth.TokenTypeData
 import utopia.exodus.model.stored.auth.TokenType
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.time.Duration
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
+
+import java.time.Instant
 
 /**
   * Used for constructing TokenTypeModel instances and for inserting token types to the database
@@ -103,7 +103,7 @@ object TokenTypeModel extends DataInserter[TokenTypeModel, TokenType, TokenTypeD
 	  *  these tokens don't expire automatically.
 	  * @return A model containing only the specified duration
 	  */
-	def withDuration(duration: FiniteDuration) = apply(duration = Some(duration))
+	def withDuration(duration: Duration) = apply(duration = Some(duration))
 	
 	/**
 	  * @param id A token type id
@@ -146,7 +146,7 @@ object TokenTypeModel extends DataInserter[TokenTypeModel, TokenType, TokenTypeD
   * @since 18.02.2022, v4.0
   */
 case class TokenTypeModel(id: Option[Int] = None, name: Option[String] = None, 
-	duration: Option[FiniteDuration] = None, refreshedTypeId: Option[Int] = None, 
+	duration: Option[Duration] = None, refreshedTypeId: Option[Int] = None,
 	created: Option[Instant] = None, isSingleUseOnly: Option[Boolean] = None) 
 	extends StorableWithFactory[TokenType]
 {
@@ -157,7 +157,7 @@ case class TokenTypeModel(id: Option[Int] = None, name: Option[String] = None,
 	override def valueProperties = {
 		import TokenTypeModel._
 		Vector("id" -> id, nameAttName -> name, 
-			durationAttName -> duration.map { _.toUnit(TimeUnit.MINUTES) }, 
+			durationAttName -> duration.map { _.toMinutes },
 			refreshedTypeIdAttName -> refreshedTypeId, createdAttName -> created, 
 			isSingleUseOnlyAttName -> isSingleUseOnly)
 	}
@@ -175,7 +175,7 @@ case class TokenTypeModel(id: Option[Int] = None, name: Option[String] = None,
 	  * @param duration A new duration
 	  * @return A new copy of this model with the specified duration
 	  */
-	def withDuration(duration: FiniteDuration) = copy(duration = Some(duration))
+	def withDuration(duration: Duration) = copy(duration = Some(duration))
 	
 	/**
 	  * @param isSingleUseOnly A new is single use only

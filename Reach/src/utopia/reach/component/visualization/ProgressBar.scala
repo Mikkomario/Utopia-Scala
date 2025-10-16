@@ -21,7 +21,7 @@ import utopia.reach.component.factory.contextual.ContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Common trait for progress bar factories and settings
@@ -85,7 +85,7 @@ trait ProgressBarSettingsLike[+Repr] extends CustomDrawableFactory[Repr] with Ba
 	/**
 	  * @return Copy of this item that doesn't apply animations (instead reflecting all changes immediately)
 	  */
-	def unanimated = withAnimationDuration(Duration.Zero)
+	def unanimated = withAnimationDuration(Duration.zero)
 	
 	def slower(implicit adj: Adjustment) = mapAnimationDuration { _ * adj(1) }
 	def faster(implicit adj: Adjustment) = mapAnimationDuration { _ * adj(-1) }

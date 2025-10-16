@@ -15,7 +15,7 @@ import utopia.paradigm.shape.shape2d.vector.point.{Point, RelativePoint}
 
 import java.awt.event.{MouseEvent, MouseListener, MouseWheelListener}
 import java.awt.{Component, MouseInfo}
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.ref.WeakReference
 import scala.util.Try
@@ -144,7 +144,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
         Future.successful(())
     }
     
-    override def act(duration: FiniteDuration) = {
+    override def act(duration: Duration) = {
         component.foreach { c =>
             // Checks for mouse movement
             // Sometimes mouse position can't be calculated, in which case assumes mouse to remain static

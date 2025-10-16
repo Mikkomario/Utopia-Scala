@@ -22,7 +22,7 @@ object AsyncMirrorSpamTest extends App
 	private def test() = {
 		val origin = Pointer.eventful(20)
 		val mapped = origin.mapAsync(-1) { i =>
-			Wait(i * delayPerUnit)
+			Wait(delayPerUnit * i)
 			i
 		}
 		var lastAssigned = -1
@@ -31,7 +31,7 @@ object AsyncMirrorSpamTest extends App
 				val newValue = Random.nextInt(50)
 				origin.value = newValue
 				lastAssigned = newValue
-				Wait(newValue * testDelayPerUnit)
+				Wait(testDelayPerUnit * newValue)
 			}
 			.take(100).foreach { _ => () }
 		

@@ -18,8 +18,6 @@ import utopia.scribe.core.model.partial.logging.IssueOccurrenceData
 import utopia.scribe.core.model.stored.logging.IssueOccurrence
 import utopia.vault.database.Connection
 
-import scala.concurrent.duration.Duration
-
 /**
   * An interface for processes that reduce stored issue space in the database.
   * @author Mikko Hilpinen
@@ -44,7 +42,7 @@ object LogCleaner
 					.withSeverityIn(severities).during(durationRange.mapTo { now - _ }).pull
 				if (issues.exists { _.hasOccurred }) {
 					// Merges occurrences within specific time periods, forming a single item
-					val dataIter = mergeGroupLength.finite match {
+					val dataIter = mergeGroupLength.ifFinite match {
 						// Case: Finite merge group length => Forms possibly multiple groups
 						case Some(mergeGroupLength) =>
 							val veryFirstOccurrenceTime = issues
@@ -88,11 +86,11 @@ object LogCleaner
 		durations.specifiedRangesIterator.foreach { case (severities, durations) =>
 			durations.deletionThresholds.foreach { case Pair(requiredInactivity, deleteAfter) =>
 				// If required inactivity or lifetime duration is infinite, no deletion occurs in practice
-				requiredInactivity.finite.foreach { requiredInactivity =>
-					deleteAfter.finite.foreach { deleteAfter =>
+				requiredInactivity.ifFinite.foreach { requiredInactivity =>
+					deleteAfter.ifFinite.foreach { deleteAfter =>
 						// Case: Inactivity required =>
 						//       Finds issue variants that have not occurred within the specified duration
-						if (requiredInactivity > Duration.Zero)
+						if (requiredInactivity.isPositive)
 							AccessIssueVariants.whereIssues.ofSeverities(severities)
 								.notOccurredSince(now - requiredInactivity).ids.pull.notEmpty
 								.foreach { variantIds =>

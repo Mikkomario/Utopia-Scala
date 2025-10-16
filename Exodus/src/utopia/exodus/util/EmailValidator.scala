@@ -7,7 +7,7 @@ import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.metropolis.model.stored.organization.Invitation
 import utopia.vault.database.Connection
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.util.Try
 
 /**

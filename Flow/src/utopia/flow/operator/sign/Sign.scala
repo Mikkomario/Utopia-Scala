@@ -11,7 +11,7 @@ import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Scalable
 import utopia.flow.operator.enumeration.End.{First, Last}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 sealed trait SignOrZero
 	extends RichComparable[SignOrZero] with Reversible[SignOrZero] with Scalable[SignOrZero, SignOrZero]
@@ -255,8 +255,8 @@ object Sign
 	  * @param duration A time duration
 	  * @return Sign of that duration
 	  */
-	def of(duration: Duration): SignOrZero =
-		if (duration == Duration.Zero) Neutral else if (duration < Duration.Zero) Negative else Positive
+	@deprecated("Deprecated for removal. Please use duration.sign instead", "v2.7")
+	def of(duration: Duration): SignOrZero = duration.sign
 	
 	/**
 	  * @param extreme Targeted extreme

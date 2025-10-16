@@ -2,13 +2,11 @@ package utopia.paradigm.motion.template
 
 import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.operator.combine.{Combinable, LinearScalable}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.NumericVectorLike
 import utopia.paradigm.shape.template.{Dimensional, VectorProjectable}
-
-import scala.concurrent.duration.Duration
 
 /**
   * Used for tracking speed
@@ -150,7 +148,7 @@ trait VelocityLike[X <: NumericVectorLike[Double, X, X], +Repr <: Change[X, Repr
 		// Sometimes translation & acceleration needs to be stopped when velocity would change direction
 		val durationLimit = {
 			if (preserveDirection)
-				durationUntilStopWith(acceleration).finite.filter { _ < time }
+				durationUntilStopWith(acceleration).ifFinite.filter { _ < time }
 			else
 				None
 		}

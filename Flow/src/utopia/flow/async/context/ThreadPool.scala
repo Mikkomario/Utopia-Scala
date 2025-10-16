@@ -16,7 +16,7 @@ import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
 import java.util.concurrent.Executor
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Promise}
 import scala.util.Try
 
@@ -36,8 +36,7 @@ object ThreadPool
 * @author Mikko Hilpinen
 * @since 28.3.2019
 **/
-class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
-                 val maxIdleDuration: FiniteDuration = 1.minutes)
+class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250, val maxIdleDuration: Duration = 1.minutes)
                 (implicit log: Logger)
     extends Executor with ExecutionContext
 {
@@ -252,7 +251,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 		         eventful: Boolean = true): (WorkerThread, Seq[ExcEvent]) =
 			apply(name, existingThreadCount, maxIdleDuration, Some(initialTask -> eventful))
 		
-		private def apply(name: String, existingThreadCount: Int, maxIdleDuration: Duration = Duration.Inf,
+		private def apply(name: String, existingThreadCount: Int, maxIdleDuration: Duration = Duration.infinite,
 		                  initialTask: Option[(Runnable, Boolean)] = None): (WorkerThread, Seq[ExcEvent]) =
 		{
 			// Creates the thread
@@ -266,7 +265,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250,
 			thread -> events
 		}
 	}
-	private class WorkerThread(name: String, maxIdleDuration: Duration = Duration.Inf,
+	private class WorkerThread(name: String, maxIdleDuration: Duration = Duration.infinite,
 	                           initialTask: Option[(Runnable, Boolean)] = None)
 		extends Thread
 	{

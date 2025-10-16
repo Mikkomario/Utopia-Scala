@@ -216,7 +216,7 @@ case class Angle private(radians: Double)
 	override implicit def toValue: Value = new Value(Some(this), AngleType)
 	override def toString = f"$degrees%1.2f degrees"
 	
-	override implicit def equalsFunction: EqualsFunction[Angle] = Angle.approxEquals
+	override implicit def approxEqualsFunction: EqualsFunction[Angle] = Angle.approxEquals
 	
 	override def compareTo(o: Angle) = radians.compareTo(o.radians)
 	

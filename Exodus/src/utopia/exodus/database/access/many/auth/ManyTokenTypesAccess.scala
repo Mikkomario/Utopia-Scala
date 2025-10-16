@@ -4,16 +4,15 @@ import utopia.exodus.database.factory.auth.TokenTypeFactory
 import utopia.exodus.database.model.auth.TokenTypeModel
 import utopia.exodus.model.stored.auth.TokenType
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.Minute
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{FilterableView, ViewFactory}
 import utopia.vault.sql.Condition
 
-import scala.concurrent.duration.FiniteDuration
-
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 object ManyTokenTypesAccess extends ViewFactory[ManyTokenTypesAccess]
 {
@@ -50,24 +49,20 @@ trait ManyTokenTypesAccess
 	  * names of the accessible token types
 	  */
 	def names(implicit connection: Connection) = pullColumn(model.nameColumn).map { v => v.getString }
-	
 	/**
 	  * durations of the accessible token types
 	  */
-	def durations(implicit connection: Connection) = 
-		pullColumn(model.durationColumn).flatMap { _.long }.map { FiniteDuration(_, TimeUnit.MINUTES) }
-	
+	def durations(implicit connection: Connection) =
+		pullColumn(model.durationColumn).flatMap { _.long }.map(Minute.apply)
 	/**
 	  * refreshed type ids of the accessible token types
 	  */
 	def refreshedTypeIds(implicit connection: Connection) = 
 		pullColumn(model.refreshedTypeIdColumn).flatMap { _.int }
-	
 	/**
 	  * creation times of the accessible token types
 	  */
 	def creationTimes(implicit connection: Connection) = pullColumn(model.createdColumn).map { _.getInstant }
-	
 	/**
 	  * are single use only of the accessible token types
 	  */
@@ -100,7 +95,6 @@ trait ManyTokenTypesAccess
 	  */
 	def areSingleUseOnly_=(newIsSingleUseOnly: Boolean)(implicit connection: Connection) = 
 		putColumn(model.isSingleUseOnlyColumn, newIsSingleUseOnly)
-	
 	/**
 	  * Updates the creation times of the targeted token types
 	  * @param newCreated A new created to assign
@@ -108,22 +102,19 @@ trait ManyTokenTypesAccess
 	  */
 	def creationTimes_=(newCreated: Instant)(implicit connection: Connection) = 
 		putColumn(model.createdColumn, newCreated)
-	
 	/**
 	  * Updates the durations of the targeted token types
 	  * @param newDuration A new duration to assign
 	  * @return Whether any token type was affected
 	  */
-	def durations_=(newDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.durationColumn, newDuration.toUnit(TimeUnit.MINUTES))
-	
+	def durations_=(newDuration: Duration)(implicit connection: Connection) =
+		putColumn(model.durationColumn, newDuration.toMinutes)
 	/**
 	  * Updates the names of the targeted token types
 	  * @param newName A new name to assign
 	  * @return Whether any token type was affected
 	  */
 	def names_=(newName: String)(implicit connection: Connection) = putColumn(model.nameColumn, newName)
-	
 	/**
 	  * Updates the refreshed type ids of the targeted token types
 	  * @param newRefreshedTypeId A new refreshed type id to assign

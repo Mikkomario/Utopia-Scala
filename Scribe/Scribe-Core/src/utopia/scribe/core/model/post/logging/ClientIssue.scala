@@ -17,7 +17,7 @@ import utopia.flow.util.{Mutate, Version}
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.util.Try
 
 object ClientIssue extends FromModelFactory[ClientIssue]
@@ -38,7 +38,7 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 		PropertyDeclaration("message", StringType, isOptional = true),
 		PropertyDeclaration("occurrenceDetails", ModelType, Pair("occurrence_details", "details"), isOptional = true),
 		PropertyDeclaration("storeDuration", DurationType, Vector("history", "duration", "store_duration"),
-			Duration.Zero),
+			Duration.zero),
 		PropertyDeclaration("instances", IntType, Single("count"), 1)
 	)
 	
@@ -83,14 +83,14 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 case class ClientIssue(version: Version, context: String, severity: Severity, variantDetails: Model = Model.empty,
                        error: Option[RecordableError] = None, message: String = "",
                        occurrenceDetails: Model = Model.empty,
-                       storeDuration: Span[FiniteDuration] = Span.singleValue(Duration.Zero), instances: Int = 1)
+                       storeDuration: Span[Duration] = Span.singleValue(Duration.zero), instances: Int = 1)
 	extends ModelConvertible with ApproxSelfEquals[ClientIssue]
 {
 	// IMPLEMENTED  ---------------------
 	
 	override def self: ClientIssue = this
 	
-	override implicit def equalsFunction: EqualsFunction[ClientIssue] = ClientIssue.areSimilar
+	override implicit def approxEqualsFunction: EqualsFunction[ClientIssue] = ClientIssue.areSimilar
 	
 	override def toModel: Model = Model.from(
 		"version" -> version.toString, "context" -> context, "severityLevel" -> severity.level,
@@ -115,12 +115,12 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	  * @param f A mapping function for the local storage durations of this issue
 	  * @return Copy of this issue with mapped storage durations
 	  */
-	def mapStoreDurations(f: Mutate[FiniteDuration]) = copy(storeDuration = storeDuration.mapEnds(f))
+	def mapStoreDurations(f: Mutate[Duration]) = copy(storeDuration = storeDuration.mapEnds(f))
 	/**
 	  * @param duration Duration how long this issue was stored since the previous store duration update
 	  * @return Copy of this issue with updated store duration
 	  */
-	def delayedBy(duration: FiniteDuration) = mapStoreDurations { _ + duration }
+	def delayedBy(duration: Duration) = mapStoreDurations { _ + duration }
 	
 	/**
 	  * Creates a copy of this issue that has been repeated n times recently
@@ -129,7 +129,7 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	  *                     (i.e. duration since the last storeDuration value update)
 	  * @return Copy of this issue that has been marked as being repeated 'times' times
 	  */
-	def repeated(times: Int, overDuration: FiniteDuration) =
+	def repeated(times: Int, overDuration: Duration) =
 		copy(storeDuration = storeDuration.mapEnds { _ + overDuration }, instances = instances + times)
 	
 	/**

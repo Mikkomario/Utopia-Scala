@@ -4,7 +4,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.motion.template.Change.milli
 import utopia.paradigm.transform.LinearSizeAdjustable
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 object Change
 {
@@ -71,7 +71,7 @@ trait Change[+A, +Repr <: Change[A, _]] extends LinearSizeAdjustable[Repr]
 	  * @return A copy of this change in specified duration. Will have same relative change.
 	  */
 	def in(duration: Duration) = {
-		if (this.duration == Duration.Zero)
+		if (this.duration.isZero)
 			throw new IllegalStateException("Can't calculate distance for changes with zero duration")
 		this * (duration / this.duration)
 	}

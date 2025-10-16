@@ -42,7 +42,7 @@ import utopia.reach.context.{ReachWindowContext, ReachWindowContextWrapper, Stat
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 /**
@@ -329,7 +329,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 					immediateAsync
 			case Delayed(delay) =>
 				// Case: Immediately async (indirect)
-				if (delay.start <= Duration.Zero)
+				if (delay.start.isNotPositive)
 					immediateAsync
 				// Case: Fixed delay
 				else if (delay.start == delay.end) {
@@ -369,7 +369,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	
 	private object PostponingRevalidationProcess
 	{
-		def apply(window: => Window, canvas: => Stackable, revalidationDelay: Pair[FiniteDuration])
+		def apply(window: => Window, canvas: => Stackable, revalidationDelay: Pair[Duration])
 		         (implicit exc: ExecutionContext, log: Logger) =
 		{
 			val waitPointer = EventfulPointer[WaitTarget](UntilNotified)
@@ -383,7 +383,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	
 	private class PostponingRevalidationProcess(waitTargetPointer: EventfulPointer[WaitTarget],
 	                                            window: => Window, canvas: => Stackable,
-	                                            minRevalidationDelay: FiniteDuration, maxRevalidationDelay: FiniteDuration)
+	                                            minRevalidationDelay: Duration, maxRevalidationDelay: Duration)
 	                                           (implicit exc: ExecutionContext, log: Logger)
 		extends PostponingProcess(waitTargetPointer, shutdownReaction = Some(Cancel))
 	{

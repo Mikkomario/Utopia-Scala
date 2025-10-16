@@ -18,7 +18,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * A base class for client-side interfaces for interacting with an LLM server
@@ -32,7 +32,7 @@ import scala.concurrent.duration.FiniteDuration
   * @param offlineWaitThreshold A request duration after which a connection is considered offline (default = 7 minutes)
   */
 class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "", maxParallelRequests: Int = 1,
-                       offlineWaitThreshold: FiniteDuration = 7.minutes)
+                       offlineWaitThreshold: Duration = 7.minutes)
                       (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
 {

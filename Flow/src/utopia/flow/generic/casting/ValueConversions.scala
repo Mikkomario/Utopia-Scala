@@ -6,7 +6,7 @@ import utopia.flow.generic.model.mutable.DataType.{BooleanType, DoubleType, Dura
 import utopia.flow.generic.model.template.ValueConvertible
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 /**
@@ -80,7 +80,7 @@ object ValueConversions
 		def toValue = new Value(Some(d), LocalDateTimeType)
 	}
 	
-	implicit class ValueOfDuration(val d: FiniteDuration) extends AnyVal with ValueConvertible
+	implicit class ValueOfDuration(val d: Duration) extends AnyVal with ValueConvertible
 	{
 		override implicit def toValue: Value = new Value(Some(d), DurationType)
 	}

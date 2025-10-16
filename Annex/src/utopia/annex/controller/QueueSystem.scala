@@ -8,13 +8,14 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.process.Wait
 import utopia.flow.operator.Identity
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.VolatileFlag
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -30,10 +31,10 @@ import scala.util.{Failure, Success, Try}
   *                             The result will always be limited to the 'maxOfflineDelay'.
   *                             Default = double the wait period between attempts.
   */
-class QueueSystem(api: ApiClient, offlineModeWaitThreshold: FiniteDuration = 30.seconds,
-                  minOfflineDelay: FiniteDuration = 5.seconds,
-                  maxOfflineDelay: FiniteDuration = 2.minutes,
-                  increaseOfflineDelay: FiniteDuration => FiniteDuration = _ * 2)
+class QueueSystem(api: ApiClient, offlineModeWaitThreshold: Duration = 30.seconds,
+                  minOfflineDelay: Duration = 5.seconds,
+                  maxOfflineDelay: Duration = 2.minutes,
+                  increaseOfflineDelay: Mutate[Duration] = _ * 2)
                  (implicit exc: ExecutionContext, log: Logger)
 {
 	// ATTRIBUTES   ------------------------------
@@ -44,7 +45,7 @@ class QueueSystem(api: ApiClient, offlineModeWaitThreshold: FiniteDuration = 30.
 	// Contains an infinite iterator that returns (offline) request delays
 	private val requestDelayIteratorPointer = _onlineFlag.strongMap { online =>
 		if (online)
-			Iterator.continually(Duration.Zero)
+			Iterator.continually(Duration.zero)
 		else
 			Iterator.iterate(minOfflineDelay)(increaseOfflineDelay).takeWhile { _ < maxOfflineDelay } ++
 				Iterator.continually(maxOfflineDelay)

@@ -1,10 +1,8 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.genesis.handling.event.keyboard.SpecificKeyEvent.SpecificKeyFilteringFactory
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object KeyDownEvent
 {
@@ -34,7 +32,7 @@ object KeyDownEvent
 		  *         than the specified time threshold.
 		  *         Key-releases restart the tracked duration.
 		  */
-		def until(durationThreshold: Duration) = durationThreshold.finite match {
+		def until(durationThreshold: Duration) = durationThreshold.ifFinite match {
 			case Some(d) => withFilter { _.totalDuration < d }
 			case None => withFilter(AcceptAll)
 		}
@@ -44,7 +42,7 @@ object KeyDownEvent
 		  *         than the specified time threshold.
 		  *         Key-releases restart the tracked duration.
 		  */
-		def after(durationThreshold: Duration) = durationThreshold.finite match {
+		def after(durationThreshold: Duration) = durationThreshold.ifFinite match {
 			case Some(d) => withFilter { _.totalDuration > d }
 			case None => withFilter(RejectAll)
 		}
@@ -81,7 +79,7 @@ object KeyDownEvent
  * @author Mikko Hilpinen
  * @since 29/03/2024, v4.0
  */
-case class KeyDownEvent(index: Int, location: KeyLocation, duration: FiniteDuration, totalDuration: FiniteDuration,
+case class KeyDownEvent(index: Int, location: KeyLocation, duration: Duration, totalDuration: Duration,
                         keyboardState: KeyboardState)
 	extends SpecificKeyEvent
 {

@@ -25,6 +25,7 @@ object Delay
 	  * @tparam A Function return value
 	  * @return Future that completes when the function has completed, containing the function's return value
 	  */
+	// TODO: Make the lock optional in order to avoid situations where this delay waits for a notification infinitely
 	def apply[A](target: WaitTarget, lock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel)
 	            (f: => A)
 	            (implicit exc: ExecutionContext, logger: Logger) =
@@ -58,15 +59,18 @@ object Delay
 	}
 	
 	// Assumes that wait target is positive
-	private def _apply[A](target: WaitTarget, lock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel)
-	                     (f: => A)
+	private def _apply[A](target: WaitTarget, lock: AnyRef, shutdownReaction: ShutdownReaction)(f: => A)
 	                     (implicit exc: ExecutionContext, logger: Logger) =
 	{
-		val resultPointer = Volatile.optional[Try[A]]()
-		val process = DelayedProcess(target, lock, Some(shutdownReaction)) { _ => resultPointer.setOne(Try { f }) }
-		process.runAsync()
-		process.completionFuture.map { _ =>
-			resultPointer.value.getOrElse { throw new InterruptedException("Process never completed") }.get
+		if (target.isPossibleToReach) {
+			val resultPointer = Volatile.optional[Try[A]]()
+			val process = DelayedProcess(target, lock, Some(shutdownReaction)) { _ => resultPointer.setOne(Try { f }) }
+			process.runAsync()
+			process.completionFuture.map { _ =>
+				resultPointer.value.getOrElse { throw new InterruptedException("Process never completed") }.get
+			}
 		}
+		else
+			Future.never
 	}
 }

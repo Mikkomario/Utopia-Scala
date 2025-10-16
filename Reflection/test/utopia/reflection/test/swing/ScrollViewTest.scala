@@ -33,7 +33,7 @@ import utopia.reflection.controller.data.ContainerSelectionManager
 import utopia.reflection.test.TestContext._
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * This is a simple test implementation of scroll view

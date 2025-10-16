@@ -2,11 +2,9 @@ package utopia.scribe.api.database.access.logging.error.stack
 
 import utopia.scribe.api.database.reader.logging.StackTraceElementRecordDbReader
 import utopia.scribe.core.model.stored.logging.StackTraceElementRecord
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
-
-import scala.language.implicitConversions
 
 object AccessStackTraceElementRecords 
 	extends AccessManyRoot[AccessStackTraceElementRecordRows[StackTraceElementRecord]] 
@@ -18,27 +16,9 @@ object AccessStackTraceElementRecords
 	override lazy val root = apply(StackTraceElementRecordDbReader)
 	
 	
-	// IMPLICIT	--------------------
-	
-	/**
-	  * Provides implicit access to an access point's .values property
-	  * @param access Access point whose values are accessed
-	  */
-	implicit def accessValues(access: AccessStackTraceElementRecords[_, 
-		_]): AccessStackTraceElementRecordValues = 
-		access.values
-	
-	
 	// IMPLEMENTED	--------------------
 	
-	/**
-	  * @tparam A Type of accessed items
-	  */
 	override def apply[A](access: TargetingManyRows[A]) = AccessStackTraceElementRecordRows(access)
-	
-	/**
-	  * @tparam A Type of accessed items
-	  */
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedStackTraceElementRecords(access)
 }
 
@@ -47,10 +27,9 @@ object AccessStackTraceElementRecords
   * @author Mikko Hilpinen
   * @since 27.07.2025, v1.1
   */
-abstract class AccessStackTraceElementRecords[A, +Repr <: TargetingManyLike[_, Repr, 
-	_]](wrapped: AccessManyColumns) 
+abstract class AccessStackTraceElementRecords[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns)
 	extends TargetingManyLike[A, Repr, AccessStackTraceElementRecord[A]] 
-		with FilterStackTraceElementRecords[Repr]
+		with FilterStackTraceElementRecords[Repr] with HasValues[AccessStackTraceElementRecordValues]
 {
 	// ATTRIBUTES	--------------------
 	

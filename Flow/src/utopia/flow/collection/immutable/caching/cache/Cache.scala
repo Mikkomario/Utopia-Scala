@@ -5,7 +5,7 @@ import utopia.flow.view.mutable.caching.ClearableCache
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object Cache
 {
@@ -53,7 +53,7 @@ object Cache
 	  * @return A new cache
 	  */
     @deprecated("Please use .expiring.after(...) instead", "v2.5")
-	def expiringAfter[K, V](threshold: FiniteDuration)(request: K => V)
+	def expiringAfter[K, V](threshold: Duration)(request: K => V)
 	                       (implicit exc: ExecutionContext) =
 		ExpiringCache.after(threshold)(request)
 	
@@ -66,7 +66,7 @@ object Cache
 	  * @return A new cache
 	  */
 	@deprecated("Please use .releasing.after(...) instead", "v2.5")
-	def releasingAfter[K, V <: AnyRef](threshold: FiniteDuration)
+	def releasingAfter[K, V <: AnyRef](threshold: Duration)
 	                                  (request: K => V)
 	                                  (implicit exc: ExecutionContext) =
 		ReleasingCache.after(threshold)(request)

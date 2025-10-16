@@ -1,11 +1,8 @@
 package utopia.citadel.database.deletion
 
 import utopia.citadel.database.access.many.organization.{DbOrganizationDeletions, DbOrganizations}
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.vault.database.Connection
-
-import scala.concurrent.duration.Duration
 
 /**
   * An object for actualizing scheduled, non-cancelled organization deletions
@@ -20,10 +17,9 @@ object ActualizeOrganizationDeletions
 	  *                                         (default = infinite = never delete deletions)
 	  * @param connection Implicit DB Connection
 	  */
-	def apply(cancelledDeletionHistoryDuration: Duration = Duration.Inf)(implicit connection: Connection) =
-	{
+	def apply(cancelledDeletionHistoryDuration: Duration = Duration.infinite)(implicit connection: Connection) = {
 		// Checks if there are some cancelled deletions that need to be deleted
-		cancelledDeletionHistoryDuration.finite.foreach { historyDuration =>
+		cancelledDeletionHistoryDuration.ifFinite.foreach { historyDuration =>
 			DbOrganizationDeletions.withCancellations.cancelledBefore(Now - historyDuration).delete()
 		}
 		

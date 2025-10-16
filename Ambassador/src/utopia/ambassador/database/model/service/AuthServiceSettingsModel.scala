@@ -1,16 +1,15 @@
 package utopia.ambassador.database.model.service
 
-import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
 import utopia.ambassador.database.factory.service.AuthServiceSettingsFactory
 import utopia.ambassador.model.partial.service.AuthServiceSettingsData
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.time.Duration
 import utopia.vault.model.immutable.StorableWithFactory
 import utopia.vault.nosql.storable.DataInserter
 
-import java.util.concurrent.TimeUnit
+import java.time.Instant
 
 /**
   * Used for constructing AuthServiceSettingsModel instances and for inserting AuthServiceSettingss to the database
@@ -212,7 +211,7 @@ object AuthServiceSettingsModel
 	  * @param defaultSessionDuration Duration of this AuthServiceSettings
 	  * @return A model containing only the specified defaultSessionDuration
 	  */
-	def withdefaultSessionDuration(defaultSessionDuration: FiniteDuration) =
+	def withdefaultSessionDuration(defaultSessionDuration: Duration) =
 		apply(defaultSessionDuration = Some(defaultSessionDuration))
 	
 	/**
@@ -232,21 +231,21 @@ object AuthServiceSettingsModel
 	  * @param incompleteAuthTokenDuration Duration how long incomplete authentication tokens can be used after they're issued before they expire
 	  * @return A model containing only the specified incompleteAuthTokenDuration
 	  */
-	def withIncompleteAuthTokenDuration(incompleteAuthTokenDuration: FiniteDuration) = 
+	def withIncompleteAuthTokenDuration(incompleteAuthTokenDuration: Duration) =
 		apply(incompleteAuthTokenDuration = Some(incompleteAuthTokenDuration))
 	
 	/**
 	  * @param preparationTokenDuration Duration how long preparation tokens can be used after they're issued before they expire
 	  * @return A model containing only the specified preparationTokenDuration
 	  */
-	def withPreparationTokenDuration(preparationTokenDuration: FiniteDuration) = 
+	def withPreparationTokenDuration(preparationTokenDuration: Duration) =
 		apply(preparationTokenDuration = Some(preparationTokenDuration))
 	
 	/**
 	  * @param redirectTokenDuration Duration how long redirect tokens can be used after they're issued before they expire
 	  * @return A model containing only the specified redirectTokenDuration
 	  */
-	def withRedirectTokenDuration(redirectTokenDuration: FiniteDuration) = 
+	def withRedirectTokenDuration(redirectTokenDuration: Duration) =
 		apply(redirectTokenDuration = Some(redirectTokenDuration))
 	
 	/**
@@ -292,10 +291,10 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 	authenticationUrl: Option[String] = None, tokenUrl: Option[String] = None, 
 	redirectUrl: Option[String] = None, incompleteAuthRedirectUrl: Option[String] = None, 
 	defaultCompletionRedirectUrl: Option[String] = None, 
-	preparationTokenDuration: Option[FiniteDuration] = None, 
-	redirectTokenDuration: Option[FiniteDuration] = None, 
-	incompleteAuthTokenDuration: Option[FiniteDuration] = None, 
-	defaultSessionDuration: Option[FiniteDuration] = None, created: Option[Instant] = None)
+	preparationTokenDuration: Option[Duration] = None,
+	redirectTokenDuration: Option[Duration] = None,
+	incompleteAuthTokenDuration: Option[Duration] = None,
+	defaultSessionDuration: Option[Duration] = None, created: Option[Instant] = None)
 	extends StorableWithFactory[AuthServiceSettings]
 {
 	// IMPLEMENTED	--------------------
@@ -310,10 +309,10 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 			tokenUrlAttName -> tokenUrl, redirectUrlAttName -> redirectUrl, 
 			incompleteAuthRedirectUrlAttName -> incompleteAuthRedirectUrl, 
 			defaultCompletionRedirectUrlAttName -> defaultCompletionRedirectUrl, 
-			preparationTokenDurationAttName -> preparationTokenDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
-			redirectTokenDurationAttName -> redirectTokenDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
-			incompleteAuthTokenDurationAttName -> incompleteAuthTokenDuration.map { _.toUnit(TimeUnit.MINUTES) }, 
-			defaultSessionDurationAttName -> defaultSessionDuration.map { _.toUnit(TimeUnit.MINUTES) },
+			preparationTokenDurationAttName -> preparationTokenDuration.map { _.toMinutes }, 
+			redirectTokenDurationAttName -> redirectTokenDuration.map { _.toMinutes }, 
+			incompleteAuthTokenDurationAttName -> incompleteAuthTokenDuration.map { _.toMinutes }, 
+			defaultSessionDurationAttName -> defaultSessionDuration.map { _.toMinutes },
 			createdAttName -> created)
 	}
 	
@@ -355,7 +354,7 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 	  * @param defaultSessionDuration A new defaultSessionDuration
 	  * @return A new copy of this model with the specified defaultSessionDuration
 	  */
-	def withDefaultSessionDuration(defaultSessionDuration: FiniteDuration) =
+	def withDefaultSessionDuration(defaultSessionDuration: Duration) =
 		copy(defaultSessionDuration = Some(defaultSessionDuration))
 	
 	/**
@@ -369,21 +368,21 @@ case class AuthServiceSettingsModel(id: Option[Int] = None, serviceId: Option[In
 	  * @param incompleteAuthTokenDuration A new incompleteAuthTokenDuration
 	  * @return A new copy of this model with the specified incompleteAuthTokenDuration
 	  */
-	def withIncompleteAuthTokenDuration(incompleteAuthTokenDuration: FiniteDuration) = 
+	def withIncompleteAuthTokenDuration(incompleteAuthTokenDuration: Duration) =
 		copy(incompleteAuthTokenDuration = Some(incompleteAuthTokenDuration))
 	
 	/**
 	  * @param preparationTokenDuration A new preparationTokenDuration
 	  * @return A new copy of this model with the specified preparationTokenDuration
 	  */
-	def withPreparationTokenDuration(preparationTokenDuration: FiniteDuration) = 
+	def withPreparationTokenDuration(preparationTokenDuration: Duration) =
 		copy(preparationTokenDuration = Some(preparationTokenDuration))
 	
 	/**
 	  * @param redirectTokenDuration A new redirectTokenDuration
 	  * @return A new copy of this model with the specified redirectTokenDuration
 	  */
-	def withRedirectTokenDuration(redirectTokenDuration: FiniteDuration) = 
+	def withRedirectTokenDuration(redirectTokenDuration: Duration) =
 		copy(redirectTokenDuration = Some(redirectTokenDuration))
 	
 	/**

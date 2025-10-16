@@ -23,7 +23,7 @@ import utopia.reflection.component.swing.template.SwingComponentRelated
 import utopia.reflection.component.template.layout.stack.ReflectionStackableWrapper
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object ProgressBar
 {
@@ -48,7 +48,7 @@ object ProgressBar
   */
 class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgroundColor: Color, val barColor: Color,
                   progressPointer: Changing[Double],
-                  animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
+                  animationDuration: Duration = ComponentCreationDefaults.transitionDuration)
 	extends ReflectionStackableWrapper with MutableCustomDrawableWrapper with SwingComponentRelated
 {
 	// ATTRIBUTES	---------------------
@@ -150,7 +150,7 @@ class ProgressBar(actorHandler: ActorHandler, _stackSize: StackSize, val backgro
 		
 		override def opaque = false
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			// Progresses the progress animation
 			val increase = duration / animationDuration
 			val newProgress = animationProgressPointer.updateAndGet { p => (p + increase) min 1.0 }

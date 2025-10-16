@@ -28,7 +28,7 @@ import utopia.reach.container.multi.ViewStack
 import utopia.reach.focus.{FocusListener, ManyFocusableWrapper}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Common trait for duration field factories and settings
@@ -233,7 +233,7 @@ object DurationFieldSettings
   */
 case class DurationFieldSettings(fieldSettings: FieldSettings = FieldSettings.default,
                                  labelSettings: SelectableTextLabelSettings = SelectableTextLabelSettings.default,
-                                 initialValue: Duration = Duration.Zero,
+                                 initialValue: Duration = Duration.zero,
                                  maxValue: Duration = 99.hours + 59.minutes + 59.seconds,
                                  separator: LocalizedString = ":".noLanguage.skipLocalization,
                                  capturesSeconds: Boolean = false, showsLabels: Boolean = false)
@@ -366,7 +366,7 @@ class DurationField(override val hierarchy: ComponentHierarchy, context: Variabl
 	
 	
 	// Makes sure the passed duration argument is positive
-	if (settings.maxValue <= Duration.Zero)
+	if (settings.maxValue.isNotPositive)
 		throw new IllegalArgumentException("DurationField max value must be positive.")
 	
 	private val marginPointer =
@@ -461,7 +461,7 @@ class DurationField(override val hierarchy: ComponentHierarchy, context: Variabl
 			def fieldDurationPointer(field: Option[TextField[Option[Int]]])(valueToDuration: Int => Duration) =
 				field.map { _.valuePointer.map {
 					case Some(amount) => valueToDuration(amount)
-					case None => Duration.Zero
+					case None => Duration.zero
 				} }
 			val valuePointer = Vector(
 				fieldDurationPointer(hoursField) { _.hours },

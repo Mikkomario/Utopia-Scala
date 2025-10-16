@@ -15,7 +15,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.TryExtensions._
@@ -48,7 +48,6 @@ import java.awt.Frame
 import java.awt.event.{ComponentEvent, ComponentListener, WindowAdapter, WindowEvent}
 import javax.swing.{JDialog, JFrame}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.jdk.CollectionConverters.SeqHasAsJava
 import scala.util.Try
 
@@ -76,7 +75,7 @@ object Window
 	  *
 	  * By default, this value is zero and no warnings will be fired.
 	  */
-	var maxInitializationWaitDurationDefault: Duration = Duration.Zero
+	var maxInitializationWaitDurationDefault: Duration = Duration.zero
 	
 	/**
 	  * Stores here the location adjustment that must be applied for every call to setLocation and setBounds
@@ -708,7 +707,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	}.waitFor(maxInitializationWaitDuration).failure
 		// Logs a warning if the window-initialization takes longer than the allowed block time
 		.foreach { e =>
-			if (maxInitializationWaitDuration > Duration.Zero)
+			if (maxInitializationWaitDuration.isPositive)
 				logger(e,
 					s"Warning: Window initialization process took more than ${
 						maxInitializationWaitDuration.description}. The process will be completed in another thread.")
@@ -1105,8 +1104,8 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	  * Closes this window when the user clicks on anywhere outside this window
 	  * @param activationDelay The delay after which mouse events should be recognized (default = no delay)
 	  */
-	def setToCloseWhenClickedOutside(activationDelay: Duration = Duration.Zero) = {
-		activationDelay.finite.foreach { delay =>
+	def setToCloseWhenClickedOutside(activationDelay: Duration = Duration.zero) = {
+		activationDelay.ifFinite.foreach { delay =>
 			val threshold = Now + delay
 			addMouseButtonListener(MouseButtonStateListener
 				.leftPressed.filtering { _ => Now > threshold }.outside(bounds) { _ => close() })
@@ -1115,17 +1114,18 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	/**
 	  * Makes it so that this window closes automatically after the specified time period
 	  * @param delay Delay before closing this window
+	 * @return A future that resolves once the specified wait has ended
 	  */
-	def setToCloseAfter(delay: Duration) = delay.finite.foreach { Delay(_) { close() } }
+	// TODO: Interrupt if closes during the wait
+	def setToCloseAfter(delay: Duration) = Delay(delay) { close() }
 	/**
 	  * Sets it so that the JVM will exit once this window closes.
 	  * @param delay Delay after window closing, before the closing of the JVM
 	  */
-	def setToExitOnClose(delay: FiniteDuration = Duration.Zero) =
-		closeFuture.onComplete { res =>
-			res.log
-			Delay(delay) { System.exit(0) }
-		}
+	def setToExitOnClose(delay: Duration = Duration.zero) = closeFuture.onComplete { res =>
+		res.log
+		Delay(delay) { System.exit(0) }
+	}
 	
 	/**
 	  * Checks this window's bounds against the current stackSize.

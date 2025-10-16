@@ -15,7 +15,7 @@ import utopia.reflection.container.template.WrappingContainer
 import utopia.reflection.event.Visibility.{Invisible, Visible}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object AnimatedChangesContainer
 {
@@ -43,7 +43,7 @@ object AnimatedChangesContainer
   */
 class AnimatedChangesContainer[C <: AwtStackable, Wrapped <: MultiStackContainer[AnimatedVisibility[C]]]
 (protected val container: Wrapped, actorHandler: ActorHandler, transitionAxis: Option[Axis2D] = None,
- animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+ animationDuration: Duration = ComponentCreationDefaults.transitionDuration,
  maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate, fadingIsEnabled: Boolean = true)
 (implicit exc: ExecutionContext)
 	extends WrappingContainer[C, AnimatedVisibility[C]] with ReflectionStackableWrapper with MutableMultiContainer[C, C]

@@ -1,7 +1,10 @@
 # Utopia Paradigm - List of Changes
 
-## v1.7.3 (in development)
+## v1.8 (in development)
 ### Breaking changes
+- Renamed **ChangeFromModelFactory** to **ChangeFactory**
+- Acceleration constructors that accepted distances, are now named `.square(...)` and `.ofSquare(...)`
+- Acceleration and velocity constructors which accepted implicit time unit values are now named `.of(...)`
 - **Sides** no longer defines `.self` and `.withSides(...)`
 ### Bugfixes
 - Fixed a bug that caused **ProjectilePath** to transform its shape when its linearity was positive
@@ -12,6 +15,7 @@
 ### New features
 - Re-added & rewrote previously deprecated **InsetsLike** as basically **SidesLike** with **Double** sides
 - Added `Bounds.aroundBuilder`
+- Added new acceleration and velocity constructors via **ChangeFactory** and **AccelerationFactory**
 ### New methods
 - **SidesLike**
   - Added `.only(...)` and `.without(...)` functions

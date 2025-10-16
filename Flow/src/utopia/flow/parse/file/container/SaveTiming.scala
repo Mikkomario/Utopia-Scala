@@ -1,6 +1,6 @@
 package utopia.flow.parse.file.container
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * An enumeration for different ways of timing when cached data is saved to local filesystem
@@ -22,7 +22,7 @@ object SaveTiming
 	  * Best for files that get updated often.
 	  * @param duration The maximum duration before a change must be saved
 	  */
-	case class Delayed(duration: FiniteDuration) extends SaveTiming
+	case class Delayed(duration: Duration) extends SaveTiming
 	
 	/**
 	  * This timing logic only saves changes when the jvm is about to close.

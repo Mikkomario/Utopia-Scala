@@ -48,7 +48,7 @@ import utopia.reach.component.template.focus.FocusableWithState
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, HasGuiState, PartOfComponentHierarchy}
 import utopia.reach.focus.FocusListener
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Common trait for slider factories and settings

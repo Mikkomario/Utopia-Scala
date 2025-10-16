@@ -2,38 +2,52 @@ package utopia.paradigm.motion.motion1d
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.operator.sign.SignOrZero
-import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.operator.numeric.DoubleLike
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.operator.sign.SignOrZero
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.time.TimeUnit.Second
+import utopia.flow.time.{Duration, TimeUnit}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LinearAccelerationType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion2d.Acceleration2D
 import utopia.paradigm.motion.motion3d.Acceleration3D
-import utopia.paradigm.motion.template.{Change, ChangeFromModelFactory, ModelConvertibleChange}
+import utopia.paradigm.motion.template.{Change, ChangeFactory, ModelConvertibleChange}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
-import scala.concurrent.duration.{Duration, TimeUnit}
-
-object LinearAcceleration extends ChangeFromModelFactory[LinearAcceleration, LinearVelocity]
+object LinearAcceleration extends ChangeFactory[LinearAcceleration, LinearVelocity]
 {
+	// ATTRIBUTES   --------------------------
+	
 	/**
-	  * A acceleration with 0 amount
+	  * An acceleration with 0 amount
 	  */
-	val zero = LinearAcceleration(LinearVelocity.zero, 1.seconds)
+	lazy val zero = LinearAcceleration(LinearVelocity.zero, Second)
+	
+	
+	// IMPLEMENTED  --------------------------
 	
 	override protected def amountFromValue(value: Value) = value.tryLinearVelocity
 	
+	
+	// OTHER    ------------------------------
+	
 	/**
-	  * @param velocityChange Amount of change in velocity in 1 unit of time
-	  * @param timeUnit Time unit used (Eg. seconds&#94;2)
-	  * @return A new acceleration
-	  */
-	def apply(velocityChange: Double)(implicit timeUnit: TimeUnit): LinearAcceleration = new LinearAcceleration(
-		LinearVelocity(velocityChange), Duration(1, timeUnit))
+	 * @param velocityChange Amount of change in velocity in 1 unit of time
+	 * @param timeUnit Time unit used (Eg. seconds&#94;2)
+	 * @return A new acceleration
+	 */
+	def ofSquare(velocityChange: Double)(implicit timeUnit: TimeUnit): LinearAcceleration =
+		square(velocityChange, timeUnit)
+	/**
+	 * @param velocityChange Amount of change in velocity in 1 unit of time
+	 * @param unit Time unit used (Eg. seconds&#94;2)
+	 * @return A new acceleration
+	 */
+	def square(velocityChange: Double, unit: TimeUnit): LinearAcceleration =
+		new LinearAcceleration(LinearVelocity(velocityChange, unit), unit.unit)
 }
 
 /**
@@ -48,7 +62,7 @@ case class LinearAcceleration(override val amount: LinearVelocity, override val 
 	// ATTRIBUTES   -------------------
 	
 	override lazy val sign: SignOrZero =
-		if (duration.isInfinite) Neutral else if (duration < Duration.Zero) -amount.sign else amount.sign
+		if (duration.isInfinite) Neutral else if (duration.isNegative) -amount.sign else amount.sign
 	
 	
 	// IMPLEMENTED	-------------------

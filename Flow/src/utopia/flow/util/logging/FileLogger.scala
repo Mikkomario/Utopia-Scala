@@ -14,7 +14,7 @@ import java.nio.file.Path
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.io.Codec
 
 object FileLogger
@@ -30,7 +30,7 @@ object FileLogger
   * @param groupDuration Duration within which the log entries will be grouped together (default = 0 = no grouping)
   * @param copyToSysErr Whether log entries should be copied to System.err (default = false)
  */
-class FileLogger(private var dir: Path = "log", groupDuration: Duration = Duration.Zero, copyToSysErr: Boolean = false)
+class FileLogger(private var dir: Path = "log", groupDuration: Duration = Duration.zero, copyToSysErr: Boolean = false)
                 (implicit codec: Codec, exc: ExecutionContext)
 	extends Logger
 {

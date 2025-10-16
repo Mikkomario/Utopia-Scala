@@ -2,13 +2,12 @@ package utopia.flow.test.time
 
 import utopia.flow.time.Month.March
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{WeekDays, Year}
+import utopia.flow.time.TimeUnit.{Hour, MilliSecond, Minute, NanoSecond, Second}
 import utopia.flow.time.WeekDays.MondayToSunday
+import utopia.flow.time.{Duration, WeekDays, Year}
 
-import scala.concurrent.duration.FiniteDuration
-import java.time.format.DateTimeFormatter
 import java.time._
-import java.util.concurrent.TimeUnit
+import java.time.format.DateTimeFormatter
 
 /**
  * This test checks time number equality
@@ -19,13 +18,13 @@ object TimeNumberTest extends App
 {
 	implicit val weekdays: WeekDays = MondayToSunday
 	
-	assert(13.nanos == FiniteDuration(13, TimeUnit.NANOSECONDS))
-	assert(13.millis == FiniteDuration(13, TimeUnit.MILLISECONDS))
-	assert(13.seconds == FiniteDuration(13, TimeUnit.SECONDS))
-	assert(13.512.seconds == FiniteDuration(13512, TimeUnit.MILLISECONDS))
-	assert(13.minutes == FiniteDuration(13, TimeUnit.MINUTES))
-	assert(1.5.minutes == FiniteDuration(90, TimeUnit.SECONDS))
-	assert(13.hours == FiniteDuration(13, TimeUnit.HOURS))
+	assert(13.nanos == Duration(13, NanoSecond))
+	assert(13.millis == Duration(13, MilliSecond))
+	assert(13.seconds == Duration(13, Second))
+	assert(13.512.seconds == Duration(13512, MilliSecond))
+	assert(13.minutes == Duration(13, Minute))
+	assert(1.5.minutes == Duration(90, Second))
+	assert(13.hours == Duration(13, Hour))
 	
 	println(13.5231.nanos.description)
 	println(13.5231.millis.description)

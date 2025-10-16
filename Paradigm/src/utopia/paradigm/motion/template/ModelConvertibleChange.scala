@@ -4,7 +4,6 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.MayBeZero
-import utopia.flow.time.TimeExtensions._
 
 /**
   * A common trait for change representation that can be converted to simple "amount" + "duration" -models
@@ -19,6 +18,7 @@ trait ModelConvertibleChange[+A <: ValueConvertible with MayBeZero[A], +Repr <: 
 	/**
 	  * @return A zero representation of the amount used by this change
 	  */
+	@deprecated("Deprecated for removal", "v1.7.3")
 	def zeroAmount = amount.zero
 	
 	
@@ -26,8 +26,5 @@ trait ModelConvertibleChange[+A <: ValueConvertible with MayBeZero[A], +Repr <: 
 	
 	override def isZero = amount.isZero || duration.isInfinite
 	
-	override def toModel = duration.finite match {
-		case Some(duration) => Model.from("amount" -> amount, "duration" -> duration)
-		case None => Model.from("amount" -> zeroAmount)
-	}
+	override def toModel = Model.from("amount" -> amount, "duration" -> duration)
 }

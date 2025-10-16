@@ -18,7 +18,7 @@ import utopia.flow.time.TimeExtensions._
 import java.nio.file.Path
 import java.time.Instant
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Tests last update time logic in ContainerUpdateLoop
@@ -55,7 +55,7 @@ object ContainerUpdateIntervalTest extends App
 	{
 		// ATTRIBUTES   ------------
 		
-		override val standardUpdateInterval: FiniteDuration = 1.seconds
+		override val standardUpdateInterval: Duration = 1.seconds
 		
 		override protected lazy val requestTimeContainer: FileContainer[Option[Instant]] =
 			new ValueConvertibleOptionFileContainer[Instant](dataDir/"test-container-update-time.json",
@@ -83,7 +83,7 @@ object ContainerUpdateIntervalTest extends App
 		override protected def handleFailureResponse(status: Status, message: String): Unit =
 			throw new IllegalStateException("Failures not allowed")
 		
-		override protected def merge(oldData: Value, readData: Value): (Value, FiniteDuration) =
+		override protected def merge(oldData: Value, readData: Value): (Value, Duration) =
 			readData -> standardUpdateInterval
 	}
 }

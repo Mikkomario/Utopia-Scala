@@ -8,7 +8,7 @@ import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
 {
@@ -33,7 +33,7 @@ object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
   * @author Mikko Hilpinen
   * @since 19.2.2022, v2.0.2
   */
-case class NewSessionRequest(modelStyle: Option[ModelStyle] = None, customDuration: Option[FiniteDuration] = None,
+case class NewSessionRequest(modelStyle: Option[ModelStyle] = None, customDuration: Option[Duration] = None,
                              requestRefreshToken: Boolean = false, revokePrevious: Boolean = false)
 	extends ModelConvertible
 {

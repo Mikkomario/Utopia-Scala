@@ -5,12 +5,11 @@ import utopia.firmament.image.ButtonImageEffect.{Highlight, LowerAlphaOnDisabled
 import utopia.firmament.model.Margins
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit.Second
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.image.Image
 import utopia.genesis.util.Fps
 import utopia.paradigm.motion.motion1d.LinearAcceleration
-
-import java.util.concurrent.TimeUnit
 
 /**
   * A container for mutable globals that are used as default values in component creation. This object shouldn't be
@@ -51,7 +50,7 @@ object ComponentCreationDefaults
 	  * The scrolling friction that should be used by default. Friction in this context means how fast a scrolling
 	  * stops by itself, the greater the friction, the faster the scrolling stops. Default value is 2000 pixels/s&#94;2
 	  */
-	var scrollFriction = LinearAcceleration(2000)(TimeUnit.SECONDS)
+	var scrollFriction = LinearAcceleration.square(2000, Second)
 	/**
 	  * The width of scroll bars by default (in pixels). The default value is 24 px. It is recommended to overwrite
 	  * this value with one relative to display resolution.

@@ -20,7 +20,7 @@ import utopia.flow.view.mutable.async.Volatile
 import java.nio.file.Path
 import java.time.Instant
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Tests manual container update triggering
@@ -67,7 +67,7 @@ object ContainerUpdateTimeManipulationTest extends App
 	{
 		// ATTRIBUTES   ------------
 		
-		override val standardUpdateInterval: FiniteDuration = 10.seconds
+		override val standardUpdateInterval: Duration = 10.seconds
 		
 		override protected lazy val requestTimeContainer: FileContainer[Option[Instant]] =
 			new ValueConvertibleOptionFileContainer[Instant](dataDir/"test-container-update-time.json",
@@ -86,7 +86,7 @@ object ContainerUpdateTimeManipulationTest extends App
 		override protected def handleFailureResponse(status: Status, message: String): Unit =
 			throw new IllegalStateException("Failures not allowed")
 		
-		override protected def merge(oldData: Value, readData: Value): (Value, FiniteDuration) =
+		override protected def merge(oldData: Value, readData: Value): (Value, Duration) =
 			readData -> standardUpdateInterval
 	}
 }

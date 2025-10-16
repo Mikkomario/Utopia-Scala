@@ -3,12 +3,11 @@ package utopia.paradigm.motion.template
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.combine.{Combinable, LinearScalable}
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
 
 /**
   * A common trait for items that contain an object's movement status over a time period
@@ -136,20 +135,18 @@ trait MovementHistoryLike[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <
 	  * @param duration A time duration
 	  * @return Projected movement status after specified duration has passed
 	  */
-	def futureStatusAfter(duration: => FiniteDuration) = futureStatusAt(Now + duration)
+	def futureStatusAfter(duration: => Duration) = futureStatusAt(Now + duration)
 	
 	/**
 	  * @param threshold Time threshold
 	  * @return Average position from history after specified time threshold
 	  */
 	def averagePositionSince(threshold: Instant) = averageSince(positionHistory, threshold, latestPosition)
-	
 	/**
 	  * @param threshold Time threshold
 	  * @return Average velocity from history after specified time threshold
 	  */
 	def averageVelocitySince(threshold: Instant) = averageSince(velocityHistory, threshold, latestVelocity)
-	
 	/**
 	  * @param threshold Time threshold
 	  * @return Average acceleration from history after specified time threshold

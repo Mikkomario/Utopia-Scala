@@ -2,28 +2,26 @@ package utopia.paradigm.motion.motion3d
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.Second
 import utopia.paradigm.generic.ParadigmDataType.Velocity3DType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.motion.motion2d.Velocity2D
-import utopia.paradigm.motion.template.{ChangeFromModelFactory, ModelConvertibleChange, VelocityLike}
+import utopia.paradigm.motion.template.{ChangeFactory, ModelConvertibleChange, VelocityLike}
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions}
 
-import scala.concurrent.duration.{Duration, TimeUnit}
-
 object Velocity3D
-	extends DimensionsWrapperFactory[LinearVelocity, Velocity3D] with ChangeFromModelFactory[Velocity3D, Vector3D]
+	extends DimensionsWrapperFactory[LinearVelocity, Velocity3D] with ChangeFactory[Velocity3D, Vector3D]
 {
 	// ATTRIBUTES   ------------------------
 	
 	/**
 	  * A zero velocity
 	  */
-	val zero = Velocity3D(Vector3D.zero, 1.seconds)
+	lazy val zero = apply(Vector3D.zero, Second)
 	
 	
 	// IMPLEMENTED  -----------------------
@@ -42,22 +40,6 @@ object Velocity3D
 	}
 	
 	override protected def amountFromValue(value: Value) = value.tryVector3D
-	
-	
-	// OTHER    ---------------------------
-	
-	/**
-	  * @param amount Distance vector traversed in 1 time unit
-	  * @param timeUnit Time unit used (implicit)
-	  * @return A new velocity
-	  */
-	def apply(amount: Vector3D)(implicit timeUnit: TimeUnit): Velocity3D = new Velocity3D(amount, Duration(1, timeUnit))
-	/**
-	  * @param amount Distance vector traversed in 1 time unit
-	  * @param timeUnit Time unit used (implicit)
-	  * @return A new velocity
-	  */
-	def apply(amount: HasDoubleDimensions)(implicit timeUnit: TimeUnit): Velocity3D = apply(Vector3D.from(amount))
 }
 
 /**

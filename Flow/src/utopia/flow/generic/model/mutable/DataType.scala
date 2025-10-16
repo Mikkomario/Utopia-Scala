@@ -5,10 +5,9 @@ import utopia.flow.collection.immutable.{Empty, Pair, Tree}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.{ConversionHandler, SuperTypeCaster}
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.time.{Days, Month, Year, YearMonth}
+import utopia.flow.time._
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
-import scala.concurrent.duration.FiniteDuration
 import scala.language.existentials
 
 object DataType
@@ -286,14 +285,14 @@ object DataType
 		override def superType = Some(AnyType)
 	}
 	/**
-	  * Represents type [[FiniteDuration]]
+	  * Represents type [[Duration]]
 	  */
 	case object DurationType extends DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
 		override lazy val name = "Duration"
-		override lazy val supportedClass = classOf[FiniteDuration]
+		override lazy val supportedClass = classOf[Duration]
 		
 		
 		// INITIAL CODE -----------------------

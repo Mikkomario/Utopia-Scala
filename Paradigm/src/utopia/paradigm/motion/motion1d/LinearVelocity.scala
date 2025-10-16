@@ -6,12 +6,13 @@ import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValida
 import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template
 import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
-import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.operator.sign.{Sign, SignOrZero}
-import utopia.flow.operator.sign.SignOrZero.Neutral
 import utopia.flow.operator.MayBeAboutZero
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.numeric.DoubleLike
+import utopia.flow.operator.sign.SignOrZero.Neutral
+import utopia.flow.operator.sign.{Sign, SignOrZero}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, TimeUnit}
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.generic.ParadigmDataType.LinearVelocityType
 import utopia.paradigm.motion.motion2d.Velocity2D
@@ -20,7 +21,6 @@ import utopia.paradigm.motion.template.Change
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
 
-import scala.concurrent.duration.{Duration, TimeUnit}
 import scala.util.{Failure, Success}
 
 object LinearVelocity extends FromModelFactory[LinearVelocity]
@@ -37,19 +37,20 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: template.ModelLike[Property]) = schema.validate(model).flatMap { model =>
-		val amount = model("amount").getDouble
-		model("duration").duration match {
-			case Some(duration) => Success(apply(amount, duration))
-			case None =>
-				if (amount ~== 0.0)
-					Success(zero)
-				else
-					Failure(new ModelValidationFailedException(
-						s"Required property 'duration' is missing. Specified properties: [${
-							model.nonEmptyProperties.map { _.name }.mkString(", ") }]"))
+	override def apply(model: template.ModelLike[Property]) =
+		schema.validate(model).flatMap { model =>
+			val amount = model("amount").getDouble
+			model("duration").duration match {
+				case Some(duration) => Success(apply(amount, duration))
+				case None =>
+					if (amount ~== 0.0)
+						Success(zero)
+					else
+						Failure(new ModelValidationFailedException(
+							s"Required property 'duration' is missing. Specified properties: [${
+								model.nonEmptyProperties.map { _.name }.mkString(", ") }]"))
+			}
 		}
-	}
 	
 	
 	// OTHER    -------------------------------
@@ -59,7 +60,13 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 	  * @param timeUnit Time unit used (implicit)
 	  * @return A new velocity
 	  */
-	def apply(amount: Double)(implicit timeUnit: TimeUnit): LinearVelocity = new LinearVelocity(amount, Duration(1, timeUnit))
+	def of(amount: Double)(implicit timeUnit: TimeUnit): LinearVelocity = apply(amount, timeUnit)
+	/**
+	 * @param amount Amount of distance travelled in 1 unit of time
+	 * @param unit Time unit used
+	 * @return A new velocity
+	 */
+	def apply(amount: Double, unit: TimeUnit): LinearVelocity = new LinearVelocity(amount, unit.unit)
 }
 
 /**
@@ -75,7 +82,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	
 	// The amount and the duration may cancel each other out
 	override lazy val sign: SignOrZero =
-		if (duration.isInfinite) Neutral else if (duration < Duration.Zero) -Sign.of(amount) else Sign.of(amount)
+		if (duration.isInfinite) Neutral else if (duration.isNegative) -Sign.of(amount) else Sign.of(amount)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -87,16 +94,13 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	override def isAboutZero = (amount ~== 0.0) || duration.isInfinite
 	
 	override def toString = {
-		if (duration.finite.forall { _ == Duration.Zero })
+		if (duration.isInfinite || duration.isZero)
 			s"invalid velocity of $amount / ${ duration.description }"
 		else
 			s"$perMilliSecond/ms"
 	}
 	override implicit def toValue: Value = new Value(Some(this), LinearVelocityType)
-	override def toModel = duration.finite match {
-		case Some(duration) => Model.from("amount" -> amount, "duration" -> duration)
-		case None => Model.from("amount" -> 0.0)
-	}
+	override def toModel = Model.from("amount" -> amount, "duration" -> duration)
 	
 	override def zero = LinearVelocity.zero
 	
@@ -174,13 +178,13 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 	  */
 	def durationUntilStopWith(acceleration: LinearAcceleration) = {
 		if (isZero)
-			Duration.Zero
+			Duration.zero
 		else if (acceleration.sign != sign.opposite)
-			Duration.Inf
+			Duration.infinite
 		else {
 			val accelerationPerMilli = acceleration.perMilliSecond.perMilliSecond
 			if (accelerationPerMilli ~== 0.0)
-				Duration.Inf
+				Duration.infinite
 			else
 				(perMilliSecond / accelerationPerMilli).abs.millis
 		}
@@ -198,7 +202,7 @@ case class LinearVelocity(override val amount: Double, override val duration: Du
 		// If preserving direction, has to check whether the movement would stop at a certain point
 		val durationLimit = {
 			if (preserveDirection)
-				durationUntilStopWith(acceleration).finite.filter { _ < time }
+				durationUntilStopWith(acceleration).ifFinite.filter { _ < time }
 			else
 				None
 		}

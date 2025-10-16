@@ -12,7 +12,7 @@ import java.util.Date
 import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
 import javax.mail.{Authenticator, PasswordAuthentication, Session, Transport}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.util.Try
 
 object EmailSender
@@ -28,7 +28,7 @@ object EmailSender
 	  * @param settings Implicit email sending settings to use
 	  * @return A new email sender instance
 	  */
-	def apply(defaultMaxSendAttemptsPerMessage: Int = 2, defaultDurationBetweenAttempts: FiniteDuration = 30.seconds)
+	def apply(defaultMaxSendAttemptsPerMessage: Int = 2, defaultDurationBetweenAttempts: Duration = 30.seconds)
 	         (implicit settings: WriteSettings) =
 		new EmailSender(settings, defaultMaxSendAttemptsPerMessage, defaultDurationBetweenAttempts)
 		
@@ -57,7 +57,7 @@ object EmailSender
   *                                       (used as defaults in the method .apply(...)) (default = 30 seconds)
   */
 class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int = 2,
-                  defaultDurationBetweenAttempts: FiniteDuration = 30.seconds)
+                  defaultDurationBetweenAttempts: Duration = 30.seconds)
 {
 	// ATTRIBUTES   ---------------------------------
 	
@@ -76,7 +76,7 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 	  *         a success doesn't necessarily mean that the message was successfully delivered.
 	  */
 	def send(email: Email, maxAttempts: Int = defaultMaxSendAttemptsPerMessage,
-	          durationBetweenAttempts: FiniteDuration = defaultDurationBetweenAttempts)
+	          durationBetweenAttempts: Duration = defaultDurationBetweenAttempts)
 	         (implicit exc: ExecutionContext) =
 		Loop.tryRepeatedly(durationBetweenAttempts, maxAttempts) { sendBlocking(email) }
 	

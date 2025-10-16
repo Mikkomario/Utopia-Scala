@@ -1,8 +1,8 @@
 package utopia.genesis.image
 
 import utopia.flow.util.Mutate
-import utopia.paradigm.animation.Animation
 import utopia.genesis.util.Fps
+import utopia.paradigm.animation.Animation
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
@@ -130,5 +130,5 @@ case class Strip(images: Seq[ConcreteImage]) extends Animation[Image]
 	  * @param fps Animation speed in frames per second
 	  * @return An animation based on this strip with specified animation speed
 	  */
-	def toTimedAnimation(fps: Fps) = over(images.size * fps.interval)
+	def toTimedAnimation(fps: Fps) = over(fps.interval * images.size)
 }

@@ -15,7 +15,7 @@ import utopia.vault.sql.{Condition, Delete, Join, SqlTarget, Where}
 
 import java.time.{Instant, LocalTime}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object ClearOldData
 {
@@ -112,7 +112,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 		
 		thisIterationTargets.foreach { rule =>
 			// Checks the general deletion rule first
-			rule.baseLiveDuration.finite.foreach { baseDuration =>
+			rule.baseLiveDuration.ifFinite.foreach { baseDuration =>
 				val baseDurationCondition = rule.timeColumn < (deletionTime - baseDuration)
 				performDeleteOn(rule, baseDurationCondition)
 			}
@@ -170,8 +170,8 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	// NESTED	-------------------------------
 	
 	private case class TableDeletionRule(timeColumn: TableColumn,
-	                                     baseLiveDuration: Duration = Duration.Inf,
-	                                     conditionalPeriods: Map[Condition, FiniteDuration] = Map(),
+	                                     baseLiveDuration: Duration = Duration.infinite,
+	                                     conditionalPeriods: Map[Condition, Duration] = Map(),
 	                                     restrictiveChildPaths: Seq[Seq[Reference]] = Empty)
 		extends HasTable
 	{

@@ -6,7 +6,7 @@ import utopia.vault.model.immutable.{DataDeletionRule, TableColumn}
 import utopia.vault.sql.Condition
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Common trait for interfaces which use a timestamp-based deprecation column
@@ -59,5 +59,5 @@ trait DeprecatesAfter extends Deprecates
 	  * @param historyDuration Duration how long the item is kept in the database after deprecation
 	  * @return A new deletion rule that applies to this model type
 	  */
-	def deletionAfterDeprecation(historyDuration: FiniteDuration) = DataDeletionRule(deprecationColumn, historyDuration)
+	def deletionAfterDeprecation(historyDuration: Duration) = DataDeletionRule(deprecationColumn, historyDuration)
 }

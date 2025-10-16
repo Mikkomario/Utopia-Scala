@@ -7,7 +7,7 @@ import utopia.flow.view.mutable.async.Volatile
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.util.{Failure, Try}
 
 object Loop
@@ -49,7 +49,7 @@ object Loop
       * @param exc Implicit execution context
       * @return The started loop process
       */
-    def regularly[U](interval: FiniteDuration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false)
+    def regularly[U](interval: Duration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false)
                  (f: => U)
                  (implicit exc: ExecutionContext, logger: Logger) =
     {
@@ -105,7 +105,7 @@ object Loop
       * @return A future that completes when the specified function completes successfully or when enough failed
       *         attempts have been made (contains success or failure, accordingly)
       */
-    def tryRepeatedly[A](firstInterval: FiniteDuration, maxAttempts: Int, intervalModifier: Double = 1.0)
+    def tryRepeatedly[A](firstInterval: Duration, maxAttempts: Int, intervalModifier: Double = 1.0)
                         (f: => Try[A])
                         (implicit exc: ExecutionContext) =
     {

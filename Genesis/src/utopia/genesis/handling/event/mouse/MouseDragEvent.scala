@@ -9,7 +9,7 @@ import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object MouseDragEvent
 {
@@ -170,7 +170,7 @@ case class MouseDragEvent(dragOrigin: RelativePoint, lastMove: MouseMoveEvent, o
 	// IMPLEMENTED  ----------------------------
 	
 	override def positions: Pair[RelativePoint] = lastMove.positions
-	override def duration: FiniteDuration = lastMove.duration
+	override def duration: Duration = lastMove.duration
 	override def buttonStates: MouseButtonStates = lastMove.buttonStates
 	
 	override def withPositions(positions: Pair[RelativePoint]): MouseDragEvent =

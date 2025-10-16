@@ -1,14 +1,12 @@
 package utopia.ambassador.database.factory.service
 
-import java.util.concurrent.TimeUnit
 import utopia.ambassador.database.AmbassadorTables
 import utopia.ambassador.model.partial.service.AuthServiceSettingsData
 import utopia.ambassador.model.stored.service.AuthServiceSettings
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.TimeUnit.Minute
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
-
-import scala.concurrent.duration.FiniteDuration
 
 /**
   * Used for reading AuthServiceSettings data from the DB
@@ -31,10 +29,10 @@ object AuthServiceSettingsFactory
 			valid("authenticationUrl").getString, valid("tokenUrl").getString, 
 			valid("redirectUrl").getString, valid("incompleteAuthRedirectUrl").string, 
 			valid("defaultCompletionRedirectUrl").string, 
-			FiniteDuration(valid("preparationTokenDurationMinutes").getLong, TimeUnit.MINUTES), 
-			FiniteDuration(valid("redirectTokenDurationMinutes").getLong, TimeUnit.MINUTES), 
-			FiniteDuration(valid("incompleteAuthTokenDurationMinutes").getLong, TimeUnit.MINUTES), 
-			FiniteDuration(valid("defaultSessionDurationMinutes").getLong, TimeUnit.MINUTES), 
+			Minute(valid("preparationTokenDurationMinutes").getLong),
+			Minute(valid("redirectTokenDurationMinutes").getLong),
+			Minute(valid("incompleteAuthTokenDurationMinutes").getLong),
+			Minute(valid("defaultSessionDurationMinutes").getLong),
 			valid("created").getInstant))
 }
 

@@ -39,7 +39,7 @@ import utopia.reflection.component.template.Focusable
 import utopia.reflection.component.template.layout.stack.ReflectionStackLeaf
 
 import java.awt.event.{FocusEvent, FocusListener, KeyEvent}
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object Slider
 {
@@ -488,7 +488,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 		
 		// IMPLEMENTED  ---------------------
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			passedDuration = (passedDuration + duration) min animationDuration
 			if (passedDuration >= animationDuration)
 				movingFlag.reset()
@@ -504,7 +504,7 @@ class Slider[+A](range: AnyAnimation[A], targetKnobDiameter: Double, targetWidth
 			else {
 				startProgress = calculatedProgress
 				targetProgress = event.newValue
-				passedDuration = Duration.Zero
+				passedDuration = Duration.zero
 				movingFlag.set()
 				Continue
 			}

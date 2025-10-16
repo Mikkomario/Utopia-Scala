@@ -3,7 +3,7 @@ package utopia.paradigm.animation.transform
 import utopia.paradigm.animation.TimedAnimation
 import utopia.paradigm.animation.transform.TimedTransform.StaticTimedTransform
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * This transformation has a time element

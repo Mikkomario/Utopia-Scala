@@ -1,6 +1,6 @@
 package utopia.paradigm.animation.transform
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Used for transforming an instance using possibly multiple timelines and layers of transformations
@@ -14,11 +14,11 @@ case class StoryTransform[A](timelines: Seq[TimelineTransform[A, A]]) extends Ti
 	/**
 	  * The start time of this story
 	  */
-	lazy val start = timelines.map { _.delay }.minOption.getOrElse(Duration.Undefined)
+	lazy val start = timelines.iterator.map { _.delay }.minOption.getOrElse(Duration.undefined)
 	/**
 	  * The end time of this story
 	  */
-	lazy val end = timelines.map { _.duration }.maxOption.getOrElse(Duration.Undefined)
+	lazy val end = timelines.iterator.map { _.duration }.maxOption.getOrElse(Duration.undefined)
 	
 	
 	// IMPLEMENTED	--------------------

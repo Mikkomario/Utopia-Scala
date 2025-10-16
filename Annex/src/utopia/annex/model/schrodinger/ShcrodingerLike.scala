@@ -4,7 +4,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.template.eventful.Changing
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Common trait for Schrödinger items. Schrödinger items may have a flux state where it is still unknown
@@ -74,6 +74,6 @@ trait ShcrodingerLike[+R, +I]
 	  * @param exc Implicit execution context.
 	  * @return Instance either based on server result or temporary placeholder, in case timeout was reached.
 	  */
-	def waitForInstance(timeout: Duration = Duration.Inf)(implicit exc: ExecutionContext) =
+	def waitForInstance(timeout: Duration = Duration.infinite)(implicit exc: ExecutionContext) =
 		finalInstanceFuture.waitFor(timeout).getOrElse(instance)
 }

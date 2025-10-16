@@ -33,8 +33,8 @@ trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] 
 	
 	// IMPLEMENTED  ------------
 	
-	override implicit def equalsFunction: EqualsFunction[Repr] =
-		EqualsFunction[Repr] { (a, b) => (a.nav ~== b.nav) && a.children.hasEqualContentWith(b.children)(equalsFunction) }
+	override implicit def approxEqualsFunction: EqualsFunction[Repr] =
+		EqualsFunction[Repr] { (a, b) => (a.nav ~== b.nav) && a.children.hasEqualContentWith(b.children)(approxEqualsFunction) }
 	
 	
 	// OTHER    ----------------

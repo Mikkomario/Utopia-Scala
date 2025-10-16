@@ -1,6 +1,6 @@
 package utopia.paradigm.animation.transform
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 /**
   * A chain of animations performed over a certain time period
@@ -8,7 +8,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   * @since Genesis 11.8.2019, v2.1+
   */
 case class TimelineTransform[-Origin, +Reflection](events: Seq[TimedTransform[Origin, Reflection]],
-												   delay: FiniteDuration = Duration.Zero)
+												   delay: Duration = Duration.zero)
 	extends TimedTransform[Origin, Option[Reflection]]
 {
 	// ATTRIBUTES	----------------------
@@ -16,7 +16,7 @@ case class TimelineTransform[-Origin, +Reflection](events: Seq[TimedTransform[Or
 	/**
 	  * The duration of the active portion of this timeline
 	  */
-	lazy val activeDuration = events.foldLeft[Duration](Duration.Zero) { (total, event) => total + event.duration }
+	lazy val activeDuration = events.foldLeft[Duration](Duration.zero) { (total, event) => total + event.duration }
 	
 	
 	// COMPUTED	--------------------------
@@ -71,11 +71,11 @@ case class TimelineTransform[-Origin, +Reflection](events: Seq[TimedTransform[Or
 	  * @param newDelay New delay for this timeline
 	  * @return A copy of this timeline with the new delay
 	  */
-	def withDelay(newDelay: FiniteDuration) = copy(delay = newDelay)
+	def withDelay(newDelay: Duration) = copy(delay = newDelay)
 	
 	/**
 	  * @param delayChange Amount of duration the delay of this timeline is altered
 	  * @return A copy of this timeline with altered delay
 	  */
-	def alterDelay(delayChange: FiniteDuration) = withDelay(delay + delayChange)
+	def alterDelay(delayChange: Duration) = withDelay(delay + delayChange)
 }

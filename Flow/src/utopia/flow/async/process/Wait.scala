@@ -3,11 +3,11 @@ package utopia.flow.async.process
 import utopia.flow.async.process.WaitTarget.UntilNotified
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit.{MilliSecond, NanoSecond}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.SysErrLogger
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 import scala.util.Try
 
 object Wait
@@ -19,7 +19,7 @@ object Wait
 	  * @param exc Implicit execution context
 	  * @return Whether the wait completed without being interrupted through an InterruptedException.
 	  *         If false, the process that follows should likewise take measures to hurry to its completion
-	  *         (use discrection).
+	  *         (use discretion).
 	  */
 	def apply(target: WaitTarget, lock: AnyRef = new AnyRef)(implicit exc: ExecutionContext) = {
 		if (target.isPositive) {
@@ -37,7 +37,7 @@ object Wait
 	  * @param exc Implicit execution context
 	  * @return Whether this wait completed without being interrupted though an InterruptedException.
 	  *         If false, the process that follows should likewise take measures to hurry to its completion
-	  *         (use discrection).
+	  *         (use discretion).
 	  */
 	def untilNotifiedWith(waitLock: AnyRef)(implicit exc: ExecutionContext) = apply(UntilNotified, waitLock)
 }
@@ -47,6 +47,7 @@ object Wait
   * @author Mikko Hilpinen
   * @since 24.2.2022, v1.15
   */
+// TODO: Replace the wait lock class used
 class Wait(val target: WaitTarget, val lock: AnyRef = new AnyRef,
            override val shutdownReaction: Option[ShutdownReaction] = None, override val isRestartable: Boolean = true)
           (implicit exc: ExecutionContext)
@@ -64,9 +65,10 @@ class Wait(val target: WaitTarget, val lock: AnyRef = new AnyRef,
 					case Some(targetTime) =>
 						lock.synchronized {
 							lazy val remainingWait = targetTime - Now
-							while (!waitCompleted && remainingWait > Duration.Zero) {
+							while (!waitCompleted && remainingWait.isPositive) {
 								// Performs the actual wait here (nano precision)
-								lock.wait(remainingWait.toMillis, remainingWait.getNano / 1000)
+								lock.wait(remainingWait.toMillis,
+									remainingWait.toRemainder(NanoSecond, MilliSecond).toInt)
 								// May break on any notify call. Also, stop() always breaks
 								if (target.breaksOnNotify || state.isBroken)
 									waitCompleted = true

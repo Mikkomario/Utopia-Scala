@@ -32,7 +32,7 @@ import utopia.reflection.component.swing.template.AwtComponentWrapperWrapper
 import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import utopia.reflection.event.StackHierarchyListener
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object Switch
 {
@@ -63,7 +63,7 @@ object Switch
   * @since 4.5.2019, v1+
   */
 class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color: Color, knobColor: Color = Color.white,
-             animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+             animationDuration: Duration = ComponentCreationDefaults.transitionDuration,
              initialState: Boolean = false)
 	extends AwtComponentWrapperWrapper with MutableCustomDrawableWrapper with InteractionWithPointer[Boolean]
 		with ReflectionStackable with FixedStackable
@@ -212,7 +212,7 @@ class Switch(actorHandler: ActorHandler, val targetWidth: StackLength, val color
 			drawer.draw(circle)(DrawSettings.onlyFill(drawColor))
 		}
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			val increment = duration / animationDuration
 			progressPointer.update { p => (p + increment) min 1.0 }
 			repaint()

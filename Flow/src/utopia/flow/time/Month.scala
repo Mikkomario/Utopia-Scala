@@ -87,10 +87,10 @@ sealed trait Month extends MonthLike[Month] with ValueConvertible
 	  */
 	def lengthAt(year: Year): Days = lengthAt(leapYear = year.isLeap)
 	/**
-	  * @param leapYear Whether targeting a leap year
+	  * @param leapYear Whether targeting a leap year (call-by-name, only called for February)
 	  * @return The length of this month at that kind of year
 	  */
-	def lengthAt(leapYear: Boolean) = if (isDifferentOnLeapYear) length + 1 else length
+	def lengthAt(leapYear: => Boolean) = if (isDifferentOnLeapYear && leapYear) length + 1 else length
 	
 	/**
 	 * @param dayOfMonth Day of this month
@@ -228,7 +228,7 @@ object Month
 	{
 		override val value: Int = 2
 		override lazy val name: String = "February"
-		override val length: Days = Days(29)
+		override val length: Days = Days(28)
 		
 		override def next(direction: Sign): Month = direction match {
 			case Positive => March

@@ -10,7 +10,8 @@ import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.parse.string.IterateLines
+import utopia.flow.parse.string.Lines
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryExtensions._
@@ -20,7 +21,6 @@ import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.Flag
 
 import java.io.InputStream
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.io.Codec
 import scala.util.{Failure, Success, Try}
@@ -146,9 +146,9 @@ object ServerSentEventsParser
 	                  (implicit codec: Codec, log: Logger) =
 	{
 		// Opens the stream
-		IterateLines.fromStream(stream) { linesIter =>
+		Lines.iterate.stream(stream) { linesIter =>
 			var currentEventBuilder: Option[EventBuilder] = None
-			var queuedRetryDelay: Option[FiniteDuration] = None
+			var queuedRetryDelay: Option[Duration] = None
 			
 			// Reads the stream one line at a time until the stream has been consumed
 			// or until a retry request is encountered

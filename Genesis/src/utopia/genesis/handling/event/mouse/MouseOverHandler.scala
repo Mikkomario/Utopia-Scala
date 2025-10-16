@@ -13,7 +13,7 @@ import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
 import java.time.Instant
 import scala.annotation.unused
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 object MouseOverHandler
@@ -93,7 +93,7 @@ class MouseOverHandler(initialListeners: IterableOnce[MouseOverListener] = Empty
 			entries = remainingEntries
 	}
 	
-	override def act(duration: FiniteDuration): Unit = {
+	override def act(duration: Duration): Unit = {
 		// Informs each mouse-over-item that the mouse is still hovering over them
 		entries.foreach { case (listener, enterTime) =>
 			val event = MouseOverEvent(lastPosition, CommonMouseEvents.buttonStates, duration, Now - enterTime)

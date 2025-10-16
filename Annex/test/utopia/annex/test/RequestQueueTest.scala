@@ -9,7 +9,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Tests [[utopia.annex.controller.RequestQueue]] by sending requests to Nexus Test Server
@@ -72,8 +72,8 @@ object RequestQueueTest extends App
 	// OTHER    ----------------------
 	
 	// NB: Slow request delay is 4 seconds server-side
-	private def slowRequest(deprecatesAfter: Duration = Duration.Inf) = {
-		val deprecationView = deprecatesAfter.finite match {
+	private def slowRequest(deprecatesAfter: Duration = Duration.infinite) = {
+		val deprecationView = deprecatesAfter.ifFinite match {
 			case Some(duration) =>
 				val threshold = Now + duration
 				View { threshold.isPast }

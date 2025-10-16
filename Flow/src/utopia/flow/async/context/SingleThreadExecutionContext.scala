@@ -8,7 +8,7 @@ import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -21,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
   *                          [[stop stop()]] is explicitly called.
   * @param log Implicit logging implementation
   */
-class SingleThreadExecutionContext(name: String, keepAliveDuration: Duration = Duration.Inf)(implicit log: Logger)
+class SingleThreadExecutionContext(name: String, keepAliveDuration: Duration = Duration.infinite)(implicit log: Logger)
 	extends ExecutionContext with Breakable
 {
 	// ATTRIBUTES   --------------------------
@@ -96,7 +96,7 @@ class SingleThreadExecutionContext(name: String, keepAliveDuration: Duration = D
 						task.run()
 						lastTaskTime = Now
 					case None =>
-						val expiration = keepAliveDuration.finite.map { lastTaskTime + _ }
+						val expiration = keepAliveDuration.ifFinite.map { lastTaskTime + _ }
 						val maxWaitMillis = expiration match {
 							case Some(expiration) => (expiration - Now).toMillis + 1
 							case None => 0L

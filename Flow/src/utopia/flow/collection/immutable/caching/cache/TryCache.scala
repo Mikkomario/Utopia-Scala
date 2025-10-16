@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable.caching.cache
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.util.Try
 
 /**
@@ -21,7 +21,7 @@ object TryCache
 	  * @tparam V Type of values used
 	  * @return A new cache
 	  */
-	def apply[K, V](failureDuration: FiniteDuration = Duration.Zero, successDuration: Duration = Duration.Inf)
+	def apply[K, V](failureDuration: Duration = Duration.zero, successDuration: Duration = Duration.infinite)
 	               (request: K => Try[V])(implicit exc: ExecutionContext) =
 		ExpiringCache(request) { (_, v) => if (v.isSuccess) successDuration else failureDuration }
 	
@@ -36,8 +36,8 @@ object TryCache
 	  * @tparam V Type of values used
 	  * @return A new cache
 	  */
-	def releasing[K, V <: AnyRef](failureReferenceDuration: FiniteDuration = Duration.Zero,
-	                              successReferenceDuration: Duration = Duration.Inf)
+	def releasing[K, V <: AnyRef](failureReferenceDuration: Duration = Duration.zero,
+	                              successReferenceDuration: Duration = Duration.infinite)
 	                             (request: K => Try[V])(implicit exc: ExecutionContext) =
 		ReleasingCache(request) { (_, v) => if (v.isSuccess) successReferenceDuration else failureReferenceDuration }
 }

@@ -16,7 +16,7 @@ import utopia.firmament.model.stack.StackSize
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reflection.util.ComponentToImage
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object AnimatedVisibilityChange
 {
@@ -60,7 +60,7 @@ object AnimatedVisibilityChange
   */
 class AnimatedVisibilityChange(original: AwtComponentRelated with ReflectionStackable, transitionAxis: Option[Axis2D] = None,
 							   transition: VisibilityChange = Appearing,
-							   override val duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+							   override val duration: Duration = ComponentCreationDefaults.transitionDuration,
 							   finalSize: Option[Size] = None,
 							   override val maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
 							   useFading: Boolean = true)

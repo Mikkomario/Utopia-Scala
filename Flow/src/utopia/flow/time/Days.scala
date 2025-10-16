@@ -5,10 +5,9 @@ import utopia.flow.generic.model.mutable.DataType.DaysType
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.operator.sign.{HasSign, Sign, SignOrZero}
+import utopia.flow.time.TimeUnit.Day
 
 import java.time.{LocalDate, Period}
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.language.implicitConversions
 
 object Days
@@ -28,7 +27,7 @@ object Days
 	// IMPLICIT    ------------------------
 	
 	// Implicitly converts a number of days to a duration
-	implicit def daysToDuration(d: Days): FiniteDuration = d.toDuration
+	implicit def daysToDuration(d: Days): Duration = d.toDuration
 	
 	
 	// OTHER    ---------------------------
@@ -65,7 +64,7 @@ case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible 
 	/**
 	  * @return A duration of time equal to this instance
 	  */
-	def toDuration = Duration(length, TimeUnit.DAYS)
+	def toDuration = Duration(length, Day)
 	
 	/**
 	  * @return The absolute value of this length of days

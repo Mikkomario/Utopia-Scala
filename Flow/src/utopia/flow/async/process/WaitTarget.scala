@@ -3,11 +3,10 @@ package utopia.flow.async.process
 import utopia.flow.async.process.WaitTarget.NoWait
 import utopia.flow.operator.MayBeZero
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Now, Today, WeekDay}
+import utopia.flow.time.{Duration, Now, Today, WeekDay}
 
 import java.time.{Instant, LocalTime}
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 /**
@@ -40,20 +39,32 @@ sealed trait WaitTarget extends MayBeZero[WaitTarget]
 	// COMPUTED    --------------
     
     override def zero = NoWait
-    
+	
+	/**
+	 * Whether this wait target only stops when the lock is notified
+	 */
+    def isInfinite = targetTime match {
+	    case Left(duration) => duration.isInfinite
+	    case Right(until) => until == Instant.MAX
+    }
     /**
-     * Whether this wait target has a maximum duration
-     */
-    def isInfinite = targetTime.left.exists { !_.isFinite }
-    /**
-     * Whether this wait target only stops when the lock is notified
+     * Whether this wait target may be reached without breaking
      */
     def isFinite = !isInfinite
+	
+	/**
+	 * @return Whether this wait target is possible to reach
+	 */
+	def isPossibleToReach = breaksOnNotify || isFinite || !isPositive
+	/**
+	 * @return Whether this wait target cannot be reached ever
+	 */
+	def isImpossibleToReach = !isPossibleToReach
     
     /**
      * the duration of this target or None if this target had infinite duration
      */
-    def toFiniteDuration = toDuration.finite
+    def toFiniteDuration = toDuration.ifFinite
     /**
      * The duration of this target. May be infinite
      */
@@ -66,7 +77,7 @@ sealed trait WaitTarget extends MayBeZero[WaitTarget]
      * @return the ending time of this target, after which no waiting is done
      */
     def endTime = targetTime match {
-        case Left(duration) => duration.finite.map { Now + _ }
+        case Left(duration) => duration.ifFinite.map { Now + _ }
         case Right(time) => Some(time)
     }
     
@@ -111,7 +122,7 @@ object WaitTarget
       * A zero length wait duration
       */
     @deprecated("Please use NoWait instead", "v2.7")
-    val zero = WaitDuration(Duration.Zero)
+    val zero = WaitDuration(Duration.zero)
     
     
     // IMPLICIT ------------------------
@@ -131,7 +142,7 @@ object WaitTarget
 		override val isPositive: Boolean = false
 		override val breaksOnNotify: Boolean = false
 		
-		override protected val targetTime: Either[SDuration, Instant] = Left(Duration.Zero)
+		override protected val targetTime: Either[Duration, Instant] = Left(Duration.zero)
 		
 		override def breakable: WaitTarget = this
 	}
@@ -141,7 +152,7 @@ object WaitTarget
       */
     case object UntilNotified extends WaitTarget
     {
-        protected val targetTime = Left(Duration.Inf)
+        protected val targetTime = Left(Duration.infinite)
         val breaksOnNotify = true
     
         override def isPositive = true
@@ -155,7 +166,7 @@ object WaitTarget
     case class WaitDuration(duration: Duration, breaksOnNotify: Boolean = true) extends WaitTarget
     {
         protected val targetTime = Left(duration)
-        override lazy val isPositive = duration > Duration.Zero
+        override lazy val isPositive = duration.isPositive
     
         def breakable: WaitDuration = if (breaksOnNotify) this else WaitDuration(duration)
     }

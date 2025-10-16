@@ -35,7 +35,7 @@ import utopia.reach.cursor.Cursor
 import utopia.reach.focus.FocusListener
 
 import java.awt.event.KeyEvent
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 /**
@@ -172,7 +172,7 @@ trait SwitchFactoryLike[+Repr] extends SwitchSettingsWrapper[Repr] with PartOfCo
 	protected def _apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	                     hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	                     valuePointer: ResettableFlag = ResettableFlag(), shade: => ColorShade = Light,
-	                     animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
+	                     animationDuration: Duration = ComponentCreationDefaults.transitionDuration) =
 	{
 		val scaling = ComponentCreationDefaults.switchScalingFactor
 		new Switch(hierarchy, actorHandler, color, math.round(knobDiameter * scaling).toDouble,
@@ -260,7 +260,7 @@ case class SwitchFactory(hierarchy: ComponentHierarchy,
 	def apply(actorHandler: ActorHandler, color: Color, knobDiameter: Double,
 	          hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
 	          valuePointer: ResettableFlag = ResettableFlag(), shade: => ColorShade = Light,
-	          animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration) =
+	          animationDuration: Duration = ComponentCreationDefaults.transitionDuration) =
 		_apply(actorHandler, color, knobDiameter, hoverExtraRadius, knobShadowOffset, valuePointer, shade,
 			animationDuration)
 }
@@ -305,7 +305,7 @@ class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHand
              knobDiameter: Double, hoverExtraRadius: Double = 0.0, knobShadowOffset: Vector2D = Vector2D(-1, 1),
              override val valuePointer: ResettableFlag = ResettableFlag()(ComponentCreationDefaults.componentLogger),
              settings: SwitchSettings = SwitchSettings.default, shade: => ColorShade = Light,
-             animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration)
+             animationDuration: Duration = ComponentCreationDefaults.transitionDuration)
 	extends AbstractButton(settings) with ConcreteCustomDrawReachComponent with InteractionWithPointer[Boolean]
 {
 	// ATTRIBUTES	--------------------------------
@@ -445,7 +445,7 @@ class Switch(override val hierarchy: ComponentHierarchy, actorHandler: ActorHand
 			}
 		}
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			val increment = duration / animationDuration
 			progressPointer.update { p => (p + increment) min 1.0 }
 			repaint(VeryHigh)

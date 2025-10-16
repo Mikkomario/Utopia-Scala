@@ -5,7 +5,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.View
 
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 /**
  * Represents some advancement in progress over time
@@ -18,8 +18,8 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
  * @author Mikko Hilpinen
  * @since 07.05.2024, v2.4
  */
-case class ProgressEvent[+A](previousProgress: Double, currentProgress: Double, value: A,
-                             processTime: FiniteDuration, timestamp: Instant = Now)
+case class ProgressEvent[+A](previousProgress: Double, currentProgress: Double, value: A, processTime: Duration,
+                             timestamp: Instant = Now)
 	extends View[A]
 {
 	// ATTRIBUTES   --------------------
@@ -30,9 +30,9 @@ case class ProgressEvent[+A](previousProgress: Double, currentProgress: Double, 
 	 */
 	lazy val projectedRemainingDuration = {
 		if (currentProgress >= 1.0)
-			Duration.Zero
-		else if (currentProgress <= 0 || processTime <= Duration.Zero)
-			Duration.Inf
+			Duration.zero
+		else if (currentProgress <= 0 || processTime.isNotPositive)
+			Duration.infinite
 		else {
 			val wholeProcessTime = processTime / currentProgress
 			wholeProcessTime * (1 - currentProgress)
@@ -42,7 +42,7 @@ case class ProgressEvent[+A](previousProgress: Double, currentProgress: Double, 
 	 * Time when the process is projected to complete, based on the current progress and progress time so far.
 	 * None if the progress can't be projected yet (at 0% completion).
 	 */
-	lazy val projectedCompletion = projectedRemainingDuration.finite.map { timestamp + _ }
+	lazy val projectedCompletion = projectedRemainingDuration.ifFinite.map { timestamp + _ }
 	
 	
 	// COMPUTED ------------------------

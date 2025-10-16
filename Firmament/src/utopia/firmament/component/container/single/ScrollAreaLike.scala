@@ -7,8 +7,9 @@ import utopia.firmament.model.stack.StackSize
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.operator.filter.{AcceptAll, Filter}
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit.MilliSecond
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Flag
@@ -31,8 +32,6 @@ import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 
 import java.awt.event.KeyEvent
 import java.time.Instant
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
 
 /**
   * Scroll areas are containers that allow horizontal and / or vertical content scrolling
@@ -359,7 +358,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 	  * @param velocityMod A modifier applied to velocity (default = 1.0)
 	  */
 	protected def setupMouseHandling(actorHandler: ActorHandler, scrollPerWheelClick: Double,
-	                                 dragDuration: FiniteDuration = 300.millis, velocityMod: Double = 1.0) =
+	                                 dragDuration: Duration = 300.millis, velocityMod: Double = 1.0) =
 	{
 		setupAnimatedScrolling(actorHandler)
 		val listener = new MouseListener(scrollPerWheelClick, dragDuration, velocityMod, scroller.get)
@@ -479,7 +478,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		
 		// IMPLEMENTED	-----------------------
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			// Calculates the amount of scrolling and velocity after applying friction
 			val (transition, newVelocity) = velocity(duration, -friction.abs, preserveDirection = true)
 			
@@ -503,7 +502,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		def accelerate(acceleration: Velocity2D) = velocity += acceleration
 	}
 	
-	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: FiniteDuration,
+	private class MouseListener(val scrollPerWheelClick: Double, val dragDuration: Duration,
 	                            val velocityMod: Double, val scroller: AnimatedScroller)
 		extends MouseButtonStateListener with MouseMoveListener with MouseWheelListener
 	{
@@ -516,7 +515,7 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 		private var isDraggingContent = false
 		private var contentDragPosition = Point.origin
 		
-		private var velocities: Seq[(Instant, Velocity2D, FiniteDuration)] = Empty
+		private var velocities: Seq[(Instant, Velocity2D, Duration)] = Empty
 		
 		// Listens to left mouse presses & releases
 		override val mouseButtonStateEventFilter = MouseButtonStateEvent.filter.leftPressed
@@ -622,10 +621,10 @@ trait ScrollAreaLike[+C <: Stackable] extends CachingStackable
 					
 					if (velocityData.nonEmpty) {
 						val actualDragDuration = now - velocityData.head._1
-						val averageTranslationPerMilli = velocityData.map {
-							case (_, v, d) => v.perMilliSecond * d.toPreciseMillis }
+						val averageTranslationPerMilli = velocityData.iterator
+							.map { case (_, v, d) => v.perMilliSecond * d.toPreciseMillis }
 							.reduce { _ + _ } / actualDragDuration.toPreciseMillis
-						scroller.accelerate(Velocity2D(averageTranslationPerMilli)(TimeUnit.MILLISECONDS) * velocityMod)
+						scroller.accelerate(Velocity2D(averageTranslationPerMilli * velocityMod, MilliSecond))
 					}
 				}
 			}

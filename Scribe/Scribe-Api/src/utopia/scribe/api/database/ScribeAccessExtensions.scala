@@ -15,6 +15,7 @@ object ScribeAccessExtensions
 		/**
 		  * @return Access to the stack trace of this error
 		  */
+		// TODO: Replace after ensuring that topToBottomIterator is available in the new access interface
 		def stackAccess = DbStackTraceElementRecord(e.stackTraceId)
 	}
 }

@@ -15,7 +15,7 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object AnimatedCollectionView
 {
@@ -47,7 +47,7 @@ object AnimatedCollectionView
 class AnimatedCollectionView[C <: AwtStackable](actorHandler: ActorHandler, rowAxis: Axis2D, initialRowSplitThreshold: Double,
                                                 margin: StackLength = StackLength.any, insideRowLayout: StackLayout = Fit,
                                                 forceEqualRowLength: Boolean = false,
-                                                animationDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                                animationDuration: Duration = ComponentCreationDefaults.transitionDuration,
                                                 maxAnimationRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate,
                                                 useFadingInAnimations: Boolean = true)(implicit exc: ExecutionContext)
 	extends ReflectionCollectionViewLike[C, AnimatedStack[C], AnimatedStack[AnimatedStack[C]]] with StackableAwtComponentWrapperWrapper

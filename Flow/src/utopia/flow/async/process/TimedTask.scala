@@ -10,14 +10,13 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult}
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Now, Today, WeekDay, WeekDays}
+import utopia.flow.time._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -79,7 +78,7 @@ object TimedTask
 	  * @tparam U Arbitrary function result type
 	  * @return A new timed task
 	  */
-	def regularly[U](interval: FiniteDuration, startImmediately: Boolean = false)(f: => U) =
+	def regularly[U](interval: Duration, startImmediately: Boolean = false)(f: => U) =
 		firstTimeAt(if (startImmediately) Now else Now + interval) {
 			val start = Now.toInstant
 			f
@@ -92,7 +91,7 @@ object TimedTask
 	  * @param f Task to run. Returns whether the task should be run again later.
 	  * @return A new timed task
 	  */
-	def regularlyWhile(interval: FiniteDuration, startImmediately: Boolean = false)(f: => Boolean) =
+	def regularlyWhile(interval: Duration, startImmediately: Boolean = false)(f: => Boolean) =
 		firstTimeAt(if (startImmediately) Now else Now + interval).completing {
 			val start = Now.toInstant
 			if (f) Some(start + interval) else None
@@ -276,7 +275,7 @@ object TimedTask
 		  * @tparam U Arbitrary function result type
 		  * @return A new task that calls the specified function between regular intervals
 		  */
-		def regularly[U](interval: Duration)(f: => U) = interval.finite match {
+		def regularly[U](interval: Duration)(f: => U) = interval.ifFinite match {
 			case Some(interval) =>
 				apply {
 					val startTime = Now.toInstant

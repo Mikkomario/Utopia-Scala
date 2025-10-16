@@ -16,7 +16,7 @@ import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 
 import javax.swing.JFrame
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object Frame
 {
@@ -185,6 +185,6 @@ class Frame[C <: ReflectionStackable with AwtContainerRelated](override val cont
       * @param delay Delay after window closing before closing the JVM
       * @param exc Implicit execution context
      */
-    def setToExitOnClose(delay: FiniteDuration = Duration.Zero)(implicit exc: ExecutionContext) =
+    def setToExitOnClose(delay: Duration = Duration.zero)(implicit exc: ExecutionContext) =
         closeFuture.onComplete { _ => process.Delay(delay) { System.exit(0) } }
 }

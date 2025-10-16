@@ -1,10 +1,9 @@
 package utopia.paradigm.animation
 
+import utopia.flow.time.Duration
 import utopia.paradigm.animation.TimedAnimation.{CurvedAnimation, MapAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.paradigm.animation.transform.{AnimatedTransform, TimedAnimationWithTranform}
 import utopia.paradigm.motion.motion1d.LinearVelocity
-
-import scala.concurrent.duration.Duration
 
 object TimedAnimation
 {
@@ -26,7 +25,7 @@ object TimedAnimation
 	  * @tparam A Type of wrapped value
 	  * @return An animation that always yields the specified value
 	  */
-	def fixed[A](value: A, duration: Duration = Duration.Inf): TimedAnimation[A] = Fixed(value, duration)
+	def fixed[A](value: A, duration: Duration = Duration.infinite): TimedAnimation[A] = Fixed(value, duration)
 	
 	
 	// NESTED	-----------------------

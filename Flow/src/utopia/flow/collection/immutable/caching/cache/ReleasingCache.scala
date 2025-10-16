@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable.caching.cache
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.ref.WeakReference
 
 object ReleasingCache
@@ -30,7 +30,7 @@ object ReleasingCache
 	  * @tparam V Type of values stored
 	  * @return A new cache
 	  */
-	def after[K, V <: AnyRef](referenceLength: FiniteDuration)
+	def after[K, V <: AnyRef](referenceLength: Duration)
 	                         (request: K => V)
 	                         (implicit exc: ExecutionContext) =
 		new ReleasingCache[K, V](request)((_, _) => referenceLength)

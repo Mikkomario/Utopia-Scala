@@ -34,7 +34,7 @@ import java.io.OutputStream
 import java.net.{URI, URLEncoder}
 import java.nio.charset.StandardCharsets
 import java.util
-import java.util.concurrent.TimeUnit
+import java.util.concurrent
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
@@ -218,9 +218,12 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 				(req.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
 					.foreach { case (timeoutType, millis) =>
 						timeoutType match {
-							case ConnectionTimeout => builder.setConnectTimeout(millis, TimeUnit.MILLISECONDS)
-							case ReadTimeout => builder.setResponseTimeout(millis, TimeUnit.MILLISECONDS)
-							case ManagerTimeout => builder.setConnectionRequestTimeout(millis, TimeUnit.MILLISECONDS)
+							case ConnectionTimeout =>
+								builder.setConnectTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
+							case ReadTimeout =>
+								builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
+							case ManagerTimeout =>
+								builder.setConnectionRequestTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 						}
 					}
 				builder.build()

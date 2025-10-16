@@ -2,7 +2,7 @@ package utopia.paradigm.animation.transform
 
 import utopia.paradigm.animation.{Animation, AnimationLike, TimedAnimation}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * This animation applies an animated transformation, and also has a specified duration

@@ -256,7 +256,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
 	override def self = this
 	override def bounds = this
 	
-	override implicit def equalsFunction: EqualsFunction[Bounds] = Bounds.approxEquals
+	override implicit def approxEqualsFunction: EqualsFunction[Bounds] = Bounds.approxEquals
 	override protected def equalsProperties = Single(dimensions)
 	
 	override def topLeftCorner = Point(dimensions.map { _.start })

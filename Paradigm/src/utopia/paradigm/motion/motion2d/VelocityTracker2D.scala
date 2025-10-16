@@ -4,14 +4,14 @@ import utopia.paradigm.motion.template.VelocityTracker
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 /**
   * Used for tracking two-dimensional movement over time
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */
-class VelocityTracker2D(maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.Zero)
+class VelocityTracker2D(maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.zero)
 	extends VelocityTracker[Vector2D, Velocity2D, Acceleration2D, MovementStatus2D, MovementHistory2D](
 		maxHistoryDuration, minCacheInterval)
 {
@@ -19,10 +19,10 @@ class VelocityTracker2D(maxHistoryDuration: Duration, minCacheInterval: Duration
 	override protected def zeroVelocity = Velocity2D.zero
 	override protected def zeroAcceleration = Acceleration2D.zero
 	
-	override protected def calculateVelocity(distance: Vector2D, duration: FiniteDuration) =
+	override protected def calculateVelocity(distance: Vector2D, duration: Duration) =
 		distance.traversedIn(duration)
 	
-	override protected def calculateAcceleration(velocityChange: Velocity2D, duration: FiniteDuration) =
+	override protected def calculateAcceleration(velocityChange: Velocity2D, duration: Duration) =
 		velocityChange.acceleratedIn(duration)
 	
 	override protected def combineHistory(positionHistory: Seq[(Vector2D, Instant)],

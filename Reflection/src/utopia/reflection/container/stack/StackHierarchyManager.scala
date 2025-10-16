@@ -13,7 +13,7 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Stack hierarchy manager tracks stack component hierarchies and updates the components when necessary
@@ -423,7 +423,7 @@ object StackHierarchyManager
 		override def toString = parts.mkString(":")
 	}
 	
-	private class RevalidateLoop(validationInterval: FiniteDuration)(implicit exc: ExecutionContext, logger: Logger)
+	private class RevalidateLoop(validationInterval: Duration)(implicit exc: ExecutionContext, logger: Logger)
 		extends LoopingProcess
 	{
 		override protected def isRestartable = true

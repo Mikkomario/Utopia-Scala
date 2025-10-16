@@ -10,7 +10,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Success, Try}
@@ -75,13 +75,13 @@ object ActionQueue
 		  * @param timeout Maximum time to wait. Default = infinite.
 		  * @return Action result. Failure if timeout was reached or if the process threw.
 		  */
-		def waitFor(timeout: Duration = Duration.Inf) = future.waitFor(timeout)
+		def waitFor(timeout: Duration = Duration.infinite) = future.waitFor(timeout)
 		/**
 		  * Blocks until this action has started running.
 		  * @param timeout Maximum wait timeout. Default = infinite.
 		  * @return This action if wait succeeded. Failure if timeout was reached.
 		  */
-		def waitUntilStarted(timeout: Duration = Duration.Inf) =
+		def waitUntilStarted(timeout: Duration = Duration.infinite) =
 			startFuture.waitFor(timeout).map { _ => this }
 	}
 	

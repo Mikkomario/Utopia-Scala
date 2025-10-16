@@ -5,7 +5,7 @@ import utopia.flow.util.Mutate
 import utopia.genesis.handling.event.animation.AnimatorInstruction.defaultClip
 import utopia.paradigm.animation.TimedAnimation
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.math.Ordering.Double.TotalOrdering
 
 object AnimatorInstruction

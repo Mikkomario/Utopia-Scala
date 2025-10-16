@@ -3,14 +3,13 @@ package utopia.flow.collection.immutable.caching.cache
 import utopia.flow.async.process.{LoopingProcess, Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ExpiringCache
 {
@@ -36,7 +35,7 @@ object ExpiringCache
 	  * @tparam V Type of values stored
 	  * @return A new cache that clears values automatically
 	  */
-	def after[K, V](expirationDuration: FiniteDuration)(request: K => V)(implicit exc: ExecutionContext) =
+	def after[K, V](expirationDuration: Duration)(request: K => V)(implicit exc: ExecutionContext) =
 		new ExpiringCache[K, V](request)((_, _) => expirationDuration)
 }
 
@@ -66,10 +65,10 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 		// Generates and stores the new value
 		val newValue = request(key)
 		val expirationDuration = calculateExpiration(key, newValue)
-		if (expirationDuration > Duration.Zero) {
+		if (expirationDuration.isPositive) {
 			cachePointer.update { _ + (key -> newValue) }
 			// Prepares an expiration if necessary
-			expirationDuration.finite.foreach { expirationDuration =>
+			expirationDuration.ifFinite.foreach { expirationDuration =>
 				// Queues a new expiration
 				val expirationTime = Now + expirationDuration
 				val needsNotify = queuedExpirationsPointer.mutate { queue =>

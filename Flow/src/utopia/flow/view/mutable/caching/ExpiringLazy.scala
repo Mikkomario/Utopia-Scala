@@ -1,28 +1,15 @@
 package utopia.flow.view.mutable.caching
 
 import utopia.flow.async.process.{DelayedProcess, Process}
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ExpiringLazy
 {
-	/**
-	  * Creates a new lazy container that automatically resets its contents after
-	  * a specified duration has passed from value generation
-	  * @param expirationThreshold How long values are cached within this lazy
-	  * @param make Function for generating a new value when one is requested
-	  * @param exc Implicit execution context (used for scheduling the reset)
-	  * @tparam A Type of cached value
-	  * @return A new lazy container
-	  */
-	def after[A](expirationThreshold: FiniteDuration)(make: => A)(implicit exc: ExecutionContext) =
-		new ExpiringLazy[A](make)(_ => expirationThreshold)
 	/**
 	  * Creates a new lazy container that automatically resets its contents after
 	  * a specified duration has passed from value generation
@@ -34,8 +21,7 @@ object ExpiringLazy
 	  * @return A new lazy container
 	  */
 	def after[A](expirationThreshold: Duration)(make: => A)(implicit exc: ExecutionContext) =
-		expirationThreshold.finite match
-		{
+		expirationThreshold.ifFinite match {
 			case Some(duration) => new ExpiringLazy[A](make)(_ => duration)
 			case None => Lazy(make)
 		}
@@ -87,9 +73,9 @@ class ExpiringLazy[+A](generator: => A)(expirationPerItem: A => Duration)
 			// Acquires the new value
 			val newValue = cache.value
 			// Checks when the value should be reset
-			expirationPerItem(newValue).finite.foreach { waitDuration =>
+			expirationPerItem(newValue).ifFinite.foreach { waitDuration =>
 				// Case: Reset scheduled => schedules a reset
-				if (waitDuration > Duration.Zero) {
+				if (waitDuration.isPositive) {
 					val newExpiration = DelayedProcess.hurriable(Now + waitDuration) { _ => cache.reset() }
 					// If there was another reset pending, cancels that first
 					expirationProcessPointer.getAndSet { Some(newExpiration) }.foreach { _.stopIfRunning() }

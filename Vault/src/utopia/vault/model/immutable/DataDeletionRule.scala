@@ -1,11 +1,9 @@
 package utopia.vault.model.immutable
 
 import utopia.flow.operator.MaybeEmpty
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.vault.model.template.HasTable
 import utopia.vault.sql.Condition
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object DataDeletionRule
 {
@@ -35,7 +33,7 @@ object DataDeletionRule
 	  */
 	@deprecated("Please use .conditional(TableColumn, Condition, Duration) instead", "v2.0")
 	def conditional(table: Table, timePropertyName: String, condition: Condition,
-	                liveDurationOnCondition: FiniteDuration): DataDeletionRule =
+	                liveDurationOnCondition: Duration): DataDeletionRule =
 		conditional(table(timePropertyName), condition, liveDurationOnCondition)
 	/**
 	  * Creates a new conditional deletion rule
@@ -47,9 +45,12 @@ object DataDeletionRule
 	  */
 	def conditional(timeColumn: TableColumn, condition: Condition, liveDurationOnCondition: Duration): DataDeletionRule =
 	{
-		val conditions = liveDurationOnCondition.finite
-			.filterNot { _ => condition.isAlwaysFalse }.map { d => Map(condition -> d) }
-			.getOrElse(Map[Condition, FiniteDuration]())
+		val conditions = {
+			if (condition.isAlwaysFalse)
+				Map[Condition, Duration]()
+			else
+				Map(condition -> liveDurationOnCondition)
+		}
 		apply(timeColumn, conditionalLiveDurations = conditions)
 	}
 	
@@ -65,7 +66,7 @@ object DataDeletionRule
 	  * @param timeColumn A column that, when its timestamp value is reached, will cause the row to be deleted
 	  * @return A deletion rule that deletes a row when a timestamp column's value is reached
 	  */
-	def at(timeColumn: TableColumn) = apply(timeColumn, standardLiveDuration = Duration.Zero)
+	def at(timeColumn: TableColumn) = apply(timeColumn, standardLiveDuration = Duration.zero)
 }
 
 /**
@@ -79,8 +80,8 @@ object DataDeletionRule
   * @see utopia.vault.database.ClearOldData
   */
 case class DataDeletionRule(timeColumn: TableColumn,
-                            standardLiveDuration: Duration = Duration.Inf,
-                            conditionalLiveDurations: Map[Condition, FiniteDuration] = Map())
+                            standardLiveDuration: Duration = Duration.infinite,
+                            conditionalLiveDurations: Map[Condition, Duration] = Map())
 	extends MaybeEmpty[DataDeletionRule] with HasTable
 {
 	// ATTRIBUTES   -------------------------
@@ -115,15 +116,21 @@ case class DataDeletionRule(timeColumn: TableColumn,
 	  * @return A copy of this deletion rule set that deletes target rows id they fulfill the specified condition and
 	  *         have lived at least the specified time period
 	  */
-	def +(conditionalDeletion: (Condition, FiniteDuration)) =
-		copy(conditionalLiveDurations = conditionalLiveDurations + conditionalDeletion)
+	def +(conditionalDeletion: (Condition, Duration)) = {
+		// Won't include conditions that can never be met
+		if (conditionalDeletion._1.isAlwaysFalse)
+			this
+		else
+			copy(conditionalLiveDurations = conditionalLiveDurations + conditionalDeletion)
+	}
+	
 	/**
 	  * @param condition Deletion condition
 	  * @param liveDurationOnCondition Minimum live duration for rows where the condition applies
 	  * @return A copy of this deletion rule set that deletes target rows id they fulfill the specified condition and
 	  *         have lived at least the specified time period
 	  */
-	def withConditionalDeletion(condition: Condition, liveDurationOnCondition: FiniteDuration) =
+	def withConditionalDeletion(condition: Condition, liveDurationOnCondition: Duration) =
 		this + (condition -> liveDurationOnCondition)
 	
 	/**

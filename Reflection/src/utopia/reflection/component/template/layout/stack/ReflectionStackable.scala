@@ -19,7 +19,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.{AlignFrame, AnimatedSizeContainer, Framing}
 import utopia.reflection.event.StackHierarchyListener
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{Future, Promise}
 
 object ReflectionStackable
@@ -193,7 +193,7 @@ object ReflectionStackable
 		  * @return This component wrapped in a component that animates its size adjustments
 		  */
 		def withAnimatedSizeUsing(actorHandler: ActorHandler,
-		                          transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+		                          transitionDuration: Duration = ComponentCreationDefaults.transitionDuration,
 		                          maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 			AnimatedSizeContainer(s, actorHandler, transitionDuration, maxRefreshRate)
 	}

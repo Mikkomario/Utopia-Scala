@@ -2,6 +2,8 @@
 
 ## v2.7 (in development)
 ### Breaking changes
+- Replaced **java.time.Duration** and **scala.concurrent.duration.Duration** with a new **Duration** class
+  - This also includes most **TimeExtensions** related to durations
 - Replaced **Year**, **Month**, **YearMonth** and **MonthDay** -related **TimeExtensions** 
   with new classes with these names
   - These also affect **Quarter** and **YearlyDateRange**

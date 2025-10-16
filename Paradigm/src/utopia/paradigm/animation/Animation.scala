@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.paradigm.animation.Animation.{MapAnimation, MergeAnimation, RepeatingAnimation, ReverseAnimation}
 import utopia.paradigm.animation.transform.{AnimatedTransform, AnimationWithTransform, TimedAnimationWithTranform, TimedTransform}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 object Animation
 {

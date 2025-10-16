@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.async.Volatile
 import java.time.Instant
 import javax.swing.SwingUtilities
 import scala.concurrent.Promise
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.util.Try
 
 /**
@@ -172,7 +172,7 @@ object AwtEventThread
 		
 		def runTime: Duration = startTime match {
 			case Some(started) => _endTime.getOrElse(Instant.now()) - started
-			case None => Duration.Zero
+			case None => Duration.zero
 		}
 		
 		

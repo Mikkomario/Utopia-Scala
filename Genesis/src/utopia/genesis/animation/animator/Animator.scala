@@ -1,13 +1,12 @@
 package utopia.genesis.animation.animator
 
+import utopia.flow.time.Duration
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.action.Actor
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * Used for generating time-based animations. Mutable.
@@ -29,7 +28,7 @@ abstract class Animator[A] extends Actor
 	  * Whether drawn animation is allowed to automatically repeat. Defaults to true.
 	  */
 	var allowsRepeat = true
-	private var _progress: Duration = Duration.Zero
+	private var _progress: Duration = Duration.zero
 	
 	private val _pointer = CopyOnDemand(View { apply(_progress / animationDuration) })(SysErrLogger)
 	
@@ -58,7 +57,7 @@ abstract class Animator[A] extends Actor
 	  * @param newProgress The new progress of this animation
 	  */
 	def progress_=(newProgress: Double) = {
-		_progress = newProgress * animationDuration
+		_progress = animationDuration * newProgress
 		_pointer.update()
 	}
 	
@@ -76,7 +75,7 @@ abstract class Animator[A] extends Actor
 	
 	override def handleCondition: Flag = AlwaysTrue
 	
-	override def act(duration: FiniteDuration) = {
+	override def act(duration: Duration) = {
 		// Advances animation progress
 		val mod = speedModifier
 		if (mod != 0) {
@@ -105,7 +104,7 @@ abstract class Animator[A] extends Actor
 	  * Resets the current animation progress
 	  */
 	def reset() = {
-		_progress = Duration.Zero
+		_progress = Duration.zero
 		_pointer.update()
 	}
 	

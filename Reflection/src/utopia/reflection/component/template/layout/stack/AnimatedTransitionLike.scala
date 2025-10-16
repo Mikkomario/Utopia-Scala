@@ -20,7 +20,7 @@ import utopia.reflection.event.TransitionState.{Finished, NotStarted, Ongoing}
 
 import java.time.Instant
 import scala.concurrent.Promise
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 /**
   * Used for animating component transitions in a stack layout environment. Remember to add this
@@ -38,7 +38,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	/**
 	  * @return Transition duration
 	  */
-	protected def duration: FiniteDuration
+	protected def duration: Duration
 	
 	/**
 	  * @return Animation that is used for calculating the drawn images. The images are drawn in the order they
@@ -62,8 +62,8 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	// ATTRIBUTES	--------------------------------
 	
 	private var _state: TransitionState = NotStarted
-	private var passedDuration = Duration.Zero
-	private var nextUpdateThreshold = Duration.Zero
+	private var passedDuration = Duration.zero
+	private var nextUpdateThreshold = Duration.zero
 	private val completionPromise = Promise[Unit]()
 	
 	private val cachedImages = ResettableLazy { imageAnimation(progress) }
@@ -153,7 +153,7 @@ trait AnimatedTransitionLike extends ReflectionStackable with ReflectionComponen
 	{
 		override def handleCondition: Flag = AlwaysTrue
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			// Advances the animation, may also finish transition and/or trigger component update
 			passedDuration += duration
 			if (passedDuration >= AnimatedTransitionLike.this.duration) {

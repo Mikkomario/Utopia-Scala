@@ -1,20 +1,19 @@
 package utopia.annex.controller
 
-import utopia.access.model.enumeration.Status.NotModified
 import utopia.access.model.enumeration.Status
+import utopia.access.model.enumeration.Status.NotModified
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.parse.file.container.FileContainer
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.logging.Logger
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -53,12 +52,12 @@ abstract class ContainerUpdateLoop[A, R](container: FileContainer[A])(implicit e
 	  * @param readData Content read from a server response (may be empty)
 	  * @return Content that should be stored in the container + scheduled duration until the next check
 	  */
-	protected def merge(oldData: A, readData: R): (A, FiniteDuration)
+	protected def merge(oldData: A, readData: R): (A, Duration)
 	
 	/**
 	  * @return Normal interval between updates
 	  */
-	def standardUpdateInterval: FiniteDuration
+	def standardUpdateInterval: Duration
 	
 	
 	// IMPLEMENTED	-----------------------

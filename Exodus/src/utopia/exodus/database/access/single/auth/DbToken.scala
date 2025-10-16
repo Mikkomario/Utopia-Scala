@@ -6,17 +6,14 @@ import utopia.exodus.model.combined.auth.ScopedTokenLike
 import utopia.exodus.model.partial.auth.{TokenData, TokenScopeLinkData}
 import utopia.exodus.model.stored.auth.Token
 import utopia.exodus.util.UuidGenerator
-import utopia.flow.parse.Sha256Hasher
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.parse.Sha256Hasher
+import utopia.flow.time.{Duration, Now}
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.{NonDeprecatedView, SubView}
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * Used for accessing individual tokens
@@ -62,7 +59,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 	  * @return A new token, along with the non-hashed token string
 	  */
 	def insertCustom(typeId: Int, parentId: Option[Int] = None, ownerId: Option[Int] = None,
-	                 duration: Option[FiniteDuration] = None, scopeIds: Set[Int] = Set(),
+	                 duration: Option[Duration] = None, scopeIds: Set[Int] = Set(),
 	                 forwardedScopeIds: Set[Int] = Set(), modelStylePreference: Option[ModelStyle] = None,
 	                 isSingleUseOnly: Boolean = false)
 	                (implicit connection: Connection, uuidGenerator: UuidGenerator) =
@@ -112,7 +109,7 @@ object DbToken extends SingleRowModelAccess[Token] with NonDeprecatedView[Token]
 				if (limitToDefaultDuration && tokenType.duration.exists { custom > _ })
 					tokenType.duration
 				else
-					custom.finite
+					custom.ifFinite
 			case None => tokenType.duration
 		}
 		// Inserts the new token

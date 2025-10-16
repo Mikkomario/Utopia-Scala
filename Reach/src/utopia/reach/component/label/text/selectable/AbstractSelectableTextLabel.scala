@@ -35,7 +35,7 @@ import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener,
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, StringSelection, Transferable}
 import java.awt.event.KeyEvent
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.util.Try
 
 /**
@@ -362,14 +362,14 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	{
 		// ATTRIBUTES	--------------------------
 		
-		private var passedDuration = Duration.Zero
+		private var passedDuration = Duration.zero
 		
 		
 		// IMPLEMENTED	--------------------------
 		
 		override def handleCondition: Flag = interactiveFlag
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			passedDuration += duration
 			if (passedDuration >= settings.caretBlinkFrequency) {
 				resetCounter()
@@ -380,7 +380,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 		
 		// OTHER	------------------------------
 		
-		def resetCounter() = passedDuration = Duration.Zero
+		def resetCounter() = passedDuration = Duration.zero
 		
 		// Makes caret visible for the full duration / refreshes duration if already visible
 		def show() = {

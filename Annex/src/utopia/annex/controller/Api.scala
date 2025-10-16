@@ -9,7 +9,7 @@ import utopia.disciple.model.request.Request
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 import scala.concurrent.Future
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.util.{Failure, Success}
 
 /**
@@ -68,7 +68,7 @@ trait Api extends ApiClient
 	  * @param modHeaders A function for modifying the request headers (default = no modification)
 	  * @return Asynchronous server result
 	  */
-	protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.Inf,
+	protected def makeRequest(method: Method, path: String, timeout: Duration = Duration.infinite,
 							  body: Value = Value.empty, params: Model = Model.empty,
 							  modHeaders: Headers => Headers = h => h) =
 		prepareRequest(method, path, Left(body), params, headers, timeout).getValue

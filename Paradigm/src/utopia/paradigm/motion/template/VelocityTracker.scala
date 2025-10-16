@@ -4,14 +4,13 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
 
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * Common trait for velocity tracker implementations, which are used for deducting velocity and acceleration from
@@ -21,7 +20,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   */
 abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V], A <: AccelerationLike[X, V, A],
 	+S <: MovementStatusLike[X, V, A, _], H]
-(maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.Zero)
+(maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.zero)
 	extends AbstractChanging[H]()(SysErrLogger) with MovementHistoryLike[X, V, A, S]
 {
 	// ATTRIBUTES	-----------------------
@@ -37,9 +36,9 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	
 	// ABSTRACT	---------------------------
 	
-	protected def calculateVelocity(distance: X, duration: FiniteDuration): V
+	protected def calculateVelocity(distance: X, duration: Duration): V
 	
-	protected def calculateAcceleration(velocityChange: V, duration: FiniteDuration): A
+	protected def calculateAcceleration(velocityChange: V, duration: Duration): A
 	
 	protected def combineHistory(positionHistory: Seq[(X, Instant)], velocityHistory: Seq[(V, Instant)],
 								 accelerationHistory: Seq[(A, Instant)]): H
@@ -72,17 +71,17 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	  * @param newPosition New recorded position
 	  * @param eventTime Timestamp of the new position (default = current time)
 	  */
-	def recordPosition(newPosition: X, eventTime: Instant = Now) =
-	{
+	def recordPosition(newPosition: X, eventTime: Instant = Now) = {
 		// May ignore some updates if they are too frequent
-		if (minCacheInterval <= Duration.Zero ||
+		if (minCacheInterval.isNotPositive ||
 			_positionHistory.lastOption.forall { case (_, time) =>
-				minCacheInterval.finite.exists { time <= eventTime - _ } })
+				minCacheInterval.ifFinite.exists { time <= eventTime - _ }
+			})
 		{
 			val previousStatus = value
 			
 			// Updates position history
-			val threshold = maxHistoryDuration.finite.map { eventTime - _ }
+			val threshold = maxHistoryDuration.ifFinite.map { eventTime - _ }
 			val oldPositionHistory = _positionHistory
 			threshold match {
 				case Some(t) =>

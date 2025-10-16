@@ -13,7 +13,7 @@ import utopia.reach.container.{ReachCanvas, RevalidationStyle}
 import utopia.reach.cursor.CursorType.{Default, Interactive, Text}
 import utopia.reach.cursor.{Cursor, CursorSet, CursorType}
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Common trait for copyable context instances that provide information for creating ReachWindows
@@ -150,18 +150,18 @@ trait ReachWindowContextCopyable[+Repr, +Textual] extends ReachWindowContextProp
 	  * @param delay Minimum and maximum revalidation delays
 	  * @return Context copy that performs revalidation between the specified delays
 	  */
-	def revalidatingAfter(delay: Span[FiniteDuration]) = withRevalidationStyle(Delayed(delay.ascending))
+	def revalidatingAfter(delay: Span[Duration]) = withRevalidationStyle(Delayed(delay.ascending))
 	/**
 	  * @param delay A fixed revalidation delay
 	  * @return Context copy that performs revalidation after the specified delay
 	  */
-	def revalidatingAfter(delay: FiniteDuration): Repr = revalidatingAfter(Span(delay, delay))
+	def revalidatingAfter(delay: Duration): Repr = revalidatingAfter(Span(delay, delay))
 	/**
 	  * @param min Minimum revalidation delay
 	  * @param max Maximum revalidation delay
 	  * @return Context copy that performs revalidation between the specified delays
 	  */
-	def revalidatingAfter(min: FiniteDuration, max: FiniteDuration): Repr = revalidatingAfter(Span(min, max))
+	def revalidatingAfter(min: Duration, max: Duration): Repr = revalidatingAfter(Span(min, max))
 	
 	/**
 	  * @param getAnchor An anchoring function

@@ -5,7 +5,7 @@ import utopia.flow.async.process.{Breakable, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -15,7 +15,6 @@ import utopia.vault.model.error.NoConnectionException
 
 import java.time.Instant
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
@@ -33,7 +32,7 @@ import scala.util.Try
   * @param exc Execution context used in automated connection closing
   */
 class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6,
-					 val connectionKeepAlive: FiniteDuration = 15.seconds,
+					 val connectionKeepAlive: Duration = 15.seconds,
 					 connectionValidationInterval: Duration = 15.seconds)
                     (implicit exc: ExecutionContext)
 	extends Breakable
@@ -43,7 +42,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	private implicit val log: Logger = SysErrLogger
 	
 	private val validatesConnections = connectionValidationInterval.isFinite
-	private val validationInterval = connectionValidationInterval.finite.getOrElse(Duration.Zero)
+	private val validationInterval = connectionValidationInterval.finiteOrZero
 	
 	private val connections = Volatile.seq[ReusableConnection]()
 	private val waitLock = new AnyRef()

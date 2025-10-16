@@ -12,7 +12,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success, Try}
@@ -304,7 +304,7 @@ class Schrodinger[+M, +R](fullStatePointer: Changing[(M, R, SchrodingerState)])
 	  * @param exc Implicit execution context.
 	  * @return Instance either based on server result or temporary placeholder, in case the timeout was reached.
 	  */
-	def waitForManifest(timeout: Duration = Duration.Inf)(implicit exc: ExecutionContext) =
+	def waitForManifest(timeout: Duration = Duration.infinite)(implicit exc: ExecutionContext) =
 		finalManifestFuture.waitFor(timeout).getOrElse(manifest)
 	
 	/**

@@ -7,7 +7,7 @@ import utopia.flow.util.Mutate
 import utopia.scribe.api.model.enumeration.CleanupOperation
 import utopia.scribe.core.model.enumeration.Severity
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 object LogStoreDurations
 {

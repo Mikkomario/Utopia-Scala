@@ -2,27 +2,26 @@ package utopia.paradigm.motion.motion2d
 
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.Second
 import utopia.paradigm.generic.ParadigmDataType.Velocity2DType
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.motion.motion3d.Velocity3D
-import utopia.paradigm.motion.template.{ChangeFromModelFactory, ModelConvertibleChange, VelocityLike}
+import utopia.paradigm.motion.template.{ChangeFactory, ModelConvertibleChange, VelocityLike}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions}
 
-import scala.concurrent.duration.{Duration, TimeUnit}
-
 object Velocity2D
-	extends DimensionsWrapperFactory[LinearVelocity, Velocity2D] with ChangeFromModelFactory[Velocity2D, Vector2D]
+	extends DimensionsWrapperFactory[LinearVelocity, Velocity2D] with ChangeFactory[Velocity2D, Vector2D]
 {
 	// ATTRIBUTES   -------------------------
 	
 	/**
 	  * A zero velocity
 	  */
-	val zero = Velocity2D(Vector2D.zero, 1.seconds)
+	lazy val zero = apply(Vector2D.zero, Second)
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -41,16 +40,6 @@ object Velocity2D
 	}
 	
 	override protected def amountFromValue(value: Value) = value.tryVector2D
-	
-	
-	// OTHER    -----------------------------
-	
-	/**
-	  * @param amount Distance vector traversed in 1 time unit
-	  * @param timeUnit Time unit used (implicit)
-	  * @return A new velocity
-	  */
-	def apply(amount: Vector2D)(implicit timeUnit: TimeUnit): Velocity2D = new Velocity2D(amount, Duration(1, timeUnit))
 }
 
 /**

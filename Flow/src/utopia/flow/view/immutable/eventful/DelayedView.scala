@@ -10,7 +10,7 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 object DelayedView
@@ -24,7 +24,7 @@ object DelayedView
 	  * @tparam A Type of the values in the other item
 	  * @return A new delayed view
 	  */
-	def apply[A](source: Changing[A], delay: FiniteDuration, condition: Changing[Boolean] = AlwaysTrue)
+	def apply[A](source: Changing[A], delay: Duration, condition: Changing[Boolean] = AlwaysTrue)
 	            (implicit exc: ExecutionContext) =
 		new DelayedView[A](source, delay, condition)
 }
@@ -42,7 +42,7 @@ object DelayedView
   * @param exc Implicit execution context
   * @tparam A Type of original pointer value
   */
-class DelayedView[A](val source: Changing[A], delay: FiniteDuration, condition: Changing[Boolean] = AlwaysTrue)
+class DelayedView[A](val source: Changing[A], delay: Duration, condition: Changing[Boolean] = AlwaysTrue)
                     (implicit exc: ExecutionContext)
 	extends ChangingWrapper[A]
 {

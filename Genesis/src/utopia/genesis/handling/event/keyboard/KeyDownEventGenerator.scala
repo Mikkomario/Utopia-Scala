@@ -14,7 +14,7 @@ import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.template.Handlers
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object KeyDownEventGenerator
 {
@@ -140,7 +140,7 @@ class KeyDownEventGenerator(val handler: KeyDownHandler)(implicit log: Logger)
 		
 		// IMPLEMENTED  -------------------
 		
-		override def act(duration: FiniteDuration): Unit = {
+		override def act(duration: Duration): Unit = {
 			val now = Now.toInstant
 			val keyboardState = keyboardStatePointer.value
 			downKeysPointer.value.view

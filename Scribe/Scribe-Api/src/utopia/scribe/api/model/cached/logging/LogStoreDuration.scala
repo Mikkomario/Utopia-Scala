@@ -7,7 +7,7 @@ import utopia.flow.operator.MaybeEmpty
 import utopia.scribe.api.model.enumeration.CleanupOperation
 import utopia.scribe.api.model.enumeration.CleanupOperation.{Delete, Merge}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 object LogStoreDuration
 {
@@ -147,7 +147,7 @@ case class LogStoreDuration(thresholds: Map[CleanupOperation, Seq[Pair[Duration]
 		else {
 			val largest = thresholds.head
 			// Converts the thresholds into ranges
-			val rangesIter = (Span(Duration.Inf, largest.first), largest.second) +:
+			val rangesIter = (Span(Duration.infinite, largest.first), largest.second) +:
 				thresholds.iterator.paired.map { case Pair(larger, smaller) =>
 					Span(larger.first, smaller.first) -> larger.second
 				}
@@ -220,7 +220,7 @@ case class LogStoreDuration(thresholds: Map[CleanupOperation, Seq[Pair[Duration]
 	  *                  regardless of whether they're active or not.
 	  * @return Copy of this set with the specified (maximum) issue lifetime duration applied.
 	  */
-	def deletingAnythingAfter(threshold: Duration) = withDeleteAfter(Duration.Zero, threshold)
+	def deletingAnythingAfter(threshold: Duration) = withDeleteAfter(Duration.zero, threshold)
 	
 	/**
 	  * @param other Another set of durations

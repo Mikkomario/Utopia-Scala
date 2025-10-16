@@ -6,7 +6,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * This context object holds certain global values required by many features in this project. It is recommended to
@@ -48,7 +48,7 @@ object CitadelContext
 	def descriptionRoleCacheDuration = data match
 	{
 		case Some(data) => data.descriptionRoleCacheDuration
-		case None => Duration.Zero
+		case None => Duration.zero
 	}
 	
 	@throws[EnvironmentNotSetupException]("If .setup(...) hasn't been called yet")

@@ -1,13 +1,12 @@
 package utopia.flow.util.logging
 
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.TimedSysErrLogger.timeFormat
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.TimedSysErrLogger.timeFormat
 
 import java.time.format.DateTimeFormatter
 import scala.annotation.unused
-import scala.concurrent.duration.Duration
 import scala.language.implicitConversions
 
 object TimedSysErrLogger
@@ -54,7 +53,7 @@ class TimedSysErrLogger(bundleDuration: Duration) extends Logger
 		// Determines whether a new separated group of entries should be started,
 		// or whether to append the previous list of entries
 		val t = Now.toLocalDateTime
-		val startsNewGroup = error.isDefined || bundleDuration.finite.exists { t > lastLogTime + _ }
+		val startsNewGroup = error.isDefined || bundleDuration.ifFinite.exists { t > lastLogTime + _ }
 		
 		// Writes the header, if appropriate
 		if (startsNewGroup)

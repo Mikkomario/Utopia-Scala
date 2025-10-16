@@ -8,7 +8,7 @@ import utopia.flow.view.template.eventful.Flag
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object LoopingProcess
 {
@@ -44,7 +44,7 @@ object LoopingProcess
 	  * @param exc Implicit execution context
 	  * @return A new looping process
 	  */
-	def static[U](interval: FiniteDuration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false,
+	def static[U](interval: Duration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false,
 	              isRestartable: Boolean = true)
 	             (f: => Flag => U)
 	             (implicit exc: ExecutionContext, logger: Logger) =

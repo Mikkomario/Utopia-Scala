@@ -1,5 +1,19 @@
 package utopia.flow.operator.equality
 
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.equality.EqualsBy.hashCodeFrom
+
+object EqualsBy
+{
+	def hashCodeFrom(first: Any, second: Any, more: Any*): Int = hashCodeFrom(Pair(first, second) ++ more)
+	/**
+	 * @param properties A set of properties
+	 * @return A hashcode constructed by combining the hashcodes of the specified properties
+	 */
+	def hashCodeFrom(properties: Iterable[Any]) =
+		properties.foldLeft(1) { (result, property) => 31 * result + property.hashCode() }
+}
+
 /**
   * This is an utility interface into the Equals -trait, providing a sample implementation.
   * This trait should only be implemented by immutable elements that have value semantics
@@ -10,8 +24,7 @@ trait EqualsBy extends Equals
 {
 	// ATTRIBUTES   ----------------------
 	
-	private lazy val _hashCode =
-		equalsProperties.foldLeft(1) { (result, property) => 31 * result + property.hashCode() }
+	private lazy val _hashCode = hashCodeFrom(equalsProperties)
 	
 	
 	// COMPUTED PROPS    -----------------

@@ -1,19 +1,19 @@
 package utopia.paradigm.motion.motion3d
 
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.motion.motion1d.LinearAcceleration
 import utopia.paradigm.motion.motion2d.Acceleration2D
-import utopia.paradigm.motion.template.{AccelerationLike, ChangeFromModelFactory, ModelConvertibleChange}
+import utopia.paradigm.motion.template.{AccelerationFactory, AccelerationLike, ChangeFactory, ModelConvertibleChange}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions}
 
-import scala.concurrent.duration.{Duration, TimeUnit}
-
-object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Acceleration3D]
-	with ChangeFromModelFactory[Acceleration3D, Velocity3D]
+object Acceleration3D
+	extends DimensionsWrapperFactory[LinearAcceleration, Acceleration3D]
+		with AccelerationFactory[Acceleration3D, Velocity3D, Vector3D]
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -27,6 +27,8 @@ object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Accel
 	
 	override def zeroDimension = LinearAcceleration.zero
 	
+	override protected def velocityFactory: ChangeFactory[Velocity3D, Vector3D] = Velocity3D
+	
 	override def apply(dimensions: Dimensions[LinearAcceleration]) = {
 		val d = dimensions.x.duration
 		apply(Velocity3D(dimensions.map { _ over d }), d)
@@ -39,25 +41,6 @@ object Acceleration3D extends DimensionsWrapperFactory[LinearAcceleration, Accel
 	}
 	
 	override protected def amountFromValue(value: Value) = value.tryVelocity3D
-	
-	
-	// OTHER    -----------------------------
-	
-	/**
-	  * @param velocityChange Amount of velocity change in 1 time unit
-	  * @param timeUnit Time unit used (implicit)
-	  * @return A new acceleration
-	  */
-	def apply(velocityChange: Vector3D)(implicit timeUnit: TimeUnit): Acceleration3D =
-		new Acceleration3D(Velocity3D(velocityChange), Duration(1, timeUnit))
-	
-	/**
-	  * @param velocityChange Amount of change in velocity over duration
-	  * @param duration Duration in which the specified change occurs
-	  * @return An acceleration adjusting velocity by 'velocityChange' over 'duration'
-	  */
-	def apply(velocityChange: Vector3D, duration: Duration): Acceleration3D =
-		apply(Velocity3D(velocityChange, duration), duration)
 }
 
 /**

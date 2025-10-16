@@ -12,8 +12,6 @@ import utopia.vault.database.Connection
 import utopia.vault.error.HandleError
 import utopia.vault.nosql.view.UnconditionalView
 
-import scala.concurrent.duration.Duration
-
 /**
   * The root access point when targeting multiple DescriptionRoles at a time
   * @author Mikko Hilpinen
@@ -26,7 +24,7 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 	// Caches all description roles, since they are needed relatively often and change rarely
 	private lazy val cache: Option[Lazy[Seq[DescriptionRole]]] = {
 		val cacheDuration = CitadelContext.descriptionRoleCacheDuration
-		if (cacheDuration <= Duration.Zero)
+		if (cacheDuration.isNotPositive)
 			None
 		else {
 			import CitadelContext.{connectionPool, executionContext}
@@ -58,10 +56,6 @@ object DbDescriptionRoles extends ManyDescriptionRolesAccess with UnconditionalV
 	override def all(implicit connection: Connection) = cache match {
 		case Some(c) => c.value
 		case None => super.all
-	}
-	override def foreach[U](f: DescriptionRole => U)(implicit connection: Connection) = cache match {
-		case Some(c) => c.value.foreach(f)
-		case None => super.foreach(f)
 	}
 	override def pull(implicit connection: Connection) = cache match {
 		case Some(c) => c.value

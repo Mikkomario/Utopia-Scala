@@ -10,7 +10,7 @@ import utopia.paradigm.shape.shape2d.vector.size.Size
 
 import java.nio.file.Path
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * Used for caching single color icons
@@ -24,7 +24,7 @@ import scala.concurrent.duration.FiniteDuration
   */
 @deprecated("Please use ImageCache.icons(...) instead", "v1.1.1")
 class SingleColorIconCache(val imageReadDirectory: Path, standardIconSize: Option[Size] = None,
-						   cacheDuration: FiniteDuration = 3.minutes)
+						   cacheDuration: Duration = 3.minutes)
                           (implicit exc: ExecutionContext, log: Logger)
 {
 	// ATTRIBUTES	--------------------------

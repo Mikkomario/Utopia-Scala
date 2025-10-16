@@ -1,17 +1,17 @@
 package utopia.paradigm.test
 
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit
+import utopia.flow.time.TimeUnit.MilliSecond
 import utopia.paradigm.angular.Angle
 import utopia.paradigm.enumeration.Axis.X
+import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.measurement.DistanceUnit.KiloMeter
 import utopia.paradigm.motion.motion1d.{LinearAcceleration, LinearVelocity}
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.shape3d.Vector3D
-import utopia.paradigm.measurement.DistanceExtensions._
-
-import java.util.concurrent.TimeUnit
 
 /**
   * Used for testing velocity-related classes
@@ -20,11 +20,11 @@ import java.util.concurrent.TimeUnit
   */
 object VelocityTest extends App
 {
-	implicit val velocityTimeUnit: TimeUnit = TimeUnit.MILLISECONDS
+	implicit val velocityTimeUnit: TimeUnit = MilliSecond
 	
 	// Tests linear velocity first
-	val v1 = LinearVelocity(1) // Speed of 1 / ms
-	val v2 = LinearVelocity(2) // Speed of 2 / ms
+	val v1 = LinearVelocity.of(1) // Speed of 1 / ms
+	val v2 = LinearVelocity.of(2) // Speed of 2 / ms
 	val v3 = LinearVelocity(1, 2.millis) // Speed of 0.5 / ms
 	
 	assert(v1 < v2)
@@ -37,16 +37,16 @@ object VelocityTest extends App
 	assert(v1 * 2 == v2)
 	assert(v1 / 2 == v3)
 	assert(v3 * 4 == v2)
-	assert(v1 + v2 == LinearVelocity(3))
+	assert(v1 + v2 == LinearVelocity.of(3))
 	assert(v1 + v3 == LinearVelocity(3, 2.millis))
 	
 	assert(v1.abs == v1)
 	assert((-v1).abs == v1)
-	assert(v1.minZero == v1)
-	assert((-v1).minZero == LinearVelocity.zero)
-	assert(v1.average(v2) == LinearVelocity(1.5))
-	assert(v1.decreasePreservingDirection(LinearVelocity(1.2)) == LinearVelocity.zero)
-	assert(v1.decreasePreservingDirection(LinearVelocity(0.5)) == v3)
+	assert(v1.atLeastZero == v1)
+	assert((-v1).atLeastZero == LinearVelocity.zero)
+	assert(v1.average(v2) == LinearVelocity.of(1.5))
+	assert(v1.decreasePreservingDirection(LinearVelocity.of(1.2)) == LinearVelocity.zero)
+	assert(v1.decreasePreservingDirection(LinearVelocity.of(0.5)) == v3)
 	
 	// Tests distance calculation
 	// x1 = x0 + vt
@@ -58,12 +58,12 @@ object VelocityTest extends App
 	assert(v3(2.millis) == 1)
 	
 	// Next tests velocity
-	val v4 = Velocity3D(X(1))
+	val v4 = Velocity3D.of(X(1).toVector3D)
 	val v5 = Velocity3D(Vector3D(1, 1), 2.millis)
-	val v6 = Velocity3D(Vector3D(2, 1, 0.5))
+	val v6 = Velocity3D.of(Vector3D(2, 1, 0.5))
 	
 	assert(v4.linear == v1)
-	assert(v4 * 2 == Velocity3D(X(2)))
+	assert(v4 * 2 == Velocity3D.of(X(2).toVector3D))
 	assert(v4 + v5 == Velocity3D(Vector3D(3, 1), 2.millis))
 	
 	assert(v4(2.millis) == X(2).in3D, v4(2.millis))
@@ -73,27 +73,27 @@ object VelocityTest extends App
 	assert(v1.withDirection(Angle.right) == v4.in2D)
 	assert(v4.direction == Angle.right)
 	// assert(v4.in2D == v4)
-	assert(v6.in2D == Velocity2D(Vector2D(2, 1)))
+	assert(v6.in2D == Velocity2D.of(Vector2D(2, 1)))
 	
 	assert(v4.average(v5) == Velocity3D(Vector3D(1.5, 0.5), 2.millis))
-	assert(v4 + v1 == Velocity3D(X(2)))
-	assert(v4 - v1 * 2 == Velocity3D(X(-1)))
+	assert(v4 + v1 == Velocity3D.of(X(2).toVector3D))
+	assert(v4 - v1 * 2 == Velocity3D.of(X(-1).toVector3D))
 	assert(v4.decreasePreservingDirection(v1 * 2) == Velocity3D.zero)
 	
 	// Next tests acceleration
-	val a1 = LinearAcceleration(1)
+	val a1 = LinearAcceleration.ofSquare(1)
 	val a2 = LinearAcceleration(LinearVelocity(2, 1.millis), 3.millis)
-	val a3 = LinearAcceleration(-0.5)
+	val a3 = LinearAcceleration.ofSquare(-0.5)
 	
 	assert(a1(1.millis) == v1)
-	assert(a2(6.millis) == LinearVelocity(4))
-	assert(a3(0.5.millis) == LinearVelocity(-0.25))
+	assert(a2(6.millis) == LinearVelocity.of(4))
+	assert(a3(0.5.millis) == LinearVelocity.of(-0.25))
 	
 	// x1 = 0.5at^2 + v0t + x0
-	assert(v1(1.millis, a1) == (1.5, LinearVelocity(2)))
-	assert(v1(2.millis, a1) == (4, LinearVelocity(3)))
-	assert(v2(1.millis, a3) == (1.75, LinearVelocity(1.5)))
-	assert(v2(2.millis, a3) == (3, LinearVelocity(1)))
+	assert(v1(1.millis, a1) == (1.5, LinearVelocity.of(2)))
+	assert(v1(2.millis, a1) == (4, LinearVelocity.of(3)))
+	assert(v2(1.millis, a3) == (1.75, LinearVelocity.of(1.5)))
+	assert(v2(2.millis, a3) == (3, LinearVelocity.of(1)))
 	
 	assert(v1.durationUntilStopWith(a3) == 2.millis)
 	assert(v2.durationUntilStopWith(a3) == 4.millis)

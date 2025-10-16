@@ -8,7 +8,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.eventful.{EventfulPointer, IndirectPointer, LockablePointer}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 object LoggingPointerFactory

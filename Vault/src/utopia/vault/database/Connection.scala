@@ -9,7 +9,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueConverterManager
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.AutoClose._
-import utopia.flow.parse.string.IterateLines
+import utopia.flow.parse.string.Lines
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
@@ -808,32 +808,30 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 	  */
 	def executeStatementsFrom(inputPath: Path, requireTargetedDb: Boolean = false) = {
 		// Reads the file and executes statements whenever one has been completely read
-		IterateLines.fromPath(inputPath) { lines =>
-			Try {
-				val c = possiblyTargetedConnection(requireTargetedDb)
-				var currentStatementBuilder = new StringBuilder()
-				lines.map { _.trim }.filterNot { s => s.isEmpty || s.startsWith("--") }.foreach { line =>
-					splitToStatements(line) match {
-						// Appends current statement until its end is found
-						case Right(partialStatement) =>
-							currentStatementBuilder ++= partialStatement
+		Lines.iterate.path(inputPath) { linesIter =>
+			val c = possiblyTargetedConnection(requireTargetedDb)
+			var currentStatementBuilder = new StringBuilder()
+			linesIter.map { _.trim }.filterNot { s => s.isEmpty || s.startsWith("--") }.foreach { line =>
+				splitToStatements(line) match {
+					// Appends current statement until its end is found
+					case Right(partialStatement) =>
+						currentStatementBuilder ++= partialStatement
+						currentStatementBuilder += ' '
+					case Left((statementEnd, completeStatements, statementStart)) =>
+						// Completes and executes current statement
+						currentStatementBuilder ++= statementEnd
+						_executeWith(c, currentStatementBuilder.result())
+						// Executes other complete statements on this line
+						completeStatements.foreach { _executeWith(c, _) }
+						// Starts building the next statement
+						currentStatementBuilder = new StringBuilder()
+						statementStart.foreach { s =>
+							currentStatementBuilder ++= s
 							currentStatementBuilder += ' '
-						case Left((statementEnd, completeStatements, statementStart)) =>
-							// Completes and executes current statement
-							currentStatementBuilder ++= statementEnd
-							_executeWith(c, currentStatementBuilder.result())
-							// Executes other complete statements on this line
-							completeStatements.foreach { _executeWith(c, _) }
-							// Starts building the next statement
-							currentStatementBuilder = new StringBuilder()
-							statementStart.foreach { s =>
-								currentStatementBuilder ++= s
-								currentStatementBuilder += ' '
-							}
-					}
+						}
 				}
 			}
-		}.flatten
+		}
 	}
 	
 	private def openConnection() = Try {

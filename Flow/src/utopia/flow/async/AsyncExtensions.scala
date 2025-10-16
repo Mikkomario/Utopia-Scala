@@ -7,7 +7,7 @@ import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -36,7 +36,7 @@ object AsyncExtensions
 	     * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 	     * @return The result of the future. A failure if this future failed or if timeout was reached
 	     */
-	    def waitFor(timeout: Duration = Duration.Inf) = Try { Await.result(f, timeout) }
+	    def waitFor(timeout: Duration = Duration.infinite) = Try { Await.result(f, timeout.toScala) }
 		/**
 		  * Blocks and waits for the result of this future.
 		  * Terminates on one of 3 conditions, whichever occurs first:
@@ -49,7 +49,7 @@ object AsyncExtensions
 		  * @return Success if this future resolved successfully before the timeout was reached
 		  *         and before the wait lock was notified. Failure otherwise.
 		  */
-		def waitWith(waitLock: AnyRef, timeout: Duration = Duration.Inf)(implicit exc: ExecutionContext) = {
+		def waitWith(waitLock: AnyRef, timeout: Duration = Duration.infinite)(implicit exc: ExecutionContext) = {
 			// If already completed, returns with completion value
 			f.value.getOrElse {
 				// If not, diverges into two paths:
@@ -78,7 +78,7 @@ object AsyncExtensions
 		  * @return A future that contains the result of the original future or a failure if timeout was passed
 		  *         before receiving a result.
 		  */
-		def withTimeout(timeout: FiniteDuration)(implicit exc: ExecutionContext) =
+		def withTimeout(timeout: Duration)(implicit exc: ExecutionContext) =
 			Future { waitFor(timeout) }
 		
 		/**
@@ -253,7 +253,7 @@ object AsyncExtensions
 		  * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 		  * @return The result of the future. A failure if this future failed, if timeout was reached or if result was a failure
 		  */
-		def waitForResult(timeout: Duration = Duration.Inf): Try[A] = f.waitFor(timeout).flatten
+		def waitForResult(timeout: Duration = Duration.infinite): Try[A] = f.waitFor(timeout).flatten
 		
 		/**
 		  * Creates a copy of this future with specified timeout. The resulting future will contain a failure if result
@@ -263,7 +263,7 @@ object AsyncExtensions
 		  * @return A future that will contain a failure if result is not received within timeout duration (the future will also
 		  *         contain a failure if this future received a failure result)
 		  */
-		def resultWithTimeout(timeout: FiniteDuration)(implicit exc: ExecutionContext) =
+		def resultWithTimeout(timeout: Duration)(implicit exc: ExecutionContext) =
 			if (f.isCompleted) Future.successful(waitForResult()) else Future { waitForResult(timeout) }
 		
 		/**
@@ -348,7 +348,7 @@ object AsyncExtensions
 		 * @return The result of the future. A failure if this future failed,
 		 *         if timeout was reached or if result was a failure
 		 */
-		def waitForResult(timeout: Duration = Duration.Inf): TryCatch[A] = f.waitFor(timeout).flattenCatching
+		def waitForResult(timeout: Duration = Duration.infinite): TryCatch[A] = f.waitFor(timeout).flattenCatching
 		
 		/**
 		 * @param map A mapping function applied if this future resolves successfully

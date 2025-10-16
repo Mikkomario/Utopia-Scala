@@ -15,7 +15,7 @@ import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.util.ComponentToImage
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 
 object AnimatedSwitchPanel
@@ -41,7 +41,7 @@ object AnimatedSwitchPanel
   * @since 19.4.2020, v1.2
   */
 class AnimatedSwitchPanel[C <: AwtStackable](initialContent: C, actorHandler: ActorHandler,
-                                             duration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                             duration: Duration = ComponentCreationDefaults.transitionDuration,
                                              maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 											(implicit exc: ExecutionContext)
 	extends StackableAwtComponentWrapperWrapper with AwtContainerRelated with SwingComponentRelated

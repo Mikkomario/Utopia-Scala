@@ -1,7 +1,7 @@
 package utopia.ambassador.model.cached
 
 import utopia.disciple.controller.Gateway
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Specifies settings to use when acquiring new access tokens
@@ -12,5 +12,5 @@ import scala.concurrent.duration.Duration
   * @param useAuthorizationHeader Whether client id and client secret should be sent
   *                               in a basic auth header (true) or in the request body (false, default)
   */
-case class TokenInterfaceConfiguration(gateway: Gateway, refreshTokenDuration: Duration = Duration.Inf,
+case class TokenInterfaceConfiguration(gateway: Gateway, refreshTokenDuration: Duration = Duration.infinite,
                                        useAuthorizationHeader: Boolean = false)

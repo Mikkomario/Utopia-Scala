@@ -1,5 +1,8 @@
 # Utopia Conflict - List of Changes
 
+## v1.6.1 (in development)
+Supports latest changes in **Flow**
+
 ## v1.6 - 23.01.2025
 This small update reflects changes in **Genesis**, where implicit **Logger** access is now required when 
 constructing **Handler**s.

@@ -13,7 +13,7 @@ import utopia.flow.view.mutable.async.Volatile
 import java.io.{FileOutputStream, OutputStream, OutputStreamWriter, PrintWriter}
 import java.nio.file.Path
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.util.{Success, Try}
@@ -28,7 +28,7 @@ object KeptOpenWriter
 	  * @param exc Implicit execution context used for closing the writer asynchronously
 	  * @return A new writer wrapper
 	  */
-	def apply(path: Path, keepOpenDuration: FiniteDuration)
+	def apply(path: Path, keepOpenDuration: Duration)
 	         (implicit codec: Codec, exc: ExecutionContext, logger: Logger) =
 	{
 		val existingPathPointer = Lazy { path.createDirectories() }
@@ -42,7 +42,7 @@ object KeptOpenWriter
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
-class KeptOpenWriter(keepOpenDuration: FiniteDuration)(generate: => OutputStream)
+class KeptOpenWriter(keepOpenDuration: Duration)(generate: => OutputStream)
                     (implicit codec: Codec, exc: ExecutionContext, logger: Logger)
 {
 	// ATTRIBUTES   ----------------------------

@@ -1,12 +1,10 @@
 package utopia.genesis.handling.event.mouse
 
 import utopia.flow.operator.filter.{AcceptAll, Filter, RejectAll}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.genesis.handling.event.consume.{Consumable, ConsumeEvent}
 import utopia.genesis.handling.event.mouse.MouseEvent.MouseFilteringFactory
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object MouseOverEvent
 {
@@ -40,10 +38,10 @@ object MouseOverEvent
 		  * @return An item that only accepts events once the hover extends over the specified duration
 		  */
 		def longerThan(minimumDuration: Duration) = {
-			if (minimumDuration <= Duration.Zero)
+			if (minimumDuration.isNotPositive)
 				withFilter(AcceptAll)
 			else
-				minimumDuration.finite match {
+				minimumDuration.ifFinite match {
 					case Some(duration) => withFilter { _.totalDuration >= duration }
 					case None => withFilter(RejectAll)
 				}
@@ -88,7 +86,7 @@ object MouseOverEvent
   *                     None if this event hasn't yet been consumed.
   */
 case class MouseOverEvent(override val position: RelativePoint, override val buttonStates: MouseButtonStates,
-                          duration: FiniteDuration, totalDuration: FiniteDuration,
+                          duration: Duration, totalDuration: Duration,
                           override val consumeEvent: Option[ConsumeEvent] = None)
 	extends MouseEvent[MouseOverEvent] with Consumable[MouseOverEvent]
 {

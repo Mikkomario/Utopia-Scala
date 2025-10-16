@@ -4,14 +4,14 @@ import utopia.paradigm.motion.template.VelocityTracker
 import utopia.paradigm.shape.shape3d.Vector3D
 
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 /**
   * Used for tracking three dimensional position, velocity and acceleration
   * @author Mikko Hilpinen
   * @since Genesis 22.7.2020, v2.3
   */
-class VelocityTracker3D(maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.Zero)
+class VelocityTracker3D(maxHistoryDuration: Duration, minCacheInterval: Duration = Duration.zero)
 	extends VelocityTracker[Vector3D, Velocity3D, Acceleration3D, MovementStatus3D, MovementHistory3D](
 		maxHistoryDuration, minCacheInterval)
 {
@@ -19,10 +19,10 @@ class VelocityTracker3D(maxHistoryDuration: Duration, minCacheInterval: Duration
 	override protected def zeroVelocity = Velocity3D.zero
 	override protected def zeroAcceleration = Acceleration3D.zero
 	
-	override protected def calculateVelocity(distance: Vector3D, duration: FiniteDuration) =
+	override protected def calculateVelocity(distance: Vector3D, duration: Duration) =
 		distance.traversedIn(duration)
 	
-	override protected def calculateAcceleration(velocityChange: Velocity3D, duration: FiniteDuration) =
+	override protected def calculateAcceleration(velocityChange: Velocity3D, duration: Duration) =
 		velocityChange.acceleratedIn(duration)
 	
 	override protected def combineHistory(positionHistory: Seq[(Vector3D, Instant)],

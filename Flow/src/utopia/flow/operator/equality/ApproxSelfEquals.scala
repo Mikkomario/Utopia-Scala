@@ -17,10 +17,10 @@ trait ApproxSelfEquals[Repr] extends Any with ApproxEquals[Repr]
 	/**
 	  * @return An equals function to use for comparing instances of this class
 	  */
-	implicit def equalsFunction: EqualsFunction[Repr]
+	def approxEqualsFunction: EqualsFunction[Repr]
 	
 	
 	// IMPLEMENTED  -------------------
 	
-	override def ~==(other: Repr) = equalsFunction(self, other)
+	override def ~==(other: Repr) = approxEqualsFunction(self, other)
 }

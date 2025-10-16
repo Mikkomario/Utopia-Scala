@@ -2,7 +2,7 @@ package utopia.flow.parse.file
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
-import utopia.flow.parse.string.{IterateLines, Regex}
+import utopia.flow.parse.string.{Lines, Regex}
 import utopia.flow.util.StringExtensions._
 
 import java.nio.file.Path
@@ -28,12 +28,9 @@ object CsvReader
 	  */
 	def iterateRawRowsIn[A](path: Path, separator: Regex = defaultSeparator)(f: Iterator[IndexedSeq[String]] => A)
 	                       (implicit codec: Codec) =
-	{
-		IterateLines.fromPath(path) { linesIter =>
-			f(linesIter.filterNot { _.isEmpty }
-				.map { _.split(separator).map(processValue) })
+		Lines.iterate.path(path) { linesIter =>
+			f(linesIter.filterNot { _.isEmpty }.map { _.split(separator).map(processValue) })
 		}
-	}
 	
 	/**
 	  * Iterates over the lines in a csv document
@@ -50,7 +47,7 @@ object CsvReader
 	                     (f: Iterator[Model] => A)(implicit codec: Codec) =
 	{
 		// Iterates all lines from the target path
-		IterateLines.fromPath(path) { linesIter =>
+		Lines.iterate.path(path) { linesIter =>
 			// The first line is interpreted as the headers list
 			val iter = linesIter.filterNot { _.isEmpty }.map { _.split(separator).toVector.map(processValue) }
 			if (iter.hasNext) {
@@ -69,7 +66,7 @@ object CsvReader
 			}
 			else
 				f(Iterator.empty)
-		}(codec)
+		}
 	}
 	
 	/**

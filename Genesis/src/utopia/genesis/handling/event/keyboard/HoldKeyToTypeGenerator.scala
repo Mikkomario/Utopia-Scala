@@ -1,15 +1,13 @@
 package utopia.genesis.handling.event.keyboard
 import utopia.flow.operator.filter.{AcceptAll, Filter}
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.Use
-import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.handling.event.keyboard.KeyDownEvent.KeyDownEventFilter
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 
 import scala.collection.mutable
-import scala.concurrent.duration.FiniteDuration
 
 object HoldKeyToTypeGenerator
 {
@@ -30,8 +28,8 @@ object HoldKeyToTypeGenerator
 	 *               Default = no filtering applied.
 	 */
 	def start(keyDownHandler: KeyDownHandler, keyStateHandler: KeyStateHandler, keyTypedHandler: KeyTypedHandler,
-	          listener: KeyTypedListener, initialDelay: FiniteDuration = 0.8.seconds,
-	          eventInterval: FiniteDuration = 0.2.seconds,
+	          listener: KeyTypedListener, initialDelay: Duration = 0.8.seconds,
+	          eventInterval: Duration = 0.2.seconds,
 	          condition: Flag = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll): Unit =
 	{
 		val generator = new HoldKeyToTypeGenerator(listener, initialDelay, eventInterval, condition, filter)
@@ -62,8 +60,8 @@ object HoldKeyToTypeGenerator
  * @author Mikko Hilpinen
  * @since 29/03/2024, v4.0
  */
-class HoldKeyToTypeGenerator(listener: KeyTypedListener, initialDelay: FiniteDuration = 0.8.seconds,
-                             eventInterval: FiniteDuration = 0.2.seconds,
+class HoldKeyToTypeGenerator(listener: KeyTypedListener, initialDelay: Duration = 0.8.seconds,
+                             eventInterval: Duration = 0.2.seconds,
                              condition: Flag = AlwaysTrue, filter: KeyDownEventFilter = AcceptAll)
 	extends KeyDownListener with KeyStateListener with KeyTypedListener
 {
@@ -75,7 +73,7 @@ class HoldKeyToTypeGenerator(listener: KeyTypedListener, initialDelay: FiniteDur
 	
 	// Key is key index
 	// Value is typed character + delay until next event is fired
-	private val eventDelays = mutable.Map[Int, (Char, FiniteDuration)]()
+	private val eventDelays = mutable.Map[Int, (Char, Duration)]()
 	
 	
 	// INITIAL CODE -----------------------

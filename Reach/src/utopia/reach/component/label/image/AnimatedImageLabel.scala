@@ -15,7 +15,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.label.image.AnimatedImageLabelFactory.defaultSettings
 import utopia.reach.component.template.ReachComponentWrapper
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object AnimatedImageLabelFactory
 {
@@ -135,8 +135,8 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		}
 		
 		// If this is a one-time animation, supports pointer-locking
-		private val lockableAdvanceP = if (looping) None else Some(Pointer.lockable[Duration](Duration.Zero))
-		private val advanceP = lockableAdvanceP.getOrElse { Pointer.eventful[Duration](Duration.Zero) }
+		private val lockableAdvanceP = if (looping) None else Some(Pointer.lockable[Duration](Duration.zero))
+		private val advanceP = lockableAdvanceP.getOrElse { Pointer.eventful[Duration](Duration.zero) }
 		lazy val imageP = {
 			if (transformAnimation.exists { _.duration > animation.duration })
 				advanceP.map(animation.repeating)
@@ -160,7 +160,7 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		
 		// IMPLEMENTED  ---------------------
 		
-		override def act(duration: FiniteDuration): Unit = {
+		override def act(duration: Duration): Unit = {
 			// Advances the animation, if possible
 			val isFinished = advanceP.mutate { advance =>
 				val newAdvance = advance + duration

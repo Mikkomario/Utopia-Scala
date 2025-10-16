@@ -10,7 +10,7 @@ import utopia.flow.view.mutable.{Pointer, Resettable, Switch}
 
 import java.time.Instant
 import scala.annotation.unchecked.uncheckedVariance
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.util.{Failure, Success, Try}
 
 object LazilyUpdating
@@ -31,7 +31,7 @@ object LazilyUpdating
 	  * @tparam A Type of values held in this container
 	  * @return A new lazily updating container
 	  */
-	def apply[A](initialValue: A, invalidatesAfter: Duration = Duration.Inf)
+	def apply[A](initialValue: A, invalidatesAfter: Duration = Duration.infinite)
 	            (update: (A, Instant) => A)(implicit log: Logger) =
 		new LazilyUpdating[A](initialValue, invalidatesAfter)(update)
 }
@@ -41,13 +41,13 @@ object LazilyUpdating
   * @author Mikko Hilpinen
   * @since 01.11.2024, v2.5.1
   */
-class LazilyUpdating[+A](initialValue: A, invalidatesAfter: Duration = Duration.Inf)
+class LazilyUpdating[+A](initialValue: A, invalidatesAfter: Duration = Duration.infinite)
                         (update: (A, Instant) => A)(implicit log: Logger)
 	extends View[A] with Resettable
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val finiteInvalidation = invalidatesAfter.finite
+	private val finiteInvalidation = invalidatesAfter.ifFinite
 	
 	// Contains the previous update value
 	// Variance here is ignored, as only values yielded by 'update' are stored here (all <: A)

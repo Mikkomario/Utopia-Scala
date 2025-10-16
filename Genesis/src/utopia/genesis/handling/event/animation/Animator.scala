@@ -10,7 +10,7 @@ import utopia.flow.view.template.eventful.{Changing, ChangingWrapper, Flag}
 import utopia.genesis.handling.action.Actor
 import utopia.genesis.handling.event.animation.AnimationEvent.{Completed, Paused, Started}
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 /**
   * A pointer-based class that advances an animation over time, according to the instructions it receives.
@@ -174,7 +174,7 @@ class Animator[+A](instructionPointer: Changing[AnimatorInstruction[A]], activeF
 	override implicit def listenerLogger: Logger = instructionPointer.listenerLogger
 	override protected def wrapped: Changing[A] = animatedPointer
 	
-	override def act(duration: FiniteDuration): Unit = {
+	override def act(duration: Duration): Unit = {
 		val i = instruction
 		// Progresses the current animation
 		val completionEvent = progressPointer.mutate { p =>

@@ -16,7 +16,7 @@ import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
 import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[Vector3D]
 {

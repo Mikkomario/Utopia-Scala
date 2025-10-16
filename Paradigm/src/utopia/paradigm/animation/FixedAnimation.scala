@@ -1,5 +1,5 @@
 package utopia.paradigm.animation
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * A static animation that won't change

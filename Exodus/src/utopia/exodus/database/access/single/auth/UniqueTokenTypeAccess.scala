@@ -1,18 +1,19 @@
 package utopia.exodus.database.access.single.auth
 
-import java.time.Instant
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
 import utopia.exodus.database.factory.auth.TokenTypeFactory
 import utopia.exodus.database.model.auth.TokenTypeModel
 import utopia.exodus.model.stored.auth.TokenType
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.Minute
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.access.template.model.DistinctModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.sql.Exists
+
+import java.time.Instant
 
 /**
   * A common trait for access points that return individual and distinct token types.
@@ -34,8 +35,8 @@ trait UniqueTokenTypeAccess
 	  * Duration that determines how long these tokens remain valid after issuing. None if these tokens don't
 	  *  expire automatically.. None if no instance (or value) was found.
 	  */
-	def duration(implicit connection: Connection) = 
-		pullColumn(model.durationColumn).long.map { FiniteDuration(_, TimeUnit.MINUTES) }
+	def duration(implicit connection: Connection) =
+		pullColumn(model.durationColumn).long.map(Minute.apply)
 	
 	/**
 	  * Id of the type of token that may be acquired by using this token type as a refresh token, 
@@ -95,8 +96,8 @@ trait UniqueTokenTypeAccess
 	  * @param newDuration A new duration to assign
 	  * @return Whether any token type was affected
 	  */
-	def duration_=(newDuration: FiniteDuration)(implicit connection: Connection) = 
-		putColumn(model.durationColumn, newDuration.toUnit(TimeUnit.MINUTES))
+	def duration_=(newDuration: Duration)(implicit connection: Connection) =
+		putColumn(model.durationColumn, newDuration.toMinutes)
 	
 	/**
 	  * Updates the are single use only of the targeted token types

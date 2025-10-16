@@ -1,6 +1,7 @@
 package utopia.genesis.handling.event.keyboard
 
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{DelegatingLogger, Logger, SysErrLogger}
 import utopia.flow.view.mutable.Pointer
@@ -12,7 +13,6 @@ import java.awt.KeyboardFocusManager
 import java.awt.event.KeyEvent
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 /**
   * Common interface for keyboard events throughout the application
@@ -116,7 +116,7 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	 * @param multiTypeInterval Time interval between generated key typed -events. Default = 0.2 seconds
 	 */
 	def setupKeyDownEvents(actorHandler: ActorHandler, beforeMultiTypeDelay: Duration = 0.8.seconds,
-	                       multiTypeInterval: FiniteDuration = 0.2.seconds): Unit =
+	                       multiTypeInterval: Duration = 0.2.seconds): Unit =
 	{
 		if (!keyDownStarted) {
 			keyDownStarted = true
@@ -126,8 +126,8 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 			generator.start(actorHandler, keyStateHandler)
 			
 			// Also starts key typed -event generation
-			beforeMultiTypeDelay.finite.foreach { delay =>
-				multiTypeInterval.finite.foreach { interval =>
+			beforeMultiTypeDelay.ifFinite.foreach { delay =>
+				multiTypeInterval.ifFinite.foreach { interval =>
 					HoldKeyToTypeGenerator.start(keyDownHandler, keyStateHandler, directKeyTypedHandler,
 						keyTypedHandler, delay, interval)
 				}

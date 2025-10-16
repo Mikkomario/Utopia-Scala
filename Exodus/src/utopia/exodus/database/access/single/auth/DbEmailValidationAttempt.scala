@@ -1,6 +1,6 @@
 package utopia.exodus.database.access.single.auth
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import utopia.citadel.database.access.single.user.DbUserSettings
 import utopia.exodus.database.factory.auth.EmailValidationAttemptFactory
 import utopia.exodus.database.model.auth.EmailValidationAttemptModel

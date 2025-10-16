@@ -4,7 +4,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.{Days, Month, Year, YearMonth}
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 /**
@@ -44,8 +44,8 @@ object ValueUnwraps
 	implicit def valueToLocalDateTimeOption(v: Value): Option[LocalDateTime] = v.localDateTime
 	implicit def valueToLocalDateTime(v: Value): LocalDateTime = v.getLocalDateTime
 	
-	implicit def valueToDuration(v: Value): FiniteDuration = v.getDuration
-	implicit def valueToDurationOption(v: Value): Option[FiniteDuration] = v.duration
+	implicit def valueToDuration(v: Value): Duration = v.getDuration
+	implicit def valueToDurationOption(v: Value): Option[Duration] = v.duration
 	
 	implicit def valueToDays(v: Value): Days = v.getDays
 	implicit def valueToDaysOption(v: Value): Option[Days] = v.days

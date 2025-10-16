@@ -1,8 +1,8 @@
 package utopia.scribe.client.controller.logging
 
-import utopia.access.model.enumeration.Method.Post
 import utopia.access.model.enumeration.Method
-import utopia.annex.controller.{ApiClient, PersistedRequestHandler, PersistingRequestQueue, QueueSystem, RequestQueue}
+import utopia.access.model.enumeration.Method.Post
+import utopia.annex.controller._
 import utopia.annex.model.request.{ApiRequest, Persisting}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
@@ -18,7 +18,7 @@ import utopia.flow.generic.model.template.ModelLike.AnyModel
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -34,7 +34,6 @@ import utopia.scribe.core.model.post.logging.ClientIssue
 
 import java.nio.file.Path
 import java.time.Instant
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.concurrent.{ExecutionContext, Future}
 
 object MasterScribe
@@ -80,7 +79,7 @@ object MasterScribe
 	  * @return A new master scribe interface instance
 	  */
 	def apply(queueSystem: QueueSystem, loggingEndpointPath: String, backupLogger: Logger = SysErrLogger,
-	          issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
+	          issueBundleDuration: HasEnds[Duration] = Span.singleValue(Duration.zero),
 	          requestStoreLocation: Option[Path] = None,
 	          issueDeprecationDurations: Map[Severity, Duration] = Map(),
 	          maxLogVelocity: Option[(Int, Duration)] = None, modifyIssue: Mutate[ClientIssue] = Identity)
@@ -111,7 +110,7 @@ object MasterScribe
 	  */
 	private class _MasterScribe(queueSystem: QueueSystem, loggingEndpointPath: String,
 	                            backupLogger: Logger = SysErrLogger,
-	                            issueBundleDuration: HasEnds[FiniteDuration] = Span.singleValue(Duration.Zero),
+	                            issueBundleDuration: HasEnds[Duration] = Span.singleValue(Duration.zero),
 	                            requestStoreLocation: Option[Path] = None,
 	                            issueDeprecationDurations: Map[Severity, Duration] = Map(),
 	                            maxLogVelocity: Option[(Int, Duration)],
@@ -160,7 +159,7 @@ object MasterScribe
 		
 		// Starts resetting the issue counter after the first issue has been recorded (optional feature)
 		maxLogVelocity.foreach { case (maxCount, resetInterval) =>
-			resetInterval.finite.foreach { resetInterval =>
+			resetInterval.ifFinite.foreach { resetInterval =>
 				pendingIssuesPointer.once { _.nonEmpty } { _ =>
 					Loop.regularly(resetInterval, waitFirst = true) {
 						issueCounter.setIf { _ < maxCount }(0)
@@ -346,9 +345,10 @@ object MasterScribe
 			
 			private def deprecateOldIssues() = remainingIssuesPointer.updateAndGet {
 				_.filter { case (issue, lastUpdate) =>
-					issueDeprecationDurations.getOrElse(issue.severity, Duration.Inf).finite.forall { liveDuration =>
-						(Now - lastUpdate + issue.storeDuration.start) < liveDuration
-					}
+					issueDeprecationDurations.getOrElse(issue.severity, Duration.infinite)
+						.ifFinite.forall { liveDuration =>
+							(Now - lastUpdate + issue.storeDuration.start) < liveDuration
+						}
 				}
 			}
 		}

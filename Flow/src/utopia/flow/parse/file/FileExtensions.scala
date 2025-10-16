@@ -10,7 +10,7 @@ import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
-import utopia.flow.parse.string.IterateLines
+import utopia.flow.parse.string.Lines
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryCatch
 import utopia.flow.util.TryExtensions._
@@ -1031,8 +1031,8 @@ object FileExtensions
 			else
 				// Writes into the new file using an editor and the specified controlling function
 				copyPath.writeUsing { writer =>
-					IterateLines.fromPath(p) { linesIterator =>
-						val editor = new FileEditor(linesIterator.pollable, writer)
+					Lines.iterate.path(p) { linesIter =>
+						val editor = new FileEditor(linesIter.pollable, writer)
 						val result = f(editor)
 						// Remaining non-edited lines are copied as is
 						editor.flush()

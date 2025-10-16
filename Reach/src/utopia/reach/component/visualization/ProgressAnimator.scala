@@ -6,7 +6,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.animation.{Animator, AnimatorInstruction}
 import utopia.paradigm.animation.Animation
 
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Used for animating linear progress
@@ -29,7 +29,7 @@ object ProgressAnimator
 	          animationDuration: Duration = 0.2.seconds, maxJumpWithoutAnimationDistance: Double = 2.0,
 	          activeFlag: Flag = AlwaysTrue): Animator[Double] =
 	{
-		val isInstant = animationDuration <= Duration.Zero
+		val isInstant = animationDuration.isNotPositive
 		
 		// Contains maximum amount of progress that may be jumped without an animation
 		lazy val maxJumpProgressPointer =

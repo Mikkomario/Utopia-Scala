@@ -3,13 +3,12 @@ package utopia.flow.view.mutable
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.async.process.{DelayedProcess, Process}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.ref.WeakReference
 
 object ReleasingPointer
@@ -108,10 +107,10 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 				// Cancels the earlier release process, if pending
 				earlier.foreach { _._2.foreach { _.stopIfRunning() } }
 				// Case: The item shouldn't be held in memory => Releases immediately
-				if (duration <= Duration.Zero)
+				if (duration.isNotPositive)
 					Some(Left(WeakReference(v)) -> None)
 				else
-					duration.finite match {
+					duration.ifFinite match {
 						// Case: Item should be held for a while => Schedules a release process
 						case Some(duration) => Some(Right(v) -> Some(releaseProcess(duration)))
 						// Case: Item should be held indefinitely => Doesn't schedule a release
@@ -139,7 +138,7 @@ class ReleasingPointer[A <: AnyRef](initialValue: Option[A] = None)(referenceDur
 	  */
 	def set(value: A) = this.value = Some(value)
 	
-	private def releaseProcess(after: FiniteDuration) = {
+	private def releaseProcess(after: Duration) = {
 		val p = DelayedProcess(WaitDuration(after), shutdownReaction = Some(Cancel), isRestartable = false) { _ =>
 			// Updates the pointer to only contain a weak reference to the held value
 			pointer.update { _.map { case (v, _) =>

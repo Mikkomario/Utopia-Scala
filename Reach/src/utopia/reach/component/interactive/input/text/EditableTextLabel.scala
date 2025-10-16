@@ -25,7 +25,7 @@ import utopia.reach.focus.FocusListener
 
 import java.awt.Toolkit
 import java.awt.datatransfer._
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.util.{Failure, Success, Try}
 
 /**

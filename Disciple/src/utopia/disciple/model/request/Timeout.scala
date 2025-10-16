@@ -1,13 +1,12 @@
 package utopia.disciple.model.request
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.disciple.model.request.TimeoutType._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.TimeExtensions._
-import TimeoutType._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
+import utopia.flow.time.Duration
 
 object Timeout
 {
@@ -21,51 +20,49 @@ object Timeout
 	  * @param threshold Timeout threshold
 	  * @return A new timeout for that type
 	  */
-	def apply(timeoutType: TimeoutType, threshold: FiniteDuration): Timeout = Timeout(Map(timeoutType -> threshold))
-	
+	def apply(timeoutType: TimeoutType, threshold: Duration): Timeout = Timeout(Map(timeoutType -> threshold))
 	/**
 	  * @param first First timeout pair
 	  * @param second Second timeout pair
 	  * @param more More timeout pairs
 	  * @return A new timeout with specified values
 	  */
-	def apply(first: (TimeoutType, FiniteDuration), second: (TimeoutType, FiniteDuration),
-			  more: (TimeoutType, FiniteDuration)*): Timeout = Timeout((more :+ first :+ second).toMap)
-	
+	def apply(first: (TimeoutType, Duration), second: (TimeoutType, Duration),
+			  more: (TimeoutType, Duration)*): Timeout =
+		Timeout((more :+ first :+ second).toMap)
 	/**
 	  * @param connection Connection timeout (default = infinite)
 	  * @param read Read timeout (default = infinite)
 	  * @param manager Manager timeout (default = infinite)
 	  * @return Timeout based on specified values
 	  */
-	def apply(connection: Duration = Duration.Inf, read: Duration = Duration.Inf,
-			  manager: Duration = Duration.Inf): Timeout = new Timeout(Map(ConnectionTimeout -> connection,
-		ReadTimeout -> read, ManagerTimeout -> manager).flatMap { case (k, v) => v.finite.map { k -> _ } })
+	def apply(connection: Duration = Duration.infinite, read: Duration = Duration.infinite,
+			  manager: Duration = Duration.infinite): Timeout =
+		new Timeout(
+			Map(ConnectionTimeout -> connection, ReadTimeout -> read, ManagerTimeout -> manager)
+				.flatMap { case (k, v) => v.ifFinite.map { k -> _ } })
 	
 	/**
 	  * @param connectionTimeout Connection timeout threshold
 	  * @return A timeout with only connection timeout set
 	  */
-	def forConnection(connectionTimeout: FiniteDuration) = apply(ConnectionTimeout, connectionTimeout)
-	
+	def forConnection(connectionTimeout: Duration) = apply(ConnectionTimeout, connectionTimeout)
 	/**
 	  * @param readTimeout Read timeout threshold
 	  * @return A timeout with only read timeout set
 	  */
-	def forRead(readTimeout: FiniteDuration) = apply(ReadTimeout, readTimeout)
-	
+	def forRead(readTimeout: Duration) = apply(ReadTimeout, readTimeout)
 	/**
 	  * @param managerTimeout Manager timeout threshold
 	  * @return A timeout with only manager timeout set
 	  */
-	def forManager(managerTimeout: FiniteDuration) = apply(ManagerTimeout, managerTimeout)
+	def forManager(managerTimeout: Duration) = apply(ManagerTimeout, managerTimeout)
 	
 	/**
 	  * @param generalTimeout Timeout to apply to all types of situations (connect, read, manager)
 	  * @return A new timeout
 	  */
-	def uniform(generalTimeout: FiniteDuration) =
-		apply(TimeoutType.values.map { t => t -> generalTimeout }.toMap)
+	def uniform(generalTimeout: Duration) = apply(TimeoutType.values.map { t => t -> generalTimeout }.toMap)
 }
 
 /**
@@ -73,7 +70,7 @@ object Timeout
   * @author Mikko Hilpinen
   * @since 15.5.2020, v1.3
   */
-case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEmpty[Timeout]
+case class Timeout(thresholds: Map[TimeoutType, Duration]) extends MaybeEmpty[Timeout]
 {
 	// COMPUTED	----------------------------
 	
@@ -81,12 +78,10 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @return Connection timeout threshold. Infinite if not otherwise specified.
 	  */
 	def forConnection = apply(ConnectionTimeout)
-	
 	/**
 	  * @return Read timeout threshold. Infinite if not otherwise specified.
 	  */
 	def forRead = apply(ReadTimeout)
-	
 	/**
 	  * @return Manager timeout threshold. Infinite if not otherwise specified.
 	  */
@@ -96,12 +91,10 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @return Copy of this timeout with no limit on connection timeout
 	  */
 	def withoutConnectionTimeout = without(ConnectionTimeout)
-	
 	/**
 	  * @return Copy of this timeout with no limit on read timeout
 	  */
 	def withoutReadTimeout = without(ReadTimeout)
-	
 	/**
 	  * @return Copy of this timeout with no limit on manager timeout
 	  */
@@ -131,8 +124,7 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @param timeoutType Type of timeout
 	  * @return Timeout for that timeout type. Infinite if not otherwise specified.
 	  */
-	def apply(timeoutType: TimeoutType) = get(timeoutType).getOrElse(Duration.Inf)
-	
+	def apply(timeoutType: TimeoutType) = get(timeoutType).getOrElse(Duration.infinite)
 	/**
 	  * @param timeoutType Type of timeout
 	  * @return A specified timeout for that timeout type. None if no timeout has been specified
@@ -144,32 +136,29 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @return A copy of this timeout with specified values from the other timeout overwriting those in this timeout
 	  */
 	def withThresholds(other: Timeout) = copy(thresholds = thresholds ++ other.thresholds)
-	
 	/**
 	  * @param timeoutType Type of timeout to overwrite
 	  * @param threshold A new timeout threshold for that type
 	  * @return a copy of this timeout with specified timeout overwritten
 	  */
-	def withThreshold(timeoutType: TimeoutType, threshold: FiniteDuration) = copy(
+	def withThreshold(timeoutType: TimeoutType, threshold: Duration) = copy(
 		thresholds = thresholds + (timeoutType -> threshold))
 	
 	/**
 	  * @param threshold New connection timeout
 	  * @return A copy of this timeout with specified connection timeout
 	  */
-	def withConnectionTimeout(threshold: FiniteDuration) = withThreshold(ConnectionTimeout, threshold)
-	
+	def withConnectionTimeout(threshold: Duration) = withThreshold(ConnectionTimeout, threshold)
 	/**
 	  * @param threshold New read timeout
 	  * @return A copy of this timeout with specified read timeout
 	  */
-	def withReadTimeout(threshold: FiniteDuration) = withThreshold(ReadTimeout, threshold)
-	
+	def withReadTimeout(threshold: Duration) = withThreshold(ReadTimeout, threshold)
 	/**
 	  * @param threshold New manager timeout
 	  * @return A copy of this timeout with specified manager timeout
 	  */
-	def withManagerTimeout(threshold: FiniteDuration) = withThreshold(ManagerTimeout, threshold)
+	def withManagerTimeout(threshold: Duration) = withThreshold(ManagerTimeout, threshold)
 	
 	/**
 	  * @param timeoutType Timeout type
@@ -213,7 +202,7 @@ case class Timeout(thresholds: Map[TimeoutType, FiniteDuration]) extends MaybeEm
 	  * @param select Function called for selecting between the available (1-2) timeout options
 	  * @return Combined timeout collection
 	  */
-	def mergeWith(other: Timeout)(select: Seq[FiniteDuration] => FiniteDuration) =
+	def mergeWith(other: Timeout)(select: Seq[Duration] => Duration) =
 		Timeout((thresholds.keySet ++ other.thresholds.keySet)
 			.map { key => key -> select(Pair(this, other).flatMap { _.get(key) }) }.toMap)
 }

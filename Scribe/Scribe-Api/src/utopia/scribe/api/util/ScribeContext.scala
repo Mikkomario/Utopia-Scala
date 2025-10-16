@@ -9,7 +9,7 @@ import utopia.scribe.core.model.enumeration.Severity
 import utopia.vault.database.{ConnectionPool, Tables}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * A set of settings which must be initialized before the program is used

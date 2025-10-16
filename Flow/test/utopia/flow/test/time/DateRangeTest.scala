@@ -4,6 +4,8 @@ import utopia.flow.time.DateRange
 import utopia.flow.time.Month.{August, December, February, January, July, June, March, November}
 import utopia.flow.time.TimeExtensions._
 
+import java.time.LocalDate
+
 /**
  * Tests date ranges
  * @author Mikko Hilpinen
@@ -11,7 +13,16 @@ import utopia.flow.time.TimeExtensions._
  */
 object DateRangeTest extends App
 {
+	assert(!2019.year.isLeap)
+	assert(2020.year.isLeap)
+	assert(2019.year(February).length.length == 28, 2019.year(February).length)
+	assert(2020.year(February).length.length == 29)
+	assert(2019.year(February).lastDay == LocalDate.of(2019, 2, 28))
+	
 	val testYear = 2020.year
+	
+	assert(testYear(February).lastDay == LocalDate.of(2020, 2, 29))
+	
 	val janToFebInclusive = DateRange.inclusive(testYear(January).firstDay, testYear(February).lastDay)
 	
 	assert(janToFebInclusive == DateRange.exclusive(testYear(January).firstDay, testYear(March).firstDay))

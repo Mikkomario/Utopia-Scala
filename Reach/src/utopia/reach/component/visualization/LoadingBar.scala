@@ -27,7 +27,7 @@ import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy}
 import utopia.reach.component.visualization.LoadingBar.animationVelocity
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 /**
@@ -325,7 +325,7 @@ class LoadingBar(override val hierarchy: ComponentHierarchy, actorHandler: Actor
 	{
 		override def handleCondition: Flag = linkedFlag
 		
-		override def act(duration: FiniteDuration): Unit =
+		override def act(duration: Duration): Unit =
 			advanceP.update { a => (a + animationVelocity(duration)) % 1 }
 	}
 }

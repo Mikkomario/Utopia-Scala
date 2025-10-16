@@ -5,7 +5,7 @@ import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.time.TimeExtensions._
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object GenerationDurations
 {
@@ -14,7 +14,7 @@ object GenerationDurations
 	/**
 	  * A set of durations where all values are set to 0
 	  */
-	val zero = apply(Duration.Zero, Duration.Zero, Duration.Zero)
+	val zero = apply(Duration.zero, Duration.zero, Duration.zero)
 	
 	
 	// OTHER    -----------------------------
@@ -40,7 +40,7 @@ object GenerationDurations
   * @param load Duration spent loading the LLM
   * @param evaluation Duration spent evaluating the prompt
   */
-case class GenerationDurations(total: FiniteDuration, load: FiniteDuration, evaluation: FiniteDuration)
+case class GenerationDurations(total: Duration, load: Duration, evaluation: Duration)
 	extends SelfCombinable[GenerationDurations] with LinearScalable[GenerationDurations]
 {
 	override def self: GenerationDurations = this

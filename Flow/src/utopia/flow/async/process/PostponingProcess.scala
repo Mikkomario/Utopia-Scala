@@ -17,7 +17,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object PostponingProcess
 {
@@ -58,13 +58,11 @@ object PostponingProcess
 	  * @tparam U Arbitrary action result type
 	  * @return A new process
 	  */
-	def by[U](delayRange: HasEnds[FiniteDuration], shutDownReaction: ShutdownReaction = Cancel,
-	          isRestartable: Boolean = true)
-	         (action: => U)
-	         (implicit exc: ExecutionContext, log: Logger): Process =
+	def by[U](delayRange: HasEnds[Duration], shutDownReaction: ShutdownReaction = Cancel, isRestartable: Boolean = true)
+	         (action: => U)(implicit exc: ExecutionContext, log: Logger): Process =
 	{
 		// Case: No delay has been requested => Uses a non-delayed process
-		if (delayRange.start <= Duration.Zero)
+		if (delayRange.start.isNotPositive)
 			Process(shutdownReaction = shutDownReaction, isRestartable = isRestartable) { _ => action }
 		// Case: There is no difference between the minimum and maximum delay => Uses a delayed process
 		else if (delayRange.start >= delayRange.end)
@@ -90,8 +88,8 @@ object PostponingProcess
 	}
 	
 	private class RangePostponingRevalidationProcess(waitTargetPointer: EventfulPointer[WaitTarget],
-	                                                 minRevalidationDelay: FiniteDuration,
-	                                                 maxRevalidationDelay: FiniteDuration,
+	                                                 minRevalidationDelay: Duration,
+	                                                 maxRevalidationDelay: Duration,
 	                                                 shutdownReaction: Option[ShutdownReaction],
 	                                                 override val isRestartable: Boolean)
 	                                                (action: => Unit)

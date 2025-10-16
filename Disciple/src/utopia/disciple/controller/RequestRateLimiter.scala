@@ -7,7 +7,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -20,7 +20,7 @@ object RequestRateLimiter
 	  * @tparam A Type of future results
 	  * @return A new request rate limiter instance
 	  */
-	def apply[A](maxRequestAmount: Int, resetDuration: FiniteDuration) =
+	def apply[A](maxRequestAmount: Int, resetDuration: Duration) =
 		new RequestRateLimiter(maxRequestAmount, resetDuration)
 	/**
 	  * Creates a new request rate limiter instance
@@ -36,7 +36,7 @@ object RequestRateLimiter
   * @author Mikko Hilpinen
   * @since 17.11.2021, v1.4.4
   */
-class RequestRateLimiter(maxRequestAmount: Int, resetDuration: FiniteDuration) extends Breakable
+class RequestRateLimiter(maxRequestAmount: Int, resetDuration: Duration) extends Breakable
 {
 	// ATTRIBUTES   --------------------------------
 	

@@ -14,11 +14,10 @@ import utopia.disciple.model.request.{Body, Request, Timeout}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -303,7 +302,7 @@ trait ApiClient
 	  * @return Prepared GET request
 	  */
 	def get(path: String, params: Model = Model.empty, headers: Headers = Headers.empty,
-	        timeout: Duration = Duration.Inf) =
+	        timeout: Duration = Duration.infinite) =
 		prepareRequest(Get, path, params = params, headers = headers, timeout = timeout)
 	/**
 	  * Prepares a POST request (or a similar request, such as PUT).
@@ -318,7 +317,7 @@ trait ApiClient
 	  * @return Prepared POST request
 	  */
 	def post(path: String, body: Either[Value, Body] = Left(Value.empty), pathParams: Model = Model.empty,
-	         method: Method = Post, headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
+	         method: Method = Post, headers: Headers = Headers.empty, timeout: Duration = Duration.infinite) =
 		prepareRequest(method, path, body, pathParams, headers, timeout)
 	/**
 	  * Prepares a POST request (or a similar request, such as PUT).
@@ -332,7 +331,7 @@ trait ApiClient
 	  * @return Prepared POST request
 	  */
 	def postValue(path: String, body: Value = Value.empty, pathParams: Model = Model.empty, method: Method = Post,
-	              headers: Headers = Headers.empty, timeout: Duration = Duration.Inf) =
+	              headers: Headers = Headers.empty, timeout: Duration = Duration.infinite) =
 		post(path, Left(body), pathParams, method, headers, timeout)
 	
 	/**
@@ -457,10 +456,10 @@ trait ApiClient
 	  */
 	protected def prepareRequest(method: Method, path: String, body: Either[Value, Body] = Left(Value.empty),
 	                             params: Model = Model.empty, headers: Headers = Headers.empty,
-	                             timeout: Duration = Duration.Inf) =
+	                             timeout: Duration = Duration.infinite) =
 	{
 		// Timeout is generated from the specified single duration
-		val fullTimeout = timeout.finite match {
+		val fullTimeout = timeout.ifFinite match {
 			case Some(time) => Timeout(time, time * 3, time * 6)
 			case None => Timeout.empty
 		}

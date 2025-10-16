@@ -5,8 +5,8 @@ import utopia.flow.generic.model.immutable.{ModelValidationFailedException, Valu
 import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.time.{Duration, TimeUnit}
 
-import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
   * @author Mikko Hilpinen
   * @since 8.8.2022, v1.0
   */
-trait ChangeFromModelFactory[+A, Amount <: MayBeAboutZero[Amount, _]] extends FromModelFactory[A]
+trait ChangeFactory[+A, Amount <: MayBeAboutZero[Amount, _]] extends FromModelFactory[A]
 {
 	// ABSTRACT --------------------------
 	
@@ -44,10 +44,25 @@ trait ChangeFromModelFactory[+A, Amount <: MayBeAboutZero[Amount, _]] extends Fr
 					case None =>
 						// Unspecified duration is only allowed for "zero" values
 						if (amount.isAboutZero)
-							Success(apply(amount, Duration.Inf))
+							Success(apply(amount, Duration.infinite))
 						else
 							Failure(new ModelValidationFailedException(
 								s"Required property 'duration' is missing from $model"))
 				}
 			}
+			
+	// OTHER    -------------------------
+	
+	/**
+	 * @param amount The amount of change in a single time unit
+	 * @param timeUnit Unit of time used (implicit)
+	 * @return A new change over one time unit
+	 */
+	def of(amount: Amount)(implicit timeUnit: TimeUnit): A = apply(amount, timeUnit)
+	/**
+	 * @param amount The amount of change in a single time unit
+	 * @param unit Unit of time used
+	 * @return A new change over one time unit
+	 */
+	def apply(amount: Amount, unit: TimeUnit): A = apply(amount, unit.unit)
 }

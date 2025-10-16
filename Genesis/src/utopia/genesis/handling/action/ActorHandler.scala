@@ -8,7 +8,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}
 
 import scala.annotation.unused
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -50,7 +50,7 @@ class ActorHandler(initialItems: IterableOnce[Actor] = Empty, additionalConditio
 {
 	// IMPLEMENTED  ----------------------
 	
-	override def act(duration: FiniteDuration) = {
+	override def act(duration: Duration) = {
 		// Delivers the action event to all active listeners
 		// Catches and logs thrown errors, and removes any actor that threw an exception
 		val actorsToRemove = items.filter { actor =>

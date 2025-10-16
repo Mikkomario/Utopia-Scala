@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
@@ -23,8 +23,6 @@ import utopia.scribe.core.model.post.logging.ClientIssue
 import utopia.vault.database.Connection
 import utopia.vault.util.DatabaseActionQueue
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
-
 object Scribe
 {
 	// ATTRIBUTES   ---------------------
@@ -40,7 +38,7 @@ object Scribe
 	// Process for resetting the logging counter regularly
 	// None until initialized
 	// Also contains the repeat interval, in case it needs to be modified
-	private var counterResetLoop: Option[(FiniteDuration, Process)] = None
+	private var counterResetLoop: Option[(Duration, Process)] = None
 	
 	private var limitListeners: Seq[MaximumLogLimitReachedListener] = Empty
 	
@@ -94,7 +92,7 @@ object Scribe
 	  */
 	def setupLoggingLimit(maxLogCount: Int, resetInterval: Duration, resetAfterReached: Boolean = false) = {
 		logLimit = Some(maxLogCount)
-		resetInterval.finite match {
+		resetInterval.ifFinite match {
 			// Case: Reset interval specified => Starts a reset process (unless identical process is already running)
 			case Some(interval) =>
 				if (counterResetLoop.forall { _._1 != interval }) {

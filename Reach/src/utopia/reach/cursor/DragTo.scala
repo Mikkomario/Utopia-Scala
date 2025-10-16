@@ -29,7 +29,7 @@ import utopia.reach.cursor.DragTo.RepositionLogic.{RepositionComponent, Repositi
 import utopia.reach.cursor.DragTo.{RepositionLogic, componentBoundsActions, windowBoundsActions}
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 object DragTo
@@ -139,7 +139,7 @@ object DragTo
 	
 	case class DragToFactory(resizeAxes: Set[Axis2D] = Axis2D.values.toSet,
 	                         repositionLogic: Option[RepositionLogic] = None,
-	                         updateDelay: FiniteDuration = Duration.Zero,
+	                         updateDelay: Duration = Duration.zero,
 	                         expandAtSides: Boolean = false, fillAtTop: Boolean = false)
 	{
 		// COMPUTED --------------------------
@@ -203,7 +203,7 @@ object DragTo
 		  * @param delay Delay before applying size changes
 		  * @return Copy of this factory that delays the size changes by the specified amount
 		  */
-		def delayedBy(delay: FiniteDuration) = copy(updateDelay = updateDelay + delay)
+		def delayedBy(delay: Duration) = copy(updateDelay = updateDelay + delay)
 		
 		/**
 		  * @param component Component that will be resized
@@ -225,7 +225,7 @@ object DragTo
 class DragTo protected(component: ReachComponent, resizeActiveInsets: Insets,
                        repositionLogic: Option[RepositionLogic] = None,
                        resizeAxes: Set[Axis2D] = Axis2D.values.toSet,
-                       updateDelay: FiniteDuration = Duration.Zero, expandAtSides: Boolean = false,
+                       updateDelay: Duration = Duration.zero, expandAtSides: Boolean = false,
                        fillAtTop: Boolean = false)
                       (implicit exc: ExecutionContext, log: Logger)
 {

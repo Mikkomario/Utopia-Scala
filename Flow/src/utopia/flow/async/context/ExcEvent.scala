@@ -1,8 +1,6 @@
 package utopia.flow.async.context
 
-import utopia.flow.time.TimeExtensions._
-
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 /**
   * Common trait for events fired by an execution context (in Flow, that is [[ThreadPool]])
@@ -48,14 +46,14 @@ object ExcEvent
 	  * @param idleDuration Duration how long this thread was idle before receiving this task
 	  * @param queueDuration Duration how long the task was queued (i.e. blocked) before passed to this thread
 	  */
-	case class TaskAccepted(name: String, idleDuration: FiniteDuration = Duration.Zero,
-	                        queueDuration: FiniteDuration = Duration.Zero)
+	case class TaskAccepted(name: String, idleDuration: Duration = Duration.zero,
+	                        queueDuration: Duration = Duration.zero)
 		extends ThreadEvent
 	{
 		override def toString = {
-			if (queueDuration > Duration.Zero)
+			if (queueDuration.isPositive)
 				s"Thread $name accepted a task that was queued for ${ queueDuration.description }"
-			else if (idleDuration > Duration.Zero)
+			else if (idleDuration.isPositive)
 				s"Thread $name accepted a task after waiting for ${ idleDuration.description }"
 			else
 				s"Thread $name accepted the next task"
@@ -66,7 +64,7 @@ object ExcEvent
 	  * @param name Name of the thread that finished the task
 	  * @param taskDuration Duration of the task's execution
 	  */
-	case class TaskCompleted(name: String, taskDuration: FiniteDuration) extends ThreadEvent
+	case class TaskCompleted(name: String, taskDuration: Duration) extends ThreadEvent
 	{
 		override def toString = s"Thread $name completed a task in ${ taskDuration.description }"
 	}

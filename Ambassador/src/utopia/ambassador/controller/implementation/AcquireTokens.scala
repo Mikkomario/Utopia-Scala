@@ -2,10 +2,10 @@ package utopia.ambassador.controller.implementation
 
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Method.Post
+import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.access.many.token.DbAuthTokens
 import utopia.ambassador.database.access.single.service.DbAuthService
 import utopia.ambassador.database.access.single.token.DbAuthToken
-import utopia.ambassador.database.AuthDbExtensions._
 import utopia.ambassador.database.model.scope.ScopeModel
 import utopia.ambassador.database.model.token.{AuthTokenModel, AuthTokenScopeLinkModel}
 import utopia.ambassador.model.cached.TokenInterfaceConfiguration
@@ -21,20 +21,19 @@ import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.model.request.{Request, StringBody}
 import utopia.exodus.util.ExodusContext.logger
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.time.{Duration, Now}
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -220,7 +219,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 	
 	private def requestWith(config: TokenInterfaceConfiguration, request: Request, serviceId: Int, userId: Int,
 	                        existingRefreshToken: Option[AuthTokenWithScopes] = None,
-	                        defaultSessionDuration: => FiniteDuration = 22.hours)
+	                        defaultSessionDuration: => Duration = 22.hours)
 	           (implicit exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
 		// Sends the request and handles the result once it arrives
@@ -255,7 +254,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 							}
 							val refreshToken = body("refresh_token").string.map { token =>
 								def insertNew() = insertToken(userId, token, scopes,
-									config.refreshTokenDuration.finite.map { requestTime + _ }, isRefreshToken = true)
+									config.refreshTokenDuration.ifFinite.map { requestTime + _ }, isRefreshToken = true)
 								// Checks whether the refresh token is a duplicate with the previously used or
 								// whether the previous token should be replaced
 								existingRefreshToken match {

@@ -11,7 +11,7 @@ import utopia.paradigm.motion.motion1d.LinearVelocity
 import utopia.paradigm.shape.shape2d.area.Area2D
 import utopia.paradigm.shape.shape2d.vector.point.RelativePoint
 
-import scala.concurrent.duration.FiniteDuration
+import utopia.flow.time.Duration
 
 object MouseMoveEvent
 {
@@ -198,7 +198,7 @@ object MouseMoveEvent
   * @author Mikko Hilpinen
   * @since 06/02/2024, v4.0
   */
-case class MouseMoveEvent(positions: Pair[RelativePoint], duration: FiniteDuration, buttonStates: MouseButtonStates)
+case class MouseMoveEvent(positions: Pair[RelativePoint], duration: Duration, buttonStates: MouseButtonStates)
 	extends MouseMoveEventLike[MouseMoveEvent]
 {
 	// ATTRIBUTES   --------------------------

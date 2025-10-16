@@ -1,14 +1,12 @@
 package utopia.ambassador.model.partial.service
 
-import java.time.Instant
-import scala.concurrent.duration.FiniteDuration
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 
-import java.util.concurrent.TimeUnit
+import java.time.Instant
 
 /**
   * Specifies service-specific settings. It is recommended to have only one instance per service.
@@ -32,10 +30,10 @@ case class AuthServiceSettingsData(serviceId: Int, clientId: String, clientSecre
                                    authenticationUrl: String, tokenUrl: String, redirectUrl: String,
                                    incompleteAuthRedirectUrl: Option[String] = None,
                                    defaultCompletionRedirectUrl: Option[String] = None,
-                                   preparationTokenDuration: FiniteDuration = 5.minutes,
-                                   redirectTokenDuration: FiniteDuration = 15.minutes,
-                                   incompleteAuthTokenDuration: FiniteDuration = 30.minutes,
-                                   defaultSessionDuration: FiniteDuration = 22.hours, created: Instant = Now)
+                                   preparationTokenDuration: Duration = 5.minutes,
+                                   redirectTokenDuration: Duration = 15.minutes,
+                                   incompleteAuthTokenDuration: Duration = 30.minutes,
+                                   defaultSessionDuration: Duration = 22.hours, created: Instant = Now)
 	extends ModelConvertible
 {
 	// IMPLEMENTED	--------------------
@@ -45,10 +43,10 @@ case class AuthServiceSettingsData(serviceId: Int, clientId: String, clientSecre
 			"authentication_url" -> authenticationUrl, "token_url" -> tokenUrl,
 			"redirect_url" -> redirectUrl, "incomplete_auth_redirect_url" -> incompleteAuthRedirectUrl,
 			"default_completion_redirect_url" -> defaultCompletionRedirectUrl,
-			"preparation_token_duration" -> preparationTokenDuration.toUnit(TimeUnit.MINUTES),
-			"redirect_token_duration" -> redirectTokenDuration.toUnit(TimeUnit.MINUTES),
-			"incomplete_auth_token_duration" -> incompleteAuthTokenDuration.toUnit(TimeUnit.MINUTES),
-			"default_session_duration" -> defaultSessionDuration.toUnit(TimeUnit.MINUTES),
+			"preparation_token_duration" -> preparationTokenDuration.toMinutes,
+			"redirect_token_duration" -> redirectTokenDuration.toMinutes,
+			"incomplete_auth_token_duration" -> incompleteAuthTokenDuration.toMinutes,
+			"default_session_duration" -> defaultSessionDuration.toMinutes,
 			"created" -> created))
 }
 

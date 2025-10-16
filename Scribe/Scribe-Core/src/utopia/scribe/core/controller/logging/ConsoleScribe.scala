@@ -22,7 +22,7 @@ import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 import scala.io.Codec
 
 object ConsoleScribe
@@ -142,7 +142,7 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		val baseHeader = s"$severity @$context${ message.prependIfNotEmpty(": ") }"
 		
 		// Checks whether to bundle the entries together
-		if (error.isDefined || bundleDuration.finite.exists { duration > _ })
+		if (error.isDefined || bundleDuration.ifFinite.exists { duration > _ })
 			out.println(s"\n${ timeFormat.format(time) }: $baseHeader")
 		else
 			out.println(s"$baseHeader (${ duration.description })")

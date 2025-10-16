@@ -4,12 +4,11 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching
 import utopia.flow.collection.immutable.caching.cache.{Cache, ExpiringCache}
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.vault.nosql.access.single.model.SingleModelAccess
 import utopia.vault.sql.Condition
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 import scala.util.Try
 
 object DatabaseCache
@@ -31,7 +30,7 @@ object DatabaseCache
 	 * @return A new cache
 	 */
 	def forIndex[A, I](connectionPool: ConnectionPool, accessor: SingleModelAccess[A],
-					   maxCacheDuration: Duration = Duration.Inf, maxFailureCacheDuration: Duration = Duration.Inf)
+					   maxCacheDuration: Duration = Duration.infinite, maxFailureCacheDuration: Duration = Duration.infinite)
 					  (implicit exc: ExecutionContext, valueConversion: I => Value) = new DatabaseCache[A, I](
 		connectionPool, accessor, maxCacheDuration, maxFailureCacheDuration)({ id => accessor.table.getPrimaryKey <=> id })
 }
@@ -51,7 +50,8 @@ object DatabaseCache
  * @param exc Execution context the connection pool uses (implicit)
  */
 class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleModelAccess[A],
-							maxCacheDuration: Duration = Duration.Inf, maxFailureCacheDuration: Duration = Duration.Inf)
+							maxCacheDuration: Duration = Duration.infinite,
+							maxFailureCacheDuration: Duration = Duration.infinite)
 						   (keyToCondition: Key => Condition)
 						   (implicit exc: ExecutionContext)
 	extends Cache[Key, Try[A]]
@@ -60,14 +60,14 @@ class DatabaseCache[A, Key](connectionPool: ConnectionPool, accessor: SingleMode
 	
 	private val cache = {
 		// Creates a different type of cache based on specified parameters
-		maxCacheDuration.finite match {
+		maxCacheDuration.ifFinite match {
 			case Some(maxTime) =>
-				maxFailureCacheDuration.finite match {
+				maxFailureCacheDuration.ifFinite match {
 					case Some(maxFailTime) => caching.cache.TryCache(maxFailTime, maxTime)(request)
 					case None => ExpiringCache.after(maxTime)(request)
 				}
 			case None =>
-				maxFailureCacheDuration.finite match {
+				maxFailureCacheDuration.ifFinite match {
 					case Some(maxFailTime) => caching.cache.TryCache(maxFailTime)(request)
 					case None => Cache(request)
 				}

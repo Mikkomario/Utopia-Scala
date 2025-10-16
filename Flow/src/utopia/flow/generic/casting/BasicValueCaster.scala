@@ -3,21 +3,20 @@ package utopia.flow.generic.casting
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.enumeration.ConversionReliability.{ContextLoss, Dangerous, DataLoss, MeaningLoss, Perfect}
+import utopia.flow.generic.model.enumeration.ConversionReliability._
 import utopia.flow.generic.model.immutable.{Conversion, Model, Value}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Days, Month, Today, Year, YearMonth}
+import utopia.flow.time.TimeUnit.{Day, Hour, MilliSecond, Minute, Second}
+import utopia.flow.time._
 import utopia.flow.util.StringExtensions._
 
-import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.{DAYS, FiniteDuration, HOURS, MILLISECONDS, MINUTES, SECONDS}
-import scala.util.Try
+import java.time.format.DateTimeFormatter
+import scala.util.{Failure, Success, Try}
 
 /**
   * This value caster handles the basic data types
@@ -339,7 +338,7 @@ object BasicValueCaster extends ValueCaster
 			case _ => None
 		}
 	
-	private def durationOf(value: Value): Option[FiniteDuration] = value.dataType match {
+	private def durationOf(value: Value): Option[Duration] = value.dataType match {
 		case DaysType => Some(value.getDays.toDuration)
 		case LocalTimeType => Some(value.getLocalTime.toDuration)
 		case LongType => Some(value.getLong.millis)
@@ -349,7 +348,7 @@ object BasicValueCaster extends ValueCaster
 		case ModelType =>
 			val model = value.getModel
 			model("value").long.flatMap { v =>
-				model("unit").string.flatMap(timeUnitFrom).map { FiniteDuration(v, _) }
+				model("unit").string.flatMap(timeUnitFrom).map { Duration(v, _) }
 			}
 		case StringType =>
 			val s = value.getString
@@ -359,18 +358,18 @@ object BasicValueCaster extends ValueCaster
 			else {
 				val (numPart, unitPart) = s.splitAt(firstLetterIndex)
 				timeUnitFrom(unitPart.trim)
-					.flatMap { unit => numPart.trim.double.map { a => FiniteDuration(a.toLong, unit) } }
+					.flatMap { unit => numPart.trim.long.map { Duration(_, unit) } }
 			}
 		case _ => None
 	}
 	
 	private def timeUnitFrom(str: String) = {
 		str.toLowerCase match {
-			case "ms" | "millis" | "milliseconds" => Some(TimeUnit.MILLISECONDS)
-			case "s" | "sec" | "seconds" => Some(TimeUnit.SECONDS)
-			case "m" | "min" | "mins" | "minutes" => Some(TimeUnit.MINUTES)
-			case "h" | "hour" | "hours" => Some(TimeUnit.HOURS)
-			case "d" | "day" | "days" => Some(TimeUnit.DAYS)
+			case "ms" | "millis" | "milliseconds" => Some(MilliSecond)
+			case "s" | "sec" | "seconds" => Some(Second)
+			case "m" | "min" | "mins" | "minutes" => Some(Minute)
+			case "h" | "hour" | "hours" => Some(Hour)
+			case "d" | "day" | "days" => Some(Day)
 			case _ => None
 		}
 	}
@@ -496,20 +495,24 @@ object BasicValueCaster extends ValueCaster
 	
 	private def modelOf(value: Value): Option[Model] = value.dataType match {
 		case DurationType =>
-			val d = value.getDuration
-			val unitString = d.unit match {
-				case MILLISECONDS => Some("ms")
-				case SECONDS => Some("s")
-				case MINUTES => Some("m")
-				case HOURS => Some("h")
-				case DAYS => Some("d")
+			val duration = value.getDuration
+			duration.tryLength match {
+				case Success((amount, unit)) =>
+					val unitString = unit match {
+						case MilliSecond => Some("ms")
+						case Second => Some("s")
+						case Minute => Some("m")
+						case Hour => Some("h")
+						case Day => Some("d")
+						case _ => None
+					}
+					val len = unitString match {
+						case Some(_) => amount
+						case None => MilliSecond.countIn(amount, unit)
+					}
+					Some(Model.from("value" -> len, "unit" -> unitString.getOrElse[String]("ms")))
 				case _ => None
 			}
-			val len = unitString match {
-				case Some(_) => d.length
-				case None => d.toMillis
-			}
-			Some(Model.from("value" -> len, "unit" -> unitString.getOrElse[String]("ms")))
 		case YearMonthType =>
 			val ym = value.getYearMonth
 			Some(Model.from("year" -> ym.year, "month" -> ym.month))

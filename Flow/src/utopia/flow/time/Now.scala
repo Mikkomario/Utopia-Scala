@@ -1,28 +1,27 @@
 package utopia.flow.time
 
-import scala.language.implicitConversions
 import utopia.flow.generic.casting.ValueConversions._
-import TimeExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.ordering.RichComparable
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit.JTimeUnit
 
+import java.time.temporal.TemporalAmount
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
-import scala.concurrent.duration.FiniteDuration
+import scala.language.implicitConversions
 
 /**
   * An object that always resolves to the current time
   * @author Mikko Hilpinen
   * @since 16.3.2021, v1.9
   */
-object Now extends ValueConvertible with RichComparable[Instant]
+object Now extends ValueConvertible with RichComparable[Instant] with CanAppendJavaDuration[Instant]
 {
 	// IMPLICIT -------------------------------
 	
 	implicit def currentLocalDateTime(now: Now.type): LocalDateTime = now.toLocalDateTime
-	
 	implicit def currentInstant(now: Now.type): Instant = now.toInstant
-	
 	implicit def currentLocalTime(now: Now.type): LocalTime = now.toLocalTime
 	
 	
@@ -50,24 +49,21 @@ object Now extends ValueConvertible with RichComparable[Instant]
 	
 	override def toString = LocalDateTime.now().toString
 	
-	override implicit def toValue: Value = toInstant
+	override protected def _max: Instant = Instant.MAX
+	override protected def _min: Instant = Instant.MIN
+	
+	override def toValue: Value = toInstant
 	
 	override def compareTo(o: Instant) = toInstant.compareTo(o)
+	
+	override def +(amount: TemporalAmount): Instant = toInstant + amount
+	override def -(amount: TemporalAmount): Instant = toInstant - amount
+	
+	override protected def _plus(amount: Long, unit: JTimeUnit): Instant = toInstant.plus(amount, unit)
 	
 	
 	// OTHER    ------------------------------
 	
-	/**
-	  * @param duration Duration to add
-	  * @return Time after a specific amount of duration has passed
-	  */
-	def +(duration: FiniteDuration) = toInstant + duration
-	
-	/**
-	  * @param duration Duration to subtract
-	  * @return Time before specified amount of duration passed
-	  */
-	def -(duration: FiniteDuration) = toInstant - duration
 	/**
 	  * @param instant A time instant
 	  * @return The amount of time that has passed since that instant

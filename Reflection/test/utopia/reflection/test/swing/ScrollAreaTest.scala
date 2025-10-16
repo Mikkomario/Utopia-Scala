@@ -6,6 +6,7 @@ import utopia.firmament.model.enumeration.WindowResizePolicy.User
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackInsets
 import utopia.firmament.model.stack.modifier.MaxOptimalLengthModifier
+import utopia.flow.time.TimeUnit.Second
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.handling.action.{ActionLoop, ActorHandler}
 import utopia.genesis.handling.event.keyboard.Key.End
@@ -23,8 +24,6 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollArea
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.test.TestContext._
-
-import java.util.concurrent.TimeUnit
 
 /**
   * This is a simple test implementation of scroll Area
@@ -59,7 +58,7 @@ object ScrollAreaTest extends App
 	// Creates the scroll area
 	val barDrawer = BoxScrollBarDrawer.roundedBarOnly(Color.black.withAlpha(0.55))
 	val scrollArea = new ScrollArea(stack, actorHandler, barDrawer, 16, 64,
-		friction = LinearAcceleration(2000)(TimeUnit.SECONDS), scrollBarIsInsideContent = true)
+		friction = LinearAcceleration.square(2000, Second), scrollBarIsInsideContent = true)
 	scrollArea addConstraint MaxOptimalLengthModifier(480).symmetric
 
 	// Creates the frame and displays it

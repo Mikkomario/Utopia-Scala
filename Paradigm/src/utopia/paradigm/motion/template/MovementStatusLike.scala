@@ -1,7 +1,7 @@
 package utopia.paradigm.motion.template
 
 import utopia.paradigm.shape.template.vector.NumericVectorLike
-import scala.concurrent.duration.Duration
+import utopia.flow.time.Duration
 
 /**
   * Represents a snapshot or a projection of position and movement

@@ -13,7 +13,7 @@ import utopia.reflection.container.stack.template.SingleStackContainer
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import utopia.flow.time.Duration
 
 object AnimatedSizeContainer
 {
@@ -27,7 +27,7 @@ object AnimatedSizeContainer
 	  * @return Newly created container
 	  */
 	def apply[C <: AwtStackable](component: C, actorHandler: ActorHandler,
-	                             transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+	                             transitionDuration: Duration = ComponentCreationDefaults.transitionDuration,
 	                             maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate) =
 		new AnimatedSizeContainer[C](actorHandler, component, transitionDuration, maxRefreshRate)
 	
@@ -49,7 +49,7 @@ object AnimatedSizeContainer
   * @since 18.4.2020, v1.2
   */
 class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initialContent: C,
-                                               transitionDuration: FiniteDuration = ComponentCreationDefaults.transitionDuration,
+                                               transitionDuration: Duration = ComponentCreationDefaults.transitionDuration,
                                                maxRefreshRate: Fps = ComponentCreationDefaults.maxAnimationRefreshRate)
 	extends SingleStackContainer[C] with AwtComponentWrapperWrapper with AwtContainerRelated
 {
@@ -62,8 +62,8 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	
 	private var startSize = StackSize.any
 	private var targetSize = StackSize.any
-	private var timePassed = Duration.Zero
-	private var nextRevalidationThreshold = Duration.Zero
+	private var timePassed = Duration.zero
+	private var nextRevalidationThreshold = Duration.zero
 	
 	private val transitioningFlag = Volatile.switch
 	
@@ -166,7 +166,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 				val newTargetLength = newTargetSize.along(axis)
 				length.within(newTargetLength.min, newTargetLength.max)
 			}
-			timePassed = Duration.Zero
+			timePassed = Duration.zero
 			targetSize = newTargetSize
 			transitioning = true
 		}
@@ -179,7 +179,7 @@ class AnimatedSizeContainer[C <: AwtStackable](actorHandler: ActorHandler, initi
 	{
 		override def handleCondition: Flag = AlwaysTrue
 		
-		override def act(duration: FiniteDuration) = {
+		override def act(duration: Duration) = {
 			// Advances, and may conclude process
 			timePassed += duration
 			if (timePassed >= transitionDuration) {

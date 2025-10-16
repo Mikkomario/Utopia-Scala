@@ -10,7 +10,7 @@ import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Desti
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.{Identity, MaybeEmpty}
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -18,7 +18,6 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
 import utopia.flow.view.template.eventful.Flag.wrap
 
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -1307,11 +1306,11 @@ trait Changing[+A] extends View[A]
 			Fixed(value)
 		// Case: This item may change
 		else if (mayChange)
-			threshold.finite match {
+			threshold.ifFinite match {
 				// Case: A finite delay has been defined
 				case Some(duration) =>
 					// Case: Zero delay = View of this item
-					if (duration <= Duration.Zero)
+					if (duration.isNotPositive)
 						this
 					// Case: Positive delay => Creates a delayed view
 					else

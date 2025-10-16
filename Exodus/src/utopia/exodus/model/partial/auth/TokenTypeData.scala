@@ -1,12 +1,11 @@
 package utopia.exodus.model.partial.auth
 
-import java.time.Instant
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
+
+import java.time.Instant
 
 /**
   * An enumeration for different types of authentication tokens available
@@ -20,7 +19,8 @@ import utopia.flow.time.Now
   * @author Mikko Hilpinen
   * @since 18.02.2022, v4.0
   */
-case class TokenTypeData(name: String, duration: Option[FiniteDuration] = None, 
+// TODO: duration should not be an option
+case class TokenTypeData(name: String, duration: Option[Duration] = None,
 	refreshedTypeId: Option[Int] = None, created: Instant = Now, isSingleUseOnly: Boolean = false) 
 	extends ModelConvertible
 {
@@ -35,7 +35,7 @@ case class TokenTypeData(name: String, duration: Option[FiniteDuration] = None,
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = 
-		Model(Vector("name" -> name, "duration_minutes" -> duration.map { _.toUnit(TimeUnit.MINUTES) },
+		Model(Vector("name" -> name, "duration_minutes" -> duration.map { _.toMinutes },
 			"refreshed_type_id" -> refreshedTypeId, "created" -> created, 
 			"is_single_use_only" -> isSingleUseOnly))
 }
