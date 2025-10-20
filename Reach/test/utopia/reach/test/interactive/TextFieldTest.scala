@@ -25,7 +25,7 @@ import utopia.reach.window.ReachWindow
   *     - The first and the second field should have a maximum length (visible in first)
   *     - The first field should show a warning when empty
   *     - The fourth field should show an error if negative
-  *     - The fifth field should show an error if > 1.0
+  *     - The fifth field should show an error if > 1.99
   *
   * @author Mikko Hilpinen
   * @since 18.11.2020, v0.1
@@ -81,7 +81,7 @@ object TextFieldTest extends App
 					},
 					makeRow[Option[Double]](Display.identity.optional) {
 						_.withFieldName("Double").withPrompt("0.".noLanguage.skipLocalization)
-							.double(Span.numeric(0.0, 1.0), expectedNumberOfDecimals = 2)
+							.double(Span.numeric(0.0, 1.99), expectedNumberOfDecimals = 2, round = true)
 					}
 				)
 			}

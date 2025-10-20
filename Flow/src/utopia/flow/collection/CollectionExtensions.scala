@@ -589,6 +589,24 @@ object CollectionExtensions
 			}
 		}
 		
+		/**
+		 * @param n Implicit numeric implementation
+		 * @return The average value of the values in this collection.
+		 *         Zero if this collection is empty.
+		 */
+		def average(implicit n: Fractional[A]) = {
+			var total = n.zero
+			var count = 0
+			i.iterator.foreach { a =>
+				total = n.plus(total, a)
+				count += 1
+			}
+			if (count > 0)
+				n.div(total, n.fromInt(count))
+			else
+				total
+		}
+		
 		
 		// OTHER    --------------------------
 		

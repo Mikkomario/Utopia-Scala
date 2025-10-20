@@ -17,6 +17,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.Mutate
+import utopia.flow.util.NumberExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -440,8 +441,6 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	  * @param expectedNumberOfDecimals The expected (maximum) number of decimal places in the resulting input value.
 	  *                                 This value is used for determining input maximum length in characters,
 	  *                                 and also the field default width.
-	  *                                 This value assumes that the minimum and maximum values are provided as whole
-	  *                                 integers.
 	  *
 	  *                                 E.g. If minimum value is 0.0 (3 characters),
 	  *                                 maximum value is 1000.0 (6 characters) and 'expectedNumberOfDecimals' is 2,
@@ -457,21 +456,38 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	  *                          Default = None = No additional validation should be performed.
 	  * @param disableLengthHint Whether the minimum and/or maximum length should NOT be displayed as a hint.
 	  *                          Please note that a minimum value of 0 is never displayed as a hint.
-	  * @return A new text field
+	  * @param round Whether the resulting numbers should be rounded to 'expectedNumberOfDecimals'.
+	 *              Default = false.
+	 * @return A new text field
 	  */
 	def double(allowedRange: HasInclusiveOrderedEnds[Double], initialValue: Option[Double] = None,
 	           expectedNumberOfDecimals: Int = 4, validate: Option[Option[Double] => InputValidationResult] = None,
-	           disableLengthHint: Boolean = false) =
+	           disableLengthHint: Boolean = false, round: Boolean = false) =
 	{
 		// Only accepts decimal numbers / number parts
 		val allowsNegative = allowedRange.start < 0
 		val inputFilter = if (allowsNegative) Regex.numberPart else Regex.positiveNumberPart
 		val resultFilter = if (allowsNegative) Regex.number else Regex.positiveNumber
 		
-		number[Double](allowedRange, initialValue, (expectedNumberOfDecimals - 1) max 0, inputFilter, resultFilter,
+		// Counts the number of decimals that need to be added to the input length
+		val decimalsInExtremeValues = allowedRange.ends.mapAndMerge { value =>
+			val str = value.toString
+			str.indexOf('.') match {
+				case -1 => -1
+				case i => str.length - i - 1
+			}
+		} { _ max _ }
+		val extraInputLength = (expectedNumberOfDecimals - decimalsInExtremeValues) max 0
+		
+		number[Double](allowedRange, initialValue, extraInputLength, inputFilter, resultFilter,
 			validate,
-			if (disableLengthHint) Pair.twice(false) else Pair(allowedRange.start != 0, true)) {
-			_.double }
+			markMinMax = if (disableLengthHint) Pair.twice(false) else Pair(allowedRange.start != 0, true)) { text =>
+			val asDouble = text.double
+			if (round)
+				asDouble.map { _.roundDecimals(expectedNumberOfDecimals) }
+			else
+				asDouble
+		}
 	}
 	/**
 	  * Creates a new field that accepts integer numbers

@@ -12,6 +12,7 @@
 - **Changing**'s `.lazyMap(...)` and `.lazyMergeWith(...)` now yield **Lazy** instead of **ListenableLazy**
   - The utilized **LazyMirror**, **LazyMergeMirror** and **LazyTripleMergeMirror** 
     no longer extend **ListenableLazy**, only **Lazy**
+- **ApproxSelfEquals** now requires `def approxEqualsFunction` instead of `implicit def equalsFunction`
 - **GroupIterator** now yields **IndexedSeq**s instead of **Vector**s
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
@@ -64,6 +65,7 @@
   - Added `.groupedWithinSize(Int)` for deep collections
 - **IterableOnce** (**CollectionExtensions**)
   - Added `.sizeIfKnown`, which is an **Option** wrapper for `.knownSize`
+  - Added `.average` for collections with **Fractional** implementation
   - Added `.countsBy(...)`
   - Added `.takeCount(...)`, a combination of `.count(...)` and `.take(...)`
   - Added `.groupReduce(...)`, `.groupByUsing(...)`, `.groupMapUsing(...)`, `.groupSimilar(...)` and `.joinSimilar(...)`
@@ -84,6 +86,8 @@
   - Added `.iterate(...)`
 - **ResettableFlag** (object)
   - Added `.wrap(EventfulPointer)`
+- **SelfComparable**
+  - Added `.atLeast(...)` and `.atMost(...)` aliases for `.max(...)` and `.min(...)`
 - **Seq** (**CollectionExtensions**)
   - Added `.startingWith(...)` and `.endingWith(...)`
   - Added `.tryReduce(...)` and `.tryReduceIterator(...)`
@@ -120,6 +124,7 @@
 - Rewrote **Lazy**`.mapCurrent` implementation
 - **EqualsBy** now caches the generated `hashCode()` value
 - `NumericSpan.from(HasInclusiveEnds)` is now implicit
+- Most implicit classes in **RichComparable** now extend **SelfComparable** instead of **RichComparable**
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
 - Optimized the implementation of **IterableOnce**'s `.divideWith(...)` and `.flatDivideWith(...)` for empty collections 
 - **ModelLike**`.nonEmptyProperties` now yields an **IndexedSeq** instead of a **Vector**

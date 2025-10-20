@@ -12,35 +12,26 @@ object RichComparable
         def compareTo(other: T) = c.compareTo(other)
     }
 	
-	/*
-	implicit class IndirectComparable[A, B](val c: A)(implicit f: A => Comparable[B]) extends RichComparable[B]
+	implicit class ComparableInt(val i: Int) extends AnyVal with SelfComparable[Int]
 	{
-		override def compareTo(o: B) = f(c).compareTo(o)
-	}*/
-	
-	implicit class ComparableInt(val i: Int) extends AnyVal with RichComparable[Int]
-	{
+		override def self: Int = i
+		
 		override def compareTo(o: Int) = i - o
 	}
 	
-	implicit class ComparableDouble(val d: Double) extends AnyVal with RichComparable[Double]
+	implicit class ComparableDouble(val d: Double) extends AnyVal with SelfComparable[Double]
 	{
+		override def self: Double = d
+		
 		override def compareTo(o: Double) = if (d < o) -1 else if (d > o) 1 else 0
 	}
 	
-	implicit class ExtendedRichComparable[A, C <: RichComparable[A] with A](val c: C) extends AnyVal
+	implicit class ExtendedRichComparable[A, C <: RichComparable[A] with A](val c: C)
+		extends AnyVal with SelfComparable[A]
 	{
-		/**
-		  * @param other Another item
-		  * @return The smaller between these two items
-		  */
-		def min(other: A): A = if (c > other) other else c
+		override def self: A = c
 		
-		/**
-		  * @param other Another item
-		  * @return The larger between these to items
-		  */
-		def max(other: A): A = if (c < other) other else c
+		override def compareTo(o: A): Int = c.compareTo(o)
 	}
 	
 	
@@ -50,7 +41,6 @@ object RichComparable
      * Finds the smaller of the two provided values
      */
     def min[A <: Comparable[A]](a: A, b: A) = if (a > b) b else a
-    
     /**
      * Finds the larger of the two values
      */
@@ -71,17 +61,14 @@ trait RichComparable[-A] extends Any with Comparable[A @uncheckedVariance]
      * Checks whether this item is larger than the specified item
      */
 	def >(other: A) = compareTo(other) > 0
-	
 	/**
 	 * Checks whether this item is smaller than the specified item
 	 */
 	def <(other: A) = compareTo(other) < 0
-	
 	/**
 	 * Checks whether this item is equal or larger than the specified item
 	 */
 	def >=(other: A) = !(<(other))
-	
 	/**
 	 * Checks whether this item is equal or smaller than the specified item
 	 */
@@ -98,8 +85,7 @@ trait RichComparable[-A] extends Any with Comparable[A @uncheckedVariance]
 	 * @param backUp a function for providing a backup result in case the first one doesn't
 	 * separate the values
 	 */
-	def compareOr(other: A)(backUp: => Int) =
-	{
+	def compareOr(other: A)(backUp: => Int) = {
 	    val primary = compareTo(other)
 	    if (primary == 0)
 	        backUp
@@ -130,4 +116,13 @@ trait SelfComparable[Repr] extends Any with RichComparable[Repr]
 	  * @return Larger of these two instances
 	  */
 	def max(other: Repr): Repr = if (this < other) other else self
+	
+	/**
+	 * An alias for [[max]]
+	 */
+	def atLeast(min: Repr): Repr = max(min)
+	/**
+	 * An alias for [[min]]
+	 */
+	def atMost(max: Repr): Repr = min(max)
 }

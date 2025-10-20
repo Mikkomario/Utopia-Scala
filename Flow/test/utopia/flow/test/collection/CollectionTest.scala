@@ -3,6 +3,7 @@ package utopia.flow.test.collection
 import utopia.flow.collection.CollectionExtensions.{iterableOperations, _}
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.ordering.SomeBeforeNone
 
 import scala.collection.View
@@ -142,6 +143,8 @@ object CollectionTest extends App
 	assert(numbers3.endingWith(4) == Vector(1, 2, 3, 4))
 	assert(numbers3.startingWith(1) == numbers3)
 	assert(numbers3.endingWith(3) == numbers3)
+	
+	assert(Vector(1.0, 2.0, 3.0).average ~== 2.0)
 	
 	println("Success!")
 }

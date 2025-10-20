@@ -131,6 +131,8 @@
   - `.textPointer` and `.valuePointer` are now mutable
   - **TextField** now uses the **Focus** color role
   - Modified how the field formats its value when it loses focus / stops editing
+  - Double number text fields no longer assume that the min & max values are whole integers
+  - Double number text fields now support rounding
 - Rewrote **ReachWindow**'s anchoring logic
 - **RadioButtonGroup** now extends **HasFocusFlag**
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
