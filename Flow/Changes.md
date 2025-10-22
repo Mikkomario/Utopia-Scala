@@ -13,6 +13,7 @@
   - The utilized **LazyMirror**, **LazyMergeMirror** and **LazyTripleMergeMirror** 
     no longer extend **ListenableLazy**, only **Lazy**
 - **ApproxSelfEquals** now requires `def approxEqualsFunction` instead of `implicit def equalsFunction`
+- **TwoThreadBuffer.Output** can no longer be reopened after closing
 - **GroupIterator** now yields **IndexedSeq**s instead of **Vector**s
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
@@ -40,6 +41,7 @@
 - Added **FirstAvailableLazy**, **PrioritizingLazy**, **MappingLazyView**, **FlatteningLazy**, 
   **MergingLazy** and **LazyWrapper**
 - Added **NoWait** as a new **WaitTarget**
+- **TwoThreadBuffer.Input** may now be closed, causing the remaining data to be discarded
 ### New methods
 - **Changing**
   - Added `.forFinalValue(...)`

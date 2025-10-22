@@ -7,8 +7,10 @@ import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.Flag
 
 import scala.annotation.tailrec
@@ -37,26 +39,41 @@ object TwoThreadBuffer
 		def remainingSize_=(newSize: UncertainInt): Unit
 		
 		/**
+		 * @return A mutable flag that is set once this output is certainly closed
+		 */
+		def closedFlag: SettableFlag
+		/**
 		 * @return Whether all data has been read from this input.
 		 */
 		def closed: UncertainBoolean
 		def closed_=(isClosed: UncertainBoolean): Unit
 		
 		/**
+		 * @return A flag that is set once the input has declared that they will no longer consume items.
+		 *         (After which, this interface starts discarding items instead of accepting them).
+		 */
+		def inputClosedFlag: Flag
+		/**
+		 * @return Whether the input has declared that they will no longer consume items.
+		 *         If true, this interface discards items instead of accepting them.
+		 */
+		def inputHasClosed = inputClosedFlag.isSet
+		/**
+		 * @return Whether the input has not declared that they will no longer consume items.
+		 *         If false, this interface discards items instead of accepting them.
+		 */
+		def inputIsOpen = !inputHasClosed
+		
+		/**
 		 * Declares that this output will not close until otherwise declared.
 		 * This allows the output to return true on 'hasNext' without yet having read values.
-		 * @param allowReopen Whether this declaration should be applied even after this output has closed.
-		 *                    Default = false = ignore this declaration if this output has closed.
 		 */
-		def declareNotClosing(allowReopen: Boolean = false): Unit
+		def declareNotClosing(): Unit
 		/**
 		 * Declares that this output might close without receiving any more values (which is the initial output state).
 		 * This declaration may be cancelled by calling [[declareNotClosing()]].
-		 * @param allowReopen Whether this declaration (of uncertainty) should override a possible closed state,
-		 *                    i.e. to possibly declare this output as reopened.
-		 *                    Default = false = output will remain closed, if closed before
 		 */
-		def declarePossiblyClosing(allowReopen: Boolean = false): Unit
+		def declarePossiblyClosing(): Unit
 		
 		/**
 		 * Specifies the number of items that will be read before this output closes.
@@ -73,6 +90,15 @@ object TwoThreadBuffer
 		 * @param items Items to place within this buffer
 		 */
 		def push(items: Iterable[A]): Unit
+		
+		
+		// COMPUTED -----------------------
+		
+		/**
+		 * @return Whether this interface receives more items at this time.
+		 *         Yields false if this interface will merely discard the items it receives.
+		 */
+		def receivesMore: Boolean = inputIsOpen && closed.mayBeFalse
 		
 		
 		// OTHER    -----------------------
@@ -154,7 +180,7 @@ object TwoThreadBuffer
 	  * Operations typically block while the buffer is empty.
 	  * @tparam A Type of read data.
 	  */
-	sealed trait Input[+A] extends Iterator[A]
+	sealed trait Input[+A] extends Iterator[A] with AutoCloseable
 	{
 		// ABSTRACT ------------------------
 		
@@ -168,6 +194,12 @@ object TwoThreadBuffer
 		 *         May be uncertain.
 		 */
 		def sizeEstimate: UncertainInt
+		
+		/**
+		 * @return A flag that may be set to indicate that this input will no longer process any items.
+		 *         Also set if [[close]] is called.
+		 */
+		def closedFlag: SettableFlag
 		
 		
 		// OTHER    ----------------------
@@ -227,18 +259,22 @@ object TwoThreadBuffer
 	  */
 	object EmptyInput extends Input[Nothing]
 	{
+		override val hasNext: Boolean = false
+		override val sizeEstimate = CertainNumber(0)
+		
+		override lazy val closedFlag = SettableFlag.alreadySet
+		
 		override def immediately = EmptyImmediateInput
-		override def sizeEstimate = CertainNumber(0)
-		override def hasNext: Boolean = false
 		
 		override def next(): Nothing = throw new IllegalStateException("next() called on empty input")
+		override def close() = ()
 	}
 	/**
 	  * An immediate input interface to use / present in situations where there is no data to read.
 	  */
 	object EmptyImmediateInput extends ImmediateInput[Nothing]
 	{
-		override def hasNext: Boolean = false
+		override val hasNext: Boolean = false
 		
 		override def next(): Nothing = throw new IllegalStateException("next() called on empty input")
 		override def collectNext(n: Int): IndexedSeq[Nothing] = Empty
@@ -247,8 +283,8 @@ object TwoThreadBuffer
 
 /**
   * A buffer that provides two interfaces:
-  *     1) For pushing elements into the buffer, as long as there is space, and
-  *     2) For pulling elements from the buffer, as long as there are some available
+  *     1. For pushing elements into the buffer, as long as there is space, and
+  *     1. For pulling elements from the buffer, as long as there are some available
   *
   * This interface is intended to be used in a 2-threaded environment, where one thread pushes items into the
   * buffer and another pulls them from the buffer.
@@ -268,20 +304,32 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	
 	// ATTRIBUTES   ------------------------
 	
-	// Contains true when Input is closed
-	private val _declaredFilledPointer = Volatile.eventful[UncertainBoolean](UncertainBoolean)
-	// Contains the remaining input size / length. Actively tracked, but may be uncertain.
-	// Based on declarations and appended input size
-	private val _remainingInputSize = Volatile.eventful[UncertainInt](zeroOrMore)
+	private val _inputClosedFlag = SettableFlag()
+	/**
+	 * A flag that contains true when the consumer has declared, that they will no longer consume any items.
+	 * When set, causes all remaining items to be discarded.
+	 */
+	lazy val inputClosedFlag = _inputClosedFlag.view
+	/**
+	 * A pointer that contains true when the input is closed (i.e. when no data will be received anymore).
+	 * Contains false while it is certain that there will be more items.
+	 */
+	private val _declaredFilledFlag = Volatile.lockable[UncertainBoolean](UncertainBoolean)
+	/**
+	 * A pointer that contains the number of remaining items to receive. The value may be uncertain.
+	 * This value is updated based on declared sizes and consumed input.
+	 */
+	private val remainingInputSizeP = Volatile.lockable[UncertainInt](zeroOrMore)
+	private val remainingInputSizeIsPositiveFlag = remainingInputSizeP.lightMap { _.isPositive }
 	/**
 	  * Pointer that contains whether this buffer is receiving more elements.
 	  * May contain an uncertain value.
 	  */
-	val isFillingFlag = _declaredFilledPointer.mergeWith(_remainingInputSize) { (declaredFilling, remainingSize) =>
-		declaredFilling.exact match {
-			case Some(filled) => CertainBoolean(!filled)
-			case None => remainingSize.isPositive
-		}
+	val isFillingFlag = _declaredFilledFlag.flatMap {
+		// Case: Declared filled or filling
+		case CertainBoolean(filled) => Fixed(CertainBoolean(!filled))
+		// Case: Not declared filled nor filling => Determines the state from the remaining input size -pointer
+		case UncertainBoolean => remainingInputSizeIsPositiveFlag
 	}
 	
 	private val buffer = Volatile.eventful.seq[A]()
@@ -289,17 +337,22 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	/**
 	  * Flag that contains true while this buffer contains unread elements
 	  */
-	val nonEmptyFlag: Flag = buffer.mapValue { _.nonEmpty }
+	val nonEmptyFlag: Flag = buffer.nonEmptyFlag
 	/**
 	  * Flag that contains true while this buffer is empty
 	  */
 	lazy val isEmptyFlag = !nonEmptyFlag
 	/**
-	  * Flag that contains true once/when this buffer has been completely read and the input has been closed.
-	  * May contain an uncertain value.
+	  * Flag that contains true once/when no more items will be passed through this buffer.
+	 * May contain an uncertain value.
 	  */
-	lazy val closedFlag = _declaredFilledPointer.mergeWith(nonEmptyFlag) { (filled, nonEmpty) =>
-		if (nonEmpty) CertainBoolean(false) else filled
+	lazy val closedFlag = _inputClosedFlag.flatMap { inputClosed =>
+		if (inputClosed)
+			Fixed(CertainBoolean(true))
+		else
+			_declaredFilledFlag.mergeWith(nonEmptyFlag) { (filled, nonEmpty) =>
+				if (nonEmpty) CertainBoolean(false) else filled
+			}
 	}
 	
 	// Reset whenever becomes empty
@@ -307,17 +360,20 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	// Reset whenever becomes full
 	private val _nonFullFuture = ResettableLazy { buffer.futureWhere { _.hasSize < capacity } }
 	// Reset when filled state becomes inexact or changes
-	private val _knownFilledStateFuture = ResettableLazy { _declaredFilledPointer.findMapFuture { _.exact } }
+	private val _knownFilledStateFuture = ResettableLazy { _declaredFilledFlag.findMapFuture { _.exact } }
 	// Reset if reopened
 	private val _filledFuture = ResettableLazy {
-		_declaredFilledPointer.findMapFuture { filled => if (filled.isCertainlyTrue) Some(()) else None }
+		_declaredFilledFlag.findMapFuture { filled => if (filled.isCertainlyTrue) Some(()) else None }
 	}
 	
 	
 	// INITIAL CODE ------------------------
 	
+	// Once the input is closed, discards any buffered items
+	_inputClosedFlag.onceSet { buffer.clear() }
+	
 	// Resets the known filled state future whenever that state is no longer valid
-	_declaredFilledPointer.addContinuousListener { e =>
+	_declaredFilledFlag.addContinuousListener { e =>
 		if (e.oldValue.isCertain) {
 			_knownFilledStateFuture.reset()
 			_filledFuture.reset()
@@ -393,17 +449,29 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	def closedFuture = closedFlag
 		.findMapFuture { closed => if (closed.isCertainlyTrue) Some(()) else None }
 	
+	private def inputHasClosed = _inputClosedFlag.value
+	
 	
 	// NESTED   ----------------------------
 	
 	object BufferOutput extends TwoThreadBuffer.Output[A]
 	{
+		// ATTRIBUTES   -------------------
+		
+		override val closedFlag = SettableFlag()
+		
+		
 		// INITIAL CODE -------------------
 		
 		// If the declared input size becomes 0 (or less), declares this input as closed
-		_remainingInputSize.addListener { e =>
-			if (e.newValue.isCertainlyNotPositive)
-				close()
+		remainingInputSizeP.once { _.isCertainlyNotPositive } { _ => close() }
+		
+		// Once closed, locks the remaining input size and declares this output as no longer filling
+		closedFlag.onceSet {
+			_declaredFilledFlag.value = true
+			remainingInputSizeP.value = 0
+			_declaredFilledFlag.lock()
+			remainingInputSizeP.lock()
 		}
 		
 		
@@ -411,84 +479,94 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		
 		override def immediately = Immediate
 		
-		override def remainingSize = _remainingInputSize.value
-		override def remainingSize_=(newSize: UncertainInt) = _remainingInputSize.value = newSize
+		override def remainingSize = remainingInputSizeP.value
+		override def remainingSize_=(newSize: UncertainInt) = remainingInputSizeP.value = newSize
 		
-		override def closed = _declaredFilledPointer.value
-		override def closed_=(isClosed: UncertainBoolean) = _declaredFilledPointer.value = isClosed
+		override def closed = _declaredFilledFlag.value
+		override def closed_=(isClosed: UncertainBoolean) = _declaredFilledFlag.value = isClosed
 		
-		override def close() = _declaredFilledPointer.value = true
+		override def inputClosedFlag: Flag = TwoThreadBuffer.this.inputClosedFlag
 		
-		override def declareNotClosing(allowReopen: Boolean = false) = {
-			if (allowReopen)
-				_declaredFilledPointer.value = false
-			else
-				_declaredFilledPointer.update { filled => if (filled.isCertainlyTrue) filled else false }
-		}
-		override def declarePossiblyClosing(allowReopen: Boolean = false) = {
-			if (allowReopen)
-				_declaredFilledPointer.value = UncertainBoolean
-			else
-				_declaredFilledPointer
-					.update { filled => if (filled.isCertainlyTrue) filled else UncertainBoolean }
-		}
+		override def close() = closedFlag.set()
+		
+		override def declareNotClosing() = _declaredFilledFlag.value = false
+		override def declarePossiblyClosing() =
+			_declaredFilledFlag.update { filled => if (filled.isCertainlyTrue) filled else UncertainBoolean }
 		
 		override def declareRemainingInputSize(remainingInputSize: UncertainInt) =
-			_remainingInputSize.value = remainingInputSize
+			remainingInputSizeP.value = remainingInputSize
 		
 		@tailrec
 		override final def push(items: Iterable[A]): Unit = {
+			// TODO: Handle non-empty more elegantly
 			if (items.nonEmpty) {
-				val immediatelyAvailableCapacity = immediately.availableCapacity
-				val wasFull = immediatelyAvailableCapacity <= 0
-				// Waits until there is space within the buffer for at least one item
-				val availableCapacity =
-					if (wasFull) capacity - _nonFullFuture.value.waitFor().get.size else immediatelyAvailableCapacity
-				
-				// Appends as many items as possible to the buffer
-				val (nextAppend, remaining) = items.splitAt(availableCapacity)
-				buffer.update { _ ++ nextAppend }
-				_remainingInputSize.update { n => (n - nextAppend.size).nonNegative }
-				
-				// If there are items which couldn't fit in the buffer, handles them recursively
-				// (i.e. completes another wait iteration)
-				if (remaining.nonEmpty) {
-					_nonFullFuture.reset()
-					push(remaining)
+				throwIfClosed()
+				// If the input has been closed, ignores all remaining items
+				if (inputIsOpen) {
+					val immediatelyAvailableCapacity = immediately.availableCapacity
+					val wasFull = immediatelyAvailableCapacity <= 0
+					// Waits until there is space within the buffer for at least one item
+					val availableCapacity =
+						if (wasFull) capacity - _nonFullFuture.value.waitFor().get.size else immediatelyAvailableCapacity
+					
+					// Appends as many items as possible to the buffer
+					val (nextAppend, remaining) = items.splitAt(availableCapacity)
+					buffer.update { _ ++ nextAppend }
+					remainingInputSizeP.update { n => (n - nextAppend.size).nonNegative }
+					
+					// If there are items which couldn't fit in the buffer, handles them recursively
+					// (i.e. completes another wait iteration)
+					if (remaining.nonEmpty) {
+						_nonFullFuture.reset()
+						push(remaining)
+					}
 				}
 			}
 		}
+		
+		
+		// OTHER    ------------------------------
+		
+		private def throwIfClosed() =
+			if (closedFlag.value) throw new IllegalStateException("This buffer has already been closed")
 		
 		
 		// NESTED   ------------------------------
 		
 		object Immediate extends TwoThreadBuffer.ImmediateOutput[A]
 		{
-			override def isFull = buffer.value.hasSize >= capacity
-			
-			override def availableCapacity = capacity - buffer.size
+			override def isFull = inputHasClosed || buffer.value.hasSize >= capacity
+			override def availableCapacity = if (inputHasClosed) 0 else capacity - buffer.size
 			
 			override def push(items: Iterable[A]): Iterable[A] = {
 				if (items.nonEmpty) {
-					// Appends as many items as possible without overfilling the buffer
-					val immediateCapacity = immediately.availableCapacity
-					val (append, reject) = items.splitAt(immediateCapacity)
-					buffer.update { _ ++ append }
-					_remainingInputSize.update { _ - append.size }
-					// Returns the remaining items
-					reject
+					throwIfClosed()
+					
+					// Case: Input has already closed => Rejects all items
+					if (inputHasClosed)
+						items
+					else {
+						// Appends as many items as possible without overfilling the buffer
+						val immediateCapacity = immediately.availableCapacity
+						val (append, reject) = items.splitAt(immediateCapacity)
+						buffer.update { _ ++ append }
+						remainingInputSizeP.update { _ - append.size }
+						// Returns the remaining items
+						reject
+					}
 				}
 				else
 					items
 			}
 			override def push(item: A) = {
+				throwIfClosed()
 				// Case: Buffer is full => Rejects the item
 				if (isFull)
 					Some(item)
 				// Case: Buffer is not full => Appends the item to the buffer
 				else {
 					buffer.update { _ :+ item }
-					_remainingInputSize.update { _ - 1 }
+					remainingInputSizeP.update { _ - 1 }
 					None
 				}
 			}
@@ -501,8 +579,9 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		
 		override def immediately = Immediate
 		
-		override def sizeEstimate: UncertainInt = output.remainingSize + buffer.size
+		override def closedFlag = _inputClosedFlag
 		
+		override def sizeEstimate: UncertainInt = output.remainingSize + buffer.size
 		override def knownSize = sizeEstimate.exact.getOrElse(-1)
 		override def size = sizeEstimate.exact.getOrElse(super.size)
 		
@@ -511,19 +590,16 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 			if (isNotCurrentlyEmpty)
 				true
 			else
-				isNoLongerFilling.exact match {
-					// Case: It is known whether the buffer has been filled or not => Returns based on that knowledge
-					case Some(hasBeenFilled) => !hasBeenFilled
+				isStillFilling.exact.getOrElse {
 					// Case: It is still uncertain whether iteration has finished or not
-					// => Waits until it is no longer uncertain
-					case None =>
-						// Uncertainty ends when filledPointer is updated or when buffer acquires a value
-						_nonEmptyFuture.value.or(_knownFilledStateFuture.value).waitFor().get match {
-							// Case: Buffer acquired a value => Has more elements
-							case Left(_) => true
-							// Case: Filled status updated => Continues if not yet filled
-							case Right(filled) => !filled
-						}
+					//       => Waits until it is no longer uncertain
+					// Uncertainty ends when filledPointer is updated or when buffer acquires a value
+					_nonEmptyFuture.value.or(_knownFilledStateFuture.value).waitFor().get match {
+						// Case: Buffer acquired a value => Has more elements
+						case Left(_) => true
+						// Case: Filled status updated => Continues if not yet filled
+						case Right(filled) => !filled
+					}
 				}
 		}
 		
@@ -544,6 +620,8 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 			}
 		}
 		
+		override def close() = closedFlag.set()
+		
 		
 		// OTHER    ---------------------
 		
@@ -562,9 +640,10 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 			
 			override def hasNext: Boolean = isNotCurrentlyEmpty
 			
-			override def next(): A = nextOption().getOrElse { throw new IllegalStateException(
-				"next() called on an empty iterator; No more items are immediately available") }
-			
+			override def next(): A = nextOption().getOrElse {
+				throw new IllegalStateException(
+					"next() called on an empty iterator; No more items are immediately available")
+			}
 			override def nextOption() = takeFromBuffer[Option[A]](None) { b => Some(b.head) -> b.tail }
 			
 			override def collectNext(n: Int) =

@@ -122,6 +122,8 @@
   - Added `.fontMetrics` and `.fontMetricsPointer` -properties to instances that also extend **HasContext**
 - **ReachComponent**
   - Added `.coordinatePointerAlong(Axis2D)` and `.lengthPointerAlong(Axis2D)`
+- **TextField**
+  - Added various caret-related functions
 ### Other changes
 - Revalidation (and consequently repainting) is now (potentially) much faster, 
   as kind of early stopping was implemented to update layout & repaint at the lowest unaffected component level.
@@ -133,6 +135,7 @@
   - Modified how the field formats its value when it loses focus / stops editing
   - Double number text fields no longer assume that the min & max values are whole integers
   - Double number text fields now support rounding
+- **AbstractSelectableTextLabel**'s caret-positioning features are now public instead of protected
 - Rewrote **ReachWindow**'s anchoring logic
 - **RadioButtonGroup** now extends **HasFocusFlag**
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets

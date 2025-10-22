@@ -79,7 +79,7 @@ lazy val logStoreDurations = LogStoreDurations(Map(
     Debug -> LogStoreDuration(Map(
         // Merges debug logs after 1 week. Deletes them after 3 weeks.
         Merge -> Vector(Pair(2.weeks, 1.days), Pair(1.weeks, 1.hours)),
-        Delete -> Vector(Pair(1.weeks, 1.weeks), Pair(3.days, 2.weeks), Pair(Duration.Zero, 3.weeks))
+        Delete -> Vector(Pair(1.weeks, 1.weeks), Pair(3.days, 2.weeks), Pair(Duration.zero, 3.weeks))
     )),
     Info -> LogStoreDuration(Map(
         // Starts merging info entries after one day, all the way up to 12 weeks, at which point they're deleted
@@ -89,7 +89,7 @@ lazy val logStoreDurations = LogStoreDurations(Map(
             Pair(7.weeks, 1.weeks), Pair(4.weeks, 24.hours),
             Pair(3.weeks, 12.hours), Pair(2.weeks, 6.hours), Pair(1.weeks, 3.hours),
             Pair(3.days, 1.hours), Pair(1.days, 15.minutes)),
-        Delete -> Vector(Pair(2.weeks, 6.weeks), Pair(Duration.Zero, 12.weeks))
+        Delete -> Vector(Pair(2.weeks, 6.weeks), Pair(Duration.zero, 12.weeks))
     )),
     // Applies to warnings and recoverable issues
     Warning -> LogStoreDuration(Map(
@@ -99,7 +99,7 @@ lazy val logStoreDurations = LogStoreDurations(Map(
             Pair(3.days, 15.minutes), Pair(1.days, 5.minutes)),
         // Deletes all cases that are 6 months old or older
         // Inactive cases are deleted after 3 months, and resolved cases after 1.5 months
-        Delete -> Vector(Pair(4.weeks, 6.weeks), Pair(2.weeks, 12.weeks), Pair(Duration.Zero, 24.weeks))
+        Delete -> Vector(Pair(4.weeks, 6.weeks), Pair(2.weeks, 12.weeks), Pair(Duration.zero, 24.weeks))
     )),
     // Applies to unrecoverable and critical issues
     Unrecoverable -> LogStoreDuration(Map(
@@ -109,7 +109,7 @@ lazy val logStoreDurations = LogStoreDurations(Map(
             Pair(2.weeks, 1.hours), Pair(1.weeks, 15.minutes)),
         // Deletes active entries after 7 years,
         // inactive entries after 1 year and resolved entries after half a year
-        Delete -> Vector(Pair(4.weeks, 24.weeks), Pair(2.weeks, 48.weeks), Pair(Duration.Zero, 336.weeks))
+        Delete -> Vector(Pair(4.weeks, 24.weeks), Pair(2.weeks, 48.weeks), Pair(Duration.zero, 336.weeks))
     ))
 ))
 // Cleans log entries once a day

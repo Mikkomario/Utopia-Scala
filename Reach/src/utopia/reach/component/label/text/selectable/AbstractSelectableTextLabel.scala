@@ -9,11 +9,12 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.{EventfulPointer, ResettableFlag}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority.VeryHigh
@@ -22,7 +23,7 @@ import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Control, Shift}
 import utopia.genesis.handling.event.keyboard.KeyStateEvent.KeyStateEventFilter
 import utopia.genesis.handling.event.keyboard.{KeyStateEvent, KeyStateListener, KeyboardEvents, KeyboardState}
-import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener, MouseEvent, MouseMoveEvent, MouseMoveListener}
+import utopia.genesis.handling.event.mouse._
 import utopia.paradigm.enumeration.Direction2D
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.reach.component.hierarchy.ComponentHierarchy
@@ -35,7 +36,6 @@ import utopia.reach.focus.{FocusChangeEvent, FocusChangeListener, FocusListener,
 import java.awt.Toolkit
 import java.awt.datatransfer.{Clipboard, ClipboardOwner, StringSelection, Transferable}
 import java.awt.event.KeyEvent
-import utopia.flow.time.Duration
 import scala.util.Try
 
 /**
@@ -63,12 +63,22 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	  */
 	val measuredTextPointer = textPointer.mergeWithWhile(stylePointer, linkedFlag)(measure)
 	private val caretWidth = (context.margins.verySmall * 0.66) max 1.0
+	private val caretIndexP = EventfulPointer(measuredText.maxCaretIndex)
 	/**
 	  * Pointer that contains the current caret index within text
 	  */
-	protected val caretIndexPointer = EventfulPointer(measuredText.maxCaretIndex)
+	val caretIndexPointer = Pointer.indirect(caretIndexP) { newIndex =>
+		// Clips the input to acceptable bounds
+		lazy val maxIndex = measuredText.maxCaretIndex
+		if (newIndex < 0)
+			caretIndexP.value = 0
+		else if (newIndex > maxIndex)
+			caretIndexP.value = maxIndex
+		else
+			caretIndexP.value = newIndex
+	}
 	private val caretVisibilityFlag = ResettableFlag()
-	private val drawnCaretPointer = caretIndexPointer.mergeWith(caretVisibilityFlag) { (index, isVisible) =>
+	private val drawnCaretPointer = caretIndexP.mergeWith(caretVisibilityFlag) { (index, isVisible) =>
 		if (isVisible && selectable) Some(index) else None }
 	// Selected range is in caret indices
 	private val selectedRangePointer = EventfulPointer[Option[(Int, Int)]](None)
@@ -129,11 +139,13 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	/**
 	  * @return Current index of the text caret
 	  */
-	def caretIndex = caretIndexPointer.value
-	protected def caretIndex_=(newIndex: Int) = {
-		if (measuredText.isValidCaretIndex(newIndex))
-			caretIndexPointer.value = newIndex
-	}
+	def caretIndex = caretIndexP.value
+	def caretIndex_=(newIndex: Int) = caretIndexPointer.value = newIndex
+	
+	/**
+	 * @return Largest allowed caret index in this label
+	 */
+	def maxCaretIndex = measuredText.maxCaretIndex
 	
 	/**
 	  * @return Currently selected range of text (in caret indices). None if no range is selected
@@ -230,7 +242,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 		selectionBgPointer.foreach { _.addListener(repaintListener) }
 		
 		// Whenever text changes or caret position is updated, shows the caret
-		caretIndexPointer.addListener(showCaretListener)
+		caretIndexP.addListener(showCaretListener)
 		textPointer.addListener(showCaretListener)
 		
 		// Clears or limits selected range whenever the text is updated
@@ -248,7 +260,7 @@ abstract class AbstractSelectableTextLabel(override val hierarchy: ComponentHier
 	/**
 	  * Moves caret to the end of this label's current text
 	  */
-	def moveCaretToEnd() = caretIndexPointer.value = measuredText.maxCaretIndex
+	def moveCaretToEnd() = caretIndexP.value = maxCaretIndex
 	
 	/**
 	  * Clears the current selection area

@@ -506,18 +506,19 @@ case class ContextualTextFieldFactory(hierarchy: ComponentHierarchy,
 	  *                                 that the number of decimal places will be restricted to the specified value.
 	  *
 	  *                                 Default = 4.
-	  *
 	  * @param disableLengthHint        Whether the minimum and/or maximum length should NOT be displayed as a hint.
 	  *                                 Please note that a minimum value of 0 is never displayed as a hint.
-	  * @param validate An input validation function that is applied in addition to the allowed range
+	  * @param round Whether the resulting numbers should be rounded to 'expectedNumberOfDecimals'.
+	 *               Default = false.
+	 * @param validate An input validation function that is applied in addition to the allowed range
 	  *                 and numeric conversion checks.
 	  *                 Accepts the input value or None if this field is empty. Returns an input validation result.
 	  * @return A new text field
 	  */
 	def validatedDouble(allowedRange: HasInclusiveOrderedEnds[Double], initialValue: Option[Double] = None,
-	                    expectedNumberOfDecimals: Int = 4, disableLengthHint: Boolean = false)
+	                    expectedNumberOfDecimals: Int = 4, disableLengthHint: Boolean = false, round: Boolean = false)
 	                   (validate: Option[Double] => InputValidationResult) =
-		double(allowedRange, initialValue, expectedNumberOfDecimals, Some(validate), disableLengthHint)
+		double(allowedRange, initialValue, expectedNumberOfDecimals, Some(validate), disableLengthHint, round)
 	/**
 	  * Creates a new field that accepts decimal numbers
 	  * @param minValue Smallest allowed value
@@ -817,7 +818,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	// INITIAL CODE	------------------------------------------
 	
 	// Will not shrink below the default width
-	_wrapped.wrappedField.addConstraintOver(X)(MaxBetweenLengthModifier(defaultWidth))
+	label.addConstraintOver(X)(MaxBetweenLengthModifier(defaultWidth))
 	
 	
 	// COMPUTED	----------------------------------------------
@@ -831,7 +832,7 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	/**
 	 * @return A flag that contains true while this field is being edited
 	 */
-	def editingFlag = _wrapped.wrappedField.editingFlag
+	def editingFlag = label.editingFlag
 	
 	/**
 	  * @return A pointer that contains the current state of this field
@@ -848,13 +849,31 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	  */
 	def maxLength = settings.maxLength
 	
+	/**
+	 * @return A (mutable) pointer that contains the current caret / cursor index within this field
+	 */
+	def caretIndexPointer = label.caretIndexPointer
+	
+	/**
+	 * @return The current caret / cursor index within this field
+	 */
+	def caretIndex = label.caretIndex
+	def caretIndex_=(newIndex: Int) = label.caretIndex = newIndex
+	
+	/**
+	 * @return The largest allowed caret / cursor index, currently
+	 */
+	def maxCaretIndex = label.maxCaretIndex
+	
+	private def label = _wrapped.wrappedField
+	
 	
 	// IMPLEMENTED	------------------------------------------
 	
 	override def hasFocus = _wrapped.hasFocus
 	
 	override protected def wrapped = _wrapped
-	override protected def focusable = _wrapped.wrappedField
+	override protected def focusable = label
 	
 	
 	// OTHER	----------------------------------------------
@@ -863,4 +882,9 @@ class TextField[A](override val hierarchy: ComponentHierarchy, context: Variable
 	  * Clears this field of all text
 	  */
 	def clear() = textPointer.value = ""
+	
+	/**
+	 * Moves the caret / cursor to the end of text
+	 */
+	def moveCaretToEnd() = label.moveCaretToEnd()
 }
