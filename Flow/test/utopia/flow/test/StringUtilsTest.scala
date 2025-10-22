@@ -1,9 +1,8 @@
 package utopia.flow.test
 
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Identity
-import utopia.flow.parse.string.Regex.stringToRegex
 import utopia.flow.parse.string.Regex
+import utopia.flow.parse.string.Regex.stringToRegex
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.StringUtils
 
@@ -89,6 +88,8 @@ object StringUtilsTest extends App
 	
 	assert(s.notContainingAnyOf(Vector("str", "i", "a")) == "Ths s  test ng")
 	assert("El Padel Oy".notContainingAnyOf(Set("Oy", "GmbH", "LLC", "Ry")) == "El Padel ")
+	
+	assert(s.overlapWith("Another test") == " test", s.overlapWith("Another test"))
 	
 	println("Success!")
 }

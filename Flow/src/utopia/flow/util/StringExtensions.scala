@@ -232,6 +232,49 @@ object StringExtensions
 		}
 		
 		/**
+		 * Finds the longest overlap between these two strings
+		 * @param other Another string
+		 * @return The longest overlapping part between these strings.
+		 *         If multiple overlaps of the same length are found, returns the first one only.
+		 *         If no overlap exists, returns an empty string.
+		 */
+		def overlapWith(other: String) = {
+			if (s.isEmpty || other.isEmpty)
+				""
+			else {
+				// Stores the longest encountered overlap here
+				var longestOverlap = ""
+				var longestOverlapLength = 0
+				
+				// Iterates over this string in order to find overlap starting positions
+				// Implements early stopping, after the length of this string starts limiting the maximum overlap length
+				val myLength = s.length
+				val theirLength = other.length
+				s.iterator.zipWithIndex.takeWhile { _._2 < myLength - longestOverlapLength }
+					// For each character in this string, looks for possible overlaps in the other string
+					.foreach { case (my, myIndex) =>
+						// Again, implements early stopping
+						other.iterator.zipWithIndex.takeWhile { _._2 < theirLength - longestOverlapLength }
+							.foreach { case (their, theirIndex) =>
+								// Case: Found a part that starts with the same character
+								//       => Checks how long of an overlap may be acquired from this matching point
+								if (my == their) {
+									val additionalOverlapLength =
+										s.drop(myIndex + 1).iterator.zip(other.drop(theirIndex + 1))
+											.takeWhile { case (my, their) => my == their }.size
+									// Case: New longest overlap found => Remembers it
+									if (additionalOverlapLength >= longestOverlapLength) {
+										longestOverlap = s.slice(myIndex, myIndex + additionalOverlapLength + 1)
+										longestOverlapLength = additionalOverlapLength + 1
+									}
+								}
+							}
+					}
+				longestOverlap
+			}
+		}
+		
+		/**
 		 * @param prefix A prefix
 		 * @return Whether this string starts with specified prefix (case-insensitive)
 		 */
