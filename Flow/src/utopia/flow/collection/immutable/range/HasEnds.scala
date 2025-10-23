@@ -51,6 +51,40 @@ object HasEnds
 	def exclusive[P](ends: Pair[P]) = apply(ends, isInclusive = false)
 	
 	
+	// EXTENSIONS   -------------------
+	
+	implicit class HasIntegerEnds(val range: HasEnds[Int]) extends AnyVal
+	{
+		/**
+		 * @throws UnsupportedOperationException If this range is empty
+		 * @return Inclusive ends of this range
+		 */
+		@throws[UnsupportedOperationException]("If this range is empty")
+		def inclusiveEnds = inclusiveEndsOption.getOrElse {
+			throw new UnsupportedOperationException("An empty range has no inclusive ends")
+		}
+		/**
+		 * @return Inclusive versions of the ends of this range. None if this range is empty.
+		 */
+		def inclusiveEndsOption = {
+			// Case: Already inclusive => Just returns the ends
+			if (range.isInclusive)
+				Some(range.ends)
+			// Case: Empty range => Throws
+			else if (range.isEmpty)
+				None
+			// Case: Exclusive non-empty range => Modifies the end, so that it's inclusive
+			else {
+				val ends = range.ends
+				if (ends.first < ends.second)
+					Some(ends.mapSecond { _ - 1 })
+				else
+					Some(ends.mapSecond { _ + 1 })
+			}
+		}
+	}
+	
+	
 	// NESTED   -------------------------
 	
 	private case class _HasEnds[+P](start: P, end: P, isInclusive: Boolean) extends HasEnds[P]

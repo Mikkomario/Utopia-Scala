@@ -15,6 +15,10 @@ object StringUtilsTest extends App
 {
 	val s = "This is a test string"
 	
+	assert("a".contains(""))
+	assert("a".indexOf("") == 0)
+	assert("".indexOf("") == 0)
+	
 	assert(s.words == Vector("This", "is", "a", "test", "string"))
 	assert(s.firstWord == "This")
 	assert(s.lastWord == "string")
@@ -34,8 +38,9 @@ object StringUtilsTest extends App
 	assert(!s.containsAll("this", "string"))
 	assert(s.containsAllIgnoreCase("this", "string"))
 	assert(s.endsWithIgnoreCase("STRING"))
-	assert(s.optionIndexOf("s").contains(3))
-	assert(s.optionIndexOf("XAA").isEmpty)
+	assert(s.findIndexOf("s").contains(3))
+	assert(s.findIndexOf("XAA").isEmpty)
+	assert(s.findIndexOf("IS", ignoreCase = true).contains(2), s.findIndexOf("IS", ignoreCase = true))
 	assert(s.dropUntil("test") == "test string")
 	assert(s.dropUntilLast("s") == "string")
 	assert(s.untilFirst("is") == "Th")

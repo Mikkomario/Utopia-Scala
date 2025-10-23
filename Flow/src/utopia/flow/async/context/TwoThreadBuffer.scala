@@ -449,8 +449,6 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	def closedFuture = closedFlag
 		.findMapFuture { closed => if (closed.isCertainlyTrue) Some(()) else None }
 	
-	private def inputHasClosed = _inputClosedFlag.value
-	
 	
 	// NESTED   ----------------------------
 	

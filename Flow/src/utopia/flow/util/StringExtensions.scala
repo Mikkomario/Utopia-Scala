@@ -1,7 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.range.{HasEnds, HasOrderedEnds, NumericSpan}
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.equality.EqualsFunction
@@ -28,7 +28,9 @@ object StringExtensions
 		  */
 		def isMultiLine = {
 			val iter = s.linesIterator
-			if (iter.hasNext) {
+			if (iter.knownSize >= 2)
+				true
+			else if (iter.hasNext) {
 				iter.next()
 				iter.hasNext
 			}
@@ -49,12 +51,13 @@ object StringExtensions
 		  * @return Iterator returning all words that belong to this string.
 		  *         <b>This includes all non-whitespace characters but not newline characters</b>
 		  */
-		def wordsIterator = s.linesIterator
-			.flatMap { _.split(" ").toVector.map { _.trim }.filter { _.nonEmpty } }
+		def wordsIterator =
+			s.linesIterator.flatMap { _.splitIterator(Regex.whiteSpace) }.map { _.trim }.filter { _.nonEmpty }
 		/**
-		 * @return Words that belong to this string. <b>This includes all non-whitespace characters but not newline characters</b>
+		 * @return Words that belong to this string.
+		 *         <b>This includes all non-whitespace characters but not newline characters</b>
 		 */
-		def words = wordsIterator.toVector
+		def words = wordsIterator.toOptimizedSeq
 		
 		/**
 		 * @return The first word in this string (may include any characters except whitespace)
@@ -81,82 +84,227 @@ object StringExtensions
 		/**
 		  * @return A copy of this string where the first character is in lower case
 		  */
-		def uncapitalize = if (s.isEmpty) s else s"${s.head.toLower}${s.drop(1)}"
+		def uncapitalize = if (s.isEmpty) s else s"${s.head.toLower}${s.tail}"
 		
 		/**
 		  * @param range A range
 		  * @return The portion of this string which falls into the specified range
 		  */
-		def slice(range: Range) = {
-			if (range.isEmpty)
-				""
-			else {
-				val first = (range.start min range.last) max 0
-				val last = (range.start max range.last) min (s.length - 1)
-				s.substring(first, last + 1)
-			}
+		def slice(range: Range): String = slice(HasOrderedEnds.from(range))
+		/**
+		 * @param range A range
+		 * @return The portion of this string which falls into the specified range
+		 */
+		def slice(range: HasEnds[Int]) = range.inclusiveEndsOption match {
+			case Some(ends) =>
+				val orderedEnds = ends.sorted
+				s.substring(orderedEnds.first max 0, orderedEnds.second min (s.length - 1))
+			case None => ""
 		}
 		/**
 		  * Cuts a range out of this string
 		  * @param range Range of characters to cut
 		  * @return The cut away part of this string, then the remaining part of this string
 		  */
-		def cut(range: Range) = {
-			if (range.isEmpty)
-				"" -> s
-			else {
-				val first = (range.start min range.last) max 0
-				val last = (range.start max range.last) min (s.length - 1)
-				val cutText = s.substring(first, last + 1)
-				val remaining = s.take(first) ++ s.drop(last + 1)
-				cutText -> remaining
+		def cut(range: Range): Pair[String] = cut(HasOrderedEnds.from(range))
+		/**
+		 * Cuts a range out of this string
+		 * @param range Range of characters to cut
+		 * @return A pair that contains:
+		 *              1. the cut away part of this string
+		 *              1. the remaining part of this string
+		 */
+		def cut(range: HasEnds[Int]) = {
+			range.inclusiveEndsOption match {
+				case Some(ends) =>
+					val orderedEnds = ends.sorted
+					val first = orderedEnds.first max 0
+					val last = orderedEnds.second min (s.length - 1)
+					
+					Pair(s.substring(first, last + 1), s.take(first) ++ s.drop(last + 1))
+				
+				case None => Pair("", s)
 			}
 		}
 		
 		/**
+		 * @param str A searched string
+		 * @return Index of the beginning of specified string in this string. None if specified string isn't a
+		 *         substring of this string
+		 */
+		@deprecated("Renamed to findIndexOf(String)", "v2.7")
+		def optionIndexOf(str: String) = findIndexOf(str)
+		/**
+		 * Finds the location of a substring within this string
+		 * @param searched The searched string
+		 * @return Index of the specified string within this string.
+		 *         None if the specified string didn't appear within this string.
+		 */
+		def findIndexOf(searched: String): Option[Int] = findIndexOf(searched, 0)
+		/**
+		 * Finds the location of a substring within this string
+		 * @param searched The searched string
+		 * @param from The starting index / first checked index. Default = 0.
+		 * @return Index of the specified string within this string.
+		 *         None if the specified string didn't appear within this string.
+		 */
+		def findIndexOf(searched: String, from: Int): Option[Int] = Some(s.indexOf(searched, from)).filter { _ >= 0 }
+		/**
+		 * Finds the location of a substring within this string
+		 * @param searched The searched string
+		 * @param from The starting index / first checked index. Default = 0.
+		 * @param ignoreCase Whether to ignore casing. Default = false.
+		 * @return Index of the specified string within this string.
+		 *         None if the specified string didn't appear within this string.
+		 */
+		def findIndexOf(searched: String, from: Int = 0, ignoreCase: Boolean = false): Option[Int] = {
+			// Case: Ignoring case => Uses 'regionMatches'
+			if (ignoreCase) {
+				val myLength = s.length
+				// Case: 'from' is out of bounds => No containment
+				//       NB: This functionality differs between the standard 'indexOf' implementation,
+				//           which yields out-of-bounds values when searching for empty strings
+				if (from >= myLength)
+					None
+				else
+					_findIndexOf(searched, from max 0, myLength) { (from, to) => (from to to).iterator }
+			}
+			// Case: Case-sensitive => Uses the standard 'indexOf' operation
+			else
+				findIndexOf(searched, from)
+		}
+		/**
+		 * @param str A searched string
+		 * @return Last index of the beginning of specified string in this string. None if specified string isn't a
+		 *         substring of this string
+		 */
+		@deprecated("Renamed to findLastIndexOf", "v2.7")
+		def optionLastIndexOf(str: String) = findLastIndexOf(str)
+		/**
+		 * @param searched A searched string
+		 * @return Index of the last appearance of the specified string in this string.
+		 *         None if this string doesn't contain the specified string.
+		 */
+		def findLastIndexOf(searched: String): Option[Int] = Some(s.lastIndexOf(searched)).filter { _ >= 0 }
+		/**
+		 * @param searched A searched string
+		 * @param from The first searched index (i.e. the rightmost index).
+		 *             Default = End of this string.
+		 * @return Index of the last appearance of the specified string in this string.
+		 *         None if this string doesn't contain the specified string.
+		 */
+		def findLastIndexOf(searched: String, from: Int) =
+			Some(s.lastIndexOf(searched, from)).filter { _ >= 0 }
+		/**
+		 * @param searched A searched string
+		 * @param from The first searched index (i.e. the rightmost index).
+		 *             Default = End of this string.
+		 * @param ignoreCase Whether to perform the search in a case-insensitive manner (default = false)
+		 * @return Index of the last appearance of the specified string in this string.
+		 *         None if this string doesn't contain the specified string.
+		 */
+		def findLastIndexOf(searched: String, from: Int = s.length - 1, ignoreCase: Boolean = false): Option[Int] = {
+			if (ignoreCase) {
+				if (from < 0)
+					None
+				else {
+					val myLength = s.length
+					_findIndexOf(searched, from min (myLength - 1), myLength) { (from, to) =>
+						Iterator.iterate(to) { _ - 1 }.takeWhile { _ >= from }
+					}
+				}
+			}
+			else
+				findLastIndexOf(searched, from)
+		}
+		/**
+		 * @param str Searched string
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return An iterator that returns the next index of the searched string
+		 */
+		def indexOfIterator(str: String, ignoreCase: Boolean = false): Iterator[Int] =
+			new StringIndexOfIterator(s, str, ignoreCase)
+		
+		/**
+		 * Checks a string appears within this string
+		 * @param other Another string
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Whether this string contains the specified string
+		 */
+		def contains(other: String, ignoreCase: Boolean) = {
+			if (ignoreCase)
+				other.isEmpty || s.findIndexOf(other, ignoreCase = true).isDefined
+			else
+				s.contains(other)
+		}
+		/**
 		 * @param other Another string
 		 * @return Whether this string contains specified substring (case-insensitive)
 		 */
-		def containsIgnoreCase(other: String) = s.toLowerCase.contains(other.toLowerCase)
+		def containsIgnoreCase(other: String) = contains(other, ignoreCase = true)
 		
 		/**
+		 * @param strings Strings to search from this one
+		 * @param ignoreCase Whether to ignore case differences
+		 * @return Whether this string contains all the specified strings
+		 */
+		def containsAll(strings: Iterable[String], ignoreCase: Boolean) = {
+			// Ignores empty strings
+			val nonEmptyStrings = strings.filter { _.nonEmpty }
+			
+			// Case: Nothing to search => Contains "all" of them
+			if (nonEmptyStrings.isEmpty)
+				true
+			else
+				nonEmptyStrings.oneOrMany match {
+					// Case: Only one string to search => Proceeds directly to 'contains'
+					case Left(only) => contains(only, ignoreCase)
+					// Case: Multiple strings to search
+					//       => Makes sure containment is possible for all of them before looking for it
+					case Right(strings) =>
+						val myLength = s.length
+						if (strings.exists { _.length > myLength })
+							false
+						else
+							strings.forall { contains(_, ignoreCase) }
+				}
+		}
+		/**
 		 * @param strings A number of strings
-		 * @return Whether this string contains all of the provided sub-strings (case-sensitive)
+		 * @return Whether this string contains all the provided sub-strings (case-sensitive)
 		 */
 		def containsAll(strings: IterableOnce[String]) = strings.iterator.forall(s.contains)
 		/**
 		 * @param first A string
 		 * @param second Another string
 		 * @param more More strings
-		 * @return Whether this string contains all of the provided sub-strings (case-sensitive)
+		 * @return Whether this string contains all the provided sub-strings (case-sensitive)
 		 */
 		def containsAll(first: String, second: String, more: String*): Boolean =
 			containsAll(Pair(first, second) ++ more)
-		
 		/**
 		 * @param strings A number of strings
-		 * @return Whether this string contains all of the provided sub-strings (case-insensitive)
+		 * @return Whether this string contains all the provided sub-strings (case-insensitive)
 		 */
-		def containsAllIgnoreCase(strings: IterableOnce[String]) = {
-			val lower = s.toLowerCase
-			strings.iterator.forall { searched => lower.contains(searched.toLowerCase) }
-		}
+		@deprecated("Please use .containsAll(strings, ignoreCase = true) instead", "v2.7")
+		def containsAllIgnoreCase(strings: Iterable[String]) = containsAll(strings, ignoreCase = true)
 		/**
 		 * @param first A string
 		 * @param second Another string
 		 * @param more More strings
-		 * @return Whether this string contains all of the provided sub-strings (case-insensitive)
+		 * @return Whether this string contains all the provided sub-strings (case-insensitive)
 		 */
-		def containsAllIgnoreCase(first: String, second: String, more: String*): Boolean = containsAllIgnoreCase(
-			Pair(first, second) ++ more)
+		def containsAllIgnoreCase(first: String, second: String, more: String*): Boolean =
+			containsAll(Pair(first, second) ++ more, ignoreCase = true)
 		/**
 		  * Checks whether multiple instances of the searched string can be found from this string
 		  * @param searched A searched string
 		  * @param minimumOccurrences Minimum number of required occurrences (default = 2)
-		  * @return Whether this string contains at least 'minimumOccurrences' number of 'searched' sub-strings
+		  * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Whether this string contains at least 'minimumOccurrences' number of 'searched' sub-strings
 		  */
-		def containsMany(searched: String, minimumOccurrences: Int = 2) =
-			indexOfIterator(searched).existsCount(minimumOccurrences) { _ => true }
+		def containsMany(searched: String, minimumOccurrences: Int = 2, ignoreCase: Boolean = false) =
+			indexOfIterator(searched, ignoreCase).existsCount(minimumOccurrences) { _ => true }
 		
 		/**
 		 * Checks whether this string contains all the specified sub-strings
@@ -169,17 +317,12 @@ object StringExtensions
 		 * Checks whether this string contains all the specified sub-strings
 		 * in the same order in which they're listed.
 		 * @param searched The sub-strings that are searched from this string
+		 * @param ignoreCase Whether to perform the search in a case-insensitive manner (default = false)
 		 * @return Whether this string contains the specified sub-strings in order.
 		 */
-		def containsInOrder(searched: Seq[String]) = searched
+		def containsInOrder(searched: Seq[String], ignoreCase: Boolean = false) = searched
 			.foldLeftIterator[Option[Int]](Some(0)) { (from, searched) =>
-				from.flatMap { from =>
-					val index = s.indexOf(searched, from)
-					if (index < 0)
-						None
-					else
-						Some(index + searched.length)
-				}
+				from.flatMap { from => findIndexOf(searched, from, ignoreCase).map { _ + searched.length } }
 			}
 			.forall { _.isDefined }
 		
@@ -275,30 +418,43 @@ object StringExtensions
 		}
 		
 		/**
+		 * @param prefix A possible prefix
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Whether this string starts with the specified prefix
+		 */
+		def startsWith(prefix: String, ignoreCase: Boolean) = {
+			if (ignoreCase)
+				prefix.isEmpty || s.regionMatches(true, 0, prefix, 0, prefix.length)
+			else
+				s.startsWith(prefix)
+		}
+		/**
+		 * @param suffix A possible suffix
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Whether this string ends with the specified suffix
+		 */
+		def endsWith(suffix: String, ignoreCase: Boolean) = {
+			if (ignoreCase) {
+				if (suffix.isEmpty)
+					true
+				else {
+					val suffixLength = suffix.length
+					s.regionMatches(true, s.length - suffixLength, suffix, 0, suffixLength)
+				}
+			}
+			else
+				s.endsWith(suffix)
+		}
+		/**
 		 * @param prefix A prefix
 		 * @return Whether this string starts with specified prefix (case-insensitive)
 		 */
-		def startsWithIgnoreCase(prefix: String) = s.toLowerCase.startsWith(prefix.toLowerCase)
+		def startsWithIgnoreCase(prefix: String) = startsWith(prefix, ignoreCase = true)
 		/**
 		 * @param suffix A suffix
 		 * @return Whether this string ends with specified suffix (case-insensitive)
 		 */
-		def endsWithIgnoreCase(suffix: String) = s.toLowerCase.endsWith(suffix.toLowerCase)
-		
-		/**
-		  * If this string is shorter than the specified length, prepends it with 'elem' until it reaches that length.
-		  * E.g. "123".prependTo(4, '0') would yield "01234".
-		  * @param length Target (minimum) length
-		  * @param elem The character to prepend to this string, if appropriate (call-by-name)
-		  * @return This string prepended to at least 'length'
-		  */
-		def prependTo(length: Int, elem: => Char) = {
-			val prependCount = length - s.length
-			if (prependCount <= 0)
-				s
-			else
-				s"${ elem.toString * prependCount }$s"
-		}
+		def endsWithIgnoreCase(suffix: String) = endsWith(suffix, ignoreCase = true)
 		
 		/**
 		  * @param prefix A prefix with which the resulting string will start
@@ -330,10 +486,12 @@ object StringExtensions
 		}
 		/**
 		  * @param prefix Prefix that is not allowed
-		  * @return Copy of this string without the specified prefix, if present.
+		  * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Copy of this string without the specified prefix, if present.
 		  *         Otherwise returns this string as is.
 		  */
-		def notStartingWith(prefix: String) = if (s.startsWith(prefix)) s.drop(prefix.length) else s
+		def notStartingWith(prefix: String, ignoreCase: Boolean = false) =
+			if (s.startsWith(prefix, ignoreCase)) s.drop(prefix.length) else s
 		/**
 		  * @param suffix                   A suffix with which the resulting string will end
 		  * @param enablePartialReplacement Whether the suffix and this string may partially overlap, causing
@@ -364,81 +522,81 @@ object StringExtensions
 		}
 		/**
 		  * @param suffix A suffix that is not allowed
-		  * @return Copy of this string without the specified suffix, if present.
+		  * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Copy of this string without the specified suffix, if present.
 		  *         Otherwise returns this string as is.
 		  */
-		def notEndingWith(suffix: String) = if (s.endsWith(suffix)) s.dropRight(suffix.length) else s
+		def notEndingWith(suffix: String, ignoreCase: Boolean = false) =
+			if (s.endsWith(suffix, ignoreCase)) s.dropRight(suffix.length) else s
+		
+		/**
+		 * If this string is shorter than the specified length, prepends it with 'elem' until it reaches that length.
+		 * E.g. "123".prependTo(4, '0') would yield "01234".
+		 * @param length Target (minimum) length
+		 * @param elem The character to prepend to this string, if appropriate (call-by-name)
+		 * @return This string prepended to at least 'length'
+		 */
+		def prependTo(length: Int, elem: => Char) = {
+			val prependCount = length - s.length
+			if (prependCount <= 0)
+				s
+			else
+				s"${ elem.toString * prependCount }$s"
+		}
+		
 		/**
 		 * @param string A string that is not allowed
+		 * @param ignoreCase Whether to ignore case differences (default = false)
 		 * @return A copy of this string not containing the specified string even once.
 		 *         If this string didn't contain the specified string, yields this.
 		 */
-		def notContaining(string: String) = {
+		def notContaining(string: String, ignoreCase: Boolean = false) = {
 			// Attempts to find the targeted string within this instance
-			val firstMatchIndex = s.indexOf(string)
-			// Case: No match => No change
-			if (firstMatchIndex < 0)
-				s
-			// Case: At least one match => Looks for others and builds the final result
-			else {
-				val builder = new StringBuilder(s.take(firstMatchIndex))
-				val step = string.length
-				var cursor = firstMatchIndex + step
-				
-				// Looks for additional matches until no more can be found or the whole string has been exhausted
-				while (cursor > 0 && cursor < s.length) {
-					val nextIndex = s.indexOf(string, cursor)
-					if (nextIndex < 0) {
-						builder ++= s.drop(cursor)
-						cursor = -1
+			findIndexOf(string, ignoreCase = ignoreCase) match {
+				// Case: At least one match => Looks for others and builds the final result
+				case Some(firstMatchIndex) =>
+					val builder = new StringBuilder(s.take(firstMatchIndex))
+					val step = string.length
+					var cursor = firstMatchIndex + step
+					
+					// Looks for additional matches until no more can be found or the whole string has been exhausted
+					while (cursor > 0 && cursor < s.length) {
+						findIndexOf(string, cursor, ignoreCase) match {
+							case Some(nextIndex) =>
+								builder ++= s.slice(cursor, nextIndex)
+								cursor = nextIndex + step
+							case None =>
+								builder ++= s.drop(cursor)
+								cursor = -1
+						}
 					}
-					else {
-						builder ++= s.slice(cursor, nextIndex)
-						cursor = nextIndex + step
-					}
-				}
+					
+					builder.result()
 				
-				builder.result()
+				// Case: No match => No change
+				case None => s
 			}
 		}
 		/**
 		 * @param strings Strings that are not allowed
+		 * @param ignoreCase Whether to ignore case differences (default = false)
 		 * @return A copy of this string not containing any of the specified strings even once.
 		 *         If this string didn't contain any of the specified strings, yields this.
 		 */
-		def notContainingAnyOf(strings: IterableOnce[String]) =
-			strings.iterator.foldLeft(s) { _.notContaining(_) }
-		
-		/**
-		 * @param str A searched string
-		 * @return Index of the beginning of specified string in this string. None if specified string isn't a
-		 *         substring of this string
-		 */
-		def optionIndexOf(str: String) = {
-			val raw = s.indexOf(str)
-			if (raw < 0) None else Some(raw)
-		}
-		/**
-		 * @param str A searched string
-		 * @return Last index of the beginning of specified string in this string. None if specified string isn't a
-		 *         substring of this string
-		 */
-		def optionLastIndexOf(str: String) = {
-			val raw = s.lastIndexOf(str)
-			if (raw < 0) None else Some(raw)
-		}
-		/**
-		  * @param str Searched string
-		  * @return An iterator that returns the next index of the searched string
-		  */
-		def indexOfIterator(str: String): Iterator[Int] = new StringIndexOfIterator(s, str)
+		def notContainingAnyOf(strings: IterableOnce[String], ignoreCase: Boolean = false) =
+			strings.iterator.foldLeft(s) { _.notContaining(_, ignoreCase) }
 		
 		/**
 		 * @param str A string
-		 * @return A portion of this string that comes after the first occurrence of specified string (empty string if
-		 *         specified string is not a substring of this string), (case-sensitive)
+		 * @param ignoreCase Whether to ignore case differences (default = false).
+		 * @return A portion of this string that comes after the first occurrence of specified string.
+		 *         Empty string if specified string doesn't appear within this string.
 		 */
-		def afterFirst(str: String) = optionIndexOf(str).map { i => s.drop(i + str.length) }.getOrElse("")
+		def afterFirst(str: String, ignoreCase: Boolean = false) =
+			findIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(i) => s.drop(i + str.length)
+				case None => ""
+			}
 		/**
 		  * @param regex A regular expression
 		  * @return A portion of this string that appears after the first match of the specified regular expression.
@@ -450,25 +608,71 @@ object StringExtensions
 		}
 		/**
 		 * @param str A string
-		 * @return A portion of this string that comes after the last occurrence of specified string (empty string if
-		 *         specified string is not a substring of this string), (case-sensitive)
+		 * @return A portion of this string that comes after the last occurrence of specified string.
+		 *         Empty string if specified string doesn't appear within this string.
 		 */
-		def afterLast(str: String) = optionLastIndexOf(str).map { i => s.drop(i + str.length) }.getOrElse("")
+		def afterLast(str: String, ignoreCase: Boolean = false) =
+			findLastIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(i) => s.drop(i + str.length)
+				case None => ""
+			}
 		
 		/**
 		 * @param str A string
-		 * @return A portion of this string that comes after the first occurrence of specified string,
-		 *         including the searched string (returns an empty string if
-		 *         specified string is not a substring of this string), (case-sensitive)
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A portion of this string that comes before the first occurrence of specified string.
+		 *         This string if specified string is not a substring of this string.
 		 */
-		def dropUntil(str: String) = optionIndexOf(str).map(s.drop).getOrElse("")
+		def untilFirst(str: String, ignoreCase: Boolean = false) =
+			findIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(i) => s.take(i)
+				case None => s
+			}
+		/**
+		 * @param regex A regular expression
+		 * @return A portion of this string that appears before the first match of the specified regular expression.
+		 *         If no matches were found, returns this string.
+		 */
+		def untilFirstMatch(regex: Regex) = regex.startIndexIteratorIn(s).nextOption() match {
+			case Some(start) => s.take(start)
+			case None => s
+		}
 		/**
 		 * @param str A string
-		 * @return A portion of this string that comes after the last occurrence of specified string,
-		 *         including the searched string (returns an empty string if
-		 *         specified string is not a substring of this string), (case-sensitive)
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A portion of this string that comes before the last occurrence of specified string.
+		 *         This string if specified string is not a substring of this string.
 		 */
-		def dropUntilLast(str: String) = optionLastIndexOf(str).map(s.drop).getOrElse("")
+		def untilLast(str: String, ignoreCase: Boolean = false) =
+			findLastIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(i) => s.take(i)
+				case None => s
+			}
+		
+		/**
+		 * @param str A string
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A portion of this string that comes after the first occurrence of specified string,
+		 *         including the searched string.
+		 *         An empty if the specified string doesn't appear within this string.
+		 */
+		def dropUntil(str: String, ignoreCase: Boolean = false) =
+			findIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(i) => s.drop(i)
+				case None => ""
+			}
+		/**
+		 * @param str A string
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A portion of this string that comes after the last occurrence of specified string,
+		 *         including the searched string.
+		 *         An empty string if the specified string doesn't appear within this one.
+		 */
+		def dropUntilLast(str: String, ignoreCase: Boolean = false) =
+			findLastIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(i) => s.drop(i)
+				case None => ""
+			}
 		/**
 		  * @param f A function that returns true for the characters to remove from the end of this string.
 		  *          Called from right to left, as long as it returns true and there are characters left.
@@ -479,44 +683,6 @@ object StringExtensions
 			val dropLength = s.reverseIterator.takeWhile(f).size
 			if (dropLength == 0) s else s.dropRight(dropLength)
 		}
-		
-		/**
-		 * @param str A string
-		 * @return A portion of this string that comes before the first occurrence of specified string
-		 *         (returns this string if specified string is not a substring of this string), (case-sensitive)
-		 */
-		def untilFirst(str: String) = optionIndexOf(str).map(s.take).getOrElse(s)
-		/**
-		  * @param regex A regular expression
-		  * @return A portion of this string that appears before the first match of the specified regular expression.
-		  *         If no matches were found, returns this string.
-		  */
-		def untilFirstMatch(regex: Regex) = regex.startIndexIteratorIn(s).nextOption() match {
-			case Some(start) => s.take(start)
-			case None => s
-		}
-		/**
-		 * @param str A string
-		 * @return A portion of this string that comes before the last occurrence of specified string
-		 *         (returns this string if specified string is not a substring of this string), (case-sensitive)
-		 */
-		def untilLast(str: String) = optionLastIndexOf(str).map(s.take).getOrElse(s)
-		
-		/*
-		 * Splits this string into two at specified index. Eg. "apple".splitAt(2) = "ap" -> "ple"
-		 * @param index Index where this string will be split
-		 * @return Part of this string until specified index -> part of this string starting from specified index
-		 */
-		/*
-		def splitAt(index: Int) =
-		{
-			if (index <= 0)
-				"" -> s
-			else if (index >= s.length)
-				s -> ""
-			else
-				s.take(index) -> s.drop(index)
-		}*/
 		
 		/**
 		  * @param regex A regular expression to split with
@@ -531,14 +697,19 @@ object StringExtensions
 		def splitIterator(regex: Regex) = regex.splitIteratorIn(s)
 		
 		/**
-		 * Splits this string into two at the first occurrence of specified substring. Eg. "apple".splitAtFirst("p") = "a" -> "ple"
+		 * Splits this string into two at the first occurrence of specified substring.
+		 * E.g. "apple".splitAtFirst("p") = "a" -> "ple"
 		 * @param str A separator string where this string will be split
-		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A pair of strings:
+		 *              1. Part of this string until specified string
+		 *              1. Part of this string after specified string (empty if string was not found)
 		 */
-		def splitAtFirst(str: String) = optionIndexOf(str) match {
-			case Some(index) => Pair(s.take(index), s.drop(index + str.length))
-			case None => Pair(s, "")
-		}
+		def splitAtFirst(str: String, ignoreCase: Boolean = false) =
+			findIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(index) => Pair(s.take(index), s.drop(index + str.length))
+				case None => Pair(s, "")
+			}
 		/**
 		  * Splits this string into two at the first regular expression match.
 		  * @param regex A regular expression used to separate this string
@@ -551,14 +722,19 @@ object StringExtensions
 			case None => Pair(s, "")
 		}
 		/**
-		 * Splits this string into two at the last occurrence of specified substring. Eg. "apple".splitAtLast("p") = "ap" -> "le"
+		 * Splits this string into two at the last occurrence of specified substring.
+		 * E.g. "apple".splitAtFirst("p") = "ap" -> "le"
 		 * @param str A separator string where this string will be split
-		 * @return Part of this string until specified string -> part of this string after specified string (empty if string was not found)
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A pair of strings:
+		 *              1. Part of this string until specified string
+		 *              1. Part of this string after specified string (empty if string was not found)
 		 */
-		def splitAtLast(str: String) = optionLastIndexOf(str) match {
-			case Some(index) => Pair(s.take(index), s.drop(index + str.length))
-			case None => Pair(s, "")
-		}
+		def splitAtLast(str: String, ignoreCase: Boolean = false) =
+			findLastIndexOf(str, ignoreCase = ignoreCase) match {
+				case Some(index) => Pair(s.take(index), s.drop(index + str.length))
+				case None => Pair(s, "")
+			}
 		
 		/**
 		  * Splits this string based on maximum line length
@@ -612,10 +788,11 @@ object StringExtensions
 		 * except that the divider / separator is included in the resulting strings. Also, this method
 		 * doesn't support regular expressions like split does.
 		 * @param divider A divider that separates different parts
+		 * @param ignoreCase Whether to ignore case differences when matching (defualt = false)
 		 * @return Divided parts of this string with the dividers included
 		 */
-		def divideWith(divider: String) = {
-			val dividerIndices = indexOfIterator(divider).toVector
+		def divideWith(divider: String, ignoreCase: Boolean = false) = {
+			val dividerIndices = indexOfIterator(divider, ignoreCase).toOptimizedSeq
 			// Case: No dividers => returns the string as is
 			if (dividerIndices.isEmpty)
 				Single(s)
@@ -764,20 +941,47 @@ object StringExtensions
 		  * @return This string if empty, otherwise a prepended version
 		  */
 		def prependIfNotEmpty(prefix: => String) = if (s.isEmpty) s else s"$prefix$s"
+		
+		/**
+		 * A direction-insensitive implementation of findIndexOf
+		 * @param searched The searched string
+		 * @param startIndex The first searched index. Must be within bounds.
+		 * @param myLength The length if this string
+		 * @param indexIteratorFrom A function that acquires an iterator from an inclusive range (start & end).
+		 *                          If searching for the last index, should apply a reverse iterator.
+		 * @return Index where the searched string appears within this string
+		 */
+		private def _findIndexOf(searched: String, startIndex: Int, myLength: Int)
+		                        (indexIteratorFrom: (Int, Int) => Iterator[Int]) =
+		{
+			// Case: The searched string is empty => Always contains it at the first available position
+			if (searched.isEmpty)
+				Some(startIndex)
+			else {
+				val searchedLength = searched.length
+				// Case: The searched string is too long => No containment
+				if (searchedLength > myLength)
+					None
+				// Case: Containment is possible => Looks for an index where it occurs
+				else
+					indexIteratorFrom(startIndex, myLength - searchedLength).find { start =>
+						s.regionMatches(true, start, searched, 0, searchedLength)
+					}
+			}
+		}
 	}
 	
-	private class StringIndexOfIterator(val string: String, val searched: String) extends Iterator[Int]
+	private class StringIndexOfIterator(string: String, searched: String, ignoreCase: Boolean) extends Iterator[Int]
 	{
 		// ATTRIBUTES	------------------
 		
 		private var lastIndex: Option[Int] = None
 		private val nextIndex = ResettableLazy[Option[Int]] {
-			val next = lastIndex match
-			{
-				case Some(last) =>
-					val result = string.indexOf(searched, last + searched.length)
-					if (result < 0) None else Some(result)
-				case None => string.optionIndexOf(searched)
+			val next = lastIndex match {
+				// Case: Previous match was found => Finds the next match
+				case Some(last) => string.findIndexOf(searched, last + searched.length, ignoreCase)
+				// Case: No searches performed yet => Finds the first match
+				case None => string.findIndexOf(searched, ignoreCase = ignoreCase)
 			}
 			lastIndex = next
 			next
@@ -788,8 +992,7 @@ object StringExtensions
 		
 		override def hasNext = nextIndex.value.isDefined
 		
-		override def next() = nextIndex.pop() match
-		{
+		override def next() = nextIndex.pop() match {
 			case Some(index) => index
 			case None => throw new NoSuchElementException("Iterator.next() called after running out of items")
 		}

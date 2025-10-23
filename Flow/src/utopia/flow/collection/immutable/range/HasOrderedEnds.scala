@@ -47,6 +47,12 @@ object HasOrderedEnds
 		case p: HasOrderedEnds[P] => p
 		case o => apply(o.start, o.end, exclusive = o.isExclusive)
 	}
+	/**
+	 * Converts a [[Range]]
+	 * @param range Range to convert
+	 * @return A HasOrderedEnds based on the specified range
+	 */
+	def from(range: Range) = apply(range.start, range.end, range.isInclusive)
 	
 	
 	// NESTED   ------------------------

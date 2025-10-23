@@ -15,6 +15,7 @@
 - **ApproxSelfEquals** now requires `def approxEqualsFunction` instead of `implicit def equalsFunction`
 - **TwoThreadBuffer.Output** can no longer be reopened after closing
 - **GroupIterator** now yields **IndexedSeq**s instead of **Vector**s
+- `.words` and `.divideWith(...)` in **StringExtensions** now yield **IndexedSeq** instead of **Vector**
 - Renamed implicit `UncertainBoolean.autoConvertFromOption(Option)` and `.autoConvertFromBoolean(Boolean)` to 
   `.apply(...)`
 - `.splitMap(...)` in **IterableOnce** (via **CollectionExtensions**) now yields **IndexedSeq**s instead of **Vector**s
@@ -30,6 +31,9 @@
 - Renamed **Lazy**`.mapCurrent(...)` to `.lightMap(...) `
 - Deprecated **Changing**'s `listenerDebuggingLimit` property / feature
   - This feature will be removed in v2.8, or possibly later
+- Various renaming-based deprecations in **StringExtensions**:
+  - `optionIndexOf(...)` functions are now named `findIndexOf(...)`
+  - `.containsAllIgnoreCase(...)` is now `.containsAll(..., ignoreCase = true)`
 ### New features
 - Added **OpenRange** class, which is also extended by **Span**
 - Added **GeneratesOnce**, which combines both **Lazy** and **Changing**
@@ -57,11 +61,15 @@
   - Added `.mapIfSuccess(...)`, `.tryMapIfSuccess(...)` and `.tryFlatMapIfSuccess(...)` 
     for **Future**s of type **TryCatch**
   - Added `.toFutureTryCatch` to **Future**s of type **Try**
+- **HasEnds**
+  - Added `.inclusiveEnds` and `.inclusiveEndsOption` for **Int**-based ranges
 - **HasInclusiveEnds**
   - Added `.toSpan` and `.toNumericSpan`
 - **HasInclusiveOrderedEnds** (object)
   - Added implicit `.from(HasInclusiveEnds)`
   - Added `.apply(...)`
+- **HasOrderedEnds** (object)
+  - Added `.from(Range)`
 - **Iterable** (**CollectionExtensions**)
   - Added `.mapHead(...)`
   - Added `.groupedWithinSize(Int)` for deep collections
@@ -96,6 +104,7 @@
 - **Span** (object)
   - Added implicit `.from(HasInclusiveEnds)`
 - **String** (**StringExtensions**)
+  - Added various variations of `.findIndexOf(...)`, including support for case-insensitive searches
   - Added `.notContaining(String)` and `.notContainingAnyOf(IterableOnce)`
 - **TimedTasks**
   - Added `.builder`, which yields **AcceptsTimedTasks**, providing an interface for adding new tasks, 
@@ -119,6 +128,9 @@
 - **Fixed** is no longer sealed; Also, `readOnly` in **Fixed** now specifies the output type as **Changing**, 
   not necessarily **Fixed**
 - Rewrote **StringFrom**
+- Various changes to **StringExtensions**
+  - Most functions now support case-insensitive searches with an additional `ignoreCase` -parameter
+  - `.slice(...)` and `.cut(...)` now support **HasEnds**, not only **Range**
 - **ValueConvertible**'s `.toValue` is no longer implicit
 - **UncertainBoolean** now extends **ValueConvertible**
 - Optimized `IntSet.from(IterableOnce)` implementation
@@ -136,6 +148,7 @@
 - Modified `toString` implementations of most **Changing** implementations
 - Converted **WeakValuesCache** into a trait and refactored it; Also, **WeakCache** now extends **WeakValuesCache**.
 - Modified **Wait** to skip the process altogether, if the passed **WaitTarget** is zero or negative
+- Removed deprecated `WeekDay.forIndex(Int)`
 
 ## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 

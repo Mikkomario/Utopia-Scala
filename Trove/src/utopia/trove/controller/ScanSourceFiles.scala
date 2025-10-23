@@ -1,15 +1,15 @@
 package utopia.trove.controller
 
 import utopia.flow.collection.immutable.{Empty, Single}
-
-import java.nio.file.Path
-import utopia.flow.util.Version
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.parse.string.IterateLines
+import utopia.flow.parse.string.Lines
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.Version
 import utopia.trove.model.DatabaseStructureSource
 import utopia.trove.model.enumeration.SqlFileType
 import utopia.trove.model.enumeration.SqlFileType.{Changes, Full}
+
+import java.nio.file.Path
 
 /**
   * Used for searching for usable sql source files
@@ -45,7 +45,7 @@ object ScanSourceFiles
 		directory.allRegularFileChildrenOfType("sql").map { files =>
 			// Categorizes the files by checking first comments
 			val sources = files.flatMap { file =>
-				val comments = IterateLines.fromPath(file) { _.filterNot { _.isEmpty }.takeWhile { _.startsWith("--") }
+				val comments = Lines.iterate.path(file) { _.filterNot { _.isEmpty }.takeWhile { _.startsWith("--") }
 					.flatMap { line =>
 						val keyValuePair = line.drop(2).splitAtFirst(":").map { _.trim.toLowerCase }
 						if (keyValuePair.forall { _.nonEmpty })

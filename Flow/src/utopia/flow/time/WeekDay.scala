@@ -157,18 +157,6 @@ object WeekDay
 	}
 	
 	/**
-	  * @param dayIndex Week day index where monday is 1 and sunday is 7
-	  * @return Weekday matching specified index
-	  */
-	@deprecated("Please use WeekDays instead", "v2.1")
-	def forIndex(dayIndex: Int) = {
-		if (dayIndex > 0)
-			values((dayIndex - 1) % 7)
-		else
-			values(7 + ((dayIndex - 1) % 7))
-	}
-	
-	/**
 	  * @param startDay First week day to return
 	  * @param w        Week calendar system
 	  * @return An infinite iterator that iterates over weekdays
