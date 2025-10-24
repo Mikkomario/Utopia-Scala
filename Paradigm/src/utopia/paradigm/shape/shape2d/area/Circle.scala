@@ -3,10 +3,10 @@ package utopia.paradigm.shape.shape2d.area
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.Mutate
@@ -24,9 +24,8 @@ import utopia.paradigm.shape.template.vector.DoubleVector
 import utopia.paradigm.transform.LinearSizeAdjustable
 
 import java.awt.geom.Ellipse2D
-import scala.util.Success
 
-object Circle extends FromModelFactory[Circle]
+object Circle extends SureFromModelFactory[Circle]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -38,8 +37,7 @@ object Circle extends FromModelFactory[Circle]
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def apply(model: template.ModelLike[Property]) =
-		Success(Circle(model("origin").getPoint, model("radius").getDouble))
+	override def parseFrom(model: HasProperties): Circle = Circle(model("origin").getPoint, model("radius").getDouble)
 	
 	
 	// OTHER    --------------------------

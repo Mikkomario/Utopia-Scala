@@ -2,8 +2,7 @@ package utopia.vault.nosql.factory.row.model
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.Property
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.model.enumeration.SelectTarget
 import utopia.vault.model.immutable.{Row, Storable, Table}
 import utopia.vault.nosql.factory.row.FromRowFactory
@@ -27,7 +26,7 @@ object FromRowModelFactory
     
     private case class TableModelFactory(override val table: Table) extends FromRowModelFactory[Storable]
     {
-        override def apply(model: template.ModelLike[Property]) = Success(Storable(table, model))
+        override def apply(model: HasProperties) = Success(Storable(table, model))
         override def defaultOrdering = None
     }
 }

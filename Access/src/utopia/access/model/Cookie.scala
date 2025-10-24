@@ -3,10 +3,10 @@ package utopia.access.model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object Cookie extends FromModelFactory[Cookie]
 {
@@ -14,14 +14,9 @@ object Cookie extends FromModelFactory[Cookie]
 	  * Parses a cookie from the provided model. The model must have a 'name' property or None is
 	  * returned.
 	  */
-	override def apply(model: template.ModelLike[Property]): Try[Cookie] = {
-		// Name property is required
-		val name = model("name").string
-		
-		if (name.isDefined)
-			Success(Cookie(name.get, model("value"), model("life_limit_seconds").int, model("secure").getBoolean))
-		else
-			Failure(new NoSuchElementException(s"Cannot parse a Cookie from $model without 'name' property"))
+	// Name property is required
+	override def apply(model: HasProperties): Try[Cookie] = model("name").tryString.map { name =>
+		Cookie(name, model("value"), model("life_limit_seconds").int, model("secure").getBoolean)
 	}
 }
 

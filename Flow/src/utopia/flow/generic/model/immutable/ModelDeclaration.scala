@@ -1,15 +1,18 @@
 package utopia.flow.generic.model.immutable
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.factory.PropertyFactory.ConstantFactory
+import utopia.flow.generic.model.immutable.ModelDeclaration.valueIsEmpty
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType, VectorType}
 import utopia.flow.generic.model.mutable.{DataType, Variable}
-import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{HasValues, ModelConvertible, Property}
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.util.{Failure, Try}
@@ -21,7 +24,7 @@ object ModelDeclaration
     /**
      * An empty model declaration
      */
-    val empty = new ModelDeclaration(Set(), Map())
+    val empty = new ModelDeclaration(Empty, Map())
     
     
     // OTHER    -------------------------
@@ -31,26 +34,23 @@ object ModelDeclaration
       * @param declarations Property declarations
       */
     def apply(declarations: Seq[PropertyDeclaration]) =
-        new ModelDeclaration(declarations.distinctWith { case (a, b) => a.name.equalsIgnoreCase(b.name) }.toSet, Map())
-    
+        new ModelDeclaration(declarations.distinctWith { case (a, b) => a.name.equalsIgnoreCase(b.name) }, Map())
     /**
       * Creates a model declaration with a single property
       * @param declaration property declaration
       */
-    def apply(declaration: PropertyDeclaration) = new ModelDeclaration(Set(declaration), Map())
-    
+    def apply(declaration: PropertyDeclaration) = new ModelDeclaration(Single(declaration), Map())
     /**
       * Creates a new model declaration
       */
     def apply(first: PropertyDeclaration, second: PropertyDeclaration, more: PropertyDeclaration*): ModelDeclaration =
-        apply(Vector(first, second) ++ more)
+        apply(Pair(first, second) ++ more)
     
     /**
       * Creates a new model declaration from property name - data type -pairs
       */
     def apply(first: (String, DataType), second: (String, DataType), more: (String, DataType)*): ModelDeclaration =
-        apply((Vector(first, second) ++ more).map { case (name, t) => PropertyDeclaration(name, t) })
-    
+        apply((Pair(first, second).view ++ more).map { case (name, t) => PropertyDeclaration(name, t) }.toOptimizedSeq)
     /**
      * @param declaration A property declaration (name + data type)
      * @return A model declaration based on that property declaration
@@ -74,6 +74,23 @@ object ModelDeclaration
       */
     def defaults(first: (String, Value), more: (String, Value)*) =
         apply((first +: more).map { case (name, default) => PropertyDeclaration.withDefault(name, default) })
+	
+	/**
+	 * Tests whether a value is empty, from a declaration's perspective
+	 * @param value A value to test
+	 * @return Whether that value should be considered empty
+	 */
+	def valueIsEmpty(value: Value): Boolean = {
+		if (value.isEmpty)
+			true
+		else
+			value.dataType match {
+				case StringType => value.getString.isEmpty
+				case VectorType => value.getVector.forall(valueIsEmpty)
+				case ModelType => value.getModel.properties.map { _.value }.forall(valueIsEmpty)
+				case _ => false
+			}
+	}
 }
 
 /**
@@ -81,12 +98,14 @@ object ModelDeclaration
  * @author Mikko Hilpinen
  * @since 11.12.2016
  */
-case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
+case class ModelDeclaration private(declarations: Seq[PropertyDeclaration],
                                     childDeclarations: Map[String, ModelDeclaration])
     extends ModelConvertible
 {
     // ATTRIBUTES   -----------
     
+	private lazy val declarationMap =
+		declarations.iterator.flatMap { d => d.names.iterator.map { _.toLowerCase -> d } }.toMap
     // First set contains declarations for optional properties
     // Second set contains the required properties
     private lazy val groupedDeclarations = declarations.divideBy { _.isRequired }
@@ -106,13 +125,13 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     /**
      * The names of the properties declared in this declaration
      */
-    def propertyNames = declarations.map { _.name } ++ childDeclarations.keySet
+    def propertyNames = Set.concat(declarations.map { _.name }, childDeclarations.keys)
     
     /**
       * @return This model declaration as a constant property factory.
       *         Utilizes information about property types, default values and alternative property names.
       */
-    def toConstantFactory = toPropertyFactory(Constant)
+    def toConstantFactory = toPropertyFactory(Constant.apply)
     /**
       * @return This model declaration as a variable factory.
       *         Utilizes information about property types, default values and alternative property names.
@@ -123,7 +142,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     // IMPLEMENTED  -----------
     
     override def toModel: Model =
-        Model.withConstants(declarations.toVector.sortBy { _.name }.map { _.toConstant } ++
+        Model.withConstants(declarations.sortBy { _.name }.map { _.toConstant } ++
             childDeclarations.map { case (childName, child) => Constant(childName, child.toModel) })
     
     
@@ -132,7 +151,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     /**
      * Creates a new declaration with the provided declaration included
      */
-    def +(declaration: PropertyDeclaration) = copy(declarations = declarations + declaration)
+    def +(declaration: PropertyDeclaration) = copy(declarations = declarations :+ declaration)
     /**
      * @param child Child name - child declaration -pair
      * @return A copy of this declaration with the specified child declaration included
@@ -151,25 +170,39 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
     /**
      * Creates a new declaration without the provided property declaration
      */
-    def -(declaration: PropertyDeclaration) = copy(declarations = declarations - declaration)
+    def -(declaration: PropertyDeclaration) = copy(declarations = declarations.filterNot { _ == declaration })
     /**
       * @param declared A declared property or child name
       * @return A copy of this declaration without that property or child
       */
-    def -(declared: String) = copy(declarations = declarations.filterNot { _.name ~== declared },
+    def -(declared: String) = copy(
+	    declarations = declarations.filterNot { _.name ~== declared },
         childDeclarations = childDeclarations.filterNot { _._1 ~== declared })
     /**
      * Creates a new declaration without any of the provided declarations
      */
-    def --(declarations: IterableOnce[PropertyDeclaration]) = copy(declarations = this.declarations -- declarations)
+    def --(declarations: IterableOnce[PropertyDeclaration]) = {
+	    val removeSet = Set.from(declarations)
+	    if (removeSet.isEmpty)
+		    this
+	    else
+	        copy(declarations = this.declarations.filterNot(removeSet.contains))
+    }
     /**
      * Creates a new declaration without any declarations from the provided model
      */
-    def --(other: ModelDeclaration): ModelDeclaration =
-        new ModelDeclaration(declarations -- other.declarations, childDeclarations -- other.childDeclarations.keys)
-    
-    
-    // OTHER METHODS    -------
+    def --(other: ModelDeclaration): ModelDeclaration = {
+	    if (other.isEmpty)
+		    this
+	    else {
+		    val otherSet = other.declarations.toSet
+		    new ModelDeclaration(declarations.filterNot(otherSet.contains),
+			    childDeclarations -- other.childDeclarations.keys)
+	    }
+    }
+	
+	
+	// OTHER METHODS    -------
     
     /**
      * @param childName Name of the new child
@@ -184,10 +217,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
      * @param propertyName The name of the property
      * @return the declaration for the property, if one exists
      */
-    def find(propertyName: String) = {
-        val lowerName = propertyName.toLowerCase
-        declarations.find { _.names.exists { _.toLowerCase == lowerName } }
-    }
+    def find(propertyName: String) = declarationMap.get(propertyName.toLowerCase)
     /**
      * @param childName Name of the child property (case-sensitive)
      * @return A child model declaration for that name, if one exists
@@ -217,10 +247,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * Returns whether this declaration declares a property with the specified name (case-insensitive)
       * @param propertyName Property name
       */
-    def contains(propertyName: String) = {
-        val lowerName = propertyName.toLowerCase
-        declarations.exists { _.names.exists { _.toLowerCase == lowerName } }
-    }
+    def contains(propertyName: String) = declarationMap.contains(propertyName.toLowerCase)
     /**
      * @param childName Name of the targeted child (case-sensitive)
      * @return Whether this declaration contains a child declaration for that name
@@ -233,7 +260,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       * @param model Model being tested
       * @return Whether the model is likely to be valid
       */
-    def isProbablyValid(model: AnyModel): Boolean = {
+    def isProbablyValid(model: HasValues): Boolean = {
         requiredDeclarations.forall { dec => model(dec.names).nonEmpty } &&
             childDeclarations.keysIterator.forall { childName => model(childName).nonEmpty }
     }
@@ -247,7 +274,7 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       *         Failure if some of the required properties were missing,
       *         were empty or couldn't be cast to the correct data type.
       */
-    def validate(model: AnyModel): Try[Model] = {
+    def validate(model: HasProperties): Try[Model] = {
         // Retrieves the values of all required properties in order to make sure they're correctly defined
         val requiredMapping = requiredDeclarations.map { d => d -> model(d.names) }
         // First checks for missing attributes
@@ -265,22 +292,24 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                     value.castTo(d.dataType)
                         .toTry {
                             new DataTypeException(
-                                s"Cannot cast ${ value.description } to the required type ${ d.dataType } in property ${ d.name }")
+                                s"Cannot cast ${ value.description } to the required type ${
+	                                d.dataType } in property ${ d.name }")
                         }
-                        .map { Constant(d.name, _) }
+                        .map { d -> Constant(d.name, _) }
                 }
                 .flatMap { cast =>
                     // Makes sure all required values have a non-empty value associated with them
                     // (works for strings, models and vectors)
-                    val emptyConstants = cast.filter { c => valueIsEmpty(c.value) }
-                    if (emptyConstants.nonEmpty)
+                    val emptyConstantsIterator = cast.iterator.map { _._2 }.filter { c => valueIsEmpty(c.value) }
+	                // Case: Some required properties lacked a value => Fails
+                    if (emptyConstantsIterator.hasNext)
                         Failure(new IllegalArgumentException(s"The following required properties were empty: ${
-                            emptyConstants.map { _.name }
+	                        emptyConstantsIterator.map { _.name }.mkString(", ")
                         }"))
-                    else {
-                        // Validates the child models, also
-                        childDeclarations.toVector
-                            .tryMap { case (propName, declaration) =>
+                    // Case: All properties have proper values => Validates the child models, also
+                    else
+                        childDeclarations.iterator
+                            .map { case (propName, declaration) =>
                                 val value = model(propName)
                                 value.model
                                     .toTry {
@@ -289,19 +318,21 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
                                     }
                                     .map { (propName, declaration, _) }
                             }
+	                        .toTry
                             .flatMap { children =>
                                 children
                                     .tryMap { case (childName, declaration, childModel) =>
                                         declaration.validate(childModel)
-                                            .map { validChild => Constant(childName, validChild) }
+                                            .map { validChild =>
+	                                            PropertyDeclaration(childName, ModelType) ->
+		                                            Constant(childName, validChild)
+                                            }
                                     }
                                     .map { validChildren =>
                                         // Generates & casts the remaining values on-demand
-                                        Model.withConstants(cast.toVector ++ validChildren,
-                                            new ValidatedPropertyFactory(model))
+	                                    Model.validated(model, this, OptimizedIndexedSeq.concat(cast, validChildren))
                                     }
                             }
-                    }
                 }
         }
     }
@@ -324,19 +355,6 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
       */
     def toPropertyFactoryWithoutDefaults[P <: Property](build: (String, Value) => P) =
         new DeclaredPropertyFactory[P](disableDefaultValues = true)(build)
-    
-    private def valueIsEmpty(value: Value): Boolean =
-    {
-        if (value.isEmpty)
-            true
-        else
-            value.dataType match {
-                case StringType => value.getString.isEmpty
-                case VectorType => value.getVector.forall(valueIsEmpty)
-                case ModelType => value.getModel.properties.map { _.value }.forall(valueIsEmpty)
-                case _ => false
-            }
-    }
     
     
     // NESTED   --------------------------
@@ -380,7 +398,8 @@ case class ModelDeclaration private(declarations: Set[PropertyDeclaration],
         override def generatesNonEmpty(propertyName: String): Boolean = find(propertyName).exists { _.hasDefault }
     }
     
-    class ValidatedPropertyFactory(source: AnyModel) extends ConstantFactory
+	@deprecated("Deprecated for removal", "v2.7")
+    class ValidatedPropertyFactory(source: HasProperties) extends ConstantFactory
     {
         override def apply(propertyName: String, value: Value) = find(propertyName) match {
             // Case: Declared property =>

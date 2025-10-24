@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.url
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.access.single.url.link.placement.DbSingleLinkPlacement
 import utopia.logos.model.factory.url.{LinkPlacementFactory, LinkPlacementFactoryWrapper}
 import utopia.logos.model.partial.text.TextPlacementData
@@ -15,7 +15,7 @@ object LinkPlacement extends StoredFromModelFactory[LinkPlacementData, LinkPlace
 	
 	override def dataFactory = LinkPlacementData
 	
-	override protected def complete(model: AnyModel, data: LinkPlacementData) = 
+	override protected def complete(model: HasProperties, data: LinkPlacementData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

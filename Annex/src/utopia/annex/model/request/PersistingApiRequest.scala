@@ -11,7 +11,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
@@ -111,7 +111,7 @@ object PersistingApiRequest
 	
 	private class PersistingApiRequestFromModel[A](sendFunction: Send[A]) extends FromModelFactory[ApiRequest[A]]
 	{
-		override def apply(model: ModelLike[Property]): Try[ApiRequest[A]] = schema.validate(model).map { model =>
+		override def apply(model: HasProperties): Try[ApiRequest[A]] = schema.validate(model).map { model =>
 			// NB: These parsed models won't be persisted anymore
 			ApiRequest(Method(model("method").getString), model("path").getString, model("body"),
 				model("params").getModel)(sendFunction)

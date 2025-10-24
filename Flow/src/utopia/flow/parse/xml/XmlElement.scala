@@ -1,13 +1,12 @@
 package utopia.flow.parse.xml
 
-import utopia.flow.collection.immutable.{Empty, Single, TreeLike}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single, TreeLike}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.template
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.template.Property
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.mutable.DataType.StringType
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
@@ -15,9 +14,17 @@ import scala.util.{Failure, Success, Try}
 
 object XmlElement extends FromModelFactory[XmlElement]
 {
+	// ATTRIBUTES   -----------------------
+	
+	private lazy val valuePropNames = Pair("value", "text")
+	private lazy val _children = "children"
+	private lazy val _attributes = "attributes"
+	private lazy val reservedPropNames = Set.concat(valuePropNames, Vector(_attributes, _children, "name"))
+	
+	
     // IMPLEMENTED  -----------------------
     
-    def apply(model: template.ModelLike[Property]): Try[XmlElement] = {
+    def apply(model: HasProperties): Try[XmlElement] = {
         model("name").string.map { name =>
             val namespacedName = {
                 if (name.contains(':')) {
@@ -46,47 +53,44 @@ object XmlElement extends FromModelFactory[XmlElement]
      * were missing.
      */
     // TODO: Handle vector value types and instead of model, accept value
-    def apply(name: NamespacedString, model: template.ModelLike[Property]): XmlElement =
-    {
+    def apply(name: NamespacedString, model: HasProperties): XmlElement = {
         // Value is either in 'value' or 'text' attribute
-        val valueAttribute = model.existing("value")
-        val value = valueAttribute.map(_.value).orElse(
-                model.existing("text").map(_.value)).getOrElse(Value.emptyWithType(StringType))
+	    val value = model(valuePropNames)
         
         // There may be some unused / non-standard attributes in the model
-        val unspecifiedAttributes = model.properties.filter(att =>
-            att.name != valueAttribute.map(_.name).getOrElse("text") && att.name != "attributes" && 
-            att.name != "children" && att.name != "name")
+        val unspecifiedAttributes = model.properties.filterNot { prop => reservedPropNames.contains(prop.name) }
         
         // Children are either read from 'children' attribute or from the unused attributes
-        val specifiedChildren = model.existing("children").map { _.value.getVector.flatMap(
-                _.model).flatMap { apply(_).toOption } }
+        val specifiedChildren = model(_children).vector
+	        .map { _.iterator.flatMap { _.model.flatMap { apply(_).toOption } }.toOptimizedSeq }
         val children = specifiedChildren.getOrElse {
             // Expects model type but parses other types as well
-            val modelChildren = unspecifiedAttributes
-                .flatMap(att => att.value.model.map { (att.name, _) })
-                .map { case (attName, attValue) =>
-                    // Attribute name may specify namespace
-                    val childName = {
-                        if (attName.contains(':')) {
-                            val (namespacePart, namePart) = attName.splitAtFirst(":").toTuple
-                            Namespace(namespacePart)(namePart)
-                        }
-                        else
-                            name.namespace(attName)
+	        val (otherChildProps, childModels) = unspecifiedAttributes.divideWith { prop =>
+		        prop.value.model match {
+			        case Some(model) => Right(prop.name -> model)
+			        case None => Left(prop)
+		        }
+	        }
+            val modelChildren = childModels.map { case (attName, attValue) =>
+                // Attribute name may specify namespace
+                val childName = {
+                    if (attName.contains(':')) {
+                        val (namespacePart, namePart) = attName.splitAtFirst(":").toTuple
+                        Namespace(namespacePart)(namePart)
                     }
-                    XmlElement(childName, attValue)
+                    else
+                        name.namespace(attName)
                 }
-            
+                XmlElement(childName, attValue)
+            }
             // Other types are parsed into simple xml elements
-            val nonModelChildren = unspecifiedAttributes.filterNot { att => modelChildren.exists {
-                _.name == att.name } }.map { att => new XmlElement(att.name, att.value) }
+            val nonModelChildren = otherChildProps.map { att => new XmlElement(att.name, att.value) }
             
             modelChildren ++ nonModelChildren
         }
         
         // Attributes are either read from 'attributes' attribute or from the unused attributes
-        val specifiedAttributes = model.existing("attributes").map { _.value.getModel }
+        val specifiedAttributes = model("attributes").model
         val attributes = specifiedAttributes.getOrElse {
             if (specifiedChildren.isDefined)
                 Model.withConstants(unspecifiedAttributes.map { att => Constant(att.name, att.value) })
@@ -95,14 +99,16 @@ object XmlElement extends FromModelFactory[XmlElement]
                 Model.empty
         }
         // Processes attribute namespaces, also
-        val namespacedAttributes = attributes.properties.map { c =>
-            if (c.name.contains(':')) {
-                val (namespacePart, namePart) = c.name.splitAtFirst(":").toTuple
-                Namespace(namespacePart) -> c.withName(namePart)
-            }
-            else
-                Namespace.empty -> c
-        }.groupMap { _._1 } { _._2 }.view.mapValues { Model.withConstants(_) }.toMap
+        val namespacedAttributes = attributes.properties
+	        .map { c =>
+	            if (c.name.contains(':')) {
+	                val (namespacePart, namePart) = c.name.splitAtFirst(":").toTuple
+	                Namespace(namespacePart) -> c.withName(namePart)
+	            }
+	            else
+	                Namespace.empty -> c
+	        }
+	        .groupMap { _._1 } { _._2 }.view.mapValues { Model.withConstants(_) }.toMap
         
         new XmlElement(name, value, namespacedAttributes, children)
     }

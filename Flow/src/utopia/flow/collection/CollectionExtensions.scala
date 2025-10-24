@@ -3008,7 +3008,7 @@ object CollectionExtensions
 		  * @tparam B Type of that item
 		  * @return A copy of this iterator with that item appended. This iterator is invalidated.
 		  */
-		def :+[B >: A](item: => B): Iterator[B] = i ++ PollableOnce(item)
+		def :+[B >: A](item: => B): Iterator[B] = i ++ Single(item)
 	}
 	
 	

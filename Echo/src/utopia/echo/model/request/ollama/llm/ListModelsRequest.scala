@@ -6,7 +6,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.echo.model.response.ollama.llm.GeneralOllamaModelInfo
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.concurrent.Future
 import scala.util.Try
@@ -38,7 +38,7 @@ object ListModelsRequest extends GetRequest[Seq[GeneralOllamaModelInfo]]
 	{
 		// IMPLEMENTED  -------------------
 		
-		override def apply(model: ModelLike[Property]): Try[Vector[GeneralOllamaModelInfo]] =
+		override def apply(model: HasProperties): Try[Vector[GeneralOllamaModelInfo]] =
 			model("models").tryVectorWith { v => v.tryModel.flatMap(GeneralOllamaModelInfo.apply) }
 	}
 }

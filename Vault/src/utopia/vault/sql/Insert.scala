@@ -2,7 +2,7 @@ package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.database.{Connection, Triggers}
 import utopia.vault.error.HandleError
@@ -28,7 +28,7 @@ object Insert
 	  * match those of the table are used
 	  * @return Results of the insert operation, which contain generated auto-increment keys where applicable
 	  */
-	def apply(table: Table, rows: Seq[ModelLike[Property]])(implicit connection: Connection) = {
+	def apply(table: Table, rows: Seq[HasProperties])(implicit connection: Connection) = {
 		if (rows.isEmpty)
 			Result.empty
 		else {
@@ -89,7 +89,7 @@ object Insert
 	  * used
 	  * @return Results of the insert, which may contain a possibly generated auto-increment key (if applicable)
 	  */
-	def apply(table: Table, row: ModelLike[Property])(implicit connection: Connection): Result =
+	def apply(table: Table, row: HasProperties)(implicit connection: Connection): Result =
 		apply(table, Single(row))
 	/**
 	  * Inserts multiple rows into an sql database. This statement is not combined with other statements and targets a
@@ -97,7 +97,7 @@ object Insert
 	  * @param table the table into which the rows are inserted
 	  * @return Results of the insert operation, which contain generated auto-increment keys where applicable
 	  */
-	def apply(table: Table, first: ModelLike[Property], second: ModelLike[Property], more: ModelLike[Property]*)
+	def apply(table: Table, first: HasProperties, second: HasProperties, more: HasProperties*)
 	         (implicit connection: Connection): Result =
 		apply(table, Pair(first, second) ++ more)
 }

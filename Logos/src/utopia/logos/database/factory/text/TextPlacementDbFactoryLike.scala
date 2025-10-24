@@ -1,7 +1,7 @@
 package utopia.logos.database.factory.text
 
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
 
@@ -28,7 +28,7 @@ trait TextPlacementDbFactoryLike[+A] extends FromValidatedRowModelFactory[A]
 	  * @param orderIndex order index to assign to the new text placement
 	  * @return A text placement with the specified data
 	  */
-	protected def apply(model: AnyModel, id: Int, parentId: Int, placedId: Int, orderIndex: Int): A
+	protected def apply(model: HasProperties, id: Int, parentId: Int, placedId: Int, orderIndex: Int): A
 	
 	
 	// IMPLEMENTED	--------------------

@@ -1,10 +1,10 @@
 package utopia.disciple.model.request
 
 import utopia.access.model.Headers
-import utopia.access.model.enumeration.Method._
 import utopia.access.model.enumeration.Method
-import utopia.flow.generic.model
+import utopia.access.model.enumeration.Method._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasConstants
 
 import scala.collection.immutable.VectorBuilder
 
@@ -62,7 +62,7 @@ case class Request(requestUri: String, method: Method = Get, params: Model = Mod
     /**
      * Adds multiple new parameters to this request
      */
-    def ++(params: model.template.ModelLike[Constant]) = copy(params = this.params ++ params)
+    def ++(params: HasConstants) = copy(params = this.params ++ params)
     
     
     // OTHER METHODS    ----------------

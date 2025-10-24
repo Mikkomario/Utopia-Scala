@@ -1,9 +1,9 @@
 package utopia.vault.model.immutable
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.model.enumeration.BasicCombineOperator.And
@@ -13,7 +13,7 @@ import utopia.vault.model.error.DBException
 import utopia.vault.model.template.HasTable
 import utopia.vault.nosql.factory.row.FromRowFactory
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
-import utopia.vault.sql.{Condition, Delete, Insert, SqlSegment, SqlTarget, Update, Where}
+import utopia.vault.sql._
 
 object Storable
 {
@@ -25,12 +25,12 @@ object Storable
       * @param model A model that contains data
       * @return A new storable instance based on the model
       */
-    def apply(table: Table, model: template.ModelLike[Property]): Storable = new StorableWrapper(table, model)
+    def apply(table: Table, model: HasProperties): Storable = new StorableWrapper(table, model)
     
     
     // NESTED   ------------------------
     
-    private class StorableWrapper(override val table: Table, val model: template.ModelLike[Property])
+    private class StorableWrapper(override val table: Table, val model: HasProperties)
         extends StorableWithFactory[Storable]
     {
         override lazy val factory = FromRowModelFactory(table)
@@ -85,7 +85,7 @@ trait Storable extends ModelConvertible with HasTable
     
     // IMPLEMENTED  ----------------------------------
     
-    override def toModel = Model(valueProperties, declaration.toPropertyFactoryWithoutDefaults(Constant))
+    override def toModel = Model.validated(Model(valueProperties), declaration)
     
     
     // OTHER METHODS    ------------------------------
@@ -247,7 +247,7 @@ trait Storable extends ModelConvertible with HasTable
                         Insert(table, toModel - primary.name).generatedKeys.headOption
                             .getOrElse(Value.emptyWithType(primary.dataType))
                     // Case: Indexing required => Throws if index hasn't been specified
-                    else {
+                    else
                         index.notEmpty match {
                             case Some(i) =>
                                 Insert(table, toModel)
@@ -256,7 +256,6 @@ trait Storable extends ModelConvertible with HasTable
                                 throw new IllegalStateException(s"Attempting to insert storable $toJson to table ${
                                     table.name} without specifying the primary key")
                         }
-                    }
                 // Case: No indexing used. Simply inserts a new row.
                 case None =>
                     Insert(table, toModel)
@@ -295,12 +294,12 @@ trait Storable extends ModelConvertible with HasTable
         factory.findMany(toCondition)
     
     // NB: Throws if there were no specified attributes
-    private def makeCondition(makePart: (Column, Value) => Condition, combineOperator: BasicCombineOperator = And) =
-    {
+    private def makeCondition(makePart: (Column, Value) => Condition, combineOperator: BasicCombineOperator = And) = {
         val model = toModel
         // Converts each defined (non-empty) attribute + column to a condition
-        val conditions = table.columns.flatMap { c => model.existing(c.name).map { _.value }.filter {
-            _.isDefined }.map { makePart(c, _) } }
+        val conditions = table.columns.flatMap { c =>
+	        model.existingProperty(c.name).map { _.value }.filter { _.isDefined }.map { makePart(c, _) }
+        }
         // Merges the specified conditions using AND
         conditions.head.combineWith(conditions.drop(1), combineOperator)
     }

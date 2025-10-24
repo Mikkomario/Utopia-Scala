@@ -10,8 +10,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{HasValues, ModelConvertible}
 import utopia.flow.util.{Mutate, NotEmpty}
 
 import scala.util.Try
@@ -28,7 +28,7 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def apply(model: ModelLike[Property]): Try[ChatMessage] =
+	override def apply(model: HasProperties): Try[ChatMessage] =
 		model("role").tryString.flatMap(ChatRole.forName).flatMap { role =>
 			model("tool_calls").getVector.tryMap { v => ToolCall(v.getModel) }.map { toolCalls =>
 				val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
@@ -45,7 +45,7 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	  * @param defaultRole Role of this message's sender, if not specified in the model
 	  * @return A chat message parsed from the specified model
 	  */
-	def parseFrom(model: AnyModel, defaultRole: => ChatRole) = {
+	def parseFrom(model: HasValues, defaultRole: => ChatRole) = {
 		val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
 		apply(text, thoughts,
 			model("role").string.flatMap(ChatRole.findForName).getOrElse(defaultRole),

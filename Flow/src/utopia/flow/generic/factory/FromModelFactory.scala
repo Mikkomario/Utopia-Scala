@@ -1,6 +1,6 @@
 package utopia.flow.generic.factory
 
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 
 import java.nio.file.Path
@@ -16,14 +16,14 @@ object FromModelFactory
 	 * @tparam A Type of parsed items
 	 * @return A new from model factory
 	 */
-	implicit def apply[A](f: ModelLike[Property] => Try[A]): FromModelFactory[A] = new FunctionalFactory[A](f)
+	implicit def apply[A](f: HasProperties => Try[A]): FromModelFactory[A] = new _FromModelFactory[A](f)
 	
 	
 	// NESTED   ---------------------
 	
-	private class FunctionalFactory[+A](f: ModelLike[Property] => Try[A]) extends FromModelFactory[A]
+	private class _FromModelFactory[+A](f: HasProperties => Try[A]) extends FromModelFactory[A]
 	{
-		override def apply(model: ModelLike[Property]): Try[A] = f(model)
+		override def apply(model: HasProperties): Try[A] = f(model)
 	}
 }
 
@@ -41,7 +41,7 @@ trait FromModelFactory[+A]
 	  * @param model Model data is parsed from
 	  * @return an instance parsed from model data. Failure if no instance could be parsed.
 	  */
-	def apply(model: ModelLike[Property]): Try[A]
+	def apply(model: HasProperties): Try[A]
 	
 	
 	// OTHER METHODS   --------------------------

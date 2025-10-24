@@ -4,16 +4,17 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Value}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.paradigm.angular.{DirectionalRotation, Rotation}
 import utopia.paradigm.animation.Animation
 import utopia.paradigm.animation.transform.{AnimatedAffineTransformable, AnimatedAffineTransformation, AnimatedLinearTransformable}
 import utopia.paradigm.generic.ParadigmDataType.AffineTransformationType
 import utopia.paradigm.generic.ParadigmValue._
-import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.Matrix2D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
+import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape3d.Matrix3D
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.DoubleVector
@@ -30,7 +31,7 @@ object AffineTransformation extends SureFromModelFactory[AffineTransformation]
     
     // IMPLEMENTED  --------------------------
     
-    override def parseFrom(model: ModelLike[Property]) =
+    override def parseFrom(model: HasProperties) =
         apply(model("translation", "position").getVector2D, LinearTransformation.parseFrom(model))
     
     

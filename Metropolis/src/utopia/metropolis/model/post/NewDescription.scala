@@ -2,7 +2,7 @@ package utopia.metropolis.model.post
 
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelDeclaration
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.mutable.DataType.{IntType, StringType, VectorType}
 import utopia.flow.collection.CollectionExtensions._
 
@@ -16,7 +16,7 @@ object NewDescription extends FromModelFactory[NewDescription]
 	
 	// IMPLEMENTED	----------------------------
 	
-	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
+	override def apply(model: HasProperties) = schema.validate(model).flatMap { valid =>
 		val languageId = valid("language_id").getInt
 		// All specified descriptions must adhere to description schema
 		valid("descriptions").getVector.tryMap { dv => descriptionSchema.validate(dv.getModel) }.map { descriptionModels =>

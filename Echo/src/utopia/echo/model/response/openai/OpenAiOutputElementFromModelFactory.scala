@@ -1,7 +1,7 @@
 package utopia.echo.model.response.openai
 
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.TryExtensions._
 
 /**
@@ -27,7 +27,7 @@ trait OpenAiOutputElementFromModelFactory[+A] extends HasTypeIdentifiers
 	  *                     coupled with their indices.
 	  * @return Parsed output elements. Failure if failed to parse any element.
 	  */
-	def apply(modelsByType: Map[String, IterableOnce[(AnyModel, Int)]]) =
+	def apply(modelsByType: Map[String, IterableOnce[(HasProperties, Int)]]) =
 		typeIdentifiers.iterator
 			.flatMap { typeIdentifier =>
 				modelsByType.get(typeIdentifier) match {

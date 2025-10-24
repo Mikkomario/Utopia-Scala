@@ -1,6 +1,6 @@
 package utopia.vault.store
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.util.Try
 
@@ -26,5 +26,5 @@ trait StandardStoredFactory[Data, A] extends StoredFromModelFactory[Data, A]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override protected def complete(model: AnyModel, data: Data): Try[A] = model("id").tryInt.map { apply(_, data) }
+	override protected def complete(model: HasProperties, data: Data): Try[A] = model("id").tryInt.map { apply(_, data) }
 }

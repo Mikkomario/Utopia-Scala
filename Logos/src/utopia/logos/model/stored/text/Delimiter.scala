@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.text
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.text.delimiter.DbSingleDelimiter
 import utopia.logos.model.factory.text.DelimiterFactoryWrapper
@@ -24,7 +24,7 @@ object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 	
 	override def dataFactory = DelimiterData
 	
-	override protected def complete(model: AnyModel, data: DelimiterData) = 
+	override protected def complete(model: HasProperties, data: DelimiterData) =
 		model("id").tryInt.map { apply(_, data) }
 		
 	

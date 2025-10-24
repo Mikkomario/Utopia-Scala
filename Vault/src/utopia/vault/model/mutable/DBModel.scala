@@ -2,15 +2,14 @@ package utopia.vault.model.mutable
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.mutable.{MutableModel, Variable}
-import utopia.flow.generic.model.template.Property
-import utopia.flow.generic.model.template
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.model.immutable.{Storable, Table}
+import utopia.vault.model.mutable.DBModel.log
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
 import utopia.vault.sql.OrderBy
 
 import scala.util.Success
-import DBModel.log
 
 object DBModel
 {
@@ -24,8 +23,7 @@ object DBModel
     /**
      * Wraps a model into a db model
      */
-    def apply(table: Table, model: template.ModelLike[Property]) =
-    {
+    def apply(table: Table, model: HasProperties) = {
         val result = new DBModel(table)
         result.set(model)
         result
@@ -44,7 +42,7 @@ class DBModel(override val table: Table)
     
 	override def valueProperties = properties.map { v => v.name -> v.value }
 	
-	override def set(data: template.ModelLike[Property]) =
+	override def set(data: HasProperties) =
         data.properties.foreach { p => update(p.name, p.value) }
 }
 
@@ -56,7 +54,7 @@ class DBModelFactory(override val table: Table, override val defaultOrdering: Op
 {
     private implicit val log: Logger = SysErrLogger
     
-    override def apply(model: template.ModelLike[Property]) = {
+    override def apply(model: HasProperties) = {
         val storable = new DBModel(table)
         storable ++= model.properties.map { p => Variable(p.name, p.value) }
     

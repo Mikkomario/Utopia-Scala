@@ -7,7 +7,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.mutable.DataType.{InstantType, IntType, ModelType}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 
@@ -16,7 +17,7 @@ object InvitationData extends FromModelFactory[InvitationData]
 	private val schema = ModelDeclaration("organization_id" -> IntType, "recipient_id" -> ModelType,
 		"starting_role_id" -> IntType, "expires" -> InstantType)
 	
-	override def apply(model: ModelLike[Property]) =
+	override def apply(model: HasProperties) =
 		schema.validate(model).map { model =>
 			InvitationData(model("organization_id"), model("starting_role_id"), model("expires"),
 				model("recipient_id"), model("recipient_email"), model("message"), model("sender_id"),

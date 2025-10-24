@@ -3,8 +3,8 @@ package utopia.echo.model.response.openai
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Alive, Dead, Flux}
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.HasValues
 
 import scala.util.Try
 
@@ -34,7 +34,7 @@ object OpenAiModelParser
 	  * @param model Model to parse
 	  * @return Interpreted status.
 	  */
-	def parseStatusFrom(model: AnyModel): SchrodingerState = model("status").getString match {
+	def parseStatusFrom(model: HasValues): SchrodingerState = model("status").getString match {
 		case "incomplete" | "failed" | "cancelled" => Dead
 		case "in_progress" | "queued" => Flux
 		case _ => Alive
@@ -65,7 +65,7 @@ object OpenAiModelParser
 	{
 		override lazy val typeIdentifiers: Set[String] = left.typeIdentifiers ++ right.typeIdentifiers
 		
-		override def apply(model: ModelLike[Property]): Try[Either[L, R]] = {
+		override def apply(model: HasProperties): Try[Either[L, R]] = {
 			val typeIdentifier = model("type").getString
 			if (right.typeIdentifiers.contains(typeIdentifier))
 				right(model).map(Right.apply)
@@ -103,7 +103,7 @@ trait OpenAiModelParser[+A] extends FromModelFactory[A] with HasTypeIdentifiers
 	  * @param model Model to parse
 	  * @return Interpreted status.
 	  */
-	protected def parseStatusFrom(model: AnyModel): SchrodingerState = OpenAiModelParser.parseStatusFrom(model)
+	protected def parseStatusFrom(model: HasProperties): SchrodingerState = OpenAiModelParser.parseStatusFrom(model)
 	/**
 	  * Interprets a status value from an Open AI response.
 	  * Supports the following status values:

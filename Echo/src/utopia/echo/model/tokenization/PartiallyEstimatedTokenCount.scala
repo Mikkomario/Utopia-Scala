@@ -4,7 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.{FromModelFactory, FromValueFactory}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.Subtractable
 import utopia.flow.operator.{MayBeZero, Reversible}
@@ -38,7 +39,7 @@ object PartiallyEstimatedTokenCount
 	
 	override def default: PartiallyEstimatedTokenCount = zero
 	
-	override def apply(model: ModelLike[Property]): Try[PartiallyEstimatedTokenCount] = {
+	override def apply(model: HasProperties): Try[PartiallyEstimatedTokenCount] = {
 		if (model.contains("estimate"))
 			Success(apply(EstimatedTokenCount.getFromValue(model("estimate")), model("confirmed").getInt))
 		else if (model.contains("confirmed"))

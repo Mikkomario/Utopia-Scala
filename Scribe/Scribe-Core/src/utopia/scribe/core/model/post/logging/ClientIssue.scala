@@ -6,9 +6,10 @@ import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, PairType, StringType}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
 import utopia.flow.time.Now
@@ -45,9 +46,9 @@ object ClientIssue extends FromModelFactory[ClientIssue]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: ModelLike[Property]): Try[ClientIssue] = schema.validate(model).flatMap { model =>
+	override def apply(model: HasProperties): Try[ClientIssue] = schema.validate(model).flatMap { model =>
 		val versionStr = model("version").getString
-		Version.findFrom(versionStr).toTry { new ModelValidationFailedException(
+		Version.findFrom(versionStr).toTry { new IllegalArgumentException(
 			s"Specified version '$versionStr' can't be parsed into a version") }
 			.map { version =>
 				val storeDuration = model("storeDurations").castTo(PairType, DurationType) match {

@@ -9,7 +9,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.ModelDeclaration
 import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.Identity
 import utopia.flow.util.StringExtensions._
 
@@ -41,7 +41,7 @@ object OpenAiMessage extends OpenAiOutputElementFromModelFactory[OpenAiMessage]
 	private class MessageAt(index: Int) extends OpenAiModelParser[OpenAiMessage]
 	{
 		override def typeIdentifiers: Set[String] = OpenAiMessage.typeIdentifiers
-		override def apply(model: ModelLike[Property]): Try[OpenAiMessage] = {
+		override def apply(model: HasProperties): Try[OpenAiMessage] = {
 			// Makes sure the model contains the "id" property
 			schema.validate(model).flatMap { model =>
 				// Parses model content into either messages or refusals

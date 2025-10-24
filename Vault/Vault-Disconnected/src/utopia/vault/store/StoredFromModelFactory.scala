@@ -1,7 +1,7 @@
 package utopia.vault.store
 
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.util.Try
 
@@ -27,10 +27,10 @@ trait StoredFromModelFactory[Data, +A] extends FromModelFactory[A]
 	 * @param data Data extracted from the model
 	 * @return Parse result, which may be a failure
 	 */
-	protected def complete(model: AnyModel, data: Data): Try[A]
+	protected def complete(model: HasProperties, data: Data): Try[A]
 	
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: AnyModel): Try[A] = dataFactory(model).flatMap { data => complete(model, data) }
+	override def apply(model: HasProperties): Try[A] = dataFactory(model).flatMap { data => complete(model, data) }
 }

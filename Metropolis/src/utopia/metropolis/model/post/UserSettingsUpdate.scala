@@ -4,7 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.metropolis.model.error.IllegalPostModelException
 import utopia.metropolis.model.partial.user.UserSettingsData
 import utopia.metropolis.util.MetropolisRegex
@@ -15,7 +16,7 @@ object UserSettingsUpdate extends FromModelFactory[UserSettingsUpdate]
 {
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: ModelLike[Property]) = {
+	override def apply(model: HasProperties) = {
 		// Email address must be valid (if specified)
 		val emailAddress = model("email").string
 		if (emailAddress.forall { MetropolisRegex.email(_) })

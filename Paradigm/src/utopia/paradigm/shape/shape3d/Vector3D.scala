@@ -5,7 +5,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.equality.EqualsBy
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
@@ -45,7 +46,7 @@ object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[
 		case o => apply(o.dimensions)
 	}
 	
-	override def parseFrom(model: template.ModelLike[Property]) =
+	override def parseFrom(model: HasProperties) =
 		Vector3D(model("x").getDouble, model("y").getDouble, model("z").getDouble)
     
     

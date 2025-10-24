@@ -1,10 +1,10 @@
 package utopia.paradigm.motion.template
 
-import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{ModelValidationFailedException, Value}
-import utopia.flow.generic.model.template.{ModelLike, Property}
-import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.time.{Duration, TimeUnit}
 
 import scala.util.{Failure, Success, Try}
@@ -34,9 +34,9 @@ trait ChangeFactory[+A, Amount <: MayBeAboutZero[Amount, _]] extends FromModelFa
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def apply(model: ModelLike[Property]) =
-		model.existing("amount")
-			.toTry { new ModelValidationFailedException(s"Required property 'amount' is missing from $model") }
+	override def apply(model: HasProperties) =
+		model.existingProperty("amount")
+			.toTry { new IllegalArgumentException(s"Required property 'amount' is missing from $model") }
 			.flatMap { p => amountFromValue(p.value) }
 			.flatMap { amount =>
 				model("duration").duration match {
@@ -46,7 +46,7 @@ trait ChangeFactory[+A, Amount <: MayBeAboutZero[Amount, _]] extends FromModelFa
 						if (amount.isAboutZero)
 							Success(apply(amount, Duration.infinite))
 						else
-							Failure(new ModelValidationFailedException(
+							Failure(new IllegalArgumentException(
 								s"Required property 'duration' is missing from $model"))
 				}
 			}

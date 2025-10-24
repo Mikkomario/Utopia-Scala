@@ -6,9 +6,9 @@ import utopia.annex.model.response.RequestResult
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, PropertyDeclaration, Value}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 
@@ -26,11 +26,11 @@ object DeleteRequest extends FromModelFactory[DeleteRequest]
 	// IMPLEMENTED	-----------------------
 	
 	@deprecated("The from-model parsing may be removed in a future release", "v1.11")
-	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
+	override def apply(model: HasProperties) = schema.validate(model).flatMap { valid =>
 		if (valid("method").string.forall { _ ~== Delete.toString })
 			Success(apply(valid("path").getString))
 		else
-			Failure(new ModelValidationFailedException(s"Trying to parse a DELETE request from model with method ${
+			Failure(new IllegalArgumentException(s"Trying to parse a DELETE request from model with method ${
 				valid("method").description}"))
 	}
 	

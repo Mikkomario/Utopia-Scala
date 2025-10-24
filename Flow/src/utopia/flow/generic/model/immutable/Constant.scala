@@ -6,6 +6,18 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.util.logging.Logger
 
+object Constant
+{
+	/**
+	 * @param property A property
+	 * @return A constant with the same name & (current) value as that property
+	 */
+	def from(property: Property) = property match {
+		case c: Constant => c
+		case p => apply(p.name, p.value)
+	}
+}
+
 /**
   * Constants are named properties whose value can't be changed
   * @author Mikko Hilpinen

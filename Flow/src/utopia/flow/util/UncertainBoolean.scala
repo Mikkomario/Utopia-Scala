@@ -142,6 +142,7 @@ sealed trait UncertainBoolean
 		if (isCertainlyFalse && condition) UncertainBoolean else this
 }
 
+// TODO: CertainlyTrue and CertainlyFalse should be objects
 case object UncertainBoolean extends UncertainBoolean
 {
 	// ATTRIBUTES   --------------------------------

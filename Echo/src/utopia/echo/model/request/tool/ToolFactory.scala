@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.util.{Success, Try}
 
@@ -66,7 +66,7 @@ trait ToolFactory extends FromModelFactory[Tool]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: ModelLike[Property]): Try[Tool] = schema.validate(model).flatMap { model =>
+	override def apply(model: HasProperties): Try[Tool] = schema.validate(model).flatMap { model =>
 		val function = model("function").getModel
 		val params = function("parameters").model match {
 			case Some(params) =>

@@ -4,7 +4,7 @@ import utopia.exodus.database.ExodusTables
 import utopia.exodus.database.model.auth.TokenModel
 import utopia.exodus.model.partial.auth.TokenData
 import utopia.exodus.model.stored.auth.Token
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.vault.nosql.factory.row.FromRowFactoryWithTimestamps
 import utopia.vault.nosql.factory.row.model.FromRowModelFactory
@@ -26,7 +26,7 @@ object TokenFactory
 	
 	override def table = ExodusTables.token
 	
-	override def apply(model: ModelLike[Property]) = {
+	override def apply(model: HasProperties) = {
 		table.validate(model).map{ valid => 
 			val modelStylePreference = valid("modelStyleId").int.flatMap(ModelStyle.findForId)
 			Token(valid("id").getInt, TokenData(valid("typeId").getInt, valid("hash").getString, 

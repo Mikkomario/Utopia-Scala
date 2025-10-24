@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.url
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.access.single.url.path.DbSingleRequestPath
 import utopia.logos.model.factory.url.{RequestPathFactory, RequestPathFactoryWrapper}
 import utopia.logos.model.partial.url.RequestPathData
@@ -14,7 +14,7 @@ object RequestPath extends StoredFromModelFactory[RequestPathData, RequestPath]
 	
 	override def dataFactory = RequestPathData
 	
-	override protected def complete(model: AnyModel, data: RequestPathData) = 
+	override protected def complete(model: HasProperties, data: RequestPathData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

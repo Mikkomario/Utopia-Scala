@@ -4,7 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.time.TimeExtensions._
 import utopia.metropolis.model.enumeration.ModelStyle
 
@@ -22,7 +23,7 @@ object NewSessionRequest extends SureFromModelFactory[NewSessionRequest]
 	
 	// IMPLEMENTED  ------------------------------
 	
-	override def parseFrom(model: ModelLike[Property]) =
+	override def parseFrom(model: HasProperties) =
 		NewSessionRequest(model("model_style", "style").string.flatMap(ModelStyle.findForKey),
 			model("duration_minutes", "duration").int.map { _.minutes },
 			model("request_refresh_token"), model("revoke_previous"))

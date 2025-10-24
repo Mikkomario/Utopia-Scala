@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.text
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.access.single.text.word.DbSingleWord
 import utopia.logos.model.factory.text.WordFactoryWrapper
 import utopia.logos.model.partial.text.WordData
@@ -12,7 +12,7 @@ object StoredWord extends StoredFromModelFactory[WordData, StoredWord]
 	
 	override def dataFactory = WordData
 	
-	override protected def complete(model: AnyModel, data: WordData) =
+	override protected def complete(model: HasProperties, data: WordData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

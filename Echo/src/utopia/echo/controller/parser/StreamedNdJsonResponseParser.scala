@@ -8,7 +8,7 @@ import utopia.echo.controller.EchoContext
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.Identity
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.parse.string.IterateLines
+import utopia.flow.parse.string.Lines
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 
@@ -94,8 +94,8 @@ trait StreamedNdJsonResponseParser[R, V] extends ResponseParser[R]
 				// Starts reading the stream asynchronously
 				val resultFuture = Future {
 					// Reads one line at a time. Expects each line to contain a json object.
-					val result = IterateLines
-						.fromStream(stream) { linesIter =>
+					val result = Lines.iterate
+						.stream(stream) { linesIter =>
 							// Stores the latest read line / model for the final result -parsing
 							var lastResult: Try[Model] = Success(Model.empty)
 							// Parses each line to a model

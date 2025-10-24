@@ -6,7 +6,7 @@ import utopia.echo.model.response.openai.{OpenAiModelParser, OpenAiOutputElement
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.ModelDeclaration
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.util.Try
 
@@ -33,7 +33,7 @@ object FileSearchToolCall extends OpenAiOutputElementFromModelFactory[FileSearch
 	{
 		override def typeIdentifiers: Set[String] = FileSearchToolCall.typeIdentifiers
 		
-		override def apply(model: ModelLike[Property]): Try[FileSearchToolCall] =
+		override def apply(model: HasProperties): Try[FileSearchToolCall] =
 			schema.validate(model).flatMap { model =>
 				model("results").tryVectorWith { _.tryModel.flatMap(FileSearchResult.apply) }.map { results =>
 					val status: SchrodingerState = model("status").getString match {

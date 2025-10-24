@@ -4,7 +4,8 @@ import utopia.echo.model.request.tts.piper.TtsParams.{defaultLengthScale, defaul
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.ScopeUsable
 import utopia.flow.util.Mutate
 
@@ -36,7 +37,7 @@ object TtsParams extends SureFromModelFactory[TtsParams]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def parseFrom(model: ModelLike[Property]): TtsParams =
+	override def parseFrom(model: HasProperties): TtsParams =
 		apply(model("length_scale").double, model("noise_scale").double, model("noise_w_scale").double,
 			model("voice").string.map(Voice.apply), model("speaker_id").int match {
 				case Some(id) => Some(Right(id))

@@ -1,9 +1,8 @@
 package utopia.metropolis.model.stored
 
-import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.ModelValidationFailedException
-import utopia.flow.generic.model.template.{ModelLike, Property}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 /**
   * A common trait for model parsers which produce stored elements
@@ -30,8 +29,8 @@ trait StoredFromModelFactory[+A, Data] extends FromModelFactory[A]
 	
 	// IMPLEMENTED	--------------------
 	
-	override def apply(model: ModelLike[Property]) = model("id").int
-		.toTry { new ModelValidationFailedException(s"Model $model doesn't contain a valid id property") }
+	override def apply(model: HasProperties) = model("id").int
+		.toTry { new IllegalArgumentException(s"Model $model doesn't contain a valid id property") }
 		.flatMap { id =>
 			dataFactory(model).map { data => apply(id, data) }
 		}

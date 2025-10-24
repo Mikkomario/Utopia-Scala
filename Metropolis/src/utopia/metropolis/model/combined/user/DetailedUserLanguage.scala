@@ -3,7 +3,8 @@ package utopia.metropolis.model.combined.user
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.combined.language.{DescribedLanguage, DescribedLanguageFamiliarity}
@@ -15,7 +16,7 @@ import scala.util.Try
 
 object DetailedUserLanguage extends FromModelFactory[DetailedUserLanguage]
 {
-	override def apply(model: ModelLike[Property]): Try[DetailedUserLanguage] =
+	override def apply(model: HasProperties): Try[DetailedUserLanguage] =
 		UserLanguageLink(model).flatMap { link =>
 			DescribedLanguage(model("language").getModel).flatMap { language =>
 				DescribedLanguageFamiliarity(model("familiarity").getModel).map { familiarity =>

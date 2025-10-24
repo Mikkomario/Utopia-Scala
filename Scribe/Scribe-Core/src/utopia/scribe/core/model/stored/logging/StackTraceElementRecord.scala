@@ -1,6 +1,6 @@
 package utopia.scribe.core.model.stored.logging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.scribe.core.model.factory.logging.StackTraceElementRecordFactoryWrapper
 import utopia.scribe.core.model.partial.logging.StackTraceElementRecordData
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
@@ -12,7 +12,7 @@ object StackTraceElementRecord
 	
 	override def dataFactory = StackTraceElementRecordData
 	
-	override protected def complete(model: AnyModel, data: StackTraceElementRecordData) = 
+	override protected def complete(model: HasProperties, data: StackTraceElementRecordData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

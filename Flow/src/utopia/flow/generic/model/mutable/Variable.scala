@@ -94,7 +94,7 @@ object Variable
         override def value_=(newValue: Value): Unit = {
             val oldValue = _value
             // May process the value before assigning it
-            _value = processValue(value)
+            _value = processValue(newValue)
             fireEventIfNecessary(oldValue).foreach { _() }
         }
         

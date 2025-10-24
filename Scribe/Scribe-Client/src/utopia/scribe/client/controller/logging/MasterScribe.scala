@@ -14,7 +14,8 @@ import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasValues
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
 import utopia.flow.parse.json.JsonParser
@@ -284,7 +285,7 @@ object MasterScribe
 			
 			// OTHER    -----------------------------
 			
-			private def parseIssuesFrom(model: AnyModel) =
+			private def parseIssuesFrom(model: HasValues) =
 				model("issues").getVector
 					// Attempts to parse the issues
 					.map { v =>

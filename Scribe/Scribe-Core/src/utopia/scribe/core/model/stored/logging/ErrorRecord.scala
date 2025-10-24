@@ -1,6 +1,6 @@
 package utopia.scribe.core.model.stored.logging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.scribe.core.model.factory.logging.ErrorRecordFactoryWrapper
 import utopia.scribe.core.model.partial.logging.ErrorRecordData
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
@@ -11,7 +11,7 @@ object ErrorRecord extends StoredFromModelFactory[ErrorRecordData, ErrorRecord]
 	
 	override def dataFactory = ErrorRecordData
 	
-	override protected def complete(model: AnyModel, data: ErrorRecordData) = 
+	override protected def complete(model: HasProperties, data: ErrorRecordData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

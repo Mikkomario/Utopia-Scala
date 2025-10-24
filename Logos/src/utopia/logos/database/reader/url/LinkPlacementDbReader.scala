@@ -1,6 +1,6 @@
 package utopia.logos.database.reader.url
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.reader.text.TextPlacementDbReaderLike
 import utopia.logos.database.storable.url.LinkPlacementDbModel
 import utopia.logos.model.partial.url.LinkPlacementData
@@ -32,7 +32,7 @@ object LinkPlacementDbReader extends TextPlacementDbReaderLike[LinkPlacement]
 	  * @param placedId   placed id to assign to the new text placement
 	  * @param orderIndex order index to assign to the new text placement
 	  */
-	override protected def apply(model: AnyModel, id: Int, parentId: Int, placedId: Int, orderIndex: Int) = 
+	override protected def apply(model: HasProperties, id: Int, parentId: Int, placedId: Int, orderIndex: Int) =
 		LinkPlacement(id, LinkPlacementData(parentId, placedId, orderIndex))
 }
 

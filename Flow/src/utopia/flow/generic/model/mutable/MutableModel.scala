@@ -1,13 +1,13 @@
 package utopia.flow.generic.model.mutable
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.event.listener.{ChangeListener, PropertyChangeListener}
 import utopia.flow.event.model.PropertyChangeEvent.{PropertyAdded, PropertyRemoved, PropertySwapped, PropertyValueChange}
 import utopia.flow.event.model.{ChangeEvent, PropertyChangeEvent}
 import utopia.flow.generic.factory.PropertyFactory
-import utopia.flow.generic.model.immutable
-import utopia.flow.generic.model.immutable.{Constant, Value}
-import utopia.flow.generic.model.template.ModelLike
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.generic.model.template.HasPropertiesLike
 
 object MutableModel
 {
@@ -67,12 +67,13 @@ object MutableModel
  * @tparam V The type of variables used in this model
  * @param propFactory The variable generator used for generating new values on this model
  */
-class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: PropertyFactory[V]) extends ModelLike[V]
+class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: PropertyFactory[V])
+	extends HasPropertiesLike[V]
 {
     // ATTRIBUTES    --------------
-    
-    private var propMap = initialProps.map { v => v.name.toLowerCase -> v }.toMap
-    private var propOrder = initialProps.map { v => v.name.toLowerCase }.toSeq.distinct
+	
+	private var _properties = OptimizedIndexedSeq.from(initialProps.iterator.distinctBy { _.name })
+	private var propMap = _properties.iterator.map { v => v.name.toLowerCase -> v }.toMap
     
     private var _listeners: Seq[PropertyChangeListener[V]] = Empty
     
@@ -85,7 +86,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
     /**
       * An immutable version of this model
       */
-    def immutableCopy = immutableCopyUsing(PropertyFactory.forConstants)
+    def immutableCopy = Model.withConstants(_properties.map { p => Constant(p.name, p.value) })
     
     /**
       * The listeners that are informed of changes within this model's properties
@@ -108,12 +109,22 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
     
     
     // IMPLEMENTED METHODS    -----
-    
-    def propertyMap = propMap
-    override protected def propertyOrder = propOrder
-    
-    override protected def newProperty(attName: String): V = newProperty(attName, Value.empty)
-    override protected def generatesNonEmptyFor(propName: String): Boolean = propFactory.generatesNonEmpty(propName)
+	
+	override def properties: Seq[V] = _properties
+	override def propertiesIterator: Iterator[V] = _properties.iterator
+	
+	override def existingProperty(propName: String): Option[V] = propMap.get(propName.toLowerCase)
+	override def property(propName: String): V =
+		existingProperty(propName).getOrElse { generateProperty(propName) }
+	
+	override protected def simulateValueFor(propName: String): Value = generateProperty(propName).value
+	
+	override def contains(propName: String): Boolean =
+		propMap.contains(propName.toLowerCase) || propFactory.generatesNonEmpty(propName)
+	override def containsNonEmpty(propName: String): Boolean =
+		existingProperty(propName).exists { _.nonEmpty } || propFactory.generatesNonEmpty(propName)
+	
+	def propertyMap = propMap
     
     
     // OTHER    ---------------
@@ -125,14 +136,11 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
      */
     def update(propName: String, value: Value) = {
         // Replaces value & generates events, may generate a new attribute
-        existing(propName) match {
+        existingProperty(propName) match {
             // Case: Existing property => updates its value
             case Some(prop) => prop.value = value
             // Case: Non-existing property => generates one
-            case None =>
-                val generated = newProperty(propName, value)
-                lazy val event = PropertyAdded(generated)
-                listeners.foreach { _.onPropertyChange(event) }
+            case None => generateProperty(propName, value)
         }
     }
     
@@ -151,16 +159,18 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
                 listeners.foreach { _.onPropertyChange(e) }
             }
         }
-        propMap.get(lowerName) match {
+        existingProperty(lowerName) match {
             // Case: There already exists a property with that name => replaces it (generates a property change event)
             case Some(oldProp) =>
                 propMap += lowerName -> prop
+	            _properties = _properties.mapFirstWhere { _ == oldProp } { _ => prop }
                 // May start listening to value changes
                 informListeners(PropertySwapped(ChangeEvent(oldProp, prop)))
+	            
             // Case: Completely new attribute => generates a property added event and modifies property order as well
             case None =>
                 propMap += lowerName -> prop
-                propOrder :+= lowerName
+	            _properties :+= prop
                 informListeners(PropertyAdded(prop))
         }
     }
@@ -175,14 +185,14 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
      * @param prop The property that is to be removed from this model
      */
     def -=(prop: V) = {
-        if (propMap.valuesIterator.contains(prop)) {
-            val lowerCaseName = prop.name.toLowerCase
-            propOrder = propOrder.filterNot { _ == lowerCaseName }
-            propMap -= lowerCaseName
-            stopListeningTo(prop)
-            lazy val event = PropertyRemoved(prop)
-            listeners.foreach { _.onPropertyChange(event) }
-        }
+	    _properties.findIndexOf(prop).foreach { index =>
+		    propMap -= prop.name.toLowerCase
+		    _properties = _properties.withoutIndex(index)
+		    
+		    stopListeningTo(prop)
+		    lazy val event = PropertyRemoved(prop)
+		    listeners.foreach { _.onPropertyChange(event) }
+	    }
     }
     /**
      * Removes a property from this model
@@ -191,8 +201,9 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
     def -=(propName: String) = {
         val lowerCaseName = propName.toLowerCase
         propMap.get(lowerCaseName).foreach { prop =>
-            propOrder = propOrder.filterNot { _ == lowerCaseName }
+	        _properties = _properties.filterNot { _ == prop }
             propMap -= lowerCaseName
+	        
             stopListeningTo(prop)
             lazy val event = PropertyRemoved(prop)
             listeners.foreach { _.onPropertyChange(event) }
@@ -214,15 +225,20 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
      * Creates an immutable version of this model by using the provided property factory
      * @param propFactory The property factory used for building the properties of the new model
      */
+    @deprecated("Generative models are currently deprecated", "v2.7")
     def immutableCopyUsing(propFactory: PropertyFactory[Constant]) =
-        immutable.Model.withConstants(properties.view.map { att => propFactory(att.name, att.value) }, propFactory)
-    
-    protected def newProperty(attName: String, value: Value) = {
-        // In addition to creating the attribute, adds it to this model and generates an event
-        val attribute = propFactory(attName, value)
-        this += attribute
-        attribute
-    }
+        Model.withConstants(properties.map { att => propFactory(att.name, att.value) }, propFactory)
+	
+	private def generateProperty(name: String, value: Value = Value.empty) = {
+		val generated = propFactory(name, value)
+		_properties :+= generated
+		propMap += (name.toLowerCase -> generated)
+		
+		lazy val event = PropertyAdded(generated)
+		listeners.foreach { _.onPropertyChange(event) }
+		
+		generated
+	}
     
     private def startListeningTo(prop: V) = {
         val listener = ChangeListener[Value] { e =>

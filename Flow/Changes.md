@@ -7,6 +7,11 @@
 - Replaced **Year**, **Month**, **YearMonth** and **MonthDay** -related **TimeExtensions** 
   with new classes with these names
   - These also affect **Quarter** and **YearlyDateRange**
+- Rewrote **Model**, replaced **template.ModelLike** with **HasValues** and **HasPropertiesLike** and added 
+  **immutable.ModelLike**
+  - The new model implementations don't utilize **PropertyFactory**, except for backward-compatibility
+- The `declarations` property in **ModelDeclaration** is now **Seq** instead of **Set**
+- (Accidentally) removed **ModelValidationFailedException**
 - **Lazy**`.flatMap(...)` now yields **Lazy** instead of **LazySeq**
   - The previous implementation is available as `.mapToSeq(...)`
 - **Changing**'s `.lazyMap(...)` and `.lazyMergeWith(...)` now yield **Lazy** instead of **ListenableLazy**
@@ -24,6 +29,7 @@
 - Bugfix to `OptimizedIndexedSeq.concat(...)`, which would previously yield wrong-sized collections sometimes
 - Under certain conditions, **OptimizedMultiMergeMirror** 
   and **OptimizedFlatteningMirror** would previously fire the change events in the wrong order / time
+- Bugfix to **Variable**'s value-assignment code, which previously didn't assign the new value
 ### Deprecations
 - Deprecated **IterateLines** in favor of new `Lines.iterate`
 - Deprecated **LinesFrom** in favor of new `Lines.from`
@@ -50,6 +56,8 @@
 - **Changing**
   - Added `.forFinalValue(...)`
   - Added new empty/non-empty -related functions to **Option**-based **Changing** instances
+- **Constant** (object)
+  - Added `.from(Property)`
 - **Duration** (**TimeExtensions**)
   - Added `.finiteOrZero`
 - **Flag** (object)
@@ -137,6 +145,7 @@
 - Added new `++` and `--` implementations to **IntSet**
 - Rewrote **Lazy**`.mapCurrent` implementation
 - **EqualsBy** now caches the generated `hashCode()` value
+- The `equalsProperties` in **EqualsBy** is now **IterableOnce** instead of **Seq**
 - `NumericSpan.from(HasInclusiveEnds)` is now implicit
 - Most implicit classes in **RichComparable** now extend **SelfComparable** instead of **RichComparable**
 - Most functions in **CollectionExtensions** now use `OptimizedIndexedSeq.newBuilder` instead of `new VectorBuilder()`
@@ -148,7 +157,8 @@
 - Modified `toString` implementations of most **Changing** implementations
 - Converted **WeakValuesCache** into a trait and refactored it; Also, **WeakCache** now extends **WeakValuesCache**.
 - Modified **Wait** to skip the process altogether, if the passed **WaitTarget** is zero or negative
-- Removed deprecated `WeekDay.forIndex(Int)`
+- Removed the previously deprecated **ModelValidationResult**
+- Removed the previously deprecated `WeekDay.forIndex(Int)`
 
 ## v2.6 - 26.05.2025
 This update focuses on improving the **Changing** interface internally, and by adding lockable flags. 

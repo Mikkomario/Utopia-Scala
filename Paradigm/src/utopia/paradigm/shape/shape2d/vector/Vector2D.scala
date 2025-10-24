@@ -5,9 +5,10 @@ import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.time.Duration
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.generic.ParadigmDataType.Vector2DType
@@ -15,8 +16,6 @@ import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
 import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
-
-import utopia.flow.time.Duration
 
 object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[Vector2D]
 {
@@ -38,7 +37,7 @@ object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def parseFrom(model: template.ModelLike[Property]) =
+	override def parseFrom(model: HasProperties) =
 		apply(model("x").getDouble, model("y").getDouble)
 	
 	override def apply(dimensions: Dimensions[Double]) = new Vector2D(dimensions.withLength(2))

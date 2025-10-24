@@ -1,6 +1,6 @@
 package utopia.flow.generic.factory
 
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.util.Success
 
@@ -17,10 +17,10 @@ trait SureFromModelFactory[+A] extends FromModelFactory[A]
 	  * @param model A model
 	  * @return An item parsed from that model
 	  */
-	def parseFrom(model: ModelLike[Property]): A
+	def parseFrom(model: HasProperties): A
 	
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: ModelLike[Property]) = Success(parseFrom(model))
+	override def apply(model: HasProperties) = Success(parseFrom(model))
 }

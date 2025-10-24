@@ -2,7 +2,7 @@ package utopia.vault.nosql.read.parse
 
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.model.immutable.{Row, Table}
 import utopia.vault.model.template.{HasTableAsTarget, SelectsTable}
 
@@ -65,5 +65,5 @@ trait ParseTableModel[+A] extends ParseRow[A] with SelectsTable with FromModelFa
 	override def apply(row: Row): Try[A] = apply(row(table))
 	override def shouldParse(row: Row): Boolean = row.containsDataForTable(table)
 	
-	override def apply(model: ModelLike[Property]): Try[A] = table.validate(model).flatMap(fromValid)
+	override def apply(model: HasProperties): Try[A] = table.validate(model).flatMap(fromValid)
 }

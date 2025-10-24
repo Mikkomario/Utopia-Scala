@@ -1,6 +1,6 @@
 package utopia.scribe.core.model.stored.logging
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.scribe.core.model.combined.logging.IssueVariantInstances
 import utopia.scribe.core.model.factory.logging.IssueVariantFactoryWrapper
 import utopia.scribe.core.model.partial.logging.IssueVariantData
@@ -20,7 +20,7 @@ object IssueVariant extends StoredFromModelFactory[IssueVariantData, IssueVarian
 	
 	override def dataFactory = IssueVariantData
 	
-	override protected def complete(model: AnyModel, data: IssueVariantData) = 
+	override protected def complete(model: HasProperties, data: IssueVariantData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

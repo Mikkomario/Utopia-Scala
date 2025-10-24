@@ -11,7 +11,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.ModelType
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.view.immutable.eventful.Fixed
 
 import scala.concurrent.Future
@@ -52,7 +53,7 @@ object PostSpiritRequest
 	                                                                             (sendFunction: PreparedRequest => Future[RequestResult[A]])
 		extends FromModelFactory[PostSpiritRequest[S, A]]
 	{
-		override def apply(model: ModelLike[Property]) =
+		override def apply(model: HasProperties) =
 			baseSchema.validate(model).flatMap { valid =>
 				spiritFactory(valid("spirit").getModel).map { spirit =>
 					PostSpiritRequest(spirit, valid("method").string.flatMap(Method.parse).getOrElse(Post))(sendFunction)

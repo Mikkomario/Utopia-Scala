@@ -10,7 +10,8 @@ import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply}
 import utopia.echo.model.tokenization.PartiallyEstimatedTokenCount
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasValues
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
@@ -38,7 +39,7 @@ object OllamaChat
 	 * @param client Wrapped / utilized Ollama client interface
 	 * @return Parsed chat interface. Failure if the specified model didn't specify the targeted LLM.
 	 */
-	def parseFrom(model: AnyModel, toolFactory: ToolFactory = ToolFactory.notImplemented)
+	def parseFrom(model: HasValues, toolFactory: ToolFactory = ToolFactory.notImplemented)
 	             (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser, client: OllamaClient) =
 	{
 		model("llm").string.toTry { new NoSuchElementException("Required parameter \"llm\" is missing") }.map { llm =>

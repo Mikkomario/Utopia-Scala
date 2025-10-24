@@ -1,6 +1,6 @@
 package utopia.vault.test.model.stored.item
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
 import utopia.vault.test.database.access.item.versioned.AccessVersionedTestItem
 import utopia.vault.test.model.factory.item.VersionedTestItemFactoryWrapper
@@ -12,7 +12,7 @@ object VersionedTestItem extends StoredFromModelFactory[VersionedTestItemData, V
 	
 	override def dataFactory = VersionedTestItemData
 	
-	override protected def complete(model: AnyModel, data: VersionedTestItemData) = 
+	override protected def complete(model: HasProperties, data: VersionedTestItemData) =
 		model("id").tryInt.map { apply(_, data) }
 }
 

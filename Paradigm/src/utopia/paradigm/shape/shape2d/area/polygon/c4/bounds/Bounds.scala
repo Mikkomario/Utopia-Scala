@@ -6,8 +6,8 @@ import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.combine.{Combinable, LinearScalable, Subtractable}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction}
@@ -80,8 +80,7 @@ object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromMo
 		case o => apply(o.dimensions)
 	}
 	
-	override def apply(model: template.ModelLike[Property]) =
-		Success(Bounds(model("position").getPoint, model("size").getSize))
+	override def apply(model: HasProperties) = Success(Bounds(model("position").getPoint, model("size").getSize))
 	
 	
 	// OTHER    -----------------------

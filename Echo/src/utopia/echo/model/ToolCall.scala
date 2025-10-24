@@ -2,7 +2,8 @@ package utopia.echo.model
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 
@@ -12,7 +13,7 @@ object ToolCall extends FromModelFactory[ToolCall]
 {
 	// IMPLEMENTED  ----------------------
 	
-	override def apply(model: ModelLike[Property]): Try[ToolCall] = {
+	override def apply(model: HasProperties): Try[ToolCall] = {
 		val functionModel = model("function").model.getOrElse(model)
 		functionModel("name").string
 			.toTry { new IllegalArgumentException(s"Tool call model $model did not specify a function name") }

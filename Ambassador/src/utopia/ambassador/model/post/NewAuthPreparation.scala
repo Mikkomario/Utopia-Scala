@@ -4,7 +4,7 @@ import utopia.ambassador.model.enumeration.AuthCompletionType
 import utopia.ambassador.model.enumeration.AuthCompletionType.Default
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.metropolis.model.error.IllegalPostModelException
 
 import scala.util.{Failure, Success}
@@ -13,7 +13,7 @@ object NewAuthPreparation extends FromModelFactory[NewAuthPreparation]
 {
 	// IMPLEMENTED  ----------------------
 	
-	override def apply(model: ModelLike[Property]) =
+	override def apply(model: HasProperties) =
 	{
 		// task_id or non-empty task_ids is required
 		val taskIds = model("task_id").int.map { Vector(_) }.getOrElse { model("task_ids").getVector.flatMap { _.int } }

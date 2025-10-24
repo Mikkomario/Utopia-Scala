@@ -1,353 +1,414 @@
 package utopia.flow.generic.model.immutable
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.mutable.iterator.LazyInitIterator
+import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.factory.PropertyFactory
-import utopia.flow.generic.model.mutable
-import utopia.flow.generic.model.mutable.DataType.ModelType
-import utopia.flow.generic.model.mutable.{MutableModel, Variable}
-import utopia.flow.generic.model.template.ModelLike.AnyModel
-import utopia.flow.generic.model.template.{ModelLike, Property, ValueConvertible}
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{HasPropertiesLike, Property, ValueConvertible}
 import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction}
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.UncertainBoolean.CertainBoolean
+
+import scala.collection.mutable
 
 object Model
 {
-	// ATTRIBUTES    -------------------
+	// COMPUTED -------------------------------
 	
 	/**
-	 * An empty model with a basic constant generator
+	 * @return An empty model
 	 */
-	val empty = new Model(Map(), Empty, PropertyFactory.forConstants)
+	def empty: Model = EmptyModel
+	
+	@deprecated("Please call HasPropertiesLike.haveSimilarProperties directly", "v2.7")
+	implicit def similarProperties: EqualsFunction[HasPropertiesLike[Property]] =
+		HasPropertiesLike.haveSimilarProperties
+	
+	
+	// OTHER    -------------------------------
 	
 	/**
-	 * Checks whether the two models have equal non-empty properties.
-	 * The values are considered equal as long as they convert to the same value (i.e. data types may differ).
-	 * If a value is defined in one model and not in the other, the models may still be considered equal.
-	 * Value ordering is not considered.
+	 * @param pair A key-value pair
+	 * @return A model containing that key and value
 	 */
-	implicit val similarProperties: EqualsFunction[Model] = (a, b) => {
-		// Only compares defined (i.e. non-empty) properties
-		a.propertyMap.iterator.forall { case (propName, ac) =>
-			ac.value.isEmpty || b.propertyMap.get(propName).forall { bc => bc.value.isEmpty || (ac.value ~== bc.value) }
-		}
+	def from[A](pair: (String, A))(implicit valueConversion: A => ValueConvertible): Model =
+		new _Model(Single(Constant(pair._1, valueConversion(pair._2).toValue)))
+	/**
+	 * @param pair A key-value pair
+	 * @return A model containing that key and value
+	 */
+	def from(pair: (String, Value)): Model = new _Model(Single(Constant(pair._1, pair._2)))
+	/**
+	 * @param first The first key-value pair
+	 * @param second The second key-value pair
+	 * @param more Additional key-value pairs
+	 * @return A model containing the specified key-value pairs
+	 */
+	def from(first: (String, Value), second: (String, Value), more: (String, Value)*): Model =
+		new _Model(OptimizedIndexedSeq.from(Pair(first, second).view ++ more).map { case (k, v) => Constant(k, v) })
+	
+	/**
+	 * @param properties Key value pairs to assign to this model
+	 * @return A new model with the specified properties
+	 */
+	def apply(properties: IterableOnce[(String, Value)]): Model = properties match {
+		case v: scala.collection.View[(String, Value)] =>
+			if (v.knownSize == 0)
+				EmptyModel
+			else
+				new LazyModel(v.map { case (name, value) => Constant(name, value) })
+		case s: CachingSeq[(String, Value)] =>
+			if (s.isEmpty)
+				EmptyModel
+			else
+				new LazyModel(s.map { case (name, value) => Constant(name, value) })
+			
+		case i: Iterable[(String, Value)] =>
+			if (i.isEmpty)
+				EmptyModel
+			else
+				new _Model(OptimizedIndexedSeq.from(i.view.map { case (name, value) => Constant(name, value) }))
+			
+		case i =>
+			i.nonEmptyIterator match {
+				case Some(iterator) => new LazyModel(iterator.map { case (name, value) => Constant(name, value) })
+				case None => EmptyModel
+			}
 	}
 	
-	
-	// OTHER    --------------------
-	
 	/**
-	 * Creates a new model that contains the specified constants
-	 * @param constants Model properties
-	 * @param propFactory Property factory to use when generating new properties (default = basic constant generator)
-	 * @return A new model containing the specified properties
+	 * @param constants Constants from which this model consists
+	 * @return A new model based on the specified constants
 	 */
-	def withConstants(constants: IterableOnce[Constant],
-	                  propFactory: PropertyFactory[Constant] = PropertyFactory.forConstants) =
-	{
-		// Filters out duplicates (case-insensitive) (if there are duplicates, last instance is used)
-		val cached = constants match {
-			case c: Iterable[Constant] => OptimizedIndexedSeq.from(c.view.map { c => c.name.toLowerCase -> c })
-			case c => OptimizedIndexedSeq.from(c.iterator.map { c => c.name.toLowerCase -> c })
-		}
-		_apply(cached, propFactory)
+	def withConstants(constants: IterableOnce[Constant]): Model = constants match {
+		case s: CachingSeq[Constant] => if (s.isEmpty) EmptyModel else new LazyModel(s)
+		case s: Seq[Constant] => if (s.isEmpty) EmptyModel else new _Model(s)
+		case v: scala.collection.View[Constant] => if (v.knownSize == 0) EmptyModel else new LazyModel(v)
+		case i: Iterable[Constant] => if (i.isEmpty) EmptyModel else new _Model(OptimizedIndexedSeq.from(i))
+		case i => if (i.knownSize == 0) EmptyModel else new LazyModel(i)
 	}
 	/**
-	 * Creates a new model from key value pairs
-	 * @param content The name value -pairs used for generating the model's properties
-	 * @param propFactory The property factory that is used to build the properties in this model
-	 * @return A new model
+	 * @param original The original model
+	 * @param declaration Applied model declaration
+	 * @param prevalidatedProperties Properties from 'original' that have already been processed / validated (optional).
+	 * @return Access to the original model's properties through the specified declaration
 	 */
-	def apply(content: IterableOnce[(String, Value)], propFactory: PropertyFactory[Constant]) = {
-		val cached = content match {
-			case c: Iterable[(String, Value)] =>
-				OptimizedIndexedSeq.from(c.view.map { case (name, value) => name.toLowerCase -> Constant(name, value) })
-			case c =>
-				OptimizedIndexedSeq.from(
-					c.iterator.map { case (name, value) => name.toLowerCase -> Constant(name, value) })
-		}
-		_apply(cached, propFactory)
-	}
+	def validated(original: HasProperties, declaration: ModelDeclaration,
+	              prevalidatedProperties: Iterable[(PropertyDeclaration, Constant)] = Empty): Model =
+		new ValidatedModel(original, declaration, prevalidatedProperties)
 	
 	/**
-	 * Creates a new model from key value pairs
-	 * @param content The name value -pairs used for generating the model's properties
-	 * @return A new model
-	 */
-	def apply(content: IterableOnce[(String, Value)]): Model = apply(content, PropertyFactory.forConstants)
-	
-	/**
-	 * Converts a model into an immutable format
+	 * Converts another type of model into this type of model
 	 * @param model A model
-	 * @return An immutable version of that model (specified model if already immutable)
+	 * @return An immutable model, based on the specified instance
 	 */
-	def from(model: AnyModel): Model = model match {
+	def from(model: HasPropertiesLike[Property]): Model = model match {
 		case m: Model => m
-		case m: MutableModel[_] => m.immutableCopy
 		case m =>
-			withConstants(m.properties.view.map {
+			withConstants(m.properties.map {
 				case c: Constant => c
 				case p => Constant(p.name, p.value)
 			})
 	}
-	/**
-	 * @param first First name-value pair
-	 * @param second Second name-value pair
-	 * @param more More name-value pairs
-	 * @return A new model with all specified name-value pairs as attributes
-	 */
-	def from(first: (String, Value), second: (String, Value), more: (String, Value)*): Model =
-		apply(Pair(first, second) ++ more)
-	/**
-	 * @param pair A name value -pair
-	 * @return A new model that contains the specified name-value pair
-	 */
-	def from(pair: (String, Value)): Model = apply(Single(pair))
-	/**
-	 * @param pair A name-values -pair
-	 * @param convert Implicit value conversion for the specified value
-	 * @tparam A Type of the specified value
-	 * @return A model that contains the specified name value pair
-	 */
-	def from[A](pair: (String, A))(implicit convert: A => Value): Model = apply(Single(pair._1 -> convert(pair._2)))
 	
 	/**
-	 * Converts a map of valueConvertible elements into a model format. The generator the model
-	 * uses can be specified as well.
+	 * Converts a map of valueConvertible elements into a model format.
 	 * @param content The map that is converted to model attributes
-	 * @param propFactory the attirbute generator that will generate the attributes
-	 * (simple constant generator used by default)
 	 * @return The newly generated model
 	 */
-	def fromMap[C1](content: Map[String, C1], propFactory: PropertyFactory[Constant] = PropertyFactory.forConstants)
-	               (implicit f: C1 => ValueConvertible) =
-		withConstants(content.map { case (name, value) => propFactory(name, value.toValue) }, propFactory)
+	def fromMap[C1](content: Map[String, C1])(implicit f: C1 => ValueConvertible) =
+		withConstants(content.view.map { case (name, value) => Constant(name, value.toValue) })
+	
+	/**
+	 * @param properties Properties to assign to this model, as key-value pairs
+	 * @param factory A factory used for generating new properties
+	 * @return A new model that may generate additional properties
+	 */
+	@deprecated("Deprecated for possible removal. Generative models don't currently yield all their properties, when iterated.", "v2.7")
+	def apply(properties: IterableOnce[(String, Value)], factory: PropertyFactory[Constant]): Model =
+		new GenerativeModel(OptimizedIndexedSeq.from(properties.iterator.map { case (k, v) => Constant(k, v) }), factory)
+	/**
+	 * @param constants Properties to assign to this model
+	 * @param factory A factory used for generating new properties
+	 * @return A new model that may generate additional properties
+	 */
+    @deprecated("Deprecated for possible removal. Generative models don't currently yield all their properties, when iterated.", "v2.7")
+	def withConstants(constants: IterableOnce[Constant], factory: PropertyFactory[Constant]): Model =
+		new GenerativeModel(OptimizedIndexedSeq.from(constants), factory)
+	/**
+	 * Converts a map of valueConvertible elements into a model format.
+	 * The generator the model uses may be specified as well.
+	 * @param content The map that is converted to model attributes
+	 * @param propFactory the property generator that will generate all the properties
+	 * @return The newly generated model
+	 */
+	@deprecated("Deprecated for possible removal. Generative models don't currently yield all their properties, when iterated.", "v2.7")
+	def fromMap[C1](content: Map[String, C1], propFactory: PropertyFactory[Constant])
+	               (implicit f: C1 => ValueConvertible): Model =
+		new GenerativeModel(OptimizedIndexedSeq.from(content.iterator.map { case (k, v) => propFactory(k, v.toValue) }),
+			propFactory)
+	
+	
+	// NESTED   -------------------------------
+	
+	/**
+	 * An empty model implementation
+	 */
+	object EmptyModel extends Model
+	{
+		// ATTRIBUTES   -----------------------
 		
-	private def _apply(constants: Seq[(String, Constant)], propFactory: PropertyFactory[Constant]) = {
-		// Filters out duplicates (case-insensitive) (if there are duplicates, last instance is used)
-		val propMap = constants.groupMapReduce { _._1 } { _._2 } { (_, later) => later }
-		val order = constants.view.map { _._1 }.distinct.toOptimizedSeq
+		override val properties: Seq[Constant] = Empty
 		
-		new Model(propMap, order, propFactory)
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = Iterator.empty
+		
+		override def existingProperty(propName: String): Option[Constant] = None
+		
+		override def contains(propName: String): Boolean = false
+		override def containsNonEmpty(propName: String): Boolean = false
+		override protected def knownContains(propName: String): UncertainBoolean = CertainBoolean(false)
+	}
+	
+	private class _Model(override val properties: Seq[Constant]) extends Model
+	{
+		// ATTRIBUTES   -----------------------
+		
+		private lazy val propMap = propertiesIterator.map { p => p.name.toLowerCase -> p }.toMap
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = properties.iterator
+		
+		override def existingProperty(propName: String): Option[Constant] = propMap.get(propName.toLowerCase)
+		
+		override def contains(propName: String): Boolean = propMap.contains(propName.toLowerCase)
+		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
+		override protected def knownContains(propName: String): UncertainBoolean = contains(propName)
+	}
+	
+	private class LazyModel(props: IterableOnce[Constant]) extends Model
+	{
+		// ATTRIBUTES   -----------------------
+		
+		override lazy val properties: Seq[Constant] = props match {
+			case s: Seq[Constant] => s
+			case v: scala.collection.View[Constant] => CachingSeq.from(v)
+			case i: Iterable[Constant] => OptimizedIndexedSeq.from(i)
+			case i => CachingSeq.from(i.iterator)
+		}
+		private lazy val propMap = new BuildingPropertyMap(propertiesIterator)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = properties.iterator
+		
+		override def contains(propName: String): Boolean = propMap(propName).isDefined
+		override def containsNonEmpty(propName: String): Boolean = propMap(propName).exists { _.value.nonEmpty }
+		override protected def knownContains(propName: String): UncertainBoolean = propMap.knownContains(propName)
+		
+		override def existingProperty(propName: String): Option[Constant] = propMap(propName)
+	}
+	
+	private class ValidatedModel(source: HasProperties, declaration: ModelDeclaration,
+	                             prevalidated: Iterable[(PropertyDeclaration, Constant)])
+		extends Model
+	{
+		import ModelDeclaration.valueIsEmpty
+		
+		// ATTRIBUTES   ---------------------
+		
+		private val generatedMappings = scala.collection.mutable.Map[PropertyDeclaration, Constant]()
+		generatedMappings ++= prevalidated
+		
+		// Lazily combines the 3 sources of properties:
+		//      1. Prevalidated properties
+		//      2. Other source properties
+		//      3. Declared properties that were not present in the source model
+		override val properties: Seq[Constant] = CachingSeq(
+			source = source.propertiesIterator
+				.flatMap { original =>
+					if (prevalidated.exists { _._2 == original })
+						None
+					else
+						declaration.find(original.name) match {
+							case Some(declaration) =>
+								if (generatedMappings.contains(declaration))
+									None
+								else {
+									val constant = makeConstant(declaration, original.name, original.value)
+									generatedMappings += (declaration -> constant)
+									Some(constant)
+								}
+							case None => Some(Constant.from(original))
+						}
+				} ++
+				LazyInitIterator {
+					declaration.declarations.iterator.filterNot(generatedMappings.contains)
+						.map { declaration => Constant(declaration.name, declaration.defaultValue) }
+				},
+			preCached = prevalidated.iterator.map { _._2 }.toVector)
+		private lazy val propMap = new BuildingPropertyMap(propertiesIterator)
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = properties.iterator
+		
+		override def existingProperty(propName: String): Option[Constant] = propMap(propName)
+		
+		override def contains(propName: String): Boolean = declaration.contains(propName) || propMap(propName).isDefined
+		override def containsNonEmpty(propName: String): Boolean = propMap(propName).exists { _.nonEmpty }
+		override protected def knownContains(propName: String): UncertainBoolean =
+			propMap.knownContains(propName) || declaration.contains(propName)
+		
+		
+		// OTHER    ---------------------------
+		
+		private def makeConstant(declaration: PropertyDeclaration, originalName: String, value: Value) = {
+			// Order of priority is: 1) Specified value, 2) Value from the source model, 3) Declared default value
+			val appliedValue = value.notEmpty
+				.flatMap { _.castTo(declaration.dataType).filterNot(valueIsEmpty) }
+				.orElse {
+					val alternativeNames = declaration.names.filterNot { _ ~== originalName }
+					if (alternativeNames.isEmpty)
+						None
+					else
+						source(alternativeNames).notEmpty
+							.flatMap { _.castTo(declaration.dataType).filterNot(valueIsEmpty) }
+				}
+				.getOrElse(declaration.defaultValue)
+			
+			Constant(declaration.name, appliedValue)
+		}
+	}
+	
+	/**
+	 * A Model implementation matching (more or less) the previous version.
+	 * Used for backwards compatibility. Not intended for continuous use.
+	 * @param initialProperties Properties assigned initially
+	 * @param generator A factory for constructing new properties.
+	 */
+	private class GenerativeModel(initialProperties: Seq[Constant], generator: PropertyFactory[Constant])
+		extends Model
+	{
+		// ATTRIBUTES   ------------------------
+		
+		private var _properties = initialProperties
+		private var propMap = initialProperties.iterator.map { p => p.name.toLowerCase -> p }.toMap
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override def self: Model = this
+		
+		override def properties: Seq[Constant] = _properties
+		override def propertiesIterator: Iterator[Constant] = _properties.iterator
+		
+		protected override def equalsProperties = Iterator.single(generator) ++ propertiesIterator
+		
+		override def existingProperty(propName: String): Option[Constant] = propMap.get(propName.toLowerCase)
+		override def property(propName: String): Constant =
+			existingProperty(propName).getOrElse { generateProp(propName) }
+		
+		override protected def simulateValueFor(propName: String): Value = generateProp(propName).value
+		
+		override def contains(propName: String): Boolean =
+			propMap.contains(propName.toLowerCase) || generator.generatesNonEmpty(propName)
+		override def containsNonEmpty(propName: String): Boolean =
+			existingProperty(propName).exists { _.nonEmpty } || generator.generatesNonEmpty(propName)
+		
+		override protected def knownContains(propName: String): UncertainBoolean = {
+			if (propMap.contains(propName.toLowerCase))
+				CertainBoolean(true)
+			else
+				UncertainBoolean
+		}
+		
+		override def withProperties(properties: IterableOnce[Constant]): Model =
+			new GenerativeModel(OptimizedIndexedSeq.from(properties), generator)
+		
+		
+		// OTHER    ---------------------------
+		
+		private def generateProp(propName: String) = {
+			val prop = generator(propName)
+			_properties :+= prop
+			propMap += (prop.name.toLowerCase -> prop)
+			prop
+		}
+	}
+	
+	private class BuildingPropertyMap(propsIter: Iterator[Constant])
+		extends MapAccess[String, Option[Constant]] with mutable.Growable[(String, Constant)]
+	{
+		// ATTRIBUTES   -----------------------
+		
+		private val map = scala.collection.mutable.Map[String, Constant]()
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def apply(key: String): Option[Constant] = {
+			// Takes the cached value, if available
+			val lowerKey = key.toLowerCase
+			map.get(lowerKey).orElse {
+				// If not available, iterates the remaining values until a match is found
+				var result: Option[Constant] = None
+				while (result.isEmpty && propsIter.hasNext) {
+					val p = propsIter.next()
+					val lowerName = p.name.toLowerCase
+					// Caches all iterated values
+					map += (lowerName -> p)
+					if (lowerName == lowerKey)
+						result = Some(p)
+				}
+				result
+			}
+		}
+		
+		override def addOne(elem: (String, Constant)): BuildingPropertyMap.this.type = {
+			map += (elem._1.toLowerCase -> elem._2)
+			this
+		}
+		override def clear(): Unit = map.clear()
+		
+		
+		// OTHER    ----------------------------
+		
+		def knownContains(propName: String): UncertainBoolean = {
+			if (map.contains(propName.toLowerCase))
+				CertainBoolean(true)
+			else if (propsIter.hasNext)
+				UncertainBoolean
+			else
+				CertainBoolean(false)
+		}
 	}
 }
 
 /**
- * This is the immutable model implementation
- * The model will only accept constant properties
+ * Common trait for immutable models
  * @author Mikko Hilpinen
- * @since 29.11.2016
+ * @since 23.10.2025, v2.7
  */
-class Model private(override val propertyMap: Map[String, Constant],
-                    override protected val propertyOrder: Seq[String],
-                    propFactory: PropertyFactory[Constant])
-	extends ModelLike[Constant] with EqualsBy with ValueConvertible with MaybeEmpty[Model] with ApproxSelfEquals[Model]
+trait Model extends ModelLike[Model]
 {
-	// COMP. PROPERTIES    -------
-	
-	/**
-	 * A version of this model where all empty values have been filtered out
-	 */
-	def withoutEmptyValues = {
-		val emptyKeys = propertyMap.view.filter { _._2.isEmpty }.keySet
-		if (emptyKeys.isEmpty)
-			this
-		else
-			new Model(propertyMap -- emptyKeys, propertyOrder.filterNot(emptyKeys.contains), propFactory)
-	}
-	
-	/**
-	 * @return Copy of this model where the properties appear in alphabetical order
-	 */
-	def sorted = new Model(propertyMap, propertyOrder.sorted, propFactory)
-	
-	/**
-	 * @return A mutable copy of this model
-	 */
-	def mutableCopy: mutable.MutableModel[Variable] = mutableCopyUsing(PropertyFactory.forVariables)
-	
-	
-	// IMPLEMENTED METHODS    ----
-	
-	override def self: Model = this
-	
-	override def nonEmpty = !isEmpty
-	
-	protected override def equalsProperties: Seq[Any] = Single(propertyMap)
-	override implicit def approxEqualsFunction: EqualsFunction[Model] = Model.similarProperties
-	
-	override def toValue = new Value(Some(this), ModelType)
-	
-	override def newProperty(attName: String) = propFactory(attName)
-	override protected def generatesNonEmptyFor(propName: String): Boolean = propFactory.generatesNonEmpty(propName)
-	
-	
-	// OPERATORS    --------------
-	
-	/**
-	 * Creates a new model with the provided property added
-	 */
-	def +(prop: Constant) = withProperties(properties :+ prop)
-	/**
-	 * @param prop A new property as a key value -pair
-	 * @return A copy of this model with that property added
-	 */
-	def +(prop: (String, Value)): Model = this + propFactory(prop._1, prop._2)
-	/**
-	 * @param prop A property
-	 * @return A copy of this model with that property prepended
-	 */
-	def +:(prop: Constant) = withProperties(prop +: properties)
-	/**
-	 * @param prop A property as a key value -pair
-	 * @return A copy of this model with that property prepended
-	 */
-	def +:(prop: (String, Value)): Model = propFactory(prop._1, prop._2) +: this
-	
-	/**
-	 * Creates a new model with the specified properties added
-	 */
-	def ++(props: IterableOnce[Constant]) = props.nonEmptyIterator match {
-		case Some(iter) => withProperties(this.properties ++ iter)
-		case None => self
-	}
-	/**
-	 * Creates a new model that contains properties from both of these models.
-	 * The resulting model will still use this model's property factory.
-	 */
-	def ++(other: ModelLike[Constant]): Model = if (other.isEmpty) this else this ++ other.properties
-	
-	/**
-	 * Creates a new model without the exact specified property
-	 */
-	def -(prop: Property) = withProperties(properties.filterNot { _ == prop })
-	/**
-	 * @return A copy of this model without a property with the specified name (case-insensitive)
-	 */
-	def -(propName: String) = {
-		val lowerName = propName.toLowerCase
-		if (propertyMap.contains(lowerName))
-			new Model(propertyMap - lowerName, propertyOrder.filterNot { _ == lowerName }, propFactory)
-		else
-			this
-	}
-	
-	/**
-	 * Creates a copy of this model without any property listed in the specified collection (case-insensitive)
-	 */
-	def --(propNames: IterableOnce[String]) = without(propNames)
-	/**
-	 * Creates a new model without any properties listed in the specified model (with the exact same values)
-	 */
-	def --(other: ModelLike[Constant]): Model = {
-		if (other.isEmpty)
-			this
-		else
-			withoutProperties(other.properties.toSet)
-	}
-	
-	
-	// OTHER METHODS    ------
-	
-	/**
-	 * Creates a copy of this model with the same property factory,
-	 * but different properties
-	 */
-	def withProperties(props: Iterable[Constant]) = Model.withConstants(props, propFactory)
-	/**
-	 * @param attributes Attributes to remove from this model
-	 * @return A copy of this model with none of the specified attributes
-	 */
-	def withoutProperties(attributes: Set[Constant]) =
-		withProperties(this.properties.filterNot(attributes.contains))
-	/**
-	 * @param keys Names of the keys to remove (case-insensitive)
-	 * @return A copy of this model with the specified keys removed
-	 */
-	def without(keys: IterableOnce[String]) = {
-		val lowerKeys = keys.iterator.map { _.toLowerCase }.toSet
-		new Model(propertyMap -- lowerKeys, propertyOrder.filterNot(lowerKeys.contains), propFactory)
-	}
-	/**
-	 * @param firstKey Name of the first key to remove (case-insensitive)
-	 * @param moreKeys Names of the other keys to remove (case-insensitive)
-	 * @return A copy of this model with the specified keys removed
-	 */
-	def without(firstKey: String, moreKeys: String*): Model = without(firstKey +: moreKeys)
-	
-	/**
-	 * @param propFactory A new property factory to use
-	 * @return A copy of this model with the specified property factory being used
-	 */
-	def withFactory(propFactory: PropertyFactory[Constant]) = new Model(propertyMap, propertyOrder, propFactory)
-	
-	/**
-	 * Creates a copy of this model with filtered properties
-	 */
-	def filter(f: Constant => Boolean) = withProperties(properties.filter(f))
-	/**
-	 * Creates a copy of this model with filtered properties.
-	 * The result model only contains properties not included by the filter
-	 */
-	def filterNot(f: Constant => Boolean) = withProperties(properties.filterNot(f))
-	
-	/**
-	 * Renames multiple properties in this model
-	 * @param renames The property name changes (old -> new)
-	 * @return A copy of this model with renamed properties
-	 */
-	def renamed(renames: Iterable[(String, String)]) = {
-		val renamedProps = properties.map { prop =>
-			renames.find { _._1 ~== prop.name } match {
-				case Some((_, newName)) => prop.withName(newName)
-				case None => prop
-			}
-		}
-		withProperties(renamedProps)
-	}
-	/**
-	 * @param oldName Old property name
-	 * @param newName New property name
-	 * @return A copy of this model with that one property renamed
-	 */
-	def renamed(oldName: String, newName: String): Model = renamed(Single(oldName -> newName))
-	
-	/**
-	 * Creates a copy of this model with sorted property order
-	 * @param f A mapping function that accepts a property and returns the value to sort by
-	 * @param ord Implicit ordering to use
-	 * @tparam A Type of sorting key
-	 * @return A sorted copy of this model
-	 */
-	def sortPropertiesBy[A](f: Constant => A)(implicit ord: Ordering[A]) =
-		new Model(propertyMap, propertyOrder.sortBy { propName => f(propertyMap(propName.toLowerCase)) }, propFactory)
-	
-	/**
-	 * Maps the properties within this model
-	 * @param f A mapping function for properties
-	 * @return A mapped copy of this model
-	 */
-	def map(f: Constant => Constant) = withProperties(properties.map(f))
-	/**
-	 * Maps the attribute names within this model
-	 * @param f A mapping function for attribute names
-	 * @return A mapped copy of this model
-	 */
-	def mapKeys(f: String => String) = map { _.mapName(f) }
-	/**
-	 * Maps attribute values within this model
-	 * @param f A mapping function for attribute values
-	 * @return A mapped copy of this model
-	 */
-	def mapValues(f: Value => Value) =
-		new Model(propertyMap.view.mapValues { _.mapValue(f) }.toMap, propertyOrder, propFactory)
-	
-	/**
-	 * Creates a mutable copy of this model
-	 * @param factory The property factory used for creating the properties of the new model
-	 * @return A mutable copy of this model using the specified property generator
-	 */
-	def mutableCopyUsing[P <: Variable](factory: PropertyFactory[P]) =
-		mutable.MutableModel.withVariables(properties.map { prop => factory(prop.name, prop.value) }, factory)
+	override def withProperties(properties: IterableOnce[Constant]): Model = Model.withConstants(properties)
 }

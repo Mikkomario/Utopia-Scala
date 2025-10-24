@@ -3,7 +3,7 @@ package utopia.metropolis.model.combined.organization
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Constant
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.view.template.Extender
 import utopia.metropolis.model.StyledModelConvertible
 import utopia.metropolis.model.partial.organization.InvitationData
@@ -13,7 +13,7 @@ import scala.util.Success
 
 object InvitationWithResponse extends FromModelFactory[InvitationWithResponse]
 {
-	override def apply(model: ModelLike[Property]) =
+	override def apply(model: HasProperties) =
 		Invitation(model).flatMap { invitation =>
 			model("response").model match
 			{

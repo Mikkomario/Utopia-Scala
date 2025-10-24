@@ -8,7 +8,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{StringType, VectorType}
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryExtensions._
@@ -62,7 +62,7 @@ object GetWorkResult
 		
 		// IMPLEMENTED  ---------------
 		
-		override def apply(model: ModelLike[Property]): Try[Seq[Path]] = schema.validate(model).flatMap { model =>
+		override def apply(model: HasProperties): Try[Seq[Path]] = schema.validate(model).flatMap { model =>
 			model(outputNode)("images").getVector.tryMap { image =>
 				image.tryModel.flatMap(imageSchema.validate).map { image =>
 					dir.path/s"output/${ image("subfolder").getString.appendIfNotEmpty("/") }${

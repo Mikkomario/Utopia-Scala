@@ -11,7 +11,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.time.Now
 
 import java.time.Instant
@@ -26,7 +26,7 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def apply(model: ModelLike[Property]): Try[OpenAiResponse] = schema.validate(model).flatMap { model =>
+	override def apply(model: HasProperties): Try[OpenAiResponse] = schema.validate(model).flatMap { model =>
 		model("usage").tryModel.flatMap(OpenAiTokenUsageStatistics.apply).flatMap { tokenUsage =>
 			model("output").getVector.tryMap { _.tryModel }.flatMap { outputModels =>
 				val outputByType: Map[String, Seq[(Model, Int)]] = outputModels.zipWithIndex

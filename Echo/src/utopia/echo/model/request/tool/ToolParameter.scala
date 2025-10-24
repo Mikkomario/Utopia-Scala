@@ -5,7 +5,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
 
@@ -25,7 +26,7 @@ object ToolParameter
 	  * @param optional Whether this parameter should be optional (default = false)
 	  * @return Parsed parameter. Failure if "type" was missing.
 	  */
-	def parseFrom(name: => String, model: AnyModel, optional: => Boolean = false) =
+	def parseFrom(name: => String, model: HasProperties, optional: => Boolean = false) =
 		schema.validate(model).map { model =>
 			apply(name, model("type"), model("description"), model("enum").getVector.map { _.getString }, optional)
 		}

@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.url
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.string.Regex
 import utopia.logos.database.access.single.url.domain.DbSingleDomain
 import utopia.logos.model.combined.url.DetailedRequestPath
@@ -37,7 +37,7 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	
 	override def dataFactory = DomainData
 	
-	override protected def complete(model: AnyModel, data: DomainData) = model("id").tryInt.map { apply(_, data) }
+	override protected def complete(model: HasProperties, data: DomainData) = model("id").tryInt.map { apply(_, data) }
 }
 
 /**

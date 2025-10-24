@@ -10,8 +10,8 @@ object EqualsBy
 	 * @param properties A set of properties
 	 * @return A hashcode constructed by combining the hashcodes of the specified properties
 	 */
-	def hashCodeFrom(properties: Iterable[Any]) =
-		properties.foldLeft(1) { (result, property) => 31 * result + property.hashCode() }
+	def hashCodeFrom(properties: IterableOnce[Any]) =
+		properties.iterator.foldLeft(1) { (result, property) => 31 * result + property.hashCode() }
 }
 
 /**
@@ -34,7 +34,7 @@ trait EqualsBy extends Equals
 	  * of same class, which also have equal properties are considered equal.
 	  * The ordering of the properties must also match.
 	  */
-	protected def equalsProperties: Seq[Any]
+	protected def equalsProperties: IterableOnce[Any]
 	
 	
 	// IMPLEMENTED METHODS    ------------

@@ -26,7 +26,7 @@ object PropertyFactory
 	/**
 	  * A basic property factory that yields constants
 	  */
-	val forConstants = apply(Constant) { _ => false }
+	val forConstants = apply(Constant.apply) { _ => false }
 	/**
 	  * A basic property factory that yields variables
 	  */
@@ -90,7 +90,7 @@ object PropertyFactory
 	  * @return A new constant property factory
 	  */
 	def constantWithDefault(defaultValue: Value, requireCastingSuccess: Boolean = false) =
-		withDefault(defaultValue, requireCastingSuccess)(Constant)
+		withDefault(defaultValue, requireCastingSuccess)(Constant.apply)
 	/**
 	  * Creates a new variable factory that uses a default value instead of an empty value
 	  * @param defaultValue The default value to assign when an empty value is proposed.
@@ -134,7 +134,7 @@ object PropertyFactory
 	  * @return A new constant property factory
 	  */
 	def constantOfType(targetType: DataType) =
-		castingTo(targetType, requireCastingSuccess = true)(Constant)
+		castingTo(targetType, requireCastingSuccess = true)(Constant.apply)
 	/**
 	  * Creates a new variable factory that, before assigning a value, casts it to a specific data type.
 	  * In situations where the casting fails, an empty value is assigned instead.

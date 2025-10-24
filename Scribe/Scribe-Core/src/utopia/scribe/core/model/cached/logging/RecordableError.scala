@@ -8,7 +8,8 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.equality.ApproxEquals
 
 import scala.util.Try
@@ -27,7 +28,7 @@ object RecordableError extends FromModelFactory[RecordableError]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def apply(model: ModelLike[Property]): Try[RecordableError] =
+	override def apply(model: HasProperties): Try[RecordableError] =
 		schema.validate(model).flatMap { model =>
 			StackTrace(model("stackTrace").getModel).map { stack =>
 				apply(model("className"), stack, model("cause").model.flatMap { apply(_).toOption }, model("message"))

@@ -5,7 +5,8 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.metropolis.model.error.IllegalPostModelException
@@ -16,7 +17,7 @@ object NewLanguageProficiency extends FromModelFactory[NewLanguageProficiency]
 {
 	private val schema = ModelDeclaration(PropertyDeclaration("familiarity_id", IntType))
 	
-	override def apply(model: ModelLike[Property]) = schema.validate(model).flatMap { valid =>
+	override def apply(model: HasProperties) = schema.validate(model).flatMap { valid =>
 		// Either language id or language code must be specified
 		val languageId = valid("language_id").int
 		val languageCode = valid("language_code").string.flatMap { s => NotEmpty(s.trim) }

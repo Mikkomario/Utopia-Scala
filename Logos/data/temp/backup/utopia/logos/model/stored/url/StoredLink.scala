@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.url
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.access.single.url.link.DbSingleLink
 import utopia.logos.model.cached.Link
 import utopia.logos.model.factory.url.LinkFactoryWrapper
@@ -21,7 +21,7 @@ object StoredLink extends StoredFromModelFactory[LinkData, StoredLink]
 	
 	override def dataFactory = LinkData
 	
-	override protected def complete(model: AnyModel, data: LinkData) = model("id").tryInt.map { apply(_, data) }
+	override protected def complete(model: HasProperties, data: LinkData) = model("id").tryInt.map { apply(_, data) }
 }
 
 /**

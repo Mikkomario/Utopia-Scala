@@ -3,10 +3,10 @@ package utopia.paradigm.shape.shape2d.line
 import utopia.flow.collection.immutable.range.{HasInclusiveEnds, Span}
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.paradigm.angular.Angle
@@ -26,9 +26,8 @@ import utopia.paradigm.transform.Transformable
 
 import java.awt.geom.Line2D
 import scala.math.Numeric.DoubleIsFractional
-import scala.util.Success
 
-object Line extends LineFactoryLike[Double, Point, Line] with FromModelFactory[Line]
+object Line extends LineFactoryLike[Double, Point, Line] with SureFromModelFactory[Line]
 {
     // ATTRIBUTES   -------------------------
     
@@ -38,9 +37,8 @@ object Line extends LineFactoryLike[Double, Point, Line] with FromModelFactory[L
     // IMPLEMENTED    -----------------------
     
     override protected def pointFactory: DimensionalFactory[Double, Point] = Point
-    
-    override def apply(model: template.ModelLike[Property]) =
-        Success(Line(model("start").getPoint, model("end").getPoint))
+	
+	override def parseFrom(model: HasProperties): Line = Line(model("start").getPoint, model("end").getPoint)
     
     
     // OTHER METHODS    ---------------------

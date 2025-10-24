@@ -2,10 +2,10 @@ package utopia.paradigm.motion.motion1d
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, ModelValidationFailedException, Value}
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.DoubleType
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.numeric.DoubleLike
@@ -37,7 +37,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def apply(model: template.ModelLike[Property]) =
+	override def apply(model: HasProperties) =
 		schema.validate(model).flatMap { model =>
 			val amount = model("amount").getDouble
 			model("duration").duration match {
@@ -46,7 +46,7 @@ object LinearVelocity extends FromModelFactory[LinearVelocity]
 					if (amount ~== 0.0)
 						Success(zero)
 					else
-						Failure(new ModelValidationFailedException(
+						Failure(new IllegalArgumentException(
 							s"Required property 'duration' is missing. Specified properties: [${
 								model.nonEmptyProperties.map { _.name }.mkString(", ") }]"))
 			}

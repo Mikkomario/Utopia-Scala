@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasValues
 import utopia.vault.model.immutable.{Column, Reference, Table}
 import utopia.vault.sql.{ConditionElement, Select, Where}
 
@@ -65,9 +65,9 @@ object DatabaseReferenceReader
 			}
 			val results = connection(Select.all(keys) + Where(condition)).rows.map { _.toModel }
 			
-			def findTable(keyName: String, row: ModelLike[Property]) =
+			def findTable(keyName: String, row: HasValues) =
 				tables.find { _.name == row(keyName).getString }
-			def findColumn(table: Table, keyName: String, row: ModelLike[Property]) =
+			def findColumn(table: Table, keyName: String, row: HasValues) =
 				table.findColumnWithName(row(keyName).getString)
 			
 			results.flatMap { row =>

@@ -3,7 +3,8 @@ package utopia.echo.model.response.ollama.llm
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.SureFromModelFactory
@@ -11,7 +12,7 @@ import utopia.flow.util.StringExtensions._
 
 object OllamaModelDetails extends SureFromModelFactory[OllamaModelDetails]
 {
-	override def parseFrom(model: ModelLike[Property]): OllamaModelDetails = {
+	override def parseFrom(model: HasProperties): OllamaModelDetails = {
 		val family = model("family").getString
 		val families = model("families").vector match {
 			case Some(familiesVector) => familiesVector.map { _.getString }

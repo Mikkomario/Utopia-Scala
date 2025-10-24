@@ -1,6 +1,6 @@
 package utopia.logos.model.stored.text
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.model.partial.text.{StatementPlacementData, TextPlacementData}
 import utopia.vault.store.StoredFromModelFactory
 
@@ -10,7 +10,7 @@ object StatementPlacement extends StoredFromModelFactory[StatementPlacementData,
 	
 	override def dataFactory = StatementPlacementData
 	
-	override protected def complete(model: AnyModel, data: StatementPlacementData) = 
+	override protected def complete(model: HasProperties, data: StatementPlacementData) =
 		model("id").tryInt.map { apply(_, data) }
 	
 	

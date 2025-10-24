@@ -6,7 +6,7 @@ import utopia.echo.model.response.openai.{OpenAiModelParser, OpenAiOutputElement
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.StringType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import scala.util.Try
 
@@ -33,7 +33,7 @@ object OpenAiFunctionToolCall extends OpenAiOutputElementFromModelFactory[OpenAi
 	{
 		override def typeIdentifiers: Set[String] = OpenAiFunctionToolCall.typeIdentifiers
 		
-		override def apply(model: ModelLike[Property]): Try[OpenAiFunctionToolCall] =
+		override def apply(model: HasProperties): Try[OpenAiFunctionToolCall] =
 			schema.validate(model).flatMap { model =>
 				model("arguments").tryModel.map { args =>
 					OpenAiFunctionToolCall(index, model("id"), model("call_id"), model("name"), args,

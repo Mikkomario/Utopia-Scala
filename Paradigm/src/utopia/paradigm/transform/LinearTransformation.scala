@@ -4,7 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.util.NotEmpty
 import utopia.paradigm.angular.{DirectionalRotation, Rotation}
@@ -31,7 +32,7 @@ object LinearTransformation extends SureFromModelFactory[LinearTransformation]
     
     // IMPLEMENTED  -----------------------------
     
-    override def parseFrom(model: template.ModelLike[Property]) =
+    override def parseFrom(model: HasProperties) =
         apply(model("scaling").vector2DOr(Vector2D.identity), model("rotation").getRotation, model("shear").getVector2D)
     
     

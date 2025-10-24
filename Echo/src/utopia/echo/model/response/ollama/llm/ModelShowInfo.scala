@@ -7,7 +7,7 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, Value}
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType}
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.StringExtensions._
 
 import scala.util.Try
@@ -21,7 +21,7 @@ object ModelShowInfo extends FromModelFactory[ModelShowInfo]
 	
 	// IMPLEMENTED  --------------------
 	
-	override def apply(model: ModelLike[Property]): Try[ModelShowInfo] = schema.validate(model).flatMap { model =>
+	override def apply(model: HasProperties): Try[ModelShowInfo] = schema.validate(model).flatMap { model =>
 		OllamaModelDetails(model("details").getModel).map { details =>
 			apply(model("modelfile"), details, parseParameters(model("parameters")), model("template"),
 				model("model_info").getModel)

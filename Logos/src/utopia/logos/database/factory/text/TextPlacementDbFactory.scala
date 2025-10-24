@@ -1,6 +1,6 @@
 package utopia.logos.database.factory.text
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.props.text.TextPlacementDbProps
 import utopia.logos.model.partial.text.TextPlacementData
 import utopia.logos.model.stored.text.TextPlacement
@@ -40,7 +40,7 @@ object TextPlacementDbFactory
 		  * @param placedId placed id to assign to the new text placement
 		  * @param orderIndex order index to assign to the new text placement
 		  */
-		override protected def apply(model: AnyModel, id: Int, parentId: Int, placedId: Int, 
+		override protected def apply(model: HasProperties, id: Int, parentId: Int, placedId: Int,
 			orderIndex: Int) = 
 			TextPlacement(id, TextPlacementData(parentId, placedId, orderIndex))
 	}

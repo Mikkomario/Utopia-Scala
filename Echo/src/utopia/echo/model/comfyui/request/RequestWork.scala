@@ -11,7 +11,7 @@ import utopia.echo.model.comfyui.workflow.node.WorkflowNode
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -33,7 +33,7 @@ object RequestWork
 	
 	private object ExtractPromptId extends FromModelFactory[String]
 	{
-		override def apply(model: ModelLike[Property]): Try[String] = model("prompt_id").tryString
+		override def apply(model: HasProperties): Try[String] = model("prompt_id").tryString
 	}
 }
 

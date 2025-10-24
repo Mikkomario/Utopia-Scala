@@ -1,10 +1,10 @@
 package utopia.paradigm.shape.shape2d.vector.size
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property, ValueConvertible}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.operator.sign.SignedOrZero
 import utopia.paradigm.generic.ParadigmDataType.SizeType
@@ -17,9 +17,8 @@ import utopia.paradigm.transform.LinearSizeAdjustable
 
 import java.awt.Dimension
 import scala.math.Numeric.DoubleIsFractional
-import scala.util.Success
 
-object Size extends SizeFactoryLike[Double, Size] with DoubleVectorFactory[Size] with FromModelFactory[Size]
+object Size extends SizeFactoryLike[Double, Size] with DoubleVectorFactory[Size] with SureFromModelFactory[Size]
 {
     // ATTRIBUTES   --------------------------
     
@@ -42,9 +41,8 @@ object Size extends SizeFactoryLike[Double, Size] with DoubleVectorFactory[Size]
         case s: Size => s
         case o => apply(o.dimensions)
     }
-    
-    def apply(model: template.ModelLike[Property]) = Success(
-            Size(model("width").getDouble, model("height").getDouble))
+	
+	override def parseFrom(model: HasProperties): Size = Size(model("width").getDouble, model("height").getDouble)
     
     
     // OTHER    ------------------------------

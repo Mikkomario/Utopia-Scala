@@ -1,6 +1,6 @@
 package utopia.logos.database.factory.text
 
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.props.text.StatementPlacementDbProps
 import utopia.logos.model.partial.text.StatementPlacementData
 import utopia.logos.model.stored.text.StatementPlacement
@@ -43,7 +43,7 @@ object StatementPlacementDbFactory
 		  * @param statementId statement id to assign to the new statement placement
 		  * @param orderIndex  order index to assign to the new statement placement
 		  */
-		override protected def apply(model: AnyModel, id: Int, parentId: Int, statementId: Int, 
+		override protected def apply(model: HasProperties, id: Int, parentId: Int, statementId: Int,
 			orderIndex: Int) = 
 			StatementPlacement(id, StatementPlacementData(parentId, statementId, orderIndex))
 	}

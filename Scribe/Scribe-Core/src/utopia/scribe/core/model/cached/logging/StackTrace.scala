@@ -7,7 +7,8 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
@@ -40,7 +41,7 @@ object StackTrace extends FromModelFactory[StackTrace]
 	
 	// IMPLEMENTED  ----------------
 	
-	override def apply(model: ModelLike[Property]): Try[StackTrace] =
+	override def apply(model: HasProperties): Try[StackTrace] =
 		schema.validate(model).map { model =>
 			apply(model("file"), model("class"), model("method"), model("line"),
 				model("cause").model.flatMap { apply(_).toOption })

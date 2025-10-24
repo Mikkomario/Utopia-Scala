@@ -7,7 +7,7 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactoryWithSchema
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.time.Now
 import utopia.metropolis.model.StyledModelConvertible
 
@@ -35,7 +35,7 @@ object UserLanguageLinkData extends FromModelFactoryWithSchema[UserLanguageLinkD
 	  * @param model Model being parsed
 	  * @return Parsed user language data. Failure if some properties were missing or invalid
 	  */
-	def apply(userId: Int, model: ModelLike[Property]): Try[UserLanguageLinkData] =
+	def apply(userId: Int, model: HasProperties): Try[UserLanguageLinkData] =
 		withoutUserSchema.validate(model).map { valid =>
 			UserLanguageLinkData(userId, valid("language_id"), valid("familiarity_id"))
 		}

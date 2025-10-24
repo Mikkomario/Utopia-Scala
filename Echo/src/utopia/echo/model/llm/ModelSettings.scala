@@ -5,7 +5,8 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template.{ModelConvertible, ModelLike, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.util.Mutate
 
 import scala.language.implicitConversions
@@ -28,7 +29,7 @@ object ModelSettings extends SureFromModelFactory[ModelSettings]
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def parseFrom(model: ModelLike[Property]): ModelSettings = {
+	override def parseFrom(model: HasProperties): ModelSettings = {
 		val params = Pair("defined", "defaults").map { key =>
 			model(key).getModel.properties.view
 				.flatMap { p => ModelParameter.findForKey(p.name).map { _ -> p.value } }

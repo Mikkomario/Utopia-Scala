@@ -1,11 +1,11 @@
 package utopia.echo.model.response.openai
 
 import utopia.flow.generic.factory.SureFromModelFactory
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 object OpenAiError extends SureFromModelFactory[OpenAiError]
 {
-	override def parseFrom(model: ModelLike[Property]): OpenAiError =
+	override def parseFrom(model: HasProperties): OpenAiError =
 		apply(model("code").getString, model("message").getString)
 }
 

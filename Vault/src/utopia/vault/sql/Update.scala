@@ -3,7 +3,7 @@ package utopia.vault.sql
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template.ModelLike.AnyModel
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.database.columnlength.{ColumnLengthLimits, ColumnLengthRules}
 import utopia.vault.model.immutable.TableUpdateEvent.RowsUpdated
 import utopia.vault.model.immutable.{Column, Table, TableColumn}
@@ -55,7 +55,7 @@ object Update
      * as model keys, they will be converted to column names automatically
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, set: Iterable[(Table, AnyModel)]) = {
+    def apply(target: SqlTarget, set: Iterable[(Table, HasProperties)]) = {
         val valueSet = set.view
             .flatMap { case (table, model) =>
                 model.properties.flatMap { property =>
@@ -69,7 +69,7 @@ object Update
      * Creates an update segment that changes multiple values in a table
      * @return an update segment (select nothing segment if there's nothing to update)
      */
-    def apply(table: Table, set: AnyModel): SqlSegment = apply(table, Single(table -> set))
+    def apply(table: Table, set: HasProperties): SqlSegment = apply(table, Single(table -> set))
     /**
      * Creates an update segment that changes the value of a single column in the table
      * @return an update segment (select nothing segment if there's nothing to update)
@@ -90,7 +90,7 @@ object Update
      * @param set Set of changes for the table
      * @return An update segment (select nothing segment if there's nothing to update)
      */
-    def apply(target: SqlTarget, table: Table, set: AnyModel): SqlSegment = apply(target, Single(table -> set))
+    def apply(target: SqlTarget, table: Table, set: HasProperties): SqlSegment = apply(target, Single(table -> set))
     /**
      * Creates an update segment that changes a single value in a table
      * @param target Update target (includes table & other tables used in conditions etc.)

@@ -6,8 +6,8 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.Now
@@ -49,7 +49,7 @@ object Headers extends FromModelFactory[Headers]
 	
 	// IMPLEMENTED    ----------------------
 	
-	override def apply(model: template.ModelLike[Property]) = {
+	override def apply(model: HasProperties) = {
 		val fields = model.nonEmptyProperties
 			.flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap
 		Success(new Headers(fields))

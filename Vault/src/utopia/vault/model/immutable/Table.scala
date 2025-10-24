@@ -3,7 +3,7 @@ package utopia.vault.model.immutable
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.model.immutable.{ModelDeclaration, Value}
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.vault.database.{Connection, References, TableUpdateListener, Triggers}
 import utopia.vault.model.error.{ColumnNotFoundException, NoReferenceFoundException}
 import utopia.vault.model.template.Joinable
@@ -240,5 +240,5 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  * @param model A model to validate
 	  * @return A validated copy of that model. Failure if the model didn't contain all required properties.
 	  */
-	def validate(model: ModelLike[Property]) = toModelDeclaration.validate(model)
+	def validate(model: HasProperties) = toModelDeclaration.validate(model)
 }

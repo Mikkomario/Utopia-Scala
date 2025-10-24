@@ -5,7 +5,8 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.paradigm.generic.ParadigmDataType.{PointType, Vector2DType}
 import utopia.paradigm.generic.ParadigmValue._
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
@@ -27,7 +28,7 @@ object Rectangle extends FromModelFactory[Rectangle]
 	  */
 	val schema = ModelDeclaration("topLeft" -> PointType, "top" -> Vector2DType, "rightEdgeLength" -> DoubleType)
 	
-	override def apply(model: template.ModelLike[Property]): Try[Rectangle] = {
+	override def apply(model: HasProperties): Try[Rectangle] = {
 		schema.validate(model).map { valid =>
 			Rectangle(valid("topLeft").getPoint, valid("top").getVector2D, valid("rightEdgeLength").getDouble)
 		}

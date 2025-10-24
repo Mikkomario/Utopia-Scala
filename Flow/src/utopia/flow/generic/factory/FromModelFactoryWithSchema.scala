@@ -1,8 +1,7 @@
 package utopia.flow.generic.factory
 
-import utopia.flow.generic.model.template
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
-import utopia.flow.generic.model.template.Property
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 /**
   * This factory uses a schema to validate the model before attempting parse
@@ -28,5 +27,5 @@ trait FromModelFactoryWithSchema[+A] extends FromModelFactory[A]
 	
 	// IMPLEMENTED	------------------
 	
-	override def apply(model: template.ModelLike[Property]) = schema.validate(model).map(fromValidatedModel)
+	override def apply(model: HasProperties) = schema.validate(model).map(fromValidatedModel)
 }

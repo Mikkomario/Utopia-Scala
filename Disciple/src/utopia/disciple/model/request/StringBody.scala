@@ -4,7 +4,7 @@ import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.net.URLEncodedUtils
 import utopia.access.model.ContentType
 import utopia.access.model.enumeration.ContentCategory._
-import utopia.flow.generic.model.template.{ModelLike, Property}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
 import java.io.ByteArrayInputStream
 import java.nio.charset.{Charset, StandardCharsets}
@@ -32,7 +32,7 @@ object StringBody
 	  * @param charset Charset to use (default = http client default = ISO-8859-1)
 	  * @return A string body wrapping the content as a url-encoded form
 	  */
-	def urlEncodedForm(content: ModelLike[Property], charset: Charset = StandardCharsets.ISO_8859_1) = {
+	def urlEncodedForm(content: HasProperties, charset: Charset = StandardCharsets.ISO_8859_1) = {
 		// Produces the url-encoded string
 		val parameters = content.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 		// Wraps the string in a body

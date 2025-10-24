@@ -6,7 +6,8 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType}
 import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, Property}
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.metropolis.model.DeepExtender
 import utopia.metropolis.model.combined.description.DescribedSimpleModelConvertible
 import utopia.metropolis.model.combined.organization.{DescribedOrganization, UserRoleWithRights}
@@ -23,7 +24,7 @@ object MyOrganization extends FromModelFactory[MyOrganization]
 	
 	// IMPLEMENTED	-------------------------------
 	
-	override def apply(model: template.ModelLike[Property]) =
+	override def apply(model: HasProperties) =
 		// Validates the model
 		schema.validate(model).flatMap { valid =>
 			// Parses organization data
