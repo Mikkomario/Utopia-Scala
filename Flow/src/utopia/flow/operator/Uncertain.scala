@@ -1,7 +1,7 @@
 package utopia.flow.operator
 
 import utopia.flow.util.UncertainBoolean
-import utopia.flow.util.UncertainBoolean.CertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainlyFalse, CertainlyTrue}
 
 /**
  * Common trait for classes where the exact value is not always known
@@ -64,11 +64,11 @@ trait Uncertain[A]
 	  */
 	def ==(v: A): UncertainBoolean = {
 		if (isCertainlyExactly(v))
-			CertainBoolean(true)
+			CertainlyTrue
 		else if (mayBe(v))
 			UncertainBoolean
 		else
-			CertainBoolean(false)
+			CertainlyFalse
 	}
 	/**
 	  * @param v A value
@@ -78,12 +78,12 @@ trait Uncertain[A]
 	def !=(v: A): UncertainBoolean = {
 		if (mayBe(v)) {
 			if (isCertainlyExactly(v))
-				CertainBoolean(false)
+				CertainlyFalse
 			else
 				UncertainBoolean
 		}
 		else
-			CertainBoolean(true)
+			CertainlyTrue
 	}
 }
 

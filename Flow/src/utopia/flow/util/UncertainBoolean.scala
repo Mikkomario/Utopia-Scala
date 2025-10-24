@@ -1,10 +1,12 @@
 package utopia.flow.util
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.Reversible
-import utopia.flow.util.UncertainBoolean.CertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
+import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
 
@@ -25,12 +27,6 @@ sealed trait UncertainBoolean
 	
 	
 	// COMPUTED --------------------------
-	
-	/**
-	  * @return The boolean representation of this value, if known
-	  */
-	@deprecated("Please use .exact instead", "v2.2")
-	def value: Option[Boolean] = exact
 	
 	/**
 	  * @return Whether this value is known for certain to be either true or false
@@ -91,33 +87,28 @@ sealed trait UncertainBoolean
 				case None => UncertainBoolean
 			}
 		else
-			CertainBoolean(false)
+			CertainlyFalse
 	}
 	/**
 	 * @param other Another boolean value
 	 * @return AND of these two values (known if either of these is known to be false or if both are known)
 	 */
 	def &&(other: UncertainBoolean): UncertainBoolean = other match {
-		case CertainBoolean(known) => this && known
-		case UncertainBoolean => if (isCertainlyFalse) CertainBoolean(false) else UncertainBoolean
+		case c: CertainBoolean => this && c.value
+		case UncertainBoolean => if (isCertainlyFalse) CertainlyFalse else UncertainBoolean
 	}
 	/**
 	 * @param other Another known boolean value
 	 * @return OR of these two values (known if other is true or if this value is known)
 	 */
-	def ||(other: Boolean) = {
-		if (other)
-			CertainBoolean(true)
-		else
-			this
-	}
+	def ||(other: Boolean) = if (other) CertainlyTrue else this
 	/**
 	 * @param other Another boolean value
 	 * @return OR of these two values (known if either of these is known to be true or if both are known)
 	 */
 	def ||(other: UncertainBoolean): UncertainBoolean = other.exact match {
 		case Some(known) => this || known
-		case None => if (isCertainlyTrue) CertainBoolean(true) else UncertainBoolean
+		case None => if (isCertainlyTrue) CertainlyTrue else UncertainBoolean
 	}
 	
 	/**
@@ -142,30 +133,28 @@ sealed trait UncertainBoolean
 		if (isCertainlyFalse && condition) UncertainBoolean else this
 }
 
-// TODO: CertainlyTrue and CertainlyFalse should be objects
 case object UncertainBoolean extends UncertainBoolean
 {
 	// ATTRIBUTES   --------------------------------
 	
 	/**
-	  * A boolean/value that is known to be true
-	  */
-	lazy val certainlyTrue = CertainBoolean(true)
-	/**
-	  * A boolean/value that is known to be false
-	  */
-	lazy val certainlyFalse = CertainBoolean(false)
-	
-	/**
 	 * All possible values of this enumeration
 	 */
-	lazy val values = Vector[UncertainBoolean](certainlyTrue, certainlyFalse, this)
+	lazy val values = CertainBoolean.values :+ this
 	
 	
 	// COMPUTED -------------------------
 	
-	@deprecated("Please use CertainBoolean instead", "v2.2")
-	def Certain = CertainBoolean
+	/**
+	 * A boolean/value that is known to be true
+	 */
+	@deprecated("Please call CertainlyTrue directly, instead", "v2.7")
+	def certainlyTrue = CertainlyTrue
+	/**
+	 * A boolean/value that is known to be false
+	 */
+	@deprecated("Please call CertainlyFalse directly, instead", "v2.7")
+	def certainlyFalse = CertainlyFalse
 	
 	
 	// IMPLEMENTED  ---------------------
@@ -179,8 +168,7 @@ case object UncertainBoolean extends UncertainBoolean
 		case Some(known) => apply(known)
 		case None => this
 	}
-	implicit def apply(boolean: Boolean): UncertainBoolean =
-		if (boolean) certainlyTrue else certainlyFalse
+	implicit def apply(boolean: Boolean): UncertainBoolean = if (boolean) CertainlyTrue else CertainlyFalse
 	
 	implicit def autoConvertToOption(boolean: UncertainBoolean): Option[Boolean] = boolean.exact
 	
@@ -197,25 +185,63 @@ case object UncertainBoolean extends UncertainBoolean
 	
 	object CertainBoolean
 	{
+		// ATTRIBUTES   ----------------------------
+		
+		/**
+		 * The values of this enumeration: First false, then true.
+		 */
+		lazy val values = Pair[CertainBoolean](CertainlyFalse, CertainlyTrue)
+		
+		
 		// IMPLICIT --------------------------------
 		
-		implicit def autoConvertToBoolean(certain: CertainBoolean): Boolean = certain.knownValue
-		implicit def autoConvertFromBoolean(boolean: Boolean): CertainBoolean = CertainBoolean(boolean)
+		implicit def apply(boolean: Boolean): CertainBoolean = if (boolean) CertainlyTrue else CertainlyFalse
+		
+		implicit def autoConvertToBoolean(certain: CertainBoolean): Boolean = certain.value
 	}
 	/**
 	 * Used when the boolean value is known
-	 * @param knownValue The known boolean value
 	 */
-	case class CertainBoolean(knownValue: Boolean) extends UncertainBoolean with Reversible[CertainBoolean]
+	sealed trait CertainBoolean extends UncertainBoolean with Reversible[CertainBoolean] with View[Boolean]
 	{
-		override def exact = Some(knownValue)
+		// ABSTRACT -----------------------------
+		
+		override def unary_! : CertainBoolean
+		
+		
+		// COMPUTED -----------------------------
+		
+		@deprecated("Please call .value instead", "v2.7")
+		def knownValue = value
+		
+		
+		// IMPLEMENTED  -------------------------
 		
 		override def self = this
+		override def unary_- : CertainBoolean = !this
 		
-		override def unary_! = CertainBoolean(!knownValue)
-		override def unary_- = !this
+		override def exact = Some(value)
 		
-		override def toString = knownValue.toString
-		override implicit def toValue: Value = ValueOfBoolean(knownValue)
+		override def toString = value.toString
+		override implicit def toValue: Value = ValueOfBoolean(value)
+	}
+	
+	/**
+	 * A certain true value of UncertainBoolean
+	 */
+	case object CertainlyTrue extends CertainBoolean
+	{
+		override val value: Boolean = true
+		
+		override def unary_! : CertainBoolean = CertainlyFalse
+	}
+	/**
+	 * A certain false value of UncertainBoolean
+	 */
+	case object CertainlyFalse extends CertainBoolean
+	{
+		override val value: Boolean = false
+		
+		override def unary_! : CertainBoolean = CertainlyTrue
 	}
 }

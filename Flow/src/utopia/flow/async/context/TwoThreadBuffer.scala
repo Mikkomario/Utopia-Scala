@@ -3,7 +3,7 @@ package utopia.flow.async.context
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
-import utopia.flow.util.UncertainBoolean.CertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
@@ -327,7 +327,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	  */
 	val isFillingFlag = _declaredFilledFlag.flatMap {
 		// Case: Declared filled or filling
-		case CertainBoolean(filled) => Fixed(CertainBoolean(!filled))
+		case c: CertainBoolean => Fixed(!c)
 		// Case: Not declared filled nor filling => Determines the state from the remaining input size -pointer
 		case UncertainBoolean => remainingInputSizeIsPositiveFlag
 	}
@@ -348,10 +348,10 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	  */
 	lazy val closedFlag = _inputClosedFlag.flatMap { inputClosed =>
 		if (inputClosed)
-			Fixed(CertainBoolean(true))
+			Fixed(CertainlyTrue)
 		else
 			_declaredFilledFlag.mergeWith(nonEmptyFlag) { (filled, nonEmpty) =>
-				if (nonEmpty) CertainBoolean(false) else filled
+				if (nonEmpty) CertainlyFalse else filled
 			}
 	}
 	

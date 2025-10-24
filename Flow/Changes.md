@@ -12,6 +12,9 @@
   - The new model implementations don't utilize **PropertyFactory**, except for backward-compatibility
 - The `declarations` property in **ModelDeclaration** is now **Seq** instead of **Set**
 - (Accidentally) removed **ModelValidationFailedException**
+- **CertainBoolean** is no longer a case object, but a trait
+  - Instead, added **CertainlyTrue** and **CertainlyFalse** case objects
+  - The match cases need to be rewritten accordingly
 - **Lazy**`.flatMap(...)` now yields **Lazy** instead of **LazySeq**
   - The previous implementation is available as `.mapToSeq(...)`
 - **Changing**'s `.lazyMap(...)` and `.lazyMergeWith(...)` now yield **Lazy** instead of **ListenableLazy**
@@ -40,6 +43,7 @@
 - Various renaming-based deprecations in **StringExtensions**:
   - `optionIndexOf(...)` functions are now named `findIndexOf(...)`
   - `.containsAllIgnoreCase(...)` is now `.containsAll(..., ignoreCase = true)`
+- Deprecated `.knownValue` in **CertainBoolean** in favor of just `.value`
 ### New features
 - Added **OpenRange** class, which is also extended by **Span**
 - Added **GeneratesOnce**, which combines both **Lazy** and **Changing**

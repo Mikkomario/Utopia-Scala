@@ -14,7 +14,7 @@ import utopia.flow.operator.combine.{Combinable, Scalable}
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.equality.ComparisonOperator
 import utopia.flow.operator.sign.{HasUncertainSign, Sign, UncertainSign}
-import utopia.flow.util.UncertainBoolean.CertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
 import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
@@ -453,7 +453,7 @@ object UncertainNumber
 			if (other.sign.mayBe(targetSign))
 				UncertainBoolean
 			else
-				CertainBoolean(false)
+				CertainlyFalse
 		}
 		override def compareWith(other: N, comparison: DirectionalComparison): UncertainBoolean = {
 			// Case: The other number is of a different sign => Will have a certain answer
@@ -648,7 +648,7 @@ object UncertainNumber
 			case Equality => other == threshold
 			case Inequality => other != threshold
 			case Always => UncertainBoolean
-			case Never => CertainBoolean(false)
+			case Never => CertainlyFalse
 			case DirectionalComparison(dir, includesEqual) =>
 				other.options(dir.extreme) match {
 					case Some(v) =>
@@ -658,7 +658,7 @@ object UncertainNumber
 						if (cmp > 0 || (cmp == 0 && includesEqual))
 							UncertainBoolean
 						else
-							CertainBoolean(false)
+							CertainlyFalse
 					case None => UncertainBoolean
 				}
 		}
@@ -674,14 +674,14 @@ object UncertainNumber
 					if (myComparison.includesEqual && other == threshold) {
 						if (myComparison.requiredDirection == comparison.requiredDirection) {
 							if (comparison.includesEqual)
-								CertainBoolean(true)
+								CertainlyTrue
 							else
 								UncertainBoolean
 						}
 						else if (comparison.includesEqual)
 							UncertainBoolean
 						else
-							CertainBoolean(false)
+							CertainlyFalse
 					}
 					else
 						UncertainBoolean
@@ -939,11 +939,11 @@ object UncertainNumber
 			case Some(exact) => other == exact
 			case None =>
 				other.exact match {
-					case Some(exact) => if (range.contains(exact)) UncertainBoolean else CertainBoolean(false)
+					case Some(exact) => if (range.contains(exact)) UncertainBoolean else CertainlyFalse
 					case None =>
 						other match {
 							case UncertainNumberRange(r2) =>
-								if (range.overlapsWith(r2)) UncertainBoolean else CertainBoolean(false)
+								if (range.overlapsWith(r2)) UncertainBoolean else CertainlyFalse
 							// Compares other types in their own methods,
 							// because determining the edge values is somewhat complicated
 							case _ => other == this

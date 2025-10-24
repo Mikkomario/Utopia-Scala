@@ -11,7 +11,7 @@ import utopia.flow.generic.model.template.{HasPropertiesLike, Property, ValueCon
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.util.UncertainBoolean
-import utopia.flow.util.UncertainBoolean.CertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
 
 import scala.collection.mutable
 
@@ -175,7 +175,7 @@ object Model
 		
 		override def contains(propName: String): Boolean = false
 		override def containsNonEmpty(propName: String): Boolean = false
-		override protected def knownContains(propName: String): UncertainBoolean = CertainBoolean(false)
+		override protected def knownContains(propName: String): UncertainBoolean = CertainlyFalse
 	}
 	
 	private class _Model(override val properties: Seq[Constant]) extends Model
@@ -334,12 +334,8 @@ object Model
 		override def containsNonEmpty(propName: String): Boolean =
 			existingProperty(propName).exists { _.nonEmpty } || generator.generatesNonEmpty(propName)
 		
-		override protected def knownContains(propName: String): UncertainBoolean = {
-			if (propMap.contains(propName.toLowerCase))
-				CertainBoolean(true)
-			else
-				UncertainBoolean
-		}
+		override protected def knownContains(propName: String): UncertainBoolean =
+			if (propMap.contains(propName.toLowerCase)) CertainlyTrue else UncertainBoolean
 		
 		override def withProperties(properties: IterableOnce[Constant]): Model =
 			new GenerativeModel(OptimizedIndexedSeq.from(properties), generator)
@@ -394,11 +390,11 @@ object Model
 		
 		def knownContains(propName: String): UncertainBoolean = {
 			if (map.contains(propName.toLowerCase))
-				CertainBoolean(true)
+				CertainlyTrue
 			else if (propsIter.hasNext)
 				UncertainBoolean
 			else
-				CertainBoolean(false)
+				CertainlyFalse
 		}
 	}
 }

@@ -84,7 +84,7 @@ abstract class ContainerUpdateLoop[A, R](container: FileContainer[A])(implicit e
 					case Response.Failure(status, message, _) =>
 						handleFailureResponse(status, message)
 						Left(status.isTemporary match {
-							case CertainBoolean(isTemporary) => if (isTemporary) 5 else 50
+							case temporary: CertainBoolean => if (temporary) 5 else 50
 							case UncertainBoolean => 15
 						})
 					case _: RequestFailure => Left(2)

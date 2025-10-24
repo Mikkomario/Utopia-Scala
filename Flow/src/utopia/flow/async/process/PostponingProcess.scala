@@ -6,10 +6,10 @@ import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
 import utopia.flow.collection.immutable.range.HasEnds
 import utopia.flow.event.model.ChangeResponse
 import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.UncertainBoolean
-import utopia.flow.util.UncertainBoolean.CertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -17,7 +17,6 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 object PostponingProcess
 {
@@ -205,15 +204,15 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 								UncertainBoolean
 							// Case: Wait target was reached => Moves to execution
 							else
-								CertainBoolean(true)
+								CertainlyTrue
 						}
 						// Case: Wait was interrupted with an InterruptedException => Skips wait and execution
 						else
-							CertainBoolean(false)
+							CertainlyFalse
 					}
 					// Case: No wait was scheduled => Moves immediately to execution
 					else
-						CertainBoolean(true)
+						CertainlyTrue
 				}
 			}
 			.flatMap { _.exact }.next()
