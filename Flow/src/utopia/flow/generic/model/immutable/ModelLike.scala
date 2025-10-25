@@ -28,12 +28,18 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	def withProperties(properties: IterableOnce[Constant]): Repr
 	
 	/**
+	 * @param renames Property renamings to apply
+	 * @return A copy of this model with the specified renamings applied
+	 */
+	def +(renames: PropertyRenames): Repr
+	
+	/**
 	 * Tests containment without iterating or caching new properties
 	 * @param propName Name of the searched property
 	 * @return Whether this model contains that property.
 	 *         Uncertain if the result would require further iteration or processing.
 	 */
-	protected def knownContains(propName: String): UncertainBoolean
+	def knownContains(propName: String): UncertainBoolean
 	
 	
 	// COMP. PROPERTIES    ----------
@@ -231,32 +237,13 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @param renames The property name changes (old -> new)
 	 * @return A copy of this model with renamed properties
 	 */
-	def renamed(renames: IterableOnce[(String, String)]) = {
-		val renameMap = renames.iterator.map { case (from, to) => from.toLowerCase -> to }.toMap
-		if (renameMap.keysIterator.forall { knownContains(_).isCertainlyFalse })
-			self
-		else
-			withProperties(propertiesIterator
-				.map { prop =>
-					renameMap.get(prop.name.toLowerCase) match {
-						case Some(newName) => prop.withName(newName)
-						case None => prop
-					}
-				}
-				.distinctBy { _.name.toLowerCase })
-	}
+	def renamed(renames: IterableOnce[Pair[String]]): Repr = this + PropertyRenames(renames)
 	/**
 	 * @param oldName Old property name
 	 * @param newName New property name
 	 * @return A copy of this model with that one property renamed
 	 */
-	def renamed(oldName: String, newName: String): Repr = {
-		if (knownContains(oldName).isCertainlyFalse)
-			self
-		else
-			withProperties(propertiesIterator.map { p => if (p.name ~== oldName) p.withName(newName) else p }
-				.distinctBy { _.name.toLowerCase })
-	}
+	def renamed(oldName: String, newName: String): Repr = this + PropertyRenames(oldName -> newName)
 	
 	/**
 	 * Creates a copy of this model with sorted property order

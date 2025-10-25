@@ -6,6 +6,7 @@ import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Singl
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.factory.PropertyFactory
+import utopia.flow.generic.model.immutable.Model.RenamedModel
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.{HasPropertiesLike, Property, ValueConvertible}
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -175,7 +176,7 @@ object Model
 		
 		override def contains(propName: String): Boolean = false
 		override def containsNonEmpty(propName: String): Boolean = false
-		override protected def knownContains(propName: String): UncertainBoolean = CertainlyFalse
+		override def knownContains(propName: String): UncertainBoolean = CertainlyFalse
 	}
 	
 	private class _Model(override val properties: Seq[Constant]) extends Model
@@ -195,7 +196,7 @@ object Model
 		
 		override def contains(propName: String): Boolean = propMap.contains(propName.toLowerCase)
 		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
-		override protected def knownContains(propName: String): UncertainBoolean = contains(propName)
+		override def knownContains(propName: String): UncertainBoolean = contains(propName)
 	}
 	
 	private class LazyModel(props: IterableOnce[Constant]) extends Model
@@ -219,9 +220,40 @@ object Model
 		
 		override def contains(propName: String): Boolean = propMap(propName).isDefined
 		override def containsNonEmpty(propName: String): Boolean = propMap(propName).exists { _.value.nonEmpty }
-		override protected def knownContains(propName: String): UncertainBoolean = propMap.knownContains(propName)
+		override def knownContains(propName: String): UncertainBoolean = propMap.knownContains(propName)
 		
 		override def existingProperty(propName: String): Option[Constant] = propMap(propName)
+	}
+	
+	private class RenamedModel(source: Model, renames: PropertyRenames) extends Model
+	{
+		// ATTRIBUTES   ---------------------
+		
+		override lazy val properties: Seq[Constant] = source.propertiesIterator
+			.map { p =>
+				renames.renamedOption(p.name) match {
+					case Some(newName) => p.withName(newName)
+					case None => p
+				}
+			}
+			.caching
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = properties.iterator
+		
+		override def contains(propName: String): Boolean = renames.yields(propName) || source.contains(propName)
+		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
+		override def knownContains(propName: String): UncertainBoolean =
+			CertainBoolean(renames.yields(propName)) || source.knownContains(propName)
+		
+		override def existingProperty(propName: String): Option[Constant] =
+			source.existingProperty(renames.original(propName))
+		
+		override def +(renames: PropertyRenames) = new RenamedModel(source, this.renames ++ renames)
 	}
 	
 	private class ValidatedModel(source: HasProperties, declaration: ModelDeclaration,
@@ -275,7 +307,7 @@ object Model
 		
 		override def contains(propName: String): Boolean = declaration.contains(propName) || propMap(propName).isDefined
 		override def containsNonEmpty(propName: String): Boolean = propMap(propName).exists { _.nonEmpty }
-		override protected def knownContains(propName: String): UncertainBoolean =
+		override def knownContains(propName: String): UncertainBoolean =
 			propMap.knownContains(propName) || declaration.contains(propName)
 		
 		
@@ -334,7 +366,7 @@ object Model
 		override def containsNonEmpty(propName: String): Boolean =
 			existingProperty(propName).exists { _.nonEmpty } || generator.generatesNonEmpty(propName)
 		
-		override protected def knownContains(propName: String): UncertainBoolean =
+		override def knownContains(propName: String): UncertainBoolean =
 			if (propMap.contains(propName.toLowerCase)) CertainlyTrue else UncertainBoolean
 		
 		override def withProperties(properties: IterableOnce[Constant]): Model =
@@ -407,4 +439,6 @@ object Model
 trait Model extends ModelLike[Model]
 {
 	override def withProperties(properties: IterableOnce[Constant]): Model = Model.withConstants(properties)
+	
+	override def +(renames: PropertyRenames): Model = new RenamedModel(this, renames)
 }
