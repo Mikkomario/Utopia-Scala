@@ -2,7 +2,7 @@ package utopia.flow.parse.xml
 
 import utopia.flow.collection.mutable.MutableTreeLike
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.collection.CollectionExtensions._
 
@@ -85,7 +85,7 @@ class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Val
 	  */
 	def setAttribute(attName: NamespacedString, newValue: Value) = {
 		if (attributeMap.contains(attName.namespace))
-			attributeMap = attributeMap.mapValue(attName.namespace) { _ + (attName.local -> newValue) }
+			attributeMap = attributeMap.mapValue(attName.namespace) { _ + Constant(attName.local -> newValue) }
 		else
 			attributeMap += (attName.namespace -> Model.from(attName.local -> newValue))
 	}

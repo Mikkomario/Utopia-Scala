@@ -68,12 +68,17 @@ class PropertyRenames(private val renames: Seq[Pair[String]]) extends MaybeEmpty
 	 * @param renamed A potentially renamed (external) property name
 	 * @return The matching original property name
 	 */
-	def original(renamed: String) = newToOld.getOrElse(renamed.toLowerCase, renamed)
+	def original(renamed: String) = originalOption(renamed).getOrElse(renamed)
+	/**
+	 * @param renamed A potentially renamed (external) property name
+	 * @return The matching original property name. None if there was no rename with the specified value.
+	 */
+	def originalOption(renamed: String) = newToOld.get(renamed.toLowerCase)
 	/**
 	 * @param original An original (internal) property name
 	 * @return A potentially renamed version of that name
 	 */
-	def renamed(original: String) = oldToNew.getOrElse(original.toLowerCase, original)
+	def renamed(original: String) = renamedOption(original).getOrElse(original)
 	/**
 	 * @param original An original (internal) property name
 	 * @return A potentially renamed version of that name. None if that property has no renaming.

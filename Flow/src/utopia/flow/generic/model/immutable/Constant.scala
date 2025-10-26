@@ -6,8 +6,21 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.ApproxEquals
 import utopia.flow.util.logging.Logger
 
+import scala.language.implicitConversions
+
 object Constant
 {
+	// IMPLICIT -------------------------
+	
+	/**
+	 * @param keyValue The name and value for this constant
+	 * @return A new constant with the specified name and value
+	 */
+	def apply(keyValue: (String, Value)): Constant = apply(keyValue._1, keyValue._2)
+	
+	
+	// OTHER    -------------------------
+	
 	/**
 	 * @param property A property
 	 * @return A constant with the same name & (current) value as that property

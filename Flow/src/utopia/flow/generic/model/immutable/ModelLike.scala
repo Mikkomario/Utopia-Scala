@@ -52,7 +52,7 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	/**
 	 * @return Copy of this model where the properties appear in alphabetical order
 	 */
-	def sorted = sortPropertiesBy {_.name}
+	def sorted = sortBy { _.name }
 	
 	/**
 	 * @return A mutable copy of this model
@@ -91,7 +91,8 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @param prop A new property as a key value -pair
 	 * @return A copy of this model with that property added
 	 */
-	def +(prop: (String, Value)): Repr = this + Constant(prop._1, prop._2)
+	def +[A](prop: (String, A))(implicit convert: A => ValueConvertible): Repr =
+		this + Constant(prop._1, convert(prop._2).toValue)
 	/**
 	 * @param prop A property
 	 * @return A copy of this model with that property prepended
@@ -101,7 +102,8 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @param prop A property as a key value -pair
 	 * @return A copy of this model with that property prepended
 	 */
-	def +:(prop: (String, Value)): Repr = Constant(prop._1, prop._2) +: this
+	def +:[A](prop: (String, A))(implicit convert: A => ValueConvertible): Repr =
+		Constant(prop._1, convert(prop._2).toValue) +: this
 	
 	/**
 	 * Creates a new model with the specified properties added
@@ -252,7 +254,9 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @tparam A Type of sorting key
 	 * @return A sorted copy of this model
 	 */
-	def sortPropertiesBy[A](f: Constant => A)(implicit ord: Ordering[A]) = withProperties(properties.sortBy(f))
+	def sortBy[A](f: Constant => A)(implicit ord: Ordering[A]) = withProperties(properties.sortBy(f))
+	@deprecated("Renamed to sortBy", "v2.7")
+	def sortPropertiesBy[A](f: Constant => A)(implicit ord: Ordering[A]) = sortBy(f)
 	
 	/**
 	 * Maps the properties within this model

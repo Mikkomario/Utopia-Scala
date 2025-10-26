@@ -1,24 +1,23 @@
 package utopia.scribe.core.model.post.logging
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.immutable.range.Span
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration, Value}
-import utopia.flow.generic.model.mutable.DataType.{DurationType, IntType, ModelType, PairType, StringType}
-import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.model.immutable._
+import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.{Mutate, Version}
 import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 
-import utopia.flow.time.Duration
 import scala.util.Try
 
 object ClientIssue extends FromModelFactory[ClientIssue]
@@ -139,7 +138,7 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 	  * @return Copy of this issue with additional variant detail
 	  */
 	def withVariantDetail(key: String, value: Value) =
-		copy(variantDetails = variantDetails + (key -> value))
+		copy(variantDetails = variantDetails + Constant(key -> value))
 	/**
 	  * @param details Additional variant details
 	  * @return Copy of this issue with the specified variant details added
@@ -157,7 +156,7 @@ case class ClientIssue(version: Version, context: String, severity: Severity, va
 		if (newVariant)
 			withVariantDetail(key, value)
 		else
-			copy(occurrenceDetails = occurrenceDetails + (key -> value))
+			copy(occurrenceDetails = occurrenceDetails + Constant(key -> value))
 	}
 	/**
 	  * @param details Additional variant details

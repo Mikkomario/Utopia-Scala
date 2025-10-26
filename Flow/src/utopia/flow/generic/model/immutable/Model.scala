@@ -82,6 +82,19 @@ object Model
 	}
 	
 	/**
+	 * @param only The only constant to store in this model
+	 * @return A model containing the specified constant
+	 */
+	def withConstants(only: Constant): Model = new _Model(Single(only))
+	/**
+	 * @param first First constant to store
+	 * @param second Second constant to store
+	 * @param more More constants to include
+	 * @return A model with the specified constants
+	 */
+	def withConstants(first: Constant, second: Constant, more: Constant*): Model =
+		new _Model(Pair(first, second) ++ more)
+	/**
 	 * @param constants Constants from which this model consists
 	 * @return A new model based on the specified constants
 	 */
@@ -251,7 +264,10 @@ object Model
 			CertainBoolean(renames.yields(propName)) || source.knownContains(propName)
 		
 		override def existingProperty(propName: String): Option[Constant] =
-			source.existingProperty(renames.original(propName))
+			renames.originalOption(propName) match {
+				case Some(original) => source.existingProperty(original)
+				case None => if (renames.refersTo(propName)) None else source.existingProperty(propName)
+			}
 		
 		override def +(renames: PropertyRenames) = new RenamedModel(source, this.renames ++ renames)
 	}

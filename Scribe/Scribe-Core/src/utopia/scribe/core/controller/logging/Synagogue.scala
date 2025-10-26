@@ -107,7 +107,7 @@ class Synagogue(severity: Severity = Severity.default, variantDetails: Model = M
 				// Appends a "delegated" detail in case this is not the primary logging implementation to use
 				val actualDetails: Model = {
 					if (isDelegated)
-						occurrenceDetails + ("delegated" -> (true: Value))
+						occurrenceDetails + ("delegated" -> true)
 					else
 						occurrenceDetails
 				}
