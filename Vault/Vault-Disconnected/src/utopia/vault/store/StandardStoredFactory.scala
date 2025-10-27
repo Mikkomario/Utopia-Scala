@@ -12,7 +12,7 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 03.08.2025, v2.0
   */
-trait StandardStoredFactory[Data, A] extends StoredFromModelFactory[Data, A]
+trait StandardStoredFactory[Data, +A] extends StoredFromModelFactory[Data, A]
 {
 	// ABSTRACT --------------------------
 	

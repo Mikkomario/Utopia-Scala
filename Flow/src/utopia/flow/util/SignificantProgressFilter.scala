@@ -22,7 +22,7 @@ class SignificantProgressFilter[A](significantProgressThreshold: Double, listene
 	// IMPLEMENTED  ----------------------
 	
 	override def onProgressEvent(event: ProgressEvent[A]): Unit = {
-		// Ignores events until a significant enough progress occurs or until the process completes
+		// Ignores events until a significant-enough progress occurs or until the process completes
 		if (event.currentProgress >= 1.0 || event.currentProgress >= lastEventProgress + significantProgressThreshold) {
 			val newEvent = event.copy(previousProgress = lastEventProgress)
 			lastEventProgress = event.currentProgress

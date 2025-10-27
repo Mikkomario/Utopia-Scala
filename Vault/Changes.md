@@ -102,6 +102,7 @@
 - **ViewManyByIntIds** now only skips **IntSet** conversion for **Set**s and **Pair**s, 
   no longer for other collection types
 - **Tables** no longer accepts implicit **ExecutionContext** in its constructor
+- **StandardStoredFactory**'s generic type parameter A is now covariant
 - Removed some methods and classes that were deprecated in earlier releases
 
 ## v1.21 - 26.05.2025
