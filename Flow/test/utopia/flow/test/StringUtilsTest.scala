@@ -96,5 +96,9 @@ object StringUtilsTest extends App
 	
 	assert(s.overlapWith("Another test") == " test", s.overlapWith("Another test"))
 	
+	// Tests slice
+	assert("TESTI".slice(0 until 3) == "TES", "TESTI".slice(0 until 3))
+	assert("TESTI".slice(0 until 5) == "TESTI", "TESTI".slice(0 until 5))
+	
 	println("Success!")
 }

@@ -52,7 +52,7 @@ object HasOrderedEnds
 	 * @param range Range to convert
 	 * @return A HasOrderedEnds based on the specified range
 	 */
-	def from(range: Range) = apply(range.start, range.end, range.isInclusive)
+	def from(range: Range) = apply(range.start, range.end, exclusive = !range.isInclusive)
 	
 	
 	// NESTED   ------------------------

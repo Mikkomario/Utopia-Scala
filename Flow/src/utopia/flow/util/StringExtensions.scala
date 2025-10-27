@@ -98,7 +98,7 @@ object StringExtensions
 		def slice(range: HasEnds[Int]) = range.inclusiveEndsOption match {
 			case Some(ends) =>
 				val orderedEnds = ends.sorted
-				s.substring(orderedEnds.first max 0, orderedEnds.second min (s.length - 1))
+				s.substring(orderedEnds.first max 0, (orderedEnds.second + 1) min s.length)
 			case None => ""
 		}
 		/**
