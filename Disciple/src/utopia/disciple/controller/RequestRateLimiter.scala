@@ -8,6 +8,8 @@ import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
 import utopia.flow.time.Duration
+import utopia.flow.time.TimeUnit.Second
+
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -28,7 +30,7 @@ object RequestRateLimiter
 	  * @tparam A Type of future results
 	  * @return A new request rate limiter instance
 	  */
-	def maxPerSecond[A](maxRequestsPerSecond: Int) = new RequestRateLimiter(maxRequestsPerSecond, 1.seconds)
+	def maxPerSecond[A](maxRequestsPerSecond: Int) = new RequestRateLimiter(maxRequestsPerSecond, Second.unit)
 }
 
 /**
