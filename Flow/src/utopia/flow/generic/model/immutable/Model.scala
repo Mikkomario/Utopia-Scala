@@ -109,11 +109,19 @@ object Model
 	 * @param original The original model
 	 * @param declaration Applied model declaration
 	 * @param prevalidatedProperties Properties from 'original' that have already been processed / validated (optional).
+	 * @param noDefaultValues Set this to true in order to disable the adding of missing properties and property values
+	 *                        from the specified declaration.
+	 *
+	 *                        If left to false (default), all declared properties that don't appear in 'original'
+	 *                        will be added and populated with their default values,
+	 *                        and all declared properties with an empty value
+	 *                        will be populated by their default value instead.
 	 * @return Access to the original model's properties through the specified declaration
 	 */
 	def validated(original: HasProperties, declaration: ModelDeclaration,
-	              prevalidatedProperties: Iterable[(PropertyDeclaration, Constant)] = Empty): Model =
-		new ValidatedModel(original, declaration, prevalidatedProperties)
+	              prevalidatedProperties: Iterable[(PropertyDeclaration, Constant)] = Empty,
+	              noDefaultValues: Boolean = false): Model =
+		new ValidatedModel(original, declaration, prevalidatedProperties, !noDefaultValues)
 	
 	/**
 	 * Converts another type of model into this type of model
@@ -273,7 +281,7 @@ object Model
 	}
 	
 	private class ValidatedModel(source: HasProperties, declaration: ModelDeclaration,
-	                             prevalidated: Iterable[(PropertyDeclaration, Constant)])
+	                             prevalidated: Iterable[(PropertyDeclaration, Constant)], defaultsEnabled: Boolean)
 		extends Model
 	{
 		import ModelDeclaration.valueIsEmpty
@@ -286,15 +294,18 @@ object Model
 		// Lazily combines the 3 sources of properties:
 		//      1. Prevalidated properties
 		//      2. Other source properties
-		//      3. Declared properties that were not present in the source model
-		override val properties: Seq[Constant] = CachingSeq(
-			source = source.propertiesIterator
+		//      3. Declared properties that were not present in the source model (optional)
+		override val properties: Seq[Constant] = {
+			val fromSourceIterator = source.propertiesIterator
 				.flatMap { original =>
+					// Case: This property was already introduced => Skips it
 					if (prevalidated.exists { _._2 == original })
 						None
 					else
 						declaration.find(original.name) match {
+							// Case: Declared property => May modify the property, or ignore it
 							case Some(declaration) =>
+								// Case: Already specified => Skips it
 								if (generatedMappings.contains(declaration))
 									None
 								else {
@@ -302,14 +313,22 @@ object Model
 									generatedMappings += (declaration -> constant)
 									Some(constant)
 								}
+							// Case: Undeclared property => Keeps it as it is
 							case None => Some(Constant.from(original))
 						}
-				} ++
-				LazyInitIterator {
-					declaration.declarations.iterator.filterNot(generatedMappings.contains)
-						.map { declaration => Constant(declaration.name, declaration.defaultValue) }
+				}
+			CachingSeq(
+				source = {
+					if (defaultsEnabled)
+						fromSourceIterator ++ LazyInitIterator {
+							declaration.declarations.iterator.filterNot(generatedMappings.contains)
+								.map { declaration => Constant(declaration.name, declaration.defaultValue) }
+						}
+					else
+						fromSourceIterator
 				},
-			preCached = prevalidated.iterator.map { _._2 }.toVector)
+				preCached = prevalidated.iterator.map { _._2 }.toVector)
+		}
 		private lazy val propMap = new BuildingPropertyMap(propertiesIterator)
 		
 		
@@ -330,9 +349,13 @@ object Model
 		// OTHER    ---------------------------
 		
 		private def makeConstant(declaration: PropertyDeclaration, originalName: String, value: Value) = {
-			// Order of priority is: 1) Specified value, 2) Value from the source model, 3) Declared default value
+			// Order of priority is:
+			//      1. Specified 'value'
+			//      2. Value from the source model
+			//      3. Declared default value (which may be disabled)
 			val appliedValue = value.notEmpty
 				.flatMap { _.castTo(declaration.dataType).filterNot(valueIsEmpty) }
+				// 2.
 				.orElse {
 					val alternativeNames = declaration.names.filterNot { _ ~== originalName }
 					if (alternativeNames.isEmpty)
@@ -341,7 +364,8 @@ object Model
 						source(alternativeNames).notEmpty
 							.flatMap { _.castTo(declaration.dataType).filterNot(valueIsEmpty) }
 				}
-				.getOrElse(declaration.defaultValue)
+				// 3.
+				.getOrElse { if (defaultsEnabled) declaration.defaultValue else Value.empty }
 			
 			Constant(declaration.name, appliedValue)
 		}

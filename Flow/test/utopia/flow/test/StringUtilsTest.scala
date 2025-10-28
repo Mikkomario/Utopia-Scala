@@ -100,5 +100,11 @@ object StringUtilsTest extends App
 	assert("TESTI".slice(0 until 3) == "TES", "TESTI".slice(0 until 3))
 	assert("TESTI".slice(0 until 5) == "TESTI", "TESTI".slice(0 until 5))
 	
+	// Tests afterFirst, untilLast, etc.
+	assert(s.afterFirst("test") == " string")
+	assert(s.afterLast("st") == "ring")
+	assert(s.untilFirst("is") == "Th")
+	assert(s.untilLast("t") == "This is a test s")
+	
 	println("Success!")
 }

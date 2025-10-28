@@ -85,7 +85,7 @@ trait Storable extends ModelConvertible with HasTable
     
     // IMPLEMENTED  ----------------------------------
     
-    override def toModel = Model.validated(Model(valueProperties), declaration)
+    override def toModel = Model.validated(Model(valueProperties), declaration, noDefaultValues = true)
     
     
     // OTHER METHODS    ------------------------------
