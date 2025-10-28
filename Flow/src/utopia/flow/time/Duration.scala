@@ -782,6 +782,17 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 		tryLength.toOption.map { case (length, myUnit) => unit.countPreciselyIn(length.toDouble, myUnit) }
 	
 	/**
+	 * Rounds this duration to the specified unit
+	 * @param unit Lowest applied unit of precision
+	 * @return This unit in no higher precision than the one specified
+	 */
+	def roundTo(unit: TimeUnit) = tryLength match {
+		case Success((length, myUnit)) =>
+			if (myUnit >= unit) this else Duration(unit.countPreciselyIn(length, myUnit).round, unit)
+		case _ => this
+	}
+	
+	/**
 	 * Multiplies this duration
 	 * @param multiplier Applied multiplier
 	 * @return A multiplied copy of this duration
