@@ -1,7 +1,6 @@
 package utopia.vault.nosql.view
 
-import utopia.vault.model.error.ColumnNotFoundException
-import utopia.vault.sql.{Condition, ConditionElement}
+import utopia.vault.sql.Condition
 
 /**
   * A common trait for access points whose conditions may be enhanced to cover a more precise area
@@ -47,24 +46,4 @@ trait FilterableView[+Sub] extends View with ViewFactory[Sub]
 		case Some(originalCondition) => apply(originalCondition || alternativeCondition)
 		case None => self
 	}
-	
-	// FIXME: These don't work because the wrappers don't overwrite the primary table
-	/**
-	 * @param indices Targeted indices
-	 * @return Copy of this access limited to the specified indices
-	 */
-	@throws[ColumnNotFoundException]("If the primary table does not specify a primary key column")
-	def in(indices: IterableOnce[Int]) = filter(Condition.indexIn(table.getPrimaryKey, indices))
-	/**
-	 * @param indices Indices to exclude
-	 * @return Copy of this access excluding the specified indices
-	 */
-	@throws[ColumnNotFoundException]("If the primary table does not specify a primary key column")
-	def excluding(indices: IterableOnce[Int]) = filter(Condition.indexNotIn(table.getPrimaryKey, indices))
-	/**
-	 * @param index Index to exclude
-	 * @return Copy of this access excluding the specified index
-	 */
-	@throws[ColumnNotFoundException]("If the primary table does not specify a primary key column")
-	def excluding(index: ConditionElement) = filter(table.getPrimaryKey <> index)
 }

@@ -62,7 +62,7 @@
   **SelectsTable** and **SelectsTables** traits for specifying **SqlTarget** and possibly **SelectTarget**
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s
-- Added **FilterableViewWrapper** and **TimeFilterableView**
+- Added **FilterableViewWrapper**, **TimeFilterableView** and **IntIndexFilterableView**
 - Added **AccessDeprecatingRoot**, **AccessManyDeprecatingRoot** and **AccessOneDeprecatingRoot**
 ### New methods
 - **Column**
@@ -76,7 +76,6 @@
   - Added `.active` and `.historical`
 - **FilterableView**
   - Added `.orWhere(Condition)`
-  - Added `.in(IterableOnce[Int])`, `.excluding(IterableOnce[Int])` and `.excluding(ConditionElement)`
 - **Joinable**
   - Added `.where(Condition)` for constructing conditional joins
 - **References**
