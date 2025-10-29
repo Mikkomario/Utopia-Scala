@@ -5,6 +5,17 @@ import utopia.flow.operator.enumeration.End
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.{AbstractIndexedSeqView, IndexedSeqView, mutable}
 
+object PairView
+{
+	/**
+	 * @param first A view into the first value (call-by-name)
+	 * @param second A view into the second value (call-by-name)
+	 * @tparam A Type of the viewed values
+	 * @return A view into those two values
+	 */
+	def apply[A](first: => A, second: => A) = new PairView[A](first, second)
+}
+
 /**
   * A view into a pair
   * @author Mikko Hilpinen

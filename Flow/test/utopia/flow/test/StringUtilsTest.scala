@@ -106,5 +106,7 @@ object StringUtilsTest extends App
 	assert(s.untilFirst("is") == "Th")
 	assert(s.untilLast("t") == "This is a test s")
 	
+	assert("asd".quoted == "\"asd\"")
+	
 	println("Success!")
 }

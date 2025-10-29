@@ -118,6 +118,7 @@
 - **String** (**StringExtensions**)
   - Added various variations of `.findIndexOf(...)`, including support for case-insensitive searches
   - Added `.notContaining(String)` and `.notContainingAnyOf(IterableOnce)`
+  - Added `.surroundedWith(String)`
 - **TimedTasks**
   - Added `.builder`, which yields **AcceptsTimedTasks**, providing an interface for adding new tasks, 
     without allowing other actions such as `runAsync()` or `stop() `

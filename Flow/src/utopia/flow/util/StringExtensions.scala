@@ -528,6 +528,19 @@ object StringExtensions
 		  */
 		def notEndingWith(suffix: String, ignoreCase: Boolean = false) =
 			if (s.endsWith(suffix, ignoreCase)) s.dropRight(suffix.length) else s
+		/**
+		 * @param edge Edge to place on both sides of this string
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return A copy of this string starting and ending with the specified substring.
+		 *         If this string already started or ended with that string, or a part of that string,
+		 *         won't repeat it.
+		 */
+		def surroundedWith(edge: String, ignoreCase: Boolean = false) = {
+			if (s.isEmpty)
+				edge * 2
+			else
+				startingWith(edge, ignoreCase).endingWith(edge, ignoreCase)
+		}
 		
 		/**
 		 * If this string is shorter than the specified length, prepends it with 'elem' until it reaches that length.
