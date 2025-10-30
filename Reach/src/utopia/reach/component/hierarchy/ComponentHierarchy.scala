@@ -333,7 +333,7 @@ trait ComponentHierarchy
 	}
 	@tailrec
 	private def _revalidate(branchBuilder: mutable.Builder[ReachComponent, Seq[ReachComponent]])
-	                        (atTop: Option[(ReachCanvas, Seq[ReachComponent])] => Unit): Unit =
+	                       (atTop: Option[(ReachCanvas, Seq[ReachComponent])] => Unit): Unit =
 	{
 		// Terminates if not linked
 		if (isThisLevelLinked)
@@ -342,11 +342,10 @@ trait ComponentHierarchy
 				case Left(canvas) => atTop(Some(canvas -> branchBuilder.result()))
 				// Case: Parent is not a canvas => Resets its stack size
 				case Right((block, component)) =>
+					branchBuilder += component
 					// Case: Stack size may have changed => Propagates the revalidation further up
-					if (component.updateStackSize()) {
-						branchBuilder += component
+					if (component.updateStackSize())
 						block._revalidate(branchBuilder)(atTop)
-					}
 					// Case: Stack size didn't change => Performs the layout updates & repainting on a local level
 					else {
 						ComponentHierarchy.updateLayoutFor(component, Single(branchBuilder.result()))

@@ -19,5 +19,5 @@ trait ContainerLike[+C <: ReflectionComponentLike] extends ReflectionComponentLi
 	
 	// IMPLEMENTED	----------------
 	
-	override def toString = s"${getClass.getSimpleName}(${ components.mkString(", ") })"
+	override def toString = s"${getClass.getSimpleName}([${ components.mkString(", ") }])"
 }

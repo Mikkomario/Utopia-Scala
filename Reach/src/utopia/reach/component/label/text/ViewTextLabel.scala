@@ -288,5 +288,7 @@ class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val
 	override def textDrawContext = stylePointer.value
 	override def allowTextShrink: Boolean = allowTextShrinkFlag.value
 	
+	override def toString: String = s"TextLabel.View(${ measuredText.text })"
+	
 	override def updateLayout() = ()
 }
