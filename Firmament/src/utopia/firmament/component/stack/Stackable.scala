@@ -17,12 +17,10 @@ trait Stackable extends Component with HasStackSize
 	  * should be reset at this point.
 	  */
 	def updateLayout(): Unit
-	
 	/**
 	  * Resets cached stackSize, if there is one, so that it will be recalculated when requested next time
 	  */
 	def resetCachedSize(): Unit
-	
 	/**
 	 * Resets and immediately updates the cached stack-size, if applicable.
 	 * @return Whether the new stack size may be different from the previously cached value.

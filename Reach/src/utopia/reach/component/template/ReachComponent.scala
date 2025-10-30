@@ -155,6 +155,33 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	
 	override def children: Seq[ReachComponent] = Empty
 	
+	override def toString: String = {
+		val _children = children
+		if (_children.isEmpty)
+			getClass.getSimpleName
+		else {
+			val contentIter = _children.iterator
+			val contentStrBuilder = new StringBuilder()
+			var contentLength = 0
+			
+			while (contentLength < 40 && contentIter.hasNext) {
+				val nextStr = contentIter.next.toString
+				if (contentLength != 0)
+					contentStrBuilder ++= ", "
+				contentStrBuilder ++= nextStr
+				contentLength += nextStr.length
+			}
+			val contentStr = {
+				if (contentLength > 40)
+					s"${ _children.size } components"
+				else
+					s"[${ contentStrBuilder.result() }]"
+			}
+			
+			s"${getClass.getSimpleName}($contentStr)"
+		}
+	}
+	
 	override def fontMetricsWith(font: Font) = hierarchy.fontMetricsWith(font)
 	
 	
@@ -237,6 +264,15 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  * hierarchy, in case some revalidate() requests have been ignored.
 	  */
 	def resetEveryCachedStackSize() = toTree.bottomToTopNodesIterator.foreach { _.nav.resetCachedSize() }
+	
+	/**
+	 * Updates the layout of this component, and every subcomponent.
+	 * May be appropriate to call when a component is added to the stack hierarchy.
+	 */
+	def updateWholeLayout(): Unit = {
+		updateLayout()
+		children.foreach { _.updateWholeLayout() }
+	}
 	
 	/**
 	  * Paints this component again

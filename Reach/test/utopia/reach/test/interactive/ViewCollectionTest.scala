@@ -27,15 +27,19 @@ object ViewCollectionTest extends App
 	private val valuesP = startP.mergeWith(endP) { (s, e) => NumericSpan(s, e).iterator.toOptimizedSeq }
 	
 	private val window = ReachWindow.contentContextual.borderless.using(AlignFrame) { (_, frameF) =>
-		val frame = frameF.center.build(ViewCollection) { collF =>
-			collF.withOuterMargin(Medium).withInnerMargin(Small).withSplitThreshold(400)
-				.withBackground(Color.white)
-				.mapPointer(valuesP, ViewTextLabel) { (labelF, p, _) =>
-					labelF.withTextInsets(Medium).withBackground(Color.red)(p)
-				}
+		val frame1 = frameF.center.build(AlignFrame) { frameF =>
+			val frame2 = frameF.center.build(ViewCollection) { collF =>
+				collF.withOuterMargin(Medium).withInnerMargin(Small).withSplitThreshold(300)
+					.withBackground(Color.white)
+					.mapPointer(valuesP, ViewTextLabel) { (labelF, p, _) =>
+						labelF.withTextInsets(Medium).withBackground(Color.red)(p)
+					}
+			}
+			frame2.addConstraint { s => s max StackSize.fixed(Size.square(300)) }
+			frame2
 		}
-		frame.addConstraint { s => s max StackSize.fixed(Size.square(500)) }
-		frame
+		frame1.addConstraint { s => s max StackSize.fixed(Size.square(400)) }
+		frame1
 	}
 	window.setToExitOnClose()
 	window.setToCloseOnEsc()

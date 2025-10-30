@@ -19,5 +19,25 @@ trait ContainerLike[+C <: ReflectionComponentLike] extends ReflectionComponentLi
 	
 	// IMPLEMENTED	----------------
 	
-	override def toString = s"${getClass.getSimpleName}([${ components.mkString(", ") }])"
+	override def toString = {
+		val contentIter = components.iterator
+		val contentStrBuilder = new StringBuilder()
+		var contentLength = 0
+		
+		while (contentLength < 40 && contentIter.hasNext) {
+			val nextStr = contentIter.next.toString
+			if (contentLength != 0)
+				contentStrBuilder ++= ", "
+			contentStrBuilder ++= nextStr
+			contentLength += nextStr.length
+		}
+		val contentStr = {
+			if (contentLength > 40)
+				s"${ components.size } components"
+			else
+				s"[${ contentStrBuilder.result() }]"
+		}
+		
+		s"${getClass.getSimpleName}($contentStr)"
+	}
 }

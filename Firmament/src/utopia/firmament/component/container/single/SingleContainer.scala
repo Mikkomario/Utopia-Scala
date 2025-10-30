@@ -21,4 +21,6 @@ trait SingleContainer[+C <: Component] extends Component
 	// IMPLEMENTED	-----------------
 	
 	override def children: Seq[C] = Single(content)
+	
+	override def toString: String = s"${ getClass.getSimpleName }($content)"
 }

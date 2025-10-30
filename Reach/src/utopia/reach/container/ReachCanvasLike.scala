@@ -70,7 +70,9 @@ trait ReachCanvasLike
 	  * @param targetContentSize Size to assign for the managed component
 	  */
 	def updateWholeLayout(targetContentSize: Size) = currentContent.foreach { content =>
-		updateLayout(content.toTree.branchesIterator.map { _.map { _.nav } }.toSet, targetContentSize)
+		content.size = targetContentSize
+		content.updateWholeLayout()
+		repaint()
 	}
 	
 	/**
@@ -78,7 +80,7 @@ trait ReachCanvasLike
 	  * @param queues Sequences of components from hierarchy top downwards that require a layout update
 	  * @param componentTargetSize Size to assign for the managed component
 	  */
-	protected def updateLayout(queues: Set[Seq[ReachComponent]], componentTargetSize: Size) = {
+	protected def updateLayout(queues: Set[Seq[ReachComponent]], componentTargetSize: Size) =
 		currentContent.foreach { content =>
 			// Updates the content size, if appropriate
 			val requiresSizeUpdate = content.size != componentTargetSize
@@ -88,7 +90,6 @@ trait ReachCanvasLike
 			// Performs the layout updates throughout the component hierarchy
 			ComponentHierarchy.updateLayoutFor(content, queues, topChangedSize = requiresSizeUpdate, topIsCanvas = true)
 		}
-	}
 	
 	/**
 	  * Requests a repaint for this whole canvas element

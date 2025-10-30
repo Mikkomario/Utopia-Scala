@@ -39,5 +39,5 @@ trait MultiContainer[+C <: Component] extends Component
 	
 	override def children: Seq[Component] = components
 	
-	override def toString = s"${getClass.getSimpleName}(${ components.mkString(", ") })"
+	// override def toString = s"${getClass.getSimpleName}(${ components.mkString(", ") })"
 }

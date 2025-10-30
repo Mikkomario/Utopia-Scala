@@ -7,6 +7,7 @@ import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
+import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.filter.{AcceptAll, Filter}
@@ -300,7 +301,15 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 {
 	// ATTRIBUTES	---------------------------
 	
+	/**
+	 * Queues component hierarchy branches that need layout updates.
+	 * Emptied on [[updateLayout]].
+	 * All branches are ordered from bottom to top.
+	 */
 	private val layoutUpdateQueue = Volatile.seq[Seq[ReachComponent]]()
+	/**
+	 * Queues actions that must be performed after [[updateLayout]] finishes.
+	 */
 	private val updateFinishedQueue = Volatile.seq[() => Unit]()
 	
 	/**
@@ -394,21 +403,24 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 		}
 	}
 	
-	linkedFlag.addContinuousListener { event =>
+	linkedFlag.addListener { event =>
 		// When attached to the stack hierarchy,
 		// makes sure to update immediate content layout and repaint this component
-		if (event.newValue) {
-			currentPainter.foreach { _.resetBuffer() }
-			currentContent.foreach { _.resetEveryCachedStackSize() }
-			layoutUpdateQueue.clear()
-			updateWholeLayout(size)
-			super[ReachCanvasLike].repaint()
-			// Listens to tabulator key events for manual focus handling
-			if (!disableFocus)
-				KeyboardEvents += FocusKeyListener
-		}
-		else
+		if (event.newValue)
+			Continue.and {
+				currentPainter.foreach { _.resetBuffer() }
+				currentContent.foreach { _.resetEveryCachedStackSize() }
+				layoutUpdateQueue.clear()
+				updateWholeLayout(size)
+				super[ReachCanvasLike].repaint()
+				// Listens to tabulator key events for manual focus handling
+				if (!disableFocus)
+					KeyboardEvents += FocusKeyListener
+			}
+		else {
 			KeyboardEvents -= FocusKeyListener
+			Continue
+		}
 	}
 	
 	// Listens to mouse events for cursor-swapping
@@ -556,10 +568,8 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 		windowUpdatingFlagPointer.value = processingFlag
 		// Updates canvas size to match the future window size
 		// (Note: the actual AWT component bounds are not updated until window bounds update finishes)
-		if (size != predictedWindowSize) {
-			// componentSizeUpdatingFlag.set()
+		if (size != predictedWindowSize)
 			size = predictedWindowSize
-		}
 		// Updates component layout and prepares painting
 		// in order to optimize the initial draw speed after window resize
 		updateLayout()

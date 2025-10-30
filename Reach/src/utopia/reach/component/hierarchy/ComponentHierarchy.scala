@@ -16,15 +16,15 @@ import utopia.reach.component.template.ReachComponent
 import utopia.reach.container.ReachCanvas
 
 import scala.annotation.tailrec
-import scala.collection.immutable.VectorBuilder
-import scala.collection.mutable
+import scala.collection.{SeqView, mutable}
 
 object ComponentHierarchy
 {
 	/**
 	 * Updates component layout based on queued updates
 	 * @param top The top component in the component hierarchy, if applicable.
-	 * @param queues Sequences of components from hierarchy top downwards that require a layout update
+	 * @param queues Sequences of components from that require a layout update.
+	 *               These sequences must be ordered from the hierarchy's bottom towards its top.
 	 * @param topChangedSize Whether the 'top' component changed its size before this layout update (default = false)
 	 * @param topIsCanvas Whether the 'top' component represents the Reach Canvas.
 	 *                    Affects repainting and component position-detection logic, for example.
@@ -34,21 +34,24 @@ object ComponentHierarchy
 	                    topIsCanvas: Boolean = false): Unit =
 	{
 		// Updates content layout
-		val layoutUpdateQueues = queues.view.map { q => (q, topChangedSize, q.size) }.toOptimizedSeq
+		val layoutUpdateQueues = queues.view.map { q => (q.view.reverse, topChangedSize, q.size) }.toOptimizedSeq
 		val sizeChangeTargets: Set[ReachComponent] = if (topChangedSize) Set(top) else Set()
 		if (layoutUpdateQueues.nonEmpty || sizeChangeTargets.nonEmpty) {
-			// Performs the layout updates. The repaint logic is different for the root level component.
-			if (topIsCanvas) {
+			// The repaint logic depends on the type & context of the top component
+			// Case: Top component changed size => Won't repaint
+			if (topChangedSize)
+				updateLayoutFor(if (topIsCanvas) None else Some(top), layoutUpdateQueues, sizeChangeTargets, None, 0)
+			// Case: Top is the reach canvas => Calls the canvas.repaint(region) possibly multiple times
+			else if (topIsCanvas) {
 				val boundsBuilder = OptimizedIndexedSeq.newBuilder[Bounds]
-				updateLayoutFor(if (topIsCanvas) None else Some(top), layoutUpdateQueues, sizeChangeTargets,
-					boundsBuilder, 0)
+				updateLayoutFor(None, layoutUpdateQueues, sizeChangeTargets, Some(boundsBuilder), 0)
 				lazy val canvas = top.hierarchy.top
 				boundsBuilder.result().foreach { canvas.repaint(_) }
 			}
+			// Case: Top is a reach component => Calls repaint(region) 0-1 times
 			else {
 				val boundsBuilder = Bounds.aroundBuilder
-				updateLayoutFor(if (topIsCanvas) None else Some(top), layoutUpdateQueues, sizeChangeTargets,
-					boundsBuilder, 0)
+				updateLayoutFor(Some(top), layoutUpdateQueues, sizeChangeTargets, Some(boundsBuilder), 0)
 				boundsBuilder.resultOption().foreach { top.repaintArea(_) }
 			}
 		}
@@ -64,42 +67,50 @@ object ComponentHierarchy
 	 *                              1. The length of this queue
 	 * @param sizeChangedChildren Collection of components that had their size altered during the previous iteration.
 	 *                            These are all updated as well.
-	 * @param repaintZonesBuilder A builder for the resulting repaint areas
+	 * @param repaintZonesBuilder A builder for the resulting repaint areas.
+	 *                            None if repaint areas shouldn't be collected.
 	 * @param queueIndex Next queue index to process
 	 */
 	@tailrec
 	private def updateLayoutFor(topComponent: Option[ReachComponent],
-	                            componentQueues: Iterable[(Seq[ReachComponent], Boolean, Int)],
+	                            componentQueues: Iterable[(SeqView[ReachComponent], Boolean, Int)],
 	                            sizeChangedChildren: collection.Set[ReachComponent],
-	                            repaintZonesBuilder: mutable.Growable[Bounds], queueIndex: Int): Unit =
+	                            repaintZonesBuilder: Option[mutable.Growable[Bounds]], queueIndex: Int): Unit =
 	{
 		// Records the components that had their size or position changed,
 		// as well as new areas that need repainting afterwards
-		val nextSizeChangeChildrenBuilder = mutable.Set[ReachComponent]()
-		val nextPositionChangeChildrenBuilder = mutable.Set[ReachComponent]()
+		val nextSizeChangeChildren = mutable.Set[ReachComponent]()
+		val positionChangeChildren = mutable.Set[ReachComponent]()
 		
 		// Determines the next components for which layout is updated.
 		// I.e. next queued components, as well as the latest components that had their size adjusted.
 		//      Component -> Whether paint operation has already been queued
-		val nextTargetsView =
-			componentQueues.view.map { case (queue, wasPainted, _) => queue(queueIndex) -> wasPainted } ++
-				sizeChangedChildren.view.map { _ -> true }
+		val nextTargetsIter =
+			componentQueues.iterator.flatMap { case (queue, wasPainted, _) =>
+				val component = queue(queueIndex)
+				// Case: This component is already included in the changed size -list
+				//       => Won't include a duplicate entry
+				if (sizeChangedChildren.contains(component))
+					None
+				else
+					Some(component -> wasPainted)
+			} ++ sizeChangedChildren.iterator.map { _ -> true }
 		// Updates the layout of the next layer (from top to bottom) components.
-		// Checks for size (and possible position) changes and queues updates for the children of components which
+		// Checks for size (and possible position) changes and queues updates for the children of the components which
 		// changed size during the layout update
 		// Also, collects any repaint requirements
-		nextTargetsView.foreach { case (component, wasPainted) =>
+		nextTargetsIter.foreach { case (component, wasPainted) =>
 			// Caches bounds before update
 			val oldChildBounds = component.children.map { c => c -> c.bounds }
 			// Applies component update
 			component.updateLayout()
 			// Queues child updates (on size changes) and possible repaints
 			// (only in components where no repaint has occurred yet)
-			
+			//
 			// Case: This component was already queued for repaint
 			//       => Only checks if any of the child components changed size
 			if (wasPainted)
-				nextSizeChangeChildrenBuilder ++=
+				nextSizeChangeChildren ++=
 					oldChildBounds.iterator.filter { case (child, oldBounds) => child.size != oldBounds.size }
 						.map { _._1 }
 			// Case: This component was not queued for repaint
@@ -109,47 +120,54 @@ object ComponentHierarchy
 					val currentBounds = child.bounds
 					if (currentBounds != oldBounds) {
 						// Queues a repaint (in the top component's coordinate space)
-						repaintZonesBuilder += (Bounds.around(Pair(oldBounds, currentBounds)) +
-							topComponent.flatMap(child.hierarchy.positionInComponentModifier)
-								.getOrElse { child.hierarchy.positionToTopModifier })
+						repaintZonesBuilder.foreach { builder =>
+							builder += (Bounds.around(Pair(oldBounds, currentBounds)) +
+								topComponent.flatMap(child.hierarchy.positionInComponentModifier)
+									.getOrElse { child.hierarchy.positionToTopModifier })
+						}
 						
 						// Case: Size changed
 						//       => Remembers this component, so that it will be updated on the next iteration
 						if (oldBounds.size != currentBounds.size)
-							nextSizeChangeChildrenBuilder += child
+							nextSizeChangeChildren += child
 						// Case: Only position changed => Remembers that a repaint was queued for this component
 						else
-							nextPositionChangeChildrenBuilder += child
+							positionChangeChildren += child
 					}
 				}
 		}
 		
 		// Moves to the next layer of components, if there is one
 		// Checks which of the queues contain more components to handle
-		val paintedChildren = Set.concat(nextSizeChangeChildrenBuilder, nextPositionChangeChildrenBuilder)
+		lazy val paintedChildren = Set.concat(nextSizeChangeChildren, positionChangeChildren)
+		lazy val leavesToPaintBuilder = OptimizedIndexedSeq.newBuilder[ReachComponent]
 		val nextQueueIndex = queueIndex + 1
-		val (leaves, remainingQueues) = componentQueues.divideWith { case (queue, wasPainted, length) =>
+		val remainingQueues = componentQueues.flatMap { case (queue, wasPainted, length) =>
 			// Case: Queue contains more components
 			//       => Updates the painted status and prepares the queue for the next iteration
 			if (length > nextQueueIndex)
-				Right((queue, wasPainted || paintedChildren.contains(queue(nextQueueIndex)), length))
+				Some((queue, wasPainted || paintedChildren.contains(queue(nextQueueIndex)), length))
 			// Case: Queue ended here => Collects the last component for repainting, if appropriate
 			else {
-				val leaf = queue(queueIndex)
-				Left((leaf, wasPainted || paintedChildren.contains(leaf)))
+				if (!wasPainted) {
+					val leaf = queue(queueIndex)
+					if (!paintedChildren.contains(leaf))
+						leavesToPaintBuilder += leaf
+				}
+				None
 			}
 		}
 		// Paints all the lowest revalidation levels, unless their parents were already painted
-		repaintZonesBuilder ++= leaves.iterator.filterNot { _._2 }.map { case (leaf, _) =>
-			topComponent.flatMap(leaf.boundsInside).getOrElse(leaf.boundsInsideTop)
+		repaintZonesBuilder.foreach { builder =>
+			builder ++= leavesToPaintBuilder.result().iterator.map { leaf =>
+				topComponent.flatMap(leaf.boundsInside).getOrElse(leaf.boundsInsideTop)
+			}
 		}
 		
 		// Checks whether more iterations are appropriate
 		// Case: More components to update => Continues using recursion
-		if (remainingQueues.nonEmpty || nextSizeChangeChildrenBuilder.nonEmpty) {
-			updateLayoutFor(topComponent, remainingQueues, nextSizeChangeChildrenBuilder, repaintZonesBuilder,
-				nextQueueIndex)
-		}
+		if (remainingQueues.nonEmpty || nextSizeChangeChildren.nonEmpty)
+			updateLayoutFor(topComponent, remainingQueues, nextSizeChangeChildren, repaintZonesBuilder, nextQueueIndex)
 	}
 }
 
@@ -313,7 +331,7 @@ trait ComponentHierarchy
 	  * stack hierarchy)
 	  */
 	def revalidate(layoutUpdateComponents: Seq[ReachComponent]): Unit = {
-		val branchBuilder = new VectorBuilder[ReachComponent]()
+		val branchBuilder = OptimizedIndexedSeq.newBuilder[ReachComponent]
 		layoutUpdateComponents.reverseIterator.foreach { branchBuilder += _ }
 		_revalidate(branchBuilder) { _.foreach { case (canvas, queue) => canvas.revalidate(queue) } }
 	}
@@ -324,7 +342,7 @@ trait ComponentHierarchy
 	  *          get called at all.
 	  */
 	def revalidateAndThen(layoutUpdateComponents: Seq[ReachComponent])(f: => Unit): Unit = {
-		val branchBuilder = new VectorBuilder[ReachComponent]()
+		val branchBuilder = OptimizedIndexedSeq.newBuilder[ReachComponent]
 		layoutUpdateComponents.reverseIterator.foreach { branchBuilder += _ }
 		_revalidate(branchBuilder) {
 			case Some((canvas, queue)) => canvas.revalidateAndThen(queue)(f)

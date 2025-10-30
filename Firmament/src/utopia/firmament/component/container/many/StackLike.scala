@@ -60,10 +60,11 @@ trait StackLike[+C <: Stackable] extends MultiContainer[C] with StackSizeCalcula
     
     // IMPLEMENTED    -------------------
     
+	/*
     override def toString = direction match {
         case X => s"Row[$count]"
         case Y => s"Column[$count]"
-    }
+    }*/
     
     override def calculatedStackSize =
         Stacker.calculateStackSize(components.map { _.stackSize }, direction, margin, cap, layout)
