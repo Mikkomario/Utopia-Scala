@@ -39,11 +39,11 @@ case class TableColumn(table: Table, column: Column) extends Extender[Column] wi
 			}
 		// Case: Not yet part of the target => Prepares a join, if possible
 		else
-			// Primarily attempts to find a direct reference to this point
+			// Option 1: Attempts to find a direct reference to this point
 			References.referencing(this).find { ref => originTables.contains(ref.table) } match {
 				// Case: Direct reference found => Joins
 				case Some(reference) => Success(Single(Join(reference.column, this, joinType)))
-				// Case: No direct reference => Looks for a reference from this point
+				// Case: No direct reference => Looks for a reference from this point (option 2)
 				case None =>
 					val secondaryResult = References.findReferencedFrom(this).flatMap { referenced =>
 						// Case: Reference originates from the specified tables => Includes the referenced table
@@ -58,25 +58,9 @@ case class TableColumn(table: Table, column: Column) extends Extender[Column] wi
 					}
 					secondaryResult match {
 						case Some(result) => Success(Single(result))
-						case None =>
-							// As a tertiary option, looks for an indirect reference to this point
-							References.toBiDirectionalLinkGraphFrom(table).shortestRoutesIterator
-								.find { case (route, end) =>
-									originTables.contains(end.value) && route.head.value._1.ends.contains(this)
-								} match
-							{
-								case Some((route, _)) =>
-									Success(route.view.reverse
-										.map { edge =>
-											val (reference, isReverse) = edge.value
-											(if (isReverse) reference.reverse else reference).toJoin
-										}
-										.toOptimizedSeq)
-								
-								// Case: Not possible to join to this reference
-								case None => Failure(new NoReferenceFoundException(
-									s"There are no references between $this and ${ originTables.mkString(" or ") }"))
-							}
+						// Case: No direct references to or from this column
+						//       => Attempts to join this column's table instead
+						case None => table.toJoinsFrom(originTables, joinType)
 					}
 			}
 	}

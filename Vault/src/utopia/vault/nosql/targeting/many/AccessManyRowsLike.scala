@@ -86,13 +86,14 @@ trait AccessManyRowsLike[+A, +Repr]
 	override def slice(range: HasInclusiveEnds[Int]): Repr = withOffset(range.start, Some(range.end - range.start + 1))
 	
 	override def pullWith[B](column: TableColumn)(map: Value => B)(implicit connection: Connection): Seq[(A, B)] =
-		pullManyWith((selectTarget + column).toSelect(target join column)) { _parse(_) {
+		pullManyWith((selectTarget + column).toSelect(target join column.table)) { _parse(_) {
 			row => parse(row).map { _ -> map(row(column)) }
 		} }
 	override def pullWith[B](columns: Seq[TableColumn])(map: Seq[Value] => B)(implicit connection: Connection): Seq[(A, B)] =
-		pullManyWith((selectTarget + columns).toSelect(target join columns)) { _parse(_) { row =>
-			parse(row).map { _ -> map(columns.map(row.apply)) }
-		} }
+		pullManyWith(
+			(selectTarget + columns).toSelect(target join columns.iterator.map { _.table }.distinct.toOptimizedSeq)) {
+			_parse(_) { row => parse(row).map { _ -> map(columns.map(row.apply)) } }
+		}
 	override def pullWithMany[B](column: TableColumn)(map: Seq[Value] => B)(implicit connection: Connection): Seq[(A, B)] =
 		_pullWithMany(Single(column)) { rows => map(rows.map { _.apply(column) }) }
 	override def pullWithMany[B](columns: Seq[TableColumn])(map: Seq[Seq[Value]] => B)
@@ -116,7 +117,10 @@ trait AccessManyRowsLike[+A, +Repr]
 			f(result.rowsIterator)
 	}
 	private def _pullWithMany[B](extraColumns: Seq[TableColumn])(map: Seq[Row] => B)(implicit connection: Connection) = {
-		pullManyWith((selectTarget + (extraColumns: SelectTarget)).toSelect(target join extraColumns), ordering = None) {
+		pullManyWith(
+			(selectTarget + (extraColumns: SelectTarget))
+				.toSelect(target join extraColumns.iterator.map { _.table }.distinct.toOptimizedSeq),
+			ordering = None) {
 			result =>
 				val indices = keys
 				/*
