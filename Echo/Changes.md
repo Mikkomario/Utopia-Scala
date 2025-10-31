@@ -1,6 +1,17 @@
 # Utopia Echo - List of Changes
 
 ## v1.4 (in development)
+This update introduces two new integrations:
+1. ComfyUI for image-generation
+2. Piper for text-to-speech
+
+Both require a separate locally running service in order to function.
+
+Besides these, this update focuses on refactoring and generalization, 
+that are necessary for eventually adding Open AI support.  
+While there are a lot of breaking changes, 
+I think you'll find the new structure and naming logic easier to use in the long run.
+
 ### Breaking changes
 - Reworked the response / reply class hierarchy:
   - There are no longer separate **Reply** and **Response** classes. All classes now extend **Reply** / **ReplyLike**.
@@ -17,7 +28,7 @@
   - Renamed **StreamedResponseParser** to **StreamedNdJsonResponseParser**, 
     in order to more clearly communicate the NDJSON format expectation / dependency
   - **StreamedOllamaResponseParser** no longer accepts a generic type parameter, 
-    since only **OllamaReply** will be yielded
+    since it'll only yield **OllamaReply**.
   - Deleted the separate classes for generate and chat -endpoint response parsing and added new versions of 
     those under **StreamedOllamaResponseParser**'s companion object (see the new `.chat` and `.generate` properties)
 - Added a new `thoughts` property to **ReplyLike** and **ChatMessage**.
@@ -40,15 +51,17 @@
 ### New features
 - Added a basic [ComfyUI](https://www.comfy.org/) integration for generating images using stable diffusion
   - The current implementation is extendable to building custom workflows, 
-    but concrete / full implementation is limited to simple image generation
+    but concrete / full implementation is limited to simple image generation.
 - Added [Piper](https://github.com/OHF-Voice/piper1-gpl) integration, which may be used for simple text-to-speech
   - This includes **PiperClient**, as a **RequestQueue** interface, plus **TextToAudioFileRequest**, 
-    and the more generic **TextToSpeechRequest** 
+    and the more generic **TextToSpeechRequest**.
 - Added more advanced support for thinking LLMs:
   - Context size is maximized in order to ensure that the thinking process fits
   - Thinking may be deactivated
   - Think content won't be included in the chat history sent to the LLM
   - In **buffered** replies, the <think> block contents are now separated to `thoughts` and not included in `text`
+- Added models for interacting with Open AI, but there doesn't yet exist a full **Chat** interface for Open AI, 
+  nor have these been tested in any way.
 ### Other changes
 - When using `.jsonArray` and `.jsonObject` in **BufferedOllamaResponseLike**, 
   attempts to handle JSON generation errors where there's a comma before the array end.

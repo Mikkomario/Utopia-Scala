@@ -1,6 +1,13 @@
 # Utopia Flow - List of Changes
 
 ## v2.7 (in development)
+This update focuses on the following features:
+- New **Duration** and time-related classes, replacing some features previously accessible via **TimeExtensions**
+- A rewritten **Model** implementation (mostly internal changes)
+- New **Source** interaction interfaces
+- Improved **Lazy** implementation, covering a wider range of use-cases
+
+There are some pretty important bugfixes included as well.
 ### Breaking changes
 - Replaced **java.time.Duration** and **scala.concurrent.duration.Duration** with a new **Duration** class
   - This also includes most **TimeExtensions** related to durations

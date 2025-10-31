@@ -1,6 +1,10 @@
 # Utopia Firmament - List of Changes
 
 ## v1.6 (in development)
+This update is focused on enabling the changes in **Reach** v1.7.  
+Immediately useful additions include:
+- New **Border** and **BorderDrawer** constructor style
+- Fixes to window-positioning and text inset scaling logic
 ### Breaking changes
 - Rewrote **SelectionKeyListener**
   - The listener is now constructed using a factory setup

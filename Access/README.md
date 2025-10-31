@@ -1,5 +1,5 @@
 # Utopia Access
-**Access** is the common http module providing tools which are shared between server- and client-side software.
+**Access** is the common http module providing models which are shared between server- and client-side software.
 
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)

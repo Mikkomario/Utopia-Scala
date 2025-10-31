@@ -1,6 +1,11 @@
 # Utopia Citadel
 **Citadel** provides database interactions related with user management (based on **Metropolis**).
 
+## Notice
+I'm not currently actively working on this module, nor using it in my active projects. 
+Since the release of this module, I've done a lot of work in the **Vault** module, which is yet to be fully utilized 
+here. Expect to see major refactoring once (if) I continue working on this one.
+
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
 - [Utopia Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault)

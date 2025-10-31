@@ -1,6 +1,14 @@
 # Utopia Ambassador
 *OAuth can be tough to implement - What if someone did it for you?*
 
+## Notice
+Unfortunately, since I don't have an active project utilizing this module, this code might not be up-to-date. 
+I'm planning on refactoring **Exodus** etc. modules before continuing working on this, so there may be a lot of 
+breaking changes coming.
+
+However, if you just want working OAuth and don't mind the fact that you might not be able to update this library 
+without a lot of effort, please go ahead and use it. If so, let me know and I might up the priority of this one.
+
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
 - [Utopia Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault)

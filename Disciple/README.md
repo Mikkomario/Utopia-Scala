@@ -53,3 +53,5 @@ Singular interface class for all request sending and response receiving
   When you need to deal with server responses (status, response body, etc.)
 - **ResponseParser** - When you need response-parsing logic beyond reading simple **Value** or **XmlElement** 
   response content.
+
+Consider also using [Utopia Annex](https://github.com/Mikkomario/Utopia-Scala/tree/master/Annex).

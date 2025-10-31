@@ -1,6 +1,13 @@
 # Utopia Exodus
 **Exodus** provides server-side user-management, greatly facilitating authorization, for example.
 
+## Notice
+I haven't updated this module in a while, and I'm not currently using it in any of my active projects. 
+Once / if I'll be using this module in a project, I will perform a lot of refactoring / rewriting. 
+So, if you're planning on using this module long-term, 
+be mindful that there may be larger changes introduced at some point, which may require you to either 
+refactor your own code, or to ignore **Utopia** updates for that project.
+
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
 - [Utopia Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault)

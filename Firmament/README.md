@@ -69,6 +69,7 @@ Interfaces for dealing with the AWT
   which is required when dealing with AWT and Swing components
 - [AwtComponentExtensions](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/awt/AwtComponentExtensions.scala) 
   provides a set of utility functions for AWT components
+- AwtUtils
 
 ## Implementation Hints
 You will most likely be dealing with **Firmament** via either **Reach** or **Reflection**. 
@@ -97,20 +98,12 @@ However, here are some details you should be aware of, whichever approach you ch
 - **Window**
   - This will be your main interface with Windows when using **Reach**
     - At this time, **Reflection** still uses an old version of this class
+- [SingleColorIcon](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/image/SingleColorIcon.scala)
+    - This class represents an icon that consists of a single color
+    - Many **Reach** and **Reflection** components support icons
 - **LocalString**, **LocalizedString**, **Localizer** and **DisplayFunction**
   - These are your main classes when dealing with localization
   - If you don't want to use localization, define `implicit val localizer: Localizer = NoLocalization`
-- **Input**, **Interaction**, **Pool**, **Refreshable**, **Selection** and **Selectable**
-  - Inherit these traits in your custom components when you aim to provide either a read-only or a read-write access 
-  to either a value, a set of displayed values, or both
-- [TextDrawContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/model/TextDrawContext.scala)
-  - This class defines the basic settings for drawing text
-- [SingleColorIcon](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/image/SingleColorIcon.scala)
-  - This class represents an icon that consists of a single color
-  - Many **Reach** and **Reflection** components support icons
-- **ContainerContentDisplayer** and **ContainerSingleSelectionManager**
-  - These classes handle pointer-based data- and selection management for you
-  - I recommend also checking the other classes and traits in package `utopia.firmament.controller.data`
 - The drawer classes [in utopia.firmament.drawing](https://github.com/Mikkomario/Utopia-Scala/tree/master/Firmament/src/utopia/firmament/drawing)
   - There are a number of drawer classes here to select from. These may be used in components which support 
     custom drawing.
@@ -124,6 +117,16 @@ However, here are some details you should be aware of, whichever approach you ch
     [Constrainable](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/component/stack/Constrainable.scala))
   - See also the built-in modifiers in 
     [utopia.firmament.model.stack.modifier](https://github.com/Mikkomario/Utopia-Scala/tree/master/Firmament/src/utopia/firmament/model/stack/modifier)
+- [TextDrawContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/model/TextDrawContext.scala)
+    - This class defines the basic settings for drawing text
+- **Interaction**, **Pool**, **Refreshable**, **Selection** and **Selectable**
+    - Inherit these traits in your custom components when you aim to provide either a read-only or a read-write access
+      to either a value, a set of displayed values, or both
+- **ContainerContentDisplayer** and **ContainerSingleSelectionManager**
+    - These classes handle pointer-based data- and selection management for you
+    - Note: These remain useful in **Utopia Reflection**, 
+      but in **Reach** they're getting outclassed by the view-based containers and their `.mapPointer(...)` function.
+      - In other words, if you're using **Reach**, I wouldn't recommend paying much attention to these classes
 - You will also likely need the following model classes:
   - [Margins](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/model/Margins.scala) 
     (for **BaseContext**)
@@ -132,3 +135,4 @@ However, here are some details you should be aware of, whichever approach you ch
   - [HotKey](https://github.com/Mikkomario/Utopia-Scala/blob/master/Firmament/src/utopia/firmament/model/HotKey.scala) 
     (for keyboard support)
   - **RowGroup**, **RowGroups** and **WindowButtonBlueprint** for **Reach** **InputWindow** creation
+    - Notice, however, that **InputWindow** may get shadowed with a new implementation in a future release.

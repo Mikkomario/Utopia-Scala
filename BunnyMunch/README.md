@@ -12,7 +12,7 @@ Efficient json parsing with support for typeless values (i.e. for **Flow**'s
   read in various other types.
 - **AsyncJsonBunny** object provides functions for asynchronous json-processing, 
   which may be useful when reading large json files or streams.
-  
+
 ## Implementation Hints
 
 ### You should get familiar with these classes
