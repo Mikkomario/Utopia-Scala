@@ -1,7 +1,7 @@
 # Utopia Terra - list of changes
 
 ## v1.3.1 (in development)
-Supports latest changes in **Flow**
+This version supports **Flow v2.7**.
 
 ## v1.3 - 26.05.2025
 A small update fixing a bug in **PointMapLike** (map image projection logic).

@@ -1,7 +1,11 @@
 # Utopia Scribe Api - list of changes
 
 ## v1.1 (in development)
-Adds support for **Scribe-Core v1.2 and Vault v1.22**
+Following **Vault v2.0** update, this version introduces new targeting-based database interaction classes. 
+The outward-facing **Scribe** interface remains identical, however.
+
+Besides refactoring, the console application received a large number of updates. 
+Do note that these new features require a database update in order to function.
 ### Breaking changes
 - Renamed **DetailedIssue** to **IssueWithDetailedVariants**
 ### Deprecations

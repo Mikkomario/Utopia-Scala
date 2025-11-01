@@ -1,7 +1,7 @@
 # Utopia Metropolis - List of Changes
 
 ## v2.3 (in development)
-Replacing stored traits with Vault (disconnected) versions
+In this update, we replaced the stored traits with their **Vault** (disconnected) versions.
 ### Deprecations
 - Deprecated **Stored** traits; Their respective **Vault** versions should be used instead
 

@@ -1,6 +1,8 @@
 # Utopia Scribe Core - list of changes
 
 ## v1.2 (in development)
+This version adds the basis for new **Scribe API** features (i.e. for the new console commands), 
+and also reflects the changes in **Vault v2.0**.
 ### Breaking changes
 - Removed a number of functions from the **ScribeLike** trait, somewhat limiting the interface usage options
 - Some **RecordableError** functions now yield **IndexedSeq** instead of **Vector**

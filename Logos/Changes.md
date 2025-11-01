@@ -1,11 +1,13 @@
 # Utopia Logos - List of Changes
 
 ## v0.6 (in development)
-Added new targeting traits (beta)
+A small update following the changes in **Vault v2.0**.
 ### Deprecations
 - Deprecated `Delimiter.anyDelimiterRegex` in favor of `Delimiter.regex.any`
 ### Bugfixes
 - Improved delimiter parsing to include whitespaces before the delimiters (e.g. " (")
+### New features
+- Added new targeting access classes, although they're yet to be tested / fully supported
 
 ## v0.5 - 26.05.2025
 This update adds major changes to the database access interfaces of the **Logos**-specific models.

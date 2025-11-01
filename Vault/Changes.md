@@ -1,8 +1,25 @@
 # Utopia Vault - List of Changes
 
 ## v2.0 (in development)
+This is a very major update, focusing on the following areas:
+1. Rewritten low level query execution and row modeling, now supporting streaming database requests
+   - In practice, this means that you don't need to pull whole queries into memory at once
+2. Solid support for targeting access classes, including better deprecation and new database reader traits
+   - The targeting access interfaces are more customizable and concise that their **Access**-based predecessors. 
+     These will become the new de-facto standard for database accessing, 
+     although support for the older interfaces will also be kept as long as it doesn't conflict with other priorities, 
+     or require extensive refactoring.
+3. A separate "disconnected" module for use-cases where you need **Storable**, 
+  for example, yet don't have database access.
+   - We already needed a workaround in **Scribe** and **Metropolis**, so this is a pretty natural development
+4. A new **TableColumn** class, extending the possibilities of column-based functions
+   - This also affects how references are modeled
+5. New error handling interfaces, including different error handling in the low-level query execution
+   - This interface functions almost identical to the previous, with an important exception: 
+     The default error handling logic is no longer to just ignore errors, but to throw them instead.
+6. Support for table aliases, although this feature has not been properly tested
 ### Breaking changes
-- Moved the following classes to a separate module package: utopia.vault.store:
+- Moved the following classes to a separate module package: `utopia.vault.store`:
   - **HasId**, **FromIdFactory**, **EqualsById**
   - **Stored**, **StoredFromModelFactory**, **StoredModelConvertible**
 - Replaced **ReferencePoint** with **TableColumn**
@@ -35,7 +52,6 @@
 - Renamed **Table**'s `.columnWithColumnName(String)` to `.columnWithName(String)` 
   and `.findColumnWithColumnName(String)` to `.findColumnWithName(String)`
 - Deprecated **Column**`.columnNameWithTable` in favor of `.sqlName`
-- Renamed **Row**'s `.otherData` to `.other`
 - Replaced **Join**'s `.leftColumn` with `.from` and `.rightTable` and `.rightColumn` with `.to`
 - Multiple deprecations concerning **FromResultFactory** and **FromRowFactory**
   - Deprecated all previous "streaming" -related functions
@@ -50,6 +66,7 @@
 - Renamed **TimeDeprecatableView**'s `.nonDeprecated` to `.active`
 - Note: In a future release, **FromResultFactory** and **Access** classes might be deprecated 
   in favor of newer interfaces
+  - In the least, new features will be exclusive to the targeting access classes, and the **DbReader** classes
 ### New features
 - Added `.stream(...)` to **Connection**, which utilizes the new **ResultStream** class
 - Added new traits for database-reading and results-parsing, which were handled 
@@ -58,7 +75,7 @@
 - Added support for table aliases when joining
 - Added **Store** interface for inserting new items to the database, while avoiding duplicate entries
 - Added **StoreResult** and **IdOrInserted** for wrapping store function results
-- Added **HasTables**, **HasTarget******, **HasSelectTarget**, **HasTablesAsTarget**, **HasTableAsTarget**, 
+- Added **HasTables**, **HasTarget**, **HasSelectTarget**, **HasTablesAsTarget**, **HasTableAsTarget**, 
   **SelectsTable** and **SelectsTables** traits for specifying **SqlTarget** and possibly **SelectTarget**
 - Added **TableColumn**, which represents a **Column** in a specific **Table**
   - **Table**'s functions now yield **TableColumn**s instead of **Column**s

@@ -1,6 +1,11 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.8 (in development)
+This small update focuses on the following 4 areas:
+1. New constructors for velocity and acceleration classes (following **Flow**'s **Duration** update)
+2. A new generalized **SidesLike** trait (used in **Insets**, as well as in other **Utopia** modules)
+3. Improved color calculation in **ColorSet**, and added two new color roles
+4. Rewrote **ProjectilePath**, fixing an important bug in the process
 ### Breaking changes
 - Renamed **ChangeFromModelFactory** to **ChangeFactory**
 - Acceleration constructors that accepted distances, are now named `.square(...)` and `.ofSquare(...)`
@@ -16,6 +21,7 @@
 - Re-added & rewrote previously deprecated **InsetsLike** as basically **SidesLike** with **Double** sides
 - Added `Bounds.aroundBuilder`
 - Added new acceleration and velocity constructors via **ChangeFactory** and **AccelerationFactory**
+- Added **Focus** color role and a **BlackOrWhite** color role
 ### New methods
 - **SidesLike**
   - Added `.only(...)` and `.without(...)` functions

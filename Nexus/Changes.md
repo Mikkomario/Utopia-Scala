@@ -1,7 +1,7 @@
 # Utopia Nexus - List of Changes
 
 ## v1.9.6 (in development)
-New build supporting the latest **Flow** version
+A new build supporting **Flow v2.7**.
 
 ## v1.9.5 - 26.05.2025
 This update adds support for **Access v1.6**

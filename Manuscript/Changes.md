@@ -1,5 +1,8 @@
 # Utopia Manuscript - List of changes
 
+## v1.0.3 (in development)
+A new build supporting **Flow v2.7**
+
 ## v1.0.2 - 23.01.2025
 A small update fixing a bug in sheet-targeting.
 ### Bugfixes

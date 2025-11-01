@@ -1,6 +1,20 @@
 # Utopia Reach - List of Changes
 
 ## v1.7 (in development)
+This is a major update, focusing on the following areas:
+1. Major **refactoring**, focusing on the terms used in component construction. 
+   - The new version results in more concise class names.
+2. Completely new **drop-down** implementation, including a new selectable stack implementation
+3. A new interface for constructing **forms**
+   - These allow for more customized data collection, compared to **InputWindowFactory**
+     - In future releases, **Form** classes will be extended, 
+       and will eventually replace or be included in **InputWindowFactory**.
+4. Text fields are now more dynamic in terms of their content management, 
+  and offer a wider range of interfaces for customization post-creation.
+5. All components now have access to their parent **Window** instance (**Firmament** version) via their **BaseContext**.
+6. Rewrote component revalidation logic, so that revalidations may be performed locally, 
+  faster than by rearranging the whole window
+7. Buttons are now easier to color, and sometimes to construct
 ### Breaking changes
 - Multiple renames:
   - Renamed **ComponentCreationResult** to **Creation**
@@ -140,7 +154,6 @@
 - **RadioButtonGroup** now extends **HasFocusFlag**
 - **DragTo**`.applyTo()` now specifies a default parameter for the active insets
 - **InputField** conversions don't require **Input** anymore, only requiring **View** (also extended by **Input**)
-- Optimized the component layout update algorithm
 - Removed some previously deprecated classes
 
 ## v1.6 - 26.05.2025

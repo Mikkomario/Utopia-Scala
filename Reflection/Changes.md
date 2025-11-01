@@ -1,7 +1,7 @@
 # Utopia Reflection - List of Changes
 
 ## v2.3 (in development)
-Supports latest changes in **Firmament** and **Flow**
+This update reflects changes in **Firmament v1.6** and **Flow v2.7**.
 ### Breaking changes
 - **ContainerSelectionManager**'s `.enableKeyHandling(...)` now accepts 
   `adjustListener: Mutate[SelectionKeyListenerFactory]` instead of various other individual parameters, 
