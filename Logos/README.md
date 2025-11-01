@@ -1,7 +1,8 @@
 # Utopia Logos
 A system for storing and indexing textual information
 
-Notice: This library is still in relatively early development. 
+## Notice
+This library is still in relatively early development. 
 Consider this a beta product likely to change once additional development effort is applied.
 
 ## Parent Modules

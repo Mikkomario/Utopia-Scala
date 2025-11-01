@@ -1,6 +1,11 @@
 # Utopia Metropolis
 *Foundation for easy user management*
 
+## Notice
+I'm currently not using **Metropolis** in any of my active projects. 
+The next time I do, there might be a lot of changes coming up. 
+So, keep that in mind when selecting, which modules to use.
+
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
 

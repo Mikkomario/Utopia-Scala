@@ -2,13 +2,13 @@
 Flow provides the standard set-of-tools that are used in all the other Utopia modules.
 
 ## Main Features
-These are the features you get when you use Utopia Flow
+These are the features you get when you use Utopia Flow.
 
 ### Typeless data handling
 [Value](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/generic/model/immutable/Value.scala) 
 and [Model](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/generic/model/immutable/Model.scala) 
-classes offer a way to handle data without type information, a little like in Python, 
-for example, conveniently converting between various supported types like Double, Int, String and Vector.
+classes offer a way to handle data without type information, a little like in Python. 
+For example, these conveniently convert between various supported data types like Double, Int, String and Vector.
 
 This is very useful in interfaces to typeless and soft-typed systems and languages, such as MySQL, JSON and XML. 
 If you have previous experience with Java in dealing with these interfaces, you will know the pain of 
@@ -39,9 +39,9 @@ please check the **Paradigm** module's
   available, also
 
 ### Event-based pointers
-- Both mutable and read-only pointer interfaces that support mapping, merging, etc.
-  - A critical tool when creating reactive systems (such as GUIs)
-- These include full support for value change events
+Flow introduces both mutable and read-only pointer interfaces that support mapping, merging, etc. 
+These are a critical tool when creating highly reactive systems, such as GUIs. 
+All pointers have eventful versions, allowing your code to react to changes in their contents.
 
 ### Various data structures
 - Both mutable and immutable 
@@ -53,7 +53,7 @@ please check the **Paradigm** module's
 - A number of lazily initialized collection classes (**CachingSeq**, **LazySeq**, **LazyPair**, **CachingMap**, etc.)
 - Mutable concurrent collections (**Volatile**, **VolatileFlag**, **VolatileList** and **VolatileOption**) 
   may be used in multithreaded environments where data is being modified and accessed from multiple threads.
-- Support for weakly referenced lists
+- Support for weakly referenced lists and weak caches
 - A large number of additional functions to standard Scala collections via **CollectionExtensions**
 
 ### Tools for asynchronous programs
@@ -77,19 +77,21 @@ please check the **Paradigm** module's
   (i.e. [Vault](https://github.com/Mikkomario/Utopia-Scala/tree/master/Vault) and/or 
   [Trove](https://github.com/Mikkomario/Utopia-Scala/tree/master/Trove))
   
-### Pleasant interface for time classes
-- A Scala- and user-friendly interface to Java's time classes (**Instant**, **LocalDate**, **LocalTime** etc.) through 
-  extension (**TimeExtensions**)
-- A new set of time-related models such as **WeekDay**, **Days** and **DateRange**
+### Effective interfaces for time classes
+Flow provides Scala-friendly versions of `java.time`'s classes, 
+such as **Duration**, **TimeUnit**, **Year** and **Month**. 
+Classes which don't receive a completely rewritten version, such as **Instant**, **LocalDate** and **LocalTime**, 
+receive a wide range of new functions via **TimeExtensions**. New time classes, such as **WeekDay**, are also added.
 
 ### Easy-to-use interface for file interactions
-- Additional easy-to-use functions for files (i.e. java.nio.file.Path instances) through extension (**FileExtensions**)
+Flow contains new easy-to-use functions for files (i.e. **java.nio.file.Path** instances) via **FileExtensions**.
 
 ### String and regular expression -utilities
-- The [Regex](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/parse/string/Regex.scala) 
-  class offers a more beginner-friendly (and readable) way to build regular expressions, 
-  which is useful for people like me who didn't grow up using them every day
-- **StringExtensions** also offers a set of neat methods for easier String-handling
+**StringExtensions** offers a various methods for easier String-handling.
+
+[Regex](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/parse/string/Regex.scala) 
+class offers a more beginner-friendly (and readable) way to build regular expressions, 
+which is useful for people like me who didn't grow up using them every day. 
 
 ### Command line interface template
 - [utopia.flow.util.console package](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow/src/utopia/flow/util/console) 
@@ -139,8 +141,8 @@ When you wish to instantiate typeless values, please enable implicit value conve
   - Specifies a number of utility methods for StdIn
 
 ### You should get familiar with these classes
-- **Value** - When you need to use attributes, but you can't define their exact typing below Any
-- immutable.**Model** - When you need to group a number of values together to form an object
+- **Value** - When you need to use attributes, but you can't define their exact typing
+- **Model** - When you need to group a number of values together to form an object
 - **ThreadPool** - When you need an implicit ExecutionContext (I.e. when you need to do anything asynchronous)
 - **XmlElement**, **XmlReader** & **XmlWriter** - When you need to deal with XML
 - **Loop**, **Wait** and **Delay** - When you need to loop a function or a background process
@@ -156,10 +158,8 @@ When you wish to instantiate typeless values, please enable implicit value conve
   When you want to initialize something lazily
 - **CsvReader** - When you need to read .csv or other text-based tables
 - [StringFrom](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/parse/string/StringFrom.scala) 
-  and [LinesFrom](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/parse/string/LinesFrom.scala) - 
-  When you need to read file or stream data into strings
-- [Cache](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/collection/immutable/caching/cache/Cache.scala) 
-  and [TryCache](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/collection/immutable/caching/cache/TryCache.scala) - 
+  and **Lines** - When you need to read file or stream data into strings
+- [Cache](https://github.com/Mikkomario/Utopia-Scala/blob/master/Flow/src/utopia/flow/collection/immutable/caching/cache/Cache.scala) - 
   When you need a simple lazily initialized map
 - **ObjectFileContainer** & **ObjectsFileContainer** (and others) - When you need to store limited amount of 
   data locally between use sessions 

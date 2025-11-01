@@ -1,6 +1,6 @@
 # Utopia Vault
 Vault is the main Utopia library for interacting with MySQL-based databases.  
-However, what's great with Vault is that you don't need much SQL know-how to use it.
+However, what's great with Vault is that you don't need that much SQL know-how in order to use it.
 
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
@@ -44,17 +44,15 @@ and [SqlTarget](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src
   together without specifying any columns or conditions. **Vault** will fill in all the blanks for you.
     - If you wish to manually specify joined columns, that is also possible
 
-**Storable**, **Readable**, Factory and **Access** traits for object-oriented database interactions
+**Storable**, **DbReader** and **Targeting** traits for easier database interactions
 - [Storable](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/model/immutable/Storable.scala) 
   trait allows you to push (update or insert) model data to database with minimum sql syntax
-- **Readable** trait allows you to pull (read) up-to-date data from database to your model
-- Mutable **DBModel** class implements both of these traits
-- Factory traits can be used for transforming database row data into your object models
-    - You can include data from multiple tables if you want. Simply use 
-    [FromResultFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/nosql/factory/FromResultFactory.scala) or 
-      [FromRowFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/nosql/factory/row/FromRowFactory.scala).
-- **Access** traits allow you to create simple interfaces into database contents and to hide the actual sql-based 
+- **DbReader** traits can be used for transforming database row data into your object models
+    - You can include data from multiple tables if you want. Simply extend **DbRowReader** or **DbReader**.
+- **Targeting** traits allow you to create simple interfaces into database contents and to hide the actual sql-based 
   implementation
+- I highly recommend utilizing these through the [Vault-Coder](https://github.com/Mikkomario/Utopia-Coder/tree/master/Vault-Coder) 
+  utility application, which generates these classes automatically for you, based on JSON specifications.
 - These traits allow you to use a MariaDB / MySQL server in a no-SQL, object-oriented manner
 
 ## Implementation Hints
@@ -65,15 +63,10 @@ The default driver option (None) in connection settings should work if you've ad
 to your build path / classpath. If not, you need to specify the name of the class you wish to use and make
 sure that class is included in the classpath.
 
-If you want to log errors or make all parsing errors fatal, please change `ErrorHandling.defaultPrinciple`.
+If you want to log errors or to add custom error handling, please change `HandleError.default`.
 
 If you want to manage column length limits, I'd recommend calling `ColumnLengthRules.loadFrom(Path)`, which reads 
 column length management settings from a .json file.
-
-When using **Vault**, it is highly recommended to also utilize the 
-[Vault-Coder](https://github.com/Mikkomario/Utopia-Coder/tree/master/Vault-Coder) utility application, 
-which can generate both database structure and Scala code for you, based on your model structure 
-(a custom json document).
 
 ### You should get familiar with these classes
 - [ConnectionPool](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/database/ConnectionPool.scala) - 
@@ -86,11 +79,9 @@ which can generate both database structure and Scala code for you, based on your
   [Column](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/model/immutable/Column.scala) - 
   When you need to deal with database tables and columns
 - **Storable** - When you're creating models for noSQL database interaction
-- [FromValidatedRowFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/nosql/factory/row/model/FromValidatedRowModelFactory.scala), 
-  **FromRowFactory**, **FromResultFactory**, etc. -
-  When you need to read model data from the database
-- [SingleModelAccess](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/nosql/access/single/model/SingleModelAccess.scala) & 
-  [ManyModelAccess](https://github.com/Mikkomario/Utopia-Scala/blob/master/Vault/src/utopia/vault/nosql/access/many/model/ManyModelAccess.scala) - 
+- **DbRowReader** and **DbReader** - When you need to read model data from the database
+  - Also check various utility traits in the `nosql.read` package
+- **AccessManyRows**, **AccessMany**, **AccessRowsWrapper**, **AccessWrapper** and **AccessOneWrapper** - 
   When you need to create interfaces for reading model data from the database
 - **Select**, **SelectAll**, **Update**, **Insert**, **Delete** & **Exists** - When you need to create SQL queries
 - **Where**, **Limit** and **OrderBY** - When you need to limit SQL queries

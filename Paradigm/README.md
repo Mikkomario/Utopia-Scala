@@ -62,6 +62,6 @@ At the application startup, you need to call `ParadigmDataType.setup()`.
 - [AffineTransformation](https://github.com/Mikkomario/Utopia-Scala/blob/master/Paradigm/src/utopia/paradigm/transform/AffineTransformation.scala) & 
   [LinearTransformation](https://github.com/Mikkomario/Utopia-Scala/blob/master/Paradigm/src/utopia/paradigm/transform/LinearTransformation.scala) - 
   When you need to deal with affine transformations (translation, rotation, scaling, etc.)
-- **Color** - When you need to deal with colors (replaces java.awt.Color)
+- **Color** - When you need to deal with colors (replaces **java.awt.Color**)
 - **Angle**, **Rotation** & 
   [DirectionalRotation](https://github.com/Mikkomario/Utopia-Scala/blob/master/Paradigm/src/utopia/paradigm/angular/DirectionalRotation.scala)

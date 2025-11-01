@@ -1,5 +1,5 @@
 # Utopia Reach
-A JVM GUI library with minimum reliance on Swing
+A JVM GUI library with minimal reliance on Swing
 
 ## Parent Modules
 - [Utopia Flow](https://github.com/Mikkomario/Utopia-Scala/tree/master/Flow)
@@ -51,6 +51,9 @@ There are usually three types of container and component implementations:
 - **Immutable** - For components and containers which are static and don't change (very safe)
 - **View** - For components and containers which reflect changes in one or more pointers (flexible & controlled)
 - **Mutable** - For components and containers that allow mutation of their contents (easy but dangerous)
+  - Note that mutable implementations are becoming more scarce as the development continues. 
+    View-based components are almost always more useful, and may involve mutability as well, 
+    depending on the complexity of the component.
 
 ### Classes to be aware of
 You will likely use these classes very often:
@@ -58,12 +61,11 @@ You will likely use these classes very often:
   This component holds the whole component hierarchy
 - **ReachWindow** - Use this interface for constructing windows that consist of a single **ReachCanvas** instances
 - [ReachWindowContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/context/ReachWindowContext.scala) 
-  and [ReachContentWindowContext](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/context/ReachContentWindowContext.scala) - 
+  and **StaticReachContentWindowContext** - 
   Use these context classes when using **ReachWindow**
 - [Open](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/wrapper/OpenComponent.scala) - 
   For creating components that haven't yet been attached to the component hierarchy
-- [ComponentCreationResult](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/wrapper/ComponentCreationResult.scala) 
-  and [ComponentWrapResult](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/wrapper/ComponentWrapResult.scala)
+- **Creation** and **ContainerCreation**
   - While these are typically implicitly constructed, you may sometimes need to declare one explicitly when 
     building component layouts. Either way, you should be familiar with these classes. 
 - [Mixed](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/factory/Mixed.scala) 
@@ -98,17 +100,16 @@ Here are some built-in components and layout containers you may use:
     - These allow the user to select boolean values
   - [RadioButtonGroup](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/RadioButtonGroup.scala)
     - This allows the user to select from a limited number of options
-  - [SelectionList](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/SelectionList.scala) 
-    and [DropDown](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/DropDown.scala)
+  - **SelectableStack** and [DropDown](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/selection/DropDown.scala)
     - These allow the user to select from a list of values
-    - SelectionList displays the list within the component while DropDown opens a separate window
+    - **Selectable** displays the list within the component while **DropDown** opens a separate window
   - [DurationField](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/component/input/text/DurationField.scala) 
     allows for time and duration input
   - **DrawableCanvas** allows you to draw **Drawable** items (from **Genesis**) in real time in a GUI context
 - [Containers](https://github.com/Mikkomario/Utopia-Scala/tree/master/Reach/src/utopia/reach/container) (for building layouts)
   - **Framing** - Places margins/insets around a single component
   - **AlignFrame** - Aligns a component to specific direction
-  - **CachingViewSwapper** - Switches the displayed component based on a pointer value
+  - **Swapper** - Switches the displayed component based on a pointer value
   - **ScrollView** and **ScrollArea** for 1D and 2D scrolling
   - **Stack** for placing components in a column or in a row
     - Supports all three component principles: immutable, view and mutable
@@ -132,36 +133,16 @@ You will likely need these classes and traits when building your custom componen
 
 When you've built your custom component, you should also build a set of factories for it.  
 For this you will need:
-- **BaseContextualFactory**, **ColorContextualFactory**, **TextContextualFactory** or some other **ContextualFactory**
+- A **ContextualFactory**, such as **TextContextualFactory** or **VariableContextualFactory**
   - Extending one of these traits allows you to build components using context instances
   - In case you're building layout containers, where you don't know or don't want to limit the exact context type 
     being used, use **GenericContextualFactory** instead
-- Your component companion object should extend **ComponentFactoryFactory** (Cff), 
-  **FromContextComponentFactoryFactory** (Ccff) or **FromGenericContextComponentFactoryFactory** (Gccff)
-  - When extending **ComponentFactoryFactory**, the generated factory class (another custom class) should 
-    extend either **FromContextFactory** or **FromGenericContextFactory**
-    - This will enable implicit conversions from your companion object into Ccff or Gccff
-    - This is assuming you want to use the context classes. If you don't, don't have the factory class extend anything.
+- Your component companion object should extend **ContextualComponentFactories** (GCF), 
+  or **GenericContainerFactories** (GCF)
 - Note, it may be useful to utilize the [Reach Coder](https://github.com/Mikkomario/Utopia-Coder/tree/master/Reach-Coder) 
   utility application in order to get a head start in custom component creation.
 
-When building form windows, you will deal with the following classes:
-- [InteractionWindowFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InteractionWindowFactory.scala) 
-  or [InputWindowFactory](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InputWindowFactory.scala)
-  - Extend one of these in the class you use for specifying the windows you wish to create
-  - **InteractionWindowFactory** is the more generic version, which doesn't require form layout
-- [InputRowBlueprint](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InputRowBlueprint.scala) - 
-  Construct one of these for each form field you specify
-- [DialogButtonBlueprint](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reflection/src/utopia/reflection/container/swing/window/interaction/DialogButtonBlueprint.scala) 
-  (in **Firmament**) - Construct one of these for each dialog button
-- [InputField](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/window/InputField.scala)
-  - Your form input components will need to be wrapped into **InputFields**
-  - `import utopia.reach.window.InputField._` will offer you a number of methods for constructing these wrappers
-  - Alternatively you may use the functions within the **InputField** object itself
-  - Oftentimes you should have an implicit conversion available
-- [FocusRequestable](https://github.com/Mikkomario/Utopia-Scala/blob/master/Reach/src/utopia/reach/focus/FocusRequestable.scala)
-  - Sometimes the input components don't support focus out-of-the-box. In these cases, 
-    wrap them using the **FocusRequestable** object.
+When building form windows, use: **FormBuilder**, **FormField** and **FormFieldOut**.
 
 Other tools available for you:
 - **DragAndDropManager**, **DragAndDropTarget** and **DragAndDropEvent**
@@ -181,15 +162,14 @@ for an example of this.
 You should specify at least the following:
 - Implicit **Logger** implementation (e.g. **SysErrLogger**)
 - Implicit **ExecutionContext** instance (typically **ThreadPool**)
-- Implicit default language code (**String**) for localization
+- Implicit default language code (**Language**) for localization
   - It is recommended that you use the 2-character ISO-standard language codes
 - Implicit **Localizer** implementation (use **NoLocalization** to skip localization)
 - An **ActorHandler** instance, and an **ActionLoop** to manage that instance
   - When the program starts, call `.runAsync()` for your **ActionLoop** instance
 - Implicit **AnimationContext** and **ScrollingContext** instances, in case you use those
 - A **ColorScheme** instance
-  - Use `ColorScheme.default ++` your custom color scheme overrides, 
-    or build one from ground up.
+  - Use `ColorScheme.default ++` your custom color scheme overrides. Alternatively, you may build one from ground up.
 - Your **Fonts** (one of which will be placed in the **BaseContext** instance)
 - A **Margins** instance
   - Hint: You may wish to use `Screen.ppi` and the **Distance** class when 
@@ -198,8 +178,8 @@ You should specify at least the following:
     - For this, import `utopia.paradigm.measurement.DistanceExtensions._`
 - A **BaseContext** instance
 - A **WindowContext** instance (if using **ReachWindow**)
-  - Once you know the window background color, combine these two by 
-    calling windowContext`.withContentContext(BaseContext)`
+  - Once you know the window background color, combine it with your **BaseContext** using 
+    `.withContentContext(BaseContext)`
 
 Next, define the data pointers you wish to use throughout or outside the component hierarchy.  
 For this, use **EventfulPointer**, **Flag**, or **ResettableFlag**.
