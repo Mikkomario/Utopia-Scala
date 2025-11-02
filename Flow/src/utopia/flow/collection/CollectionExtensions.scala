@@ -364,7 +364,7 @@ object CollectionExtensions
 		  * Collects the most extreme items from this collection, based on the specified mapping function
 		  * @param extreme The extreme being collected (min | max)
 		  * @param f A mapping function
-		  * @param bf Implicit buildfrom
+		  * @param bf Implicit build-from
 		  * @param ord Implicit ordering applied for the mapped values
 		  * @tparam B Type of map results
 		  * @tparam To Type of resulting collection
@@ -609,6 +609,41 @@ object CollectionExtensions
 		
 		
 		// OTHER    --------------------------
+		
+		/**
+		 * @param extreme The targeted extreme
+		 * @param ord     Implicit ordering to use
+		 * @return The most extreme item in this collection
+		 * @throws NoSuchElementException If this collection is empty
+		 */
+		@throws[NoSuchElementException]("This collection is empty")
+		def apply(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.from(i)
+		/**
+		 * @param extreme The targeted extreme
+		 * @param ord     Implicit ordering to use
+		 * @return The most extreme item in this collection. None if this collection is empty.
+		 */
+		def findExtreme(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.findFrom(i)
+		
+		/**
+		 * @param extreme Targeted extreme
+		 * @param f A function that extracts the compared key
+		 * @param ord Implicit ordering applied
+		 * @tparam B Type of the compared keys
+		 * @return The most extreme item in this collection, by a compared key
+		 */
+		@throws[NoSuchElementException]("This collection is empty")
+		def extremeBy[B](extreme: Extreme)(f: A => B)(implicit ord: Ordering[B]) = extreme.by(f).from(i)
+		/**
+		 * @param extreme Targeted extreme
+		 * @param f A function that extracts the compared key
+		 * @param ord Implicit ordering applied
+		 * @tparam B Type of the compared keys
+		 * @return The most extreme item in this collection, by a compared key.
+		 *         None if this collection is empty.
+		 */
+		def findExtremeBy[B](extreme: Extreme)(f: A => B)(implicit ord: Ordering[B]) =
+			extreme.by(f).findFrom(i)
 		
 		/**
 		 * Performs the specified operation for all elements in this collection,
@@ -1626,21 +1661,6 @@ object CollectionExtensions
 			case First => t.headOption
 			case Last => t.lastOption
 		}
-		
-		/**
-		  * @param extreme The targeted extreme
-		  * @param ord     Implicit ordering to use
-		  * @return The most extreme item in this collection
-		  * @throws NoSuchElementException If this collection is empty
-		  */
-		@throws[NoSuchElementException]("This collection is empty")
-		def apply(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.from(t)
-		/**
-		  * @param extreme The targeted extreme
-		  * @param ord     Implicit ordering to use
-		  * @return The most extreme item in this collection. None if this collection is empty.
-		  */
-		def find(extreme: Extreme)(implicit ord: Ordering[A]) = extreme.optionFrom(t)
 		
 		/**
 		  * @return Duplicate items within this Iterable

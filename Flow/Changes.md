@@ -1,5 +1,21 @@
 # Utopia Flow - List of Changes
 
+## v2.8 (in development)
+### Breaking changes
+- **Iterable**'s `.find(Extreme)` (in **CollectionExtensions**) is now named `.findExtreme(Extreme)`
+  - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
+- **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
+### Deprecation
+- Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
+### New methods
+- **Extreme**
+  - Added `.compare(...)`
+- **IterableOnce**
+  - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
+### Other changes
+- `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
+- Internal refactoring within **Extreme**'s `.by(...)`
+
 ## v2.7 - 01.11.2025
 This update focuses on the following features:
 - New **Duration** and time-related classes, replacing some features previously accessible via **TimeExtensions**

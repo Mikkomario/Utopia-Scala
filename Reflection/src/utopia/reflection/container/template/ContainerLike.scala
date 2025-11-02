@@ -25,7 +25,7 @@ trait ContainerLike[+C <: ReflectionComponentLike] extends ReflectionComponentLi
 		var contentLength = 0
 		
 		while (contentLength < 40 && contentIter.hasNext) {
-			val nextStr = contentIter.next.toString
+			val nextStr = contentIter.next().toString
 			if (contentLength != 0)
 				contentStrBuilder ++= ", "
 			contentStrBuilder ++= nextStr

@@ -166,7 +166,9 @@ trait LinkedDescriptionAccess extends SingleRowModelAccess[LinkedDescription] wi
 				languageIds.grouped(3).findMap { nextLanguageIds =>
 					val options = find(descriptionModel.languageIdColumn.in(nextLanguageIds.toSet))
 					// Selects the result that is most preferred by the user
-					nextLanguageIds.findMap { languageId => options.find { _.description.languageId == languageId } }
+					nextLanguageIds.findMap { languageId: Int =>
+						options.find { o: LinkedDescription => o.description.languageId == languageId }
+					}
 				}
 			}
 			
