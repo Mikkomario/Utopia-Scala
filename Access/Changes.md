@@ -1,6 +1,6 @@
 # Utopia Access - List of Changes
 
-## v1.6.1 (in development)
+## v1.6.1 - 01.11.2025
 A new build supporting changes in **Flow**
 
 ## v1.6 - 26.05.2025

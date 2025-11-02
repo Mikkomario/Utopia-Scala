@@ -1,6 +1,6 @@
 # Utopia Reflection - List of Changes
 
-## v2.3 (in development)
+## v2.3 - 01.11.2025
 This update reflects changes in **Firmament v1.6** and **Flow v2.7**.
 ### Breaking changes
 - **ContainerSelectionManager**'s `.enableKeyHandling(...)` now accepts 

@@ -1,6 +1,6 @@
 # Utopia Manuscript - List of changes
 
-## v1.0.3 (in development)
+## v1.0.3 - 01.11.2025
 A new build supporting **Flow v2.7**
 
 ## v1.0.2 - 23.01.2025

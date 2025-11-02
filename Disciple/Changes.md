@@ -1,6 +1,6 @@
 # Utopia Disciple - List of Changes
 
-## v1.9.1 (in development)
+## v1.9.1 - 01.11.2025
 A very small update, introducing a new response parser for file-writing. 
 Compatible with **Flow** v2.7.
 ### New features

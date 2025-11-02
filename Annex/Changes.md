@@ -1,6 +1,6 @@
 # Utopia Annex - List of Changes
 
-## v1.11 (in development)
+## v1.11 - 01.11.2025
 A small update introducing support for path parameters in API requests.
 ### Breaking changes
 - **ApiRequest** now contains an abstract property: `pathParams: Model`

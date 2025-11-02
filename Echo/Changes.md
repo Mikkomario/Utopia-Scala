@@ -1,6 +1,6 @@
 # Utopia Echo - List of Changes
 
-## v1.4 (in development)
+## v1.4 - 01.11.2025
 This update introduces two new integrations:
 1. ComfyUI for image-generation
 2. Piper for text-to-speech

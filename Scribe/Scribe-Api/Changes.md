@@ -1,6 +1,6 @@
 # Utopia Scribe Api - list of changes
 
-## v1.1 (in development)
+## v1.1 - 01.11.2025
 Following **Vault v2.0** update, this version introduces new targeting-based database interaction classes. 
 The outward-facing **Scribe** interface remains identical, however.
 

@@ -1,6 +1,6 @@
 # Utopia Ambassador - List of Changes
 
-## v2.3.2 (in development)
+## v2.3.2 - 01.11.2025
 Supports latest changes in **Flow** and **Vault**
 
 ## v2.3.1 - 26.05.2025

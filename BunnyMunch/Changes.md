@@ -1,6 +1,6 @@
 # Utopia BunnyMunch - List of Changes
 
-## v1.0.8 (in development)
+## v1.0.8 - 01.11.2025
 A new build supporting **Flow v2.7**
 
 ## v1.0.7 - 26.05.2025

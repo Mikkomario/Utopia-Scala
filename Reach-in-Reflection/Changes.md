@@ -1,6 +1,6 @@
 # Reach in Reflection - List of Changes
 
-## v1.0.6 (in development)
+## v1.0.6 - 01.11.2025
 This version supports **Reach v1.7**.
 
 ## v1.0.5 - 26.05.2025

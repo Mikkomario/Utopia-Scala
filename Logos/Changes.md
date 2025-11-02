@@ -1,6 +1,6 @@
 # Utopia Logos - List of Changes
 
-## v0.6 (in development)
+## v0.6 - 01.11.2025
 A small update following the changes in **Vault v2.0**.
 ### Deprecations
 - Deprecated `Delimiter.anyDelimiterRegex` in favor of `Delimiter.regex.any`

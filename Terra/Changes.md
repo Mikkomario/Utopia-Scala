@@ -1,6 +1,6 @@
 # Utopia Terra - list of changes
 
-## v1.3.1 (in development)
+## v1.3.1 - 01.11.2025
 This version supports **Flow v2.7**.
 
 ## v1.3 - 26.05.2025

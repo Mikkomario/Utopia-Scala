@@ -1,6 +1,6 @@
 # Utopia Genesis - List of Changes
 
-## v4.2.2 (in development)
+## v4.2.2 - 01.11.2025
 This small update only introduces some minor refactoring, and a few new utility features.
 ### Breaking changes
 - **DrawableHandler**'s `visiblePointer` is now `visibleFlag`

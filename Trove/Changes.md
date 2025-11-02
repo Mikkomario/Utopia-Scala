@@ -1,6 +1,6 @@
 # Utopia Trove - List of Changes
 
-## v1.1.13 (in development)
+## v1.1.13 - 01.11.2025
 This version supports **Vault v2.0**.
 
 ## v1.1.12 - 26.05.2025

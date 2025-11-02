@@ -1,6 +1,6 @@
 # Utopia Flow - List of Changes
 
-## v2.7 (in development)
+## v2.7 - 01.11.2025
 This update focuses on the following features:
 - New **Duration** and time-related classes, replacing some features previously accessible via **TimeExtensions**
 - A rewritten **Model** implementation (mostly internal changes)

@@ -1,6 +1,6 @@
 # Utopia Firmament - List of Changes
 
-## v1.6 (in development)
+## v1.6 - 01.11.2025
 This update is focused on enabling the changes in **Reach** v1.7.  
 Immediately useful additions include:
 - New **Border** and **BorderDrawer** constructor style

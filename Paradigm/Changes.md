@@ -1,6 +1,6 @@
 # Utopia Paradigm - List of Changes
 
-## v1.8 (in development)
+## v1.8 - 01.11.2025
 This small update focuses on the following 4 areas:
 1. New constructors for velocity and acceleration classes (following **Flow**'s **Duration** update)
 2. A new generalized **SidesLike** trait (used in **Insets**, as well as in other **Utopia** modules)

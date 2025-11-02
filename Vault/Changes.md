@@ -1,6 +1,6 @@
 # Utopia Vault - List of Changes
 
-## v2.0 (in development)
+## v2.0 - 01.11.2025
 This is a very major update, focusing on the following areas:
 1. Rewritten low level query execution and row modeling, now supporting streaming database requests
    - In practice, this means that you don't need to pull whole queries into memory at once
