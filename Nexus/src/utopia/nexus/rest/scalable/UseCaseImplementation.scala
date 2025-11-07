@@ -5,6 +5,7 @@ import utopia.nexus.http.Path
 import utopia.nexus.rest.Context
 import utopia.nexus.result.Result
 
+@deprecated("Replaced with a new implementation in controller.api.node.scalable package", "v2.0")
 object UseCaseImplementation
 {
 	// OTHER    --------------------------------
@@ -63,10 +64,11 @@ object UseCaseImplementation
 }
 
 /**
- * A common trait for rest node use case implementations (E.g. Get)
+ * A common trait for rest node use case implementations (e.g. Get)
  * @author Mikko Hilpinen
  * @since 17.6.2021, v1.6
  */
+@deprecated("Replaced with a new implementation in controller.api.node.scalable package", "v2.0")
 trait UseCaseImplementation[-C <: Context, -P]
 {
 	// ABSTRACT --------------------------------

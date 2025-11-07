@@ -7,6 +7,7 @@ import utopia.nexus.rest.{Context, Resource, ResourceSearchResult}
 
 import scala.language.implicitConversions
 
+@deprecated("Replaced with a new version in controller.api.node.scalable", "v2.0")
 object FollowImplementation
 {
 	// IMPLICIT --------------------------------
@@ -64,6 +65,7 @@ object FollowImplementation
  * @author Mikko Hilpinen
  * @since 17.6.2021, v1.6
  */
+@deprecated("Replaced with a new version in controller.api.node.scalable", "v2.0")
 trait FollowImplementation[-C <: Context]
 {
 	/**

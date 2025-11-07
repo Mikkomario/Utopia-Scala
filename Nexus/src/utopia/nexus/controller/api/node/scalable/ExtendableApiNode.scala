@@ -1,0 +1,150 @@
+package utopia.nexus.controller.api.node.scalable
+
+import utopia.access.model.enumeration.Method
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.util.EitherExtensions._
+import utopia.nexus.model.response.RequestResult
+
+object ExtendableApiNode
+{
+	// OTHER    -----------------------------
+	
+	/**
+	 * Creates a new scalable API node with no local context
+	 * @param name Name of this node
+	 * @param follow Initial follow implementations. Default = empty.
+	 * @param execute Initial method implementations (method -> implementation). Default = empty.
+	 *                Note: If there are multiple implementations for a method,
+	 *                      the first entry will be called primarily,
+	 *                      and the others reserved as backup/default implementations.
+	 * @tparam C Type of the required request context
+	 * @return A new scalable API node
+	 */
+	def apply[C](name: String, follow: Seq[FollowImplementation[C]] = Empty,
+	             execute: IterableOnce[(Method, UseCaseImplementation[C, Any])] = Empty) =
+		withStaticContext[C, Unit](name, (), follow, execute)
+	
+	/**
+	 * Creates a new scalable API node, which wraps a static context property
+	 * @param name Name of this node
+	 * @param context The context property to wrap
+	 * @param follow Initial follow implementations. Default = empty.
+	 * @param execute Initial method implementations (method -> implementation). Default = empty.
+	 *                Note: If there are multiple implementations for a method,
+	 *                      the first entry will be called primarily,
+	 *                      and the others reserved as backup/default implementations.
+	 * @tparam C Type of the required request context
+	 * @tparam P Type of the wrapped local context
+	 * @return A new scalable API node
+	 */
+	def withStaticContext[C, P](name: String, context: P, follow: Seq[FollowImplementation[C]] = Empty,
+	                             execute: IterableOnce[(Method, UseCaseImplementation[C, P])] = Empty): ExtendableApiNode[C, P] =
+		new StaticContextNode[C, P](name, context, follow, execute)
+	/**
+	 * Creates a new scalable API node, which computes the local context based on the request context
+	 * @param name Name of this node
+	 * @param follow Initial follow implementations. Default = empty.
+	 * @param execute Initial method implementations (method -> implementation). Default = empty.
+	 *                Note: If there are multiple implementations for a method,
+	 *                      the first entry will be called primarily,
+	 *                      and the others reserved as backup/default implementations.
+	 * @param openContext A function which receives the request context and attempts to open a local context.
+	 *                    Yields either:
+	 *                          - Right: Local context, if successfully initialized
+	 *                          - Left: A failure, if context-initialization failed
+	 * @tparam C Type of the required request context
+	 * @tparam P Type of the generated local context
+	 * @return A new scalable API node
+	 */
+	def withComputedContext[C, P](name: String, follow: Seq[FollowImplementation[C]] = Empty,
+	                              execute: IterableOnce[(Method, UseCaseImplementation[C, P])] = Empty)
+	                             (openContext: C => Either[RequestResult, P]): ExtendableApiNode[C, P] =
+		new _ExtendableApiNode[C, P](name, follow, execute)(openContext)
+	
+	
+	// NESTED   -----------------------------
+	
+	private class StaticContextNode[C, P](override val name: String, localContext: P,
+	                                      defaultFollow: Seq[FollowImplementation[C]],
+	                                      defaultExecute: IterableOnce[(Method, UseCaseImplementation[C, P])])
+		extends ExtendableApiNode[C, P](defaultFollow, defaultExecute)
+	{
+		override protected def withLocalContext(implementation: P => RequestResult)
+		                                       (implicit context: C): RequestResult =
+			implementation(localContext)
+	}
+	
+	private class _ExtendableApiNode[C, P](override val name: String, defaultFollow: Seq[FollowImplementation[C]],
+	                                       defaultExecute: IterableOnce[(Method, UseCaseImplementation[C, P])])
+	                                      (openContext: C => Either[RequestResult, P])
+		extends ExtendableApiNode[C, P](defaultFollow, defaultExecute)
+	{
+		override protected def withLocalContext(implementation: P => RequestResult)
+		                                       (implicit context: C): RequestResult =
+			openContext(context).leftOrMap(implementation)
+	}
+}
+
+/**
+ * An abstract implementation of the [[ModularApiNode]] trait,
+ * that allows custom implementations to be added post-creation
+ * @tparam C Type of the required request context
+ * @tparam P Type of the local context generated by this node
+ * @author Mikko Hilpinen
+ * @since 07.11.2025, v2.0, based on ExtendableResource written 18.6.2021 for v1.6
+ */
+abstract class ExtendableApiNode[C, P](defaultFollow: Seq[FollowImplementation[C]] = Empty,
+                                       defaultExecute: IterableOnce[(Method, UseCaseImplementation[C, P])] = Empty)
+	extends ModularApiNode[C, P] with Extendable[C, P]
+{
+	// ATTRIBUTES   ------------------------------
+	
+	/**
+	 * Contains all registered follow implementations
+	 */
+	private var _follow = defaultFollow
+	/**
+	 * Contains all registered use-case implementations, grouped by method
+	 */
+	private var _execute: Map[Method, Seq[UseCaseImplementation[C, P]]] =
+		defaultExecute.groupMapToSeqs { _._1 } { _._2 }
+	
+	
+	// IMPLEMENTED  ------------------------------
+	
+	override def followImplementations = _follow
+	override def useCaseImplementations = _execute
+	
+	def followWith(implementation: FollowImplementation[C]) = _follow = implementation +: _follow
+	def ++=(followImplementations: Iterable[FollowImplementation[C]]) =
+		_follow = OptimizedIndexedSeq.concat(followImplementations, _follow)
+	
+	def addImplementation(method: Method, implementation: UseCaseImplementation[C, P]) =
+		_execute += method -> (_execute.get(method) match {
+			case Some(existing) => implementation +: existing
+			case None => Single(implementation)
+		})
+	def update(method: Method)(implementation: (P, C, Seq[String]) => RequestResult) =
+		_execute += (method -> Single(UseCaseImplementation.default.usingNodeContext(implementation)))
+	
+	
+	// OTHER    ----------------------------------
+	
+	/**
+	 * Extends the capabilities of this node by adding a new use case implementation.
+	 * The new implementation will be the first one to use for the supported method.
+	 * @param method Method for which to add this use case
+	  * @param useCaseImplementation A new use case implementation
+	 */
+	@deprecated("Renamed to .addImplementation(Method, UseCaseImplementation)", "v2.0")
+	def extendWith(method: Method, useCaseImplementation: UseCaseImplementation[C, P]) =
+		addImplementation(method, useCaseImplementation)
+	/**
+	 * Extends the capabilities of this node by adding a new follow implementation.
+	 * The new implementation will be the first one called.
+	 * @param followImplementation A new follow implementation
+	 */
+	@deprecated("Renamed to .followWith(FollowImplementation)", "v2.0")
+	def extendWith(followImplementation: FollowImplementation[C]) = followWith(followImplementation)
+}
