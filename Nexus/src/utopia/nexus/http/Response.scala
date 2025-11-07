@@ -15,6 +15,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.Mutate
 
+@deprecated("Replaced with a new implementation in the model.response package", "v2.0")
 object Response
 {
     // OTHER METHODS    ----------------
@@ -26,15 +27,13 @@ object Response
      */
     def fromModel(body: Model, status: Status = OK, setCookies: Seq[Cookie] = Empty) =
         fromValue(body, status, setCookies)
-    
     /**
      * Wraps a value vector body into an UTF-8 encoded JSON response
      * @param body the vector that forms the body of the response
      * @param status the status of the response
      */
-    def fromVector(body: Vector[Value], status: Status = OK, setCookies: Seq[Cookie] = Empty) =
+    def fromVector(body: Seq[Value], status: Status = OK, setCookies: Seq[Cookie] = Empty) =
         fromValue(body, status, setCookies)
-    
     /**
      * Wraps a body into an UTF-8 encoded JSON response
      * @param body the value that forms the body of the response
@@ -54,26 +53,23 @@ object Response
     def fromFile(filePath: file.Path, contentType: Option[ContentType] = None, status: Status = OK, 
             setCookies: Seq[Cookie] = Empty) =
     {
-        if (Files.exists(filePath) && !Files.isDirectory(filePath))
-        {
+        if (Files.exists(filePath) && !Files.isDirectory(filePath)) {
             val contentType = ContentType.guessFrom(filePath.getFileName.toString)
             val headers = if (contentType.isDefined) Headers.withContentType(contentType.get) else Headers.empty
             new Response(status, headers.withCurrentDate, setCookies, Some(Files.copy(filePath, _)))
         }
         else
-        {
             new Response(NotFound)
-        }
     }
-    
-    /**
+	
+	/**
      * Creates an error response
      * @param status the status for the response
      * @param message the optional message sent along with the response
      * @param charset the character set used for encoding the message content. Default = UTF-8
      */
     def plainText(message: String, status: Status = OK, charset: Charset = StandardCharsets.UTF_8) = {
-        val headers = Headers.withContentType(Text/"plain", Some(charset)).withCurrentDate
+        val headers = Headers.withContentType((Text/"plain").withCharset(charset)).withCurrentDate
         new Response(status, headers, Empty, Some({ _.write(message.getBytes(charset)) }))
     }
     
@@ -93,8 +89,9 @@ object Response
   * @param setCookies Cookies to be set for the consequent requests
  * @param writeBody a function that writes the response body into a stream. None by default.
  */
+@deprecated("Replaced with a new implementation in the model.response package", "v2.0")
 class Response(val status: Status = OK, val headers: Headers = Headers.empty,
-        val setCookies: Seq[Cookie] = Empty, val writeBody: Option[OutputStream => Unit] = None)
+               val setCookies: Seq[Cookie] = Empty, val writeBody: Option[OutputStream => Unit] = None)
 {
     // OPERATORS    --------------------
     

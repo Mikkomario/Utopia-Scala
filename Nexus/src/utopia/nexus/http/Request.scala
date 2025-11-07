@@ -22,6 +22,7 @@ import java.time.Instant
   * @param rawCookies Cookies provided with this request (default = empty)
  * @param created Creation time of this request (default = Now)
  */
+@deprecated("Replaced with a new version in package model.request", "v2.0")
 class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None,
               val parameters: Model = Model.empty, val headers: Headers = Headers.empty,
               val body: Seq[StreamedBody] = Empty, rawCookies: Iterable[Cookie] = Empty,

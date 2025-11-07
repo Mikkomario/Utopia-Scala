@@ -4,6 +4,8 @@
       <root url="jar://$PROJECT_DIR$/NexusForTomcat/lib/servlet-api.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/NexusForTomcat/lib/servlet-api.jar!/" />
+    </SOURCES>
   </library>
 </component>

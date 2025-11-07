@@ -21,7 +21,7 @@ trait ContentCategory extends OpenEnumerationValue[String] with EqualsBy
 	  */
 	def name: String
 	/**
-	  * @return Whether this is a custom category (indicated by a X- prefix)
+	  * @return Whether this is a custom category (indicated by an X- prefix)
 	  */
 	def isCustom: Boolean
 	

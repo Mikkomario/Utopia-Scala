@@ -16,6 +16,7 @@ import utopia.nexus.result.Result
 import scala.annotation.tailrec
 import scala.util.Try
 
+@deprecated("Replaced with ApiRoot", "v2.0")
 object RequestHandler
 {
     /**
@@ -39,6 +40,7 @@ object RequestHandler
  * @author Mikko Hilpinen
  * @since 9.9.2017
  */
+@deprecated("Replaced with ApiRoot", "v2.0")
 class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resource[C]]], path: Option[Path] = None,
                                     makeContext: Request => C)(implicit logger: Logger)
 {
@@ -54,11 +56,9 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
     /**
      * Forms a response for the specified request
      */
-    def apply(request: Request): Response = handleBasePath(request.path) match
-    {
+    def apply(request: Request): Response = handleBasePath(request.path) match {
         case Right((version, remaining)) =>
-            remaining match
-            {
+            remaining match {
                 // Targeting a resource under a version
                 case Some(remaining) =>
                     makeContext(request).consume { implicit c =>
@@ -139,8 +139,7 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
     {
         val resources = childResources(version)
         val first = remainingPath.head
-        resources.find { _.name ~== first } match
-        {
+        resources.find { _.name ~== first } match {
             // Case: Root resource found => follows that one
             case Some(resource) => follow(version, resource, remainingPath.tail)
             // Case: Root resource not found
@@ -151,16 +150,16 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
     
     @tailrec
     private def follow[C2 <: C](version: String, resource: Resource[C2], path: Option[Path])
-                      (implicit context: C2): Either[Error, (Resource[C2], Option[Path])] = path match
-    {
-        case Some(remaining) =>
-            // NB: The match may not be exhaustive (because of the type parameter requirement)
-            resource.follow(remaining) match {
-                case Follow(next, remaining) => follow(version, next, remaining)
-                case Ready(resource, path) => Right(resource -> path)
-                case e: Error => Left(e)
-                case Redirected(path) => findTarget(version, path)
-            }
-        case None => Right(resource -> None)
-    }
+                      (implicit context: C2): Either[Error, (Resource[C2], Option[Path])] =
+	    path match {
+	        case Some(remaining) =>
+	            // NB: The match may not be exhaustive (because of the type parameter requirement)
+	            resource.follow(remaining) match {
+	                case Follow(next, remaining) => follow(version, next, remaining)
+	                case Ready(resource, path) => Right(resource -> path)
+	                case e: Error => Left(e)
+	                case Redirected(path) => findTarget(version, path)
+	            }
+	        case None => Right(resource -> None)
+	    }
 }

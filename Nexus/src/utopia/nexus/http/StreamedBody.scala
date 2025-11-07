@@ -20,9 +20,11 @@ import scala.util.{Success, Try}
 * @author Mikko Hilpinen
 * @since 12.5.2018
 **/
-class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Text.plain, 
-        val contentLength: Option[Long] = None, val headers: Headers = Headers.currentDateHeaders,
-        val name: Option[String] = None) extends Body
+@deprecated("Replaced with StreamedRequestBody", "v2.0")
+class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Text.plain,
+                   val contentLength: Option[Long] = None, val headers: Headers = Headers.currentDateHeaders,
+                   val name: Option[String] = None)
+	extends Body
 {
     // OTHER METHODS    --------------------
     
@@ -78,6 +80,7 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
       * Best performance is achieved when the output stream is buffered.
      */
     def writeTo(output: OutputStream) = {
+	    // TODO: Optimize using StreamExtensions (once available), including buffering support, etc.
         // See: https://stackoverflow.com/questions/6927873/
         // how-can-i-read-a-file-to-an-inputstream-then-write-it-into-an-outputstream-in-sc
         reader.tryConsume(r => Iterator

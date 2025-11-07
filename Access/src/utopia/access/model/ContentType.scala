@@ -1,14 +1,31 @@
 package utopia.access.model
 
+import utopia.access.model.ContentType._any
 import utopia.access.model.enumeration.ContentCategory
+import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.net.URLConnection
 import java.nio.charset.Charset
+import scala.io.Codec
 import scala.util.Try
 
 object ContentType
 {
+	// ATTRIBUTES   -------------------------
+	
+	private val _any = "*"
+	
+	/**
+	 * @return An equals function which yields true as long as the two types point to the same category & subtype.
+	 *         E.g. text/plain with some charset would match text/plain without a charset,
+	 *         but not text/html or application/json.
+	 */
+	implicit val haveSameType: EqualsFunction[ContentType] =
+		(a, b) => a.category == b.category && (a.subType ~== b.subType)
+	
+	
 	// OTHER METHODS    ---------------------
 	
 	/**
@@ -48,7 +65,10 @@ object ContentType
   * @author Mikko Hilpinen
   * @since 20.8.2017
   */
+// TODO: Parameters should be a Model
+// TODO: Add support & modeling for * subtype
 case class ContentType(category: ContentCategory, subType: String, parameters: Map[String, String] = Map())
+	extends ApproxSelfEquals[ContentType]
 {
 	// ATTRIBUTES   --------------------
 	
@@ -60,7 +80,20 @@ case class ContentType(category: ContentCategory, subType: String, parameters: M
 	lazy val charset = parameters.get("charset").flatMap { c => Try { Charset.forName(c) }.toOption }
 	
 	
+	// COMPUTED --------------------
+	
+	/**
+	 * @param codec Implicit character encoding information to use by default
+	 *              (i.e. when no other character set has been explicitly set)
+	 * @return A copy of this content type with a character set value specified
+	 */
+	def withCharsetSpecified(implicit codec: Codec) = withDefaultCharset(codec.charSet)
+	
+	
 	// IMPLEMENTED    --------------
+	
+	override def self: ContentType = this
+	override def approxEqualsFunction: EqualsFunction[ContentType] = ContentType.haveSameType
 	
 	override def toString = {
 		val parametersPart = parameters.view.map { case (key, value) => s";$key=$value" }.mkString
@@ -69,6 +102,21 @@ case class ContentType(category: ContentCategory, subType: String, parameters: M
 	
 	
 	// OTHER    -----------------------
+	
+	/**
+	 * @param other Another content type
+	 * @return Whether this content type covers the specified type.
+	 *         Doesn't consider parameter differences.
+	 */
+	def contains(other: ContentType) =
+		category == other.category && (subType == _any || (subType ~== other.subType))
+	/**
+	 * @param other Another content type
+	 * @return Whether this content type covers the specified type, or the specified type covers this type.
+	 *         Doesn't consider parameter differences.
+	 */
+	def overlapsWith(other: ContentType) =
+		category == other.category && ((subType ~== other.subType) || subType == _any || other.subType == _any)
 	
 	/**
 	  * Creates a new content type with the assigned parameter
@@ -84,4 +132,11 @@ case class ContentType(category: ContentCategory, subType: String, parameters: M
 	  * @return Copy of this content type with the specified character set
 	  */
 	def withCharset(charset: Charset) = this + ("charset" -> charset.name())
+	/**
+	 * @param charset Character set to specify, unless one has already been specified (call-by-name)
+	 * @return A copy of this content type with either the current character set,
+	 *         or the specified character set, if no character set was specified on this instance.
+	 */
+	def withDefaultCharset(charset: => Charset) =
+		if (this.charset.isDefined) this else withCharset(charset)
 }

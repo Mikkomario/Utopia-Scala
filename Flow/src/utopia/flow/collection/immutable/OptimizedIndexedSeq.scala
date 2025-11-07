@@ -20,7 +20,7 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 	// IMPLEMENTED  ------------------------
 	
 	override def empty[A]: IndexedSeq[A] = Empty
-	override def newBuilder[A]: mutable.Builder[A, IndexedSeq[A]] = new OptimizedSeqBuilder[A]()
+	override def newBuilder[A] = new OptimizedSeqBuilder[A]()
 	
 	override def from[A](source: IterableOnce[A]): IndexedSeq[A] = source match {
 		// Case: Already an indexed sequence => Won't transform

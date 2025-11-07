@@ -9,6 +9,7 @@ import utopia.nexus.http.Request
 * @author Mikko Hilpinen
 * @since 22.5.2018
 **/
+@deprecated("Replaced with RequestContext", "v2.0")
 trait Context extends AutoCloseable
 {
     // ABSTRACT    ------------------------

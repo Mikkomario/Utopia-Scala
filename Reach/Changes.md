@@ -1,5 +1,8 @@
 # Utopia Reach - List of Changes
 
+## v1.7.1 (in development)
+Supports **Flow v2.8**
+
 ## v1.7 - 01.11.2025
 This is a major update, focusing on the following areas:
 1. Major **refactoring**, focusing on the terms used in component construction. 

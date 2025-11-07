@@ -10,6 +10,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.nexus.http.{Request, ServerSettings}
 import utopia.nexus.result.{Result, ResultParser, UseRawJson}
 
@@ -48,10 +49,11 @@ object PostContext
 /**
   * A request context that parses a post body from json, xml or text into a Value,
   * offering functions for processing those parsed values.
+ *
   * Basically, using this context allows one to bypass the following phases in request processing:
-  * 1) Validating that there is a request body present
-  * 2) Checking the request body content type and parsing it into a value, accordingly
-  * 3) Handling the cases where value to expected post object parsing fails
+  *     1. Validating that there is a request body present
+  *     1. Checking the request body content type and parsing it into a value, accordingly
+  *     1. Handling the cases where value to expected post object parsing fails
   * @author Mikko Hilpinen
   * @since 13.10.2022, v1.9
   */
@@ -59,9 +61,15 @@ abstract class PostContext extends Context
 {
 	// ATTRIBUTES   ------------------------
 	
-	// Request body is cached, since streamed request bodies can only be read once
-	// Either[Failure, Value]
-	private lazy val parsedRequestBody = {
+	/**
+	 * Parses the request body into a value, caching the result.
+	 * The value is initialized lazily, on-demand.
+	 *
+	 * Contains either:
+	 *      - Right: The parsed request body as a [[Value]]
+	 *      - Left: Parsing failure as a [[Result.Failure]]
+	 */
+	val lazyParsedRequestBody = Lazy {
 		request.body.headOption match {
 			case Some(body) =>
 				// Accepts json, xml and text content types
@@ -71,14 +79,16 @@ abstract class PostContext extends Context
 					case _ =>
 						body.contentType.category match {
 							case Text => body.bufferedToString.contents.map[Value] { s => s }
-							case _ => Failure(ContentTypeException.notAccepted(body.contentType,
-								Vector(Application.json, Application.xml, Text.plain)))
+							case _ =>
+								Failure(ContentTypeException.notAccepted(body.contentType,
+									Vector(Application.json, Application.xml, Text.plain)))
 						}
 				}
 				value match {
 					case Success(value) => Right(value)
 					case Failure(error) => Left(Result.Failure(BadRequest, error.getMessage))
 				}
+				
 			// Case: No request body specified => Uses an empty value
 			case None => Right(Value.empty)
 		}
@@ -101,14 +111,14 @@ abstract class PostContext extends Context
 	  *          Accepts the read value, which may be empty. Returns a http result.
 	  * @return Function result
 	  */
-	def handlePossibleValuePost(f: Value => Result) = parsedRequestBody.leftOrMap(f)
+	def handlePossibleValuePost(f: Value => Result) = lazyParsedRequestBody.value.leftOrMap(f)
 	/**
 	  * Parses a value from the request body and uses it to produce a response
 	  * @param f Function that will be called if the value was successfully read and not empty.
 	  *          Returns an http result.
 	  * @return Function result or a failure result if no value could be read.
 	  */
-	def handleValuePost(f: Value => Result) = {
+	def handleValuePost(f: Value => Result) =
 		handlePossibleValuePost { value =>
 			// Fails on empty value
 			if (value.isEmpty)
@@ -116,7 +126,6 @@ abstract class PostContext extends Context
 			else
 				f(value)
 		}
-	}
 	/**
 	  * Parses a model from the request body and uses it to produce a response
 	  * @param parser Model parser
@@ -124,7 +133,7 @@ abstract class PostContext extends Context
 	  * @tparam A Type of parsed model
 	  * @return Function result or a failure result if no model could be parsed.
 	  */
-	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result = {
+	def handlePost[A](parser: FromModelFactory[A])(f: A => Result): Result =
 		handleValuePost { value =>
 			value.model match {
 				case Some(model) =>
@@ -136,7 +145,6 @@ abstract class PostContext extends Context
 				case None => Result.Failure(BadRequest, "Please provide a json object in the request body")
 			}
 		}
-	}
 	/**
 	  * Parses request body into a vector of values and handles them using the specified function.
 	  * For non-array bodies, wraps the body in a vector.

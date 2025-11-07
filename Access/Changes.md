@@ -1,5 +1,26 @@
 # Utopia Access - List of Changes
 
+## v1.7 (in development)
+### Breaking changes
+- `.contentLength` in **Headers** now yields an **Option**
+### Deprecations
+- `.getAcceptedType(...)` in **Headers** is now named `.findAcceptedType(...)`
+### New features
+- Added **HasHeaders** and **Headered** traits
+### New methods
+- **ContentType**
+  - Added `.withDefaultCharset(=> Charset)` and `.withCharsetSpecified`
+  - Added `.contains(ContentType)` and `.overlapsWith(ContentType)`
+    - **ContentType** also now extends **ApproxSelfEquals**
+- **Headers**
+  - Added `.charsetOrUtf8`
+  - Added `.without(String)` and `-`
+  - Added `.withContentLength(...)`
+  - Added `.selectType(...)`
+  - Added various split-iterator functions
+### Other changes
+- Internal refactoring within **Headers**
+
 ## v1.6.1 - 01.11.2025
 A new build supporting changes in **Flow**
 

@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v2.0 (in development)
+TODO: Write documentation (rewrote everything)
+
 ## v1.9.6 - 01.11.2025
 A new build supporting **Flow v2.7**.
 

@@ -1,7 +1,7 @@
 package utopia.flow.parse.string
 
-import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.string.Regex.unbracketableChars
 import utopia.flow.util.EitherExtensions._
@@ -16,143 +16,182 @@ import scala.language.implicitConversions
 
 object Regex
 {
-	implicit def stringToRegex(s: String): Regex = Regex(s)
+	// ATTRIBUTES   ---------------------
 	
+	/**
+	 * A regular expression that matches any single character
+	 */
 	val anySingle = Regex(".")
+	/**
+	 * A regular expression that matches any string of characters
+	 */
 	val any = anySingle.anyTimes
 	
 	/**
 	 * A regular expression that matches the start of a line / input
 	 */
-	val startOfLine = Regex("^")
+	lazy val startOfLine = Regex("^")
 	/**
 	 * A regular expression that matches the start of the input string
 	 */
-	val startOfString = Regex("\\A")
+	lazy val startOfString = Regex("\\A")
 	/**
 	 * A regular expression that matches the end of input string
 	 */
-	val endOfString = Regex("\\Z")
+	lazy val endOfString = Regex("\\Z")
 	
 	/**
 	  * Accepts individual digits [0-9]
 	  */
 	val digit = Regex("\\d")
-	val nonDigit = Regex("\\D")
+	/**
+	 * Accepts all characters, except digits
+	 */
+	lazy val nonDigit = Regex("\\D")
+	/**
+	 * Accepts only whitespace characters
+	 */
 	val whiteSpace = Regex("\\s")
+	/**
+	 * Accepts all characters, except whitespace characters
+	 */
 	val nonWhiteSpace = Regex("\\S")
 	/**
-	  * Accepts alpha-numeric (ASCII) characters and underscores
+	  * Accepts alphanumeric (ASCII) characters and underscores
 	  */
-	val wordCharacter = Regex("\\w")
+	lazy val wordCharacter = Regex("\\w")
 	/**
-	  * Contains alpha-numeric (ASCII) words with underscores
+	  * Contains alphanumeric (ASCII) words with underscores
 	  */
-	val word = wordCharacter.oneOrMoreTimes
+	lazy val word = wordCharacter.oneOrMoreTimes
 	/**
 	  * @see [[https://www.regular-expressions.info/wordboundaries.html]]
 	  */
-	val wordBoundary = Regex("\\b")
+	lazy val wordBoundary = Regex("\\b")
+	/**
+	 * Accepts newline characters
+	 */
 	val newLine = Regex("\\R")
 	
-	val lowerCaseLetter = Regex("[a-zåäö]")
-	val upperCaseLetter = Regex("[A-ZÅÄÖ]")
+	lazy val lowerCaseLetter = Regex("[a-zåäö]")
+	lazy val upperCaseLetter = Regex("[A-ZÅÄÖ]")
 	/**
 	 * Accepts lower- and upper-case letters
 	 */
-	val letter = Regex("[a-zA-ZåäöÅÄÖ]")
+	lazy val letter = Regex("[a-zA-ZåäöÅÄÖ]")
+	
 	/**
-	  * Accepts lower- and upper-case letters
-	  */
+	 * Accepts any positive integer
+	 */
+	lazy val positiveInteger = digit.oneOrMoreTimes
+	/**
+	 * Accepts any integer (positive or negative)
+	 */
+	lazy val integer = Regex("\\-").noneOrOnce + positiveInteger
+	/**
+	 * Accepts digits and characters
+	 */
+	lazy val letterOrDigit = Regex("[a-zA-ZåäöÅÄÖ\\d]")
+	/**
+	 * Accepts positive integers and decimal numbers
+	 */
+	lazy val positiveNumber = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParentheses.noneOrOnce
+	/**
+	 * Accepts any integer or decimal number
+	 */
+	lazy val number = Regex("\\-").noneOrOnce + positiveNumber
+	
+	/**
+	 * Accepts any character that appears in a (decimal) number
+	 */
+	lazy val numberPart = Regex("[-\\d,\\.]")
+	/**
+	 * Accepts any character that accepts in a positive (decimal) number
+	 */
+	lazy val positiveNumberPart = Regex("[\\d,\\.]")
+	/**
+	 * Accepts any character that appears in an integer (positive or negative)
+	 */
+	lazy val integerPart = Regex("[-\\d]")
+	
+	/**
+	 * A regular expression that matches the forward slash character "/"
+	 */
+	lazy val forwardSlash = escape('/')
+	/**
+	 * A regular expression that matches a single (non-escaped) backslash
+	 */
+	lazy val backslash = apply("\\\\")
+	
+	/**
+	 * A regular expression that finds parenthesis ( ) content
+	 */
+	lazy val parentheses = escape('(').followedBy(any).followedBy(escape(')'))
+	
+	lazy val comma = escape(',')
+	lazy val dot = escape('.')
+	lazy val semicolon = escape(';')
+	
+	private val unbracketableChars = Set[Char]('[', ']', '(', ')', '|')
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	 * Accepts lower- and upper-case letters
+	 */
 	@deprecated("Renamed to .letter", "v2.2")
 	def alpha = letter
 	/**
 	 * Accepts any positive integer
 	 */
-	val positiveInteger = digit.oneOrMoreTimes
-	/**
-	  * Accepts any positive integer
-	  */
 	@deprecated("Renamed to .positiveInteger", "v2.2")
 	def numericPositive = positiveInteger
 	/**
 	 * Accepts any integer (positive or negative)
 	 */
-	val integer = Regex("\\-").noneOrOnce + positiveInteger
-	/**
-	  * Accepts any integer (positive or negative)
-	  */
 	@deprecated("Renamed to .integer", "v2.2")
 	def numeric = integer
 	/**
 	 * Accepts digits and characters
 	 */
-	val letterOrDigit = Regex("[a-zA-ZåäöÅÄÖ\\d]")
-	/**
-	  * Accepts digits and characters
-	  */
 	@deprecated("Renamed to .letterOrDigit", "v2.2")
 	def alphaNumeric = letterOrDigit
 	/**
 	 * Accepts positive integers and decimal numbers
 	 */
-	val positiveNumber = digit.oneOrMoreTimes + (Regex("[.,]") + digit.oneOrMoreTimes).withinParentheses.noneOrOnce
-	/**
-	  * Accepts positive integers and decimal numbers
-	  */
 	@deprecated("Renamed to .positiveNumber", "v2.2")
 	def decimalPositive = positiveNumber
 	/**
 	 * Accepts any integer or decimal number
 	 */
-	val number = Regex("\\-").noneOrOnce + positiveNumber
-	/**
-	  * Accepts any integer or decimal number
-	  */
 	@deprecated("Renamed to .number", "v2.2")
 	def decimal = number
-	
 	/**
-	 * Accepts any character that appears in a (decimal) number
+	 * Accepts any character that appears in a decimal number
 	 */
-	val numberPart = Regex("[-\\d,\\.]")
-	/**
-	  * Accepts any character that appears in a decimal number
-	  */
 	@deprecated("Renamed to .numberPart", "v2.2")
 	def decimalParts = numberPart
 	/**
-	 * Accepts any character that accepts in a positive (decimal) number
+	 * Accepts any character that accepts in a positive decimal number
 	 */
-	val positiveNumberPart = Regex("[\\d,\\.]")
-	/**
-	  * Accepts any character that accepts in a positive decimal number
-	  */
 	@deprecated("Renamed to positiveNumberPart", "v2.2")
 	def decimalPositiveParts = positiveNumberPart
 	/**
 	 * Accepts any character that appears in an integer (positive or negative)
 	 */
-	val integerPart = Regex("[-\\d]")
-	/**
-	  * Accepts any character that appears in an integer (positive or negative)
-	  */
 	@deprecated("Renamed to .integerPart", "v2.2")
 	def numericParts = integerPart
-	
-	/**
-	 * A regular expression that matches a single (non-escaped) backslash
-	 */
-	val backslash = apply("\\\\")
-	
-	/**
-	 * A regular expression that finds parenthesis ( ) content
-	 */
-	val parentheses = escape('(').followedBy(any).followedBy(escape(')'))
 	@deprecated("Renamed to .parentheses", "v2.3")
 	def parenthesis = parentheses
 	
-	private val unbracketableChars = Set[Char]('[', ']', '(', ')', '|')
+	
+	// IMPLICIT ----------------------------
+	
+	implicit def stringToRegex(s: String): Regex = Regex(s)
+	
+	
+	// OTHER    ----------------------------
 	
 	/**
 	  * Creates a regex that accepts any of the specified characters. You don't need to worry about regular expressions

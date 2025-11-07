@@ -5,16 +5,26 @@
 - **Iterable**'s `.find(Extreme)` (in **CollectionExtensions**) is now named `.findExtreme(Extreme)`
   - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
 - **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
+- `OptimizedIndexedSeq.newBuilder` now yields **OptimizedSeqBuilder** instead of **Builder**
+  - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
+### New features
+- Added **EmptyInputStream**
 ### New methods
 - **Extreme**
   - Added `.compare(...)`
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
+  - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
+- **OutputStream** (via **StreamExtensions**)
+  - Added `.writeUsing(...)`
+- **Regex** (object)
+  - Added multiple new static values
 ### Other changes
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
 - Internal refactoring within **Extreme**'s `.by(...)`
+- Internal refactoring within **Lazy**
 
 ## v2.7 - 01.11.2025
 This update focuses on the following features:

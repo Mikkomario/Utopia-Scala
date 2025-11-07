@@ -4,17 +4,21 @@ import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status._
 import utopia.access.model.enumeration.{Status, StatusGroup}
 import utopia.flow.generic.model.immutable.Value
+import utopia.nexus.model.response.RequestResult.ContentResult
+import utopia.nexus.model.response.ResponseContent
 import utopia.nexus.rest.Context
 
+@deprecated("Replaced with RequestResult", "v2.0")
 object Result
 {
     /**
      * This result may be returned when there is no data to return
      */
+    @deprecated("Replaced with a new version under RequestResult", "v2.0")
     case object Empty extends Result
     {
         def status = NoContent
-        def description = ""
+        override def description = ""
         def data = Value.empty
         def headers = Headers.empty
     }
@@ -23,10 +27,11 @@ object Result
      * This result should be returned for requests that have specified if modified since -header and content
 	  * hasn't been modified
      */
+    @deprecated("Replaced with a new version under RequestResult", "v2.0")
     case object NotModified extends Result
     {
         def status = Status.NotModified
-        def description = ""
+	    override def description = ""
         def data = Value.empty
         def headers = Headers.empty
     }
@@ -36,14 +41,16 @@ object Result
       * @param status Failure status
       * @param description Failure description. Default = empty = no description.
      */
-    case class Failure(status: Status, description: String = "",
+    @deprecated("Replaced with RequestResult", "v2.0")
+    case class Failure(status: Status, override val description: String = "",
             data: Value = Value.empty, headers: Headers = Headers.empty) extends Result
     
     /**
      * This result may be returned when the API wants to return specific data
      */
+    @deprecated("Replaced with RequestResult", "v2.0")
     case class Success(data: Value = Value.empty, status: Status = OK,
-            description: String = "", headers: Headers = Headers.empty) extends Result
+                       override val description: String = "", headers: Headers = Headers.empty) extends Result
 	
 	/**
 	 * A result used for redirecting the client to another resource
@@ -51,6 +58,7 @@ object Result
 	 * @param permanently Whether this redirect should be used in the future without accessing this resource
 	 *                    first (default = false)
 	 */
+	@deprecated("Replaced with a new version under RequestResult", "v2.0")
 	case class Redirect(url: String, permanently: Boolean = false) extends Result
 	{
 		override def status = if (permanently) MovedPermanently else Found
@@ -67,14 +75,11 @@ object Result
 * @author Mikko
 * @since 24.5.2018
 **/
-trait Result
+@deprecated("Replaced with RequestResult", "v2.0")
+trait Result extends ContentResult
 {
     // ABSTRACT    ------------------------
     
-    /**
-     * The status of the result
-     */
-	def status: Status
 	/**
 	 * The description for the result. Empty if there is no description.
 	 */
@@ -83,18 +88,11 @@ trait Result
 	 * The data returned by this result
 	 */
 	def data: Value
-	/**
-	 * The header modifications for this result
-	 */
-	def headers: Headers
 	
 	
-	// COMPUTED    ------------------------
+	// IMPLEMENTED    ---------------------
 	
-	/**
-	 * Whether this is a result of an successful operation
-	 */
-	def isSuccess = status.group == StatusGroup.Success
+	override def content: ResponseContent = ResponseContent(data, description)
 	
 	
 	// OTHER METHODS    ------------------

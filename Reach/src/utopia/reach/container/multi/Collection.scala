@@ -653,8 +653,9 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 	private def buildRows[A](items: Iterable[A], margin: Double, threshold: Double)(lengthOf: A => Double) = {
 		val rowsBuilder = OptimizedIndexedSeq.newBuilder[IndexedSeq[A]]
 		val (lastRowBuilder, _) = items
-			.foldLeft((OptimizedIndexedSeq.newBuilder[A], 0.0)) { case ((rowBuilder, rowLength), item) =>
-				placeOnLine(rowsBuilder, rowBuilder, rowLength, item, margin, threshold)(lengthOf)
+			.foldLeft((OptimizedIndexedSeq.newBuilder[A]: mutable.Builder[A, IndexedSeq[A]], 0.0)) {
+				case ((rowBuilder, rowLength), item) =>
+					placeOnLine(rowsBuilder, rowBuilder, rowLength, item, margin, threshold)(lengthOf)
 			}
 		rowsBuilder += lastRowBuilder.result()
 		rowsBuilder.result()

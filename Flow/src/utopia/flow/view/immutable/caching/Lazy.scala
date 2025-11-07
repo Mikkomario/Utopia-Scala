@@ -1,8 +1,8 @@
 package utopia.flow.view.immutable.caching
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.LazySeq
 import utopia.flow.collection.mutable.iterator.{LazyInitIterator, PollableOnce}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
@@ -100,25 +100,23 @@ object Lazy
 	
 	// NESTED   ------------------------
 	
-	private class _Lazy[+A](generator: => A) extends Lazy[A]
+	private class _Lazy[A](generator: => A) extends Lazy[A]
 	{
 		// ATTRIBUTES	-------------------------
 		
-		private lazy val _value = generator
-		private var initialized = false
+		private var _value: Option[A] = None
 		
 		
 		// IMPLEMENTED	-------------------------
 		
-		override def isInitialized = initialized
-		override def nonInitialized = !initialized
+		override def current = _value
 		
-		override def current = if (initialized) Some(_value) else None
-		
-		override def value = {
-			if (!initialized)
-				initialized = true
-			_value
+		override def value = _value match {
+			case Some(value) => value
+			case None =>
+				val value = generator
+				_value = Some(value)
+				value
 		}
 		override def valueIterator = PollableOnce(value)
 		

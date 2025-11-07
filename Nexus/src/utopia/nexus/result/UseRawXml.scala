@@ -17,6 +17,7 @@ import utopia.flow.parse.xml.{XmlElement, XmlWriter}
 * @author Mikko Hilpinen
 * @since 24.5.2018
 **/
+@deprecated("Replaced with PlainXmlContentWriter", "v2.0")
 case class UseRawXml(rootElementName: String = "Response") extends RawResultParser
 {
 	def parseDataResponse(data: Value, status: Status, request: Request) =
@@ -24,7 +25,7 @@ case class UseRawXml(rootElementName: String = "Response") extends RawResultPars
 	    val element = parseElement(rootElementName, data)
 	    val charset = request.headers.preferredCharset getOrElse StandardCharsets.UTF_8
 	    
-	    new Response(status, Headers.withContentType(Application.xml, Some(charset)), Empty,
+	    new Response(status, Headers.withContentType(Application.xml.withCharset(charset)), Empty,
 	            Some(stream => XmlWriter.writeElementToStream(stream, element, charset)))
 	}
 	

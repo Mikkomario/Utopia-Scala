@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets
 * @author Mikko Hilpinen
 * @since 24.5.2018
 **/
+@deprecated("Replaced with ContentWriter", "v2.0")
 trait RawResultParser extends ResultParser
 {
 	// ABSTRACT    ----------------------
@@ -36,6 +37,6 @@ trait RawResultParser extends ResultParser
             else
                 parseDataResponse(result.data, result.status, request)
         }
-        response.mapHeaders(_ ++ result.headers)
+        response.mapHeaders { _ ++ result.headers }
     }
 }

@@ -11,4 +11,5 @@ import scala.io.Codec
  * @param expectedParameterEncoding Encoding that is expected for query parameters.
  *                                  None if no decoding should be done (default)
  */
+@deprecated("Deprecated for removal", "v2.0")
 case class ServerSettings(address: String, expectedParameterEncoding: Option[Codec] = None)

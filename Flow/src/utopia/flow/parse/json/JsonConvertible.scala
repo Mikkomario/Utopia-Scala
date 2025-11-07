@@ -9,6 +9,7 @@ trait JsonConvertible
 {
 	// ABSTRACT    -----------------------
 	
+	// TODO: Instead of accepting a StringBuilder, accept Growable[String] etc. This may be used for streamed JSON content, for example.
 	/**
 	  * Appends the json representation of this item to the specified string builder
 	  * @param jsonBuilder A string builder that will contain the resulting json string

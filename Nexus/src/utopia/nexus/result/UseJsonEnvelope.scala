@@ -11,6 +11,7 @@ import utopia.nexus.http.{Request, Response}
 * @author Mikko Hilpinen
 * @since 24.5.2018
 **/
+@deprecated("Replaced with JsonEnveloper", "v2.0")
 case class UseJsonEnvelope(getDataName: Status => String = s => if (s.group == StatusGroup.Success) "data" else "error",
                            descriptionName: String = "description", statusName: String = "status") extends ResultParser
 {

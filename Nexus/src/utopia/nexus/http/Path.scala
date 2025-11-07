@@ -2,6 +2,7 @@ package utopia.nexus.http
 
 import utopia.flow.collection.CollectionExtensions._
 
+@deprecated("Deprecated for removal", "v2.0")
 object Path
 {
     // OPERATORS    ----------------------
@@ -49,6 +50,7 @@ object Path
  * @author Mikko Hilpinen
  * @since 22.8.2017
  */
+@deprecated("Deprecated for removal", "v2.0")
 case class Path(parts: Seq[String])
 {
     // COMPUTED PROPERTIES    -----------------

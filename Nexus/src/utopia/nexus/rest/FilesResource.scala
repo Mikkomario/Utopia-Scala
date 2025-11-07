@@ -24,6 +24,7 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 17.9.2017
  */
+@deprecated("Deprecated for removal", "v2.0")
 class FilesResource(override val name: String, uploadPath: java.nio.file.Path) extends Resource[Context]
 {
     // TODO: Convert to use result instead of response

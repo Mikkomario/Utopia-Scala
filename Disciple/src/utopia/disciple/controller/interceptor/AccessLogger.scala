@@ -140,25 +140,26 @@ class AccessLogger(logger: Logger)(implicit exc: ExecutionContext) extends Reque
 		val requestPart = s"$timePart: ${ request.method } ${ request.requestUri }"
 		response match {
 			case Success(response) =>
-				val length = response.contentLength
-				val sizePart = {
-					if (length == 0)
-						"(empty)"
-					else {
-						val bytesPart = {
-							if (length < 1000)
-								s"$length bytes"
-							else if (length < 1000000)
-								s"${ length / 1000 } Kb"
-							else
-								s"${ length / 1000000 } Mb"
+				val sizePart = response.contentLength match {
+					case Some(length) =>
+						if (length == 0)
+							"(empty)"
+						else {
+							val bytesPart = {
+								if (length < 1000)
+									s"$length bytes"
+								else if (length < 1000000)
+									s"${ length / 1000 } Kb"
+								else
+									s"${ length / 1000000 } Mb"
+							}
+							val typePart = response.contentType match {
+								case Some(cType) => s" of $cType"
+								case None => ""
+							}
+							s"$bytesPart$typePart"
 						}
-						val typePart = response.contentType match {
-							case Some(cType) => s" of $cType"
-							case None => ""
-						}
-						s"$bytesPart$typePart"
-					}
+					case None => ""
 				}
 				val paramsPart = {
 					if (request.params.hasNonEmptyValues)

@@ -7,6 +7,7 @@ import utopia.nexus.rest.ResourceSearchResult.Error
   * @author Mikko Hilpinen
   * @since 8.3.2021, v1.5.1
   */
+@deprecated("Replaced with LeafNode", "v2.0")
 trait LeafResource[-C <: Context] extends Resource[C]
 {
 	override def follow(path: Path)(implicit context: C) =

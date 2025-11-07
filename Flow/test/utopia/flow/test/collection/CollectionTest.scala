@@ -146,5 +146,34 @@ object CollectionTest extends App
 	
 	assert(Vector(1.0, 2.0, 3.0).average ~== 2.0)
 	
+	// Tests padToFrom
+	private var appendCalls = 0
+	private val appendingIter = numbers3.padToFromIterator(5) {
+		appendCalls += 1
+		Pair(4, 5)
+	}
+	
+	assert(appendCalls == 0)
+	assert(appendingIter.hasNext)
+	assert(appendingIter.next() == 1)
+	assert(appendCalls == 0)
+	assert(appendingIter.hasNext)
+	assert(appendingIter.next() == 2)
+	assert(appendCalls == 0)
+	assert(appendingIter.hasNext)
+	assert(appendingIter.next() == 3)
+	assert(appendCalls == 0)
+	assert(appendingIter.hasNext)
+	assert(appendCalls == 1)
+	assert(appendingIter.next() == 4)
+	assert(appendCalls == 1)
+	assert(appendingIter.hasNext)
+	assert(appendingIter.next() == 5)
+	assert(appendCalls == 1)
+	assert(!appendingIter.hasNext)
+	
+	assert(numbers3.padToFrom(6) { Iterator.iterate(4) { _ + 1 } } == Vector(1, 2, 3, 4, 5, 6))
+	assert(numbers3.padToFrom(2) { throw new IllegalStateException("Can't arrive here") } == numbers3)
+	
 	println("Success!")
 }

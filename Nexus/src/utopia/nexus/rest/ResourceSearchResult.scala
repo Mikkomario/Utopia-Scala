@@ -9,8 +9,10 @@ import utopia.nexus.result.Result.Failure
  * There are different types of results that can be get when following a path alongside resources. 
  * All of those result types are under this trait.
  */
+@deprecated("Replaced with PathFollowResult", "v2.0")
 sealed trait ResourceSearchResult[-C <: Context]
 
+@deprecated("Replaced with PathFollowResult", "v2.0")
 object ResourceSearchResult
 {
     /**
@@ -20,7 +22,6 @@ object ResourceSearchResult
      */
     final case class Ready[-C <: Context](resource: Resource[C], remainingPath: Option[Path] = None)
         extends ResourceSearchResult[C]
-    
     /**
      * Follow means that the next resource was found but there is still some path to cover. A follow
      * response should be followed by another search.

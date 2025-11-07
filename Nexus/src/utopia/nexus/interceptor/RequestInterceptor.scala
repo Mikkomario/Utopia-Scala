@@ -5,6 +5,7 @@ import utopia.nexus.http.Request
 
 import scala.language.implicitConversions
 
+@deprecated("Replaced with InterceptRequest", "v2.0")
 object RequestInterceptor
 {
 	// IMPLICIT ------------------------
@@ -27,6 +28,7 @@ object RequestInterceptor
   * @author Mikko Hilpinen
   * @since 16.09.2024, v1.9.4
   */
+@deprecated("Replaced with InterceptRequest", "v2.0")
 trait RequestInterceptor
 {
 	/**

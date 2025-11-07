@@ -82,8 +82,7 @@ object CsvReader
 	               (f: Model => Unit)(implicit codec: Codec) =
 		iterateLinesIn(path, separator, ignoreEmptyStringValues) { _.foreach(f) }
 	
-	private def processValue(original: String) =
-	{
+	private def processValue(original: String) = {
 		val trimmed = original.trim
 		if (trimmed.startsWith("'"))
 			trimmed.drop(1)

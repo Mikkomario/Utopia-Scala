@@ -4,6 +4,7 @@ import utopia.access.model.enumeration.Method
 import utopia.nexus.http.Path
 import utopia.nexus.http.Response
 
+@deprecated("Replaced with ApiNode", "v2.0")
 trait Resource[-C <: Context]
 {
     // ABSTRACT PROPERTIES & METHODS ------------------

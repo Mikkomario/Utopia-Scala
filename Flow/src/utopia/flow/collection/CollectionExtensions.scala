@@ -3,9 +3,9 @@ package utopia.flow.collection
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Pair.PairIsIterable
+import utopia.flow.collection.immutable._
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
-import utopia.flow.collection.immutable._
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
@@ -136,6 +136,19 @@ object CollectionExtensions
 					encountered >= count
 				})
 			}
+		}
+		
+		/**
+		 * @param length Targeted (minimum) length
+		 * @param other Another collection, from which items may be appended in order to reach length 'length'
+		 * @param bf Implicit build-from for the resulting collection
+		 * @return A copy of this collection appended to length 'length', if possible
+		 */
+		def padToFrom(length: Int)(other: => IterableOnce[iter.A])(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
+			if (length <= 0 || ops.knownSize >= length)
+				coll
+			else
+				bf.fromSpecific(coll)(ops.padToFromIterator(length)(other))
 		}
 		
 		/**
@@ -747,6 +760,17 @@ object CollectionExtensions
 			else
 				Map.empty.withDefaultValue(0)
 		}
+		
+		/**
+		 * @param length Targeted (minimum) length
+		 * @param from Collection from which additional items will be taken, if necessary.
+		 *             Call-by-name: Only called once/if appending is necessary.
+		 * @tparam B Type of the iterated items
+		 * @return An iterator that iterates over this collection, and adds from 'from',
+		 *         if 'length' length has not been reached yet.
+		 */
+		def padToFromIterator[B >: A](length: Int)(from: => IterableOnce[B]) =
+			AppendToLengthIterator(length, i, from)
 		
 		/**
 		  * Maps items until a concrete result is found, then returns that result
@@ -2573,7 +2597,7 @@ object CollectionExtensions
 	implicit class RichIterator[A](val i: Iterator[A]) extends AnyVal
 	{
 		// COMPUTED -------------------------------------
-	
+		
 		/**
 		  * @return This iterator if not empty (i.e. has more elements), otherwise None.
 		  */

@@ -11,17 +11,20 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 1.5.2018
 **/
+// TODO: Refactor to allow the client to specify the writing process more precisely
+//  (e.g. when sending streamed content, the client may need to call flush() for the output stream every now and then)
 trait Body
 {
     // ABSTRACT    -------------------------
     
     /**
-     * Whether this body can repeat it's stream contents multiple times
+     * Whether this body can repeat its stream contents multiple times
      */
 	def repeatable: Boolean
 	/**
 	 * Whether this data in this body should be chunked
 	 */
+	// TODO: Automatically consider this body chunked if contentLength is not specified
 	def chunked: Boolean
 	
 	/**
@@ -63,6 +66,7 @@ trait Body
 			    }
 			    // Case: Both streams don't apply buffering => Processes using a separate buffer
 			    else {
+				    // TODO: Optimize buffer size to match that of the outputStream, if applicable
 				    val buffer = new Array[Byte](1024)
 				    Iterator
 					    .continually { input.read(buffer) }

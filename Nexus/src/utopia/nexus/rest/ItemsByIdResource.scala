@@ -12,6 +12,7 @@ import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
   * @author Mikko Hilpinen
   * @since 13.10.2022, v1.9
   */
+@deprecated("Replaced with FindById", "v2.0")
 trait ItemsByIdResource[-C <: Context] extends Resource[C]
 {
 	// ABSTRACT -------------------------

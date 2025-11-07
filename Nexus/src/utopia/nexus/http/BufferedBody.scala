@@ -8,6 +8,7 @@ import utopia.access.model.{ContentType, Headers}
 * @author Mikko Hilpinen
 * @since 12.5.2018
 **/
+@deprecated("Replaced with RequestBody", "v2.0")
 case class BufferedBody[+A](contents: A, contentType: ContentType = Text.plain,
         contentLength: Option[Long] = None, headers: Headers = Headers.currentDateHeaders,
         name: Option[String] = None) extends Body

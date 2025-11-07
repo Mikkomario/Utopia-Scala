@@ -8,6 +8,7 @@ import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.Lines
@@ -934,9 +935,7 @@ object FileExtensions
 		def writeUsing[A](writer: PrintWriter => A)(implicit codec: Codec) =
 			_writeUsing(append = false)(writer)
 		def _writeUsing[A](append: Boolean)(writer: PrintWriter => A)(implicit codec: Codec) =
-			_writeWith(append) { stream =>
-				stream.consume { new OutputStreamWriter(_, codec.charSet).consume { new PrintWriter(_).consume(writer) } }
-			}
+			_writeWith(append) { _.writeUsing(writer) }
 		private def _writeWith[A](append: Boolean)(writer: BufferedOutputStream => A) =
 			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
 		/**

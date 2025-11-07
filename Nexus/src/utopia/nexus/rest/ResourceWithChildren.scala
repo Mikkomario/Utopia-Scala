@@ -9,6 +9,7 @@ import utopia.nexus.rest.ResourceSearchResult.{Error, Follow}
   * @author Mikko Hilpinen
   * @since 8.3.2021, v1.5.1
   */
+@deprecated("Replaced with NodeWithChildren", "v2.0")
 trait ResourceWithChildren[-C <: Context] extends Resource[C]
 {
 	// ABSTRACT	-------------------------

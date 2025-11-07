@@ -10,6 +10,7 @@ import utopia.nexus.http.Request
 * @author Mikko Hilpinen
 * @since 22.5.2018
 **/
+@deprecated("Replaced with RequestContext", "v2.0")
 class BaseContext(override val request: Request, override val resultParser: ResultParser = UseRawJson)
         (implicit override val settings: ServerSettings) extends Context
 {

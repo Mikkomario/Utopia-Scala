@@ -7,6 +7,7 @@ import utopia.access.model.{ContentType, Headers}
 * @author Mikko Hilpinen
 * @since 12.5.2018
 **/
+@deprecated("Replaced with RequestBody", "v2.0")
 trait Body
 {
     // ABSTRACT    -------------------

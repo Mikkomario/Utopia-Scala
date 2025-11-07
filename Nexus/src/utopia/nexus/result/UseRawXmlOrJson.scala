@@ -10,6 +10,7 @@ import utopia.nexus.http.Request
 * @author Mikko Hilpinen
 * @since 24.5.2018
 **/
+@deprecated("Replaced with PlainJsonOrXmlContentWriter", "v2.0")
 case class UseRawXmlOrJson(rootElementName: String = "Response", preferJson: Boolean = true) extends RawResultParser
 {
     private val xmlParser = UseRawXml(rootElementName)

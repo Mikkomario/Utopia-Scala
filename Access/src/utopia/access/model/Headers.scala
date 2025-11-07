@@ -10,6 +10,7 @@ import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.parse.string.Regex
 import utopia.flow.time.Now
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.{Mutate, NotEmpty}
@@ -71,6 +72,7 @@ object Headers extends FromModelFactory[Headers]
   * @author Mikko Hilpinen
   * @since 22.8.2017
   */
+// TODO: Refactor by creating a Header class
 case class Headers private(fields: Map[String, String]) extends ModelConvertible with MaybeEmpty[Headers]
 {
 	// ATTRIBUTES   -----------------
@@ -83,19 +85,24 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	/**
 	  * The content types accepted by the client
 	  */
-	lazy val acceptedTypes = commaSeparatedValues("Accept").flatMap { ContentType.parse }
+	lazy val acceptedTypes = commaSeparatedValuesIterator("Accept").flatMap { ContentType.parse }.toOptimizedSeq
 	/**
 	  * The charsets accepted by the client. Each charset is matched with a weight modifier. Higher
 	  * weight charsets should be preferred by the server.
 	  */
-	lazy val acceptedCharsets = weightedValues("Accept-Charset").flatMap { case (charset, weight) =>
-		Try(Charset.forName(charset)).toOption.map { _ -> weight }
-	}
+	// TODO: Maybe fix this. This one might be the cause behind character-set explosions
+	lazy val acceptedCharsets =
+		weightedValues("Accept-Charset")
+			.flatMap { case (charset, weight) => Try { Charset.forName(charset) }.toOption.map { _ -> weight } }
+	/**
+	 * The charset preferred by the client. None if no charset is specified.
+	 */
+	lazy val preferredCharset = acceptedCharsets.maxByOption { _._2 }.map { _._1 }
 	
 	/**
 	  * The type of the associated content. None if not defined.
 	  */
-	lazy val contentType = semicolonSeparatedValues("Content-Type").headOption.flatMap { ContentType.parse }
+	lazy val contentType = semicolonSeparatedValuesIterator("Content-Type").findMap(ContentType.parse)
 	
 	/**
 	  * The Date general-header field represents the date and time at which the message was
@@ -115,10 +122,6 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	// COMPUTED   ------------------
 	
 	/**
-	  * The charset preferred by the client. None if no charset is specified.
-	  */
-	def preferredCharset = acceptedCharsets.maxByOption { _._2 }.map { _._1 }
-	/**
 	  * The charset preferred by the client. UTF 8 if the client doesn't specify any other charset
 	  */
 	def preferredCharsetOrUTF8 = preferredCharset getOrElse StandardCharsets.UTF_8
@@ -137,6 +140,10 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	  */
 	def charset = contentType.flatMap { _.charset }
 	/**
+	 * The character set used in the associated content. Defaults to UTF-8.
+	 */
+	def charsetOrUtf8 = charset.getOrElse(StandardCharsets.UTF_8)
+	/**
 	  * The name of the character set used in the associated content. None if not defined
 	  */
 	@deprecated("Deprecated for removal. Likely buggy as well. Please use .charset instead.", "v1.5.1")
@@ -147,9 +154,10 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	def codec = charset.map { Codec(_) }
 	
 	/**
-	  * 	The length of the response body in octets (8-bit bytes)
+	  * The length of the response body in octets (8-bit bytes).
+	 * None if not specified.
 	  */
-	def contentLength = apply("Content-Length").getInt
+	def contentLength = apply("Content-Length").long
 	/**
 	  * @return Whether content length information has been provided
 	  */
@@ -231,7 +239,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	override def isEmpty = fields.isEmpty
 	
 	
-	// OPERATORS    ---------------
+	// OTHER    ------------------
 	
 	/**
 	  * @param headerName A header
@@ -281,11 +289,8 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 		case None => this
 	}
 	
-	
-	// OTHER METHODS    -----------
-	
 	/**
-	  * Checks whether speficied header field has been defined
+	  * Checks whether specified header field has been defined
 	  * @param headerName Header name (case-insensitive)
 	  * @return Whether such a header has been provided
 	  */
@@ -295,34 +300,51 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	  * Returns multiple values where the original value is split into multiple parts. Returns an
 	  * empty vector if there were no values for the header name
 	  */
-	def splitValues(headerName: String, separator: String) =
-		apply(headerName).split(separator).view.filter { _.nonEmpty }.toVector
+	def splitValues(header: String, separator: Regex) =
+		splitValuesIterator(header, separator).toOptimizedSeq
+	/**
+	 * @param header Name of the targeted header
+	 * @param separator Regular expression used for identifying value separators
+	 * @return An iterator that yields the values of the specified header
+	 */
+	def splitValuesIterator(header: String, separator: Regex) = get(header) match {
+		case Some(value) => value.splitIterator(separator).filter { _.nonEmpty }
+		case None => Iterator.empty[String]
+	}
 	/**
 	  * Returns multiple values where the original value is separated with a comma (,). Returns an
 	  * empty vector if there were no values for the header name
 	  */
-	def commaSeparatedValues(headerName: String) = splitValues(headerName, ",")
+	def commaSeparatedValues(header: String) = commaSeparatedValuesIterator(header).toOptimizedSeq
+	def commaSeparatedValuesIterator(header: String) = splitValuesIterator(header, Regex.comma)
 	/**
 	  * Returns multiple values where the original value is separated with a semicolon (;). Returns an
 	  * empty vector if there were no values for the header name
 	  */
-	def semicolonSeparatedValues(headerName: String) = splitValues(headerName, ";")
+	def semicolonSeparatedValues(header: String) =
+		semicolonSeparatedValuesIterator(header).toOptimizedSeq
+	def semicolonSeparatedValuesIterator(header: String) =
+		splitValuesIterator(header, Regex.semicolon)
 	
 	/**
-	  * @param headerName Name of target header
+	  * @param header Name of target header
 	  * @return All values for the header with their relative weights where a larger value is more preferred
 	  */
-	def weightedValues(headerName: String) = commaSeparatedValues(headerName).map {
-		_.split(";") }.map {  set =>
-		val weight = (if (set.length > 1) set(1).double else None) getOrElse 1.0
-		set.head -> weight
-	}.toMap
+	def weightedValues(header: String) =
+		commaSeparatedValuesIterator(header)
+			.map { _.splitIterator(Regex.semicolon).take(2).toOptimizedSeq }
+			.map { values =>
+				val weight = if (values.hasSize > 1) values(1).doubleOr(1.0) else 1.0
+				values.head -> weight
+			}
+			.toMap
 	
 	/**
 	  * @param headerName Name of target header
 	  * @return The most preferred value for this header (based on value weights)
 	  */
-	def preferredValue(headerName: String) = weightedValues(headerName).maxByOption { _._2 }.map { _._1 }
+	def preferredValue(headerName: String) =
+		weightedValues(headerName).maxByOption { _._2 }.map { _._1 }
 	
 	/**
 	  * Returns a copy of these headers with a new header. Overwrites any previous values on the
@@ -357,6 +379,22 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 			case None => withHeader(headerName.toLowerCase, value)
 		}
 	}
+	
+	/**
+	 * @param header The header to remove
+	 * @return A copy of these headers without the specified header present
+	 */
+	def without(header: String) = {
+		val lower = header.toLowerCase
+		if (fields.contains(lower))
+			copy(fields = fields - lower)
+		else
+			this
+	}
+	/**
+	 * Alias for [[without]]
+	 */
+	def -(header: String) = without(header)
 	
 	/**
 	  * Parses a header field into a time instant
@@ -395,14 +433,43 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	/**
 	  * Checks whether the client accepts the provided content type
 	  */
-	def accepts(contentType: ContentType) = acceptedTypes.contains(contentType)
+	def accepts(contentType: ContentType) = acceptedTypes.exists { _.contains(contentType) }
+	
+	/**
+	 * @param primary Primarily targeted type
+	 * @param secondary Secondarily targeted type
+	 * @param alternative Alternative types
+	 * @return The first accepted type, or the primary type
+	 */
+	def selectType(primary: ContentType, secondary: ContentType, alternative: ContentType*): ContentType =
+		selectType(Pair(primary, secondary) ++ alternative)
+	/**
+	 * Checks the Accept header in order to select a content type
+	 * @param options Content type options, from most to least preferred. Not empty.
+	 * @return The first accepted content type, or the first content type
+	 */
+	@throws[NoSuchElementException]("If options is empty")
+	def selectType(options: Iterable[ContentType]) = findAcceptedType(options).getOrElse(options.head)
+	
+	/**
+	 * @param primary The primarily targeted content type
+	 * @param alternative Alternative content types
+	 * @return The first accepted content type
+	 */
+	def findAcceptedType(primary: ContentType, secondary: ContentType, alternative: ContentType*): Option[ContentType] =
+		findAcceptedType(Pair(primary, secondary) ++ alternative)
 	/**
 	  * Finds the first accepted type from the provided options
 	  */
-	def getAcceptedType(options: Seq[ContentType]) = {
-		val accepted = acceptedTypes
-		options.find(accepted.contains)
+	def findAcceptedType(options: IterableOnce[ContentType]) = {
+		if (acceptedTypes.isEmpty)
+			None
+		else
+			options.iterator.find { contentType => acceptedTypes.exists { _.contains(contentType) } }
 	}
+	@deprecated("Renamed to .findAcceptedType(...)", "v1.6.2")
+	def getAcceptedType(options: IterableOnce[ContentType]) = findAcceptedType(options)
+	
 	/**
 	  * Finds the most preferred accepted charset from the provided options
 	  */
@@ -411,7 +478,7 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 		if (accepted.isEmpty)
 			None
 		else
-			Some(accepted.maxBy(_._2)._1)
+			Some(accepted.maxBy { _._2 }._1)
 	}
 	/**
 	  * @param options Available language options
@@ -475,16 +542,32 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 		withHeaderAdded("Accept-Language", s"$language;q=$weight")
 	
 	/**
-	  * Creates a new headers with the content type (and character set) specified
 	  * @param contentType the type of the content
-	  * @param charset then encoding that was used used when the content was written to the response
+	 *  @return A copy of these headers with the specified content type
 	  */
-	def withContentType(contentType: ContentType, charset: Option[Charset] = None) = {
-		val charsetPart = charset match {
-			case Some(charset) => s";${charset.name()}"
-			case None => ""
-		}
-		withHeader("Content-Type", s"$contentType$charsetPart")
+	def withContentType(contentType: ContentType) = withHeader("Content-Type", contentType.toString)
+	/**
+	 * @param contentType Type of the response or request contents.
+	 *                    None if Content-Type should not be specified.
+	 * @return A copy of these headers with the specified content type
+	 */
+	def withContentType(contentType: Option[ContentType]): Headers = contentType match {
+		case Some(contentType) => withContentType(contentType)
+		case None => without("Content-Type")
+	}
+	/**
+	 * @param contentLength Content length to assign (in 8 bit bytes)
+	 * @return A copy of these headers with the specified content length
+	 */
+	def withContentLength(contentLength: Long) = withHeader("Content-Length", contentLength.toString)
+	/**
+	 * @param contentLength Content length to assign (in 8-bit bytes).
+	 *                      None if content length is not available at this time.
+	 * @return A copy of these headers with the specified content length.
+	 */
+	def withContentLength(contentLength: Option[Long]): Headers = contentLength match {
+		case Some(length) => withContentLength(length)
+		case None => without("Content-Length")
 	}
 	
 	/**
