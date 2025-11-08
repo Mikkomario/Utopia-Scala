@@ -38,8 +38,8 @@ class ApiServlet extends LogicWrappingServlet
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private implicit val logger: Logger = SysErrLogger
-	private implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server")
+	implicit val logger: Logger = SysErrLogger
+	implicit val exc: ExecutionContext = new ThreadPool("Exodus-Test-Server")
 	private implicit val connectionPool: ConnectionPool = new ConnectionPool()
 	private implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	private implicit val jsonParser: JsonParser = JsonBunny

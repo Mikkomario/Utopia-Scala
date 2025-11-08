@@ -16,6 +16,7 @@ import utopia.nexus.result.{Result, ResultParser, UseRawJson}
 
 import scala.util.{Failure, Success, Try}
 
+@deprecated("Replaced with a new version in package controller.api.context", "v2.0")
 object PostContext
 {
 	// OTHER    -------------------------
@@ -57,6 +58,7 @@ object PostContext
   * @author Mikko Hilpinen
   * @since 13.10.2022, v1.9
   */
+@deprecated("Replaced with a new version in package controller.api.context", "v2.0")
 abstract class PostContext extends Context
 {
 	// ATTRIBUTES   ------------------------

@@ -5,9 +5,11 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import HttpExtensions._
 import utopia.access.model.enumeration.Method
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 import utopia.nexus.http.ServerSettings
 
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
+import scala.concurrent.ExecutionContext
 
 object LogicWrappingServlet
 {
@@ -17,12 +19,15 @@ object LogicWrappingServlet
 	  * @param logic Logic to wrap
 	  * @return A servlet using the specified logic
 	  */
-	def apply(logic: ServletLogic): LogicWrappingServlet = new _LogicWrappingServlet(logic)
+	def apply(logic: ServletLogic)(implicit exc: ExecutionContext, log: Logger): LogicWrappingServlet =
+		new _LogicWrappingServlet(logic)
 	
 	
 	// NESTED   -----------------------------
 	
-	private class _LogicWrappingServlet(override val logic: ServletLogic) extends LogicWrappingServlet
+	private class _LogicWrappingServlet(override val logic: ServletLogic)
+	                                   (implicit val exc: ExecutionContext, val logger: Logger)
+		extends LogicWrappingServlet
 }
 
 /**
@@ -33,6 +38,9 @@ object LogicWrappingServlet
 abstract class LogicWrappingServlet extends HttpServlet
 {
 	// ABSTRACT -------------------------------
+	
+	implicit def exc: ExecutionContext
+	implicit def logger: Logger
 	
 	/**
 	  * @return Servlet logic implementation

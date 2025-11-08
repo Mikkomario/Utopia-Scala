@@ -34,7 +34,7 @@ class TestApiServlet extends LogicWrappingServlet
 	
 	implicit val codec: Codec = Codec.UTF8
 	implicit val exc: ExecutionContext = new ThreadPool("Test-API", 1, 20, 30.seconds)(SysErrLogger)
-	implicit val log: Logger = new FileLogger("log/test-api", 1.seconds, copyToSysErr = true)
+	implicit val logger: Logger = new FileLogger("log/test-api", 1.seconds, copyToSysErr = true)
 	implicit val jsonParser: JsonParser = JsonBunny
 	implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
 	
@@ -54,11 +54,11 @@ class TestApiServlet extends LogicWrappingServlet
 	// OTHER    -------------------------------
 	
 	private def intercept(request: Request) = {
-		log.apply(s"Received request: ${ request.method } ${ request.pathString }")
+		logger.apply(s"Received request: ${ request.method } ${ request.pathString }")
 		request
 	}
 	private def postProcess(response: Response, request: Request) = {
-		log.apply(s"Sending out response: ${ response.status } for ${ request.method } ${ request.pathString }")
+		logger.apply(s"Sending out response: ${ response.status } for ${ request.method } ${ request.pathString }")
 		response
 	}
 	
