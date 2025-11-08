@@ -1,9 +1,9 @@
 package utopia.nexus.result
 
 import utopia.access.model.enumeration.Status
-import utopia.nexus.http.Request
 import utopia.flow.generic.model.immutable.Value
-import utopia.nexus.http.Response
+import utopia.nexus.controller.write.ContentWriter.JsonContentWriter.PlainJsonContentWriter
+import utopia.nexus.http.{Request, Response}
 
 /**
 * This parser outputs the data in JSON format as "raw" (http response-like) as possible
@@ -11,7 +11,7 @@ import utopia.nexus.http.Response
 * @since 24.5.2018
 **/
 @deprecated("Replaced with PlainJsonContentWriter", "v2.0")
-object UseRawJson extends RawResultParser
+object UseRawJson extends PlainJsonContentWriter("", writeDescriptionAsPlainText = true) with RawResultParser
 {
     def parseDataResponse(data: Value, status: Status, request: Request) = Response.fromValue(data, status)
 }

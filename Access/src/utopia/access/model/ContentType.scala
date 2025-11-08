@@ -7,7 +7,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 
 import java.net.URLConnection
-import java.nio.charset.Charset
+import java.nio.charset.{Charset, StandardCharsets}
 import scala.io.Codec
 import scala.util.Try
 
@@ -81,6 +81,11 @@ case class ContentType(category: ContentCategory, subType: String, parameters: M
 	
 	
 	// COMPUTED --------------------
+	
+	/**
+	 * @return The character-set specified in this content type, or UTF-8
+	 */
+	def charsetOrUtf8 = charset.getOrElse(StandardCharsets.UTF_8)
 	
 	/**
 	 * @param codec Implicit character encoding information to use by default

@@ -38,7 +38,7 @@ class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[RequestInter
 		val response = requestHandler(interceptors.foldLeft(request) { (req, i) => i.intercept(req) })
 		// Logs server-side errors
 		if (response.status.group == ServerError) {
-			val pathString = request.path match {
+			val pathString = request.pathOption match {
 				case Some(p) => p.toString
 				case None => ""
 			}

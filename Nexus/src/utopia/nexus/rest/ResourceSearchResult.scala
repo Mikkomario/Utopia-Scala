@@ -3,7 +3,10 @@ package utopia.nexus.rest
 import utopia.access.model.enumeration.Status._
 import utopia.access.model.enumeration.Status
 import utopia.nexus.http.Path
+import utopia.nexus.model.api.PathFollowResult
 import utopia.nexus.result.Result.Failure
+
+import scala.language.implicitConversions
 
 /**
  * There are different types of results that can be get when following a path alongside resources. 
@@ -15,6 +18,18 @@ sealed trait ResourceSearchResult[-C <: Context]
 @deprecated("Replaced with PathFollowResult", "v2.0")
 object ResourceSearchResult
 {
+	// IMPLICIT ------------------------
+	
+	implicit def toFollowResult[C <: Context](result: ResourceSearchResult[C]): PathFollowResult[C] = result match {
+		case _: Ready[_] => PathFollowResult.Ready
+		case Follow(node, _) => PathFollowResult.Follow(node)
+		case Redirected(newPath) => PathFollowResult.Redirected(newPath.parts)
+		case Error(_, message) => PathFollowResult.NotFound(message)
+	}
+	
+	
+	// VALUES   ------------------------
+	
     /**
      * Ready means that the resource is ready to fulfil the request and form the response
      * @param resource The resource ready to be targeted

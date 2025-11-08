@@ -14,6 +14,13 @@ import utopia.access.model.enumeration.Status
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.Mutate
+import utopia.nexus.controller.write.WriteResponseBody
+import utopia.nexus.controller.write.WriteResponseBody.NoBody
+import utopia.nexus.http.Response.CompatibilityWriter
+import utopia.nexus.model
+
+import scala.concurrent.Future
+import scala.util.Try
 
 @deprecated("Replaced with a new implementation in the model.response package", "v2.0")
 object Response
@@ -78,6 +85,21 @@ object Response
      * @param status the status for the response (default = 204 = No Content)
      */
     def empty(status: Status = NoContent) = new Response(status, Headers.withCurrentDate)
+    
+	
+	// NESTED   --------------------
+	
+	private class CompatibilityWriter(headers: Headers, write: OutputStream => Unit) extends WriteResponseBody
+	{
+		override def self: WriteResponseBody = this
+		
+		override def isEmpty: Boolean = contentLength.contains(0)
+		
+		override def contentType: Option[ContentType] = headers.contentType
+		override def contentLength: Option[Long] = headers.contentLength
+		
+		override def writeTo(stream: OutputStream): Future[Try[Unit]] = Future.successful(Try { write(stream) })
+	}
 }
 
 /**
@@ -90,8 +112,12 @@ object Response
  * @param writeBody a function that writes the response body into a stream. None by default.
  */
 @deprecated("Replaced with a new implementation in the model.response package", "v2.0")
-class Response(val status: Status = OK, val headers: Headers = Headers.empty,
+class Response(status: Status = OK, headers: Headers = Headers.empty,
                val setCookies: Seq[Cookie] = Empty, val writeBody: Option[OutputStream => Unit] = None)
+	extends model.response.Response(status, headers, setCookies, writeBody match {
+		case Some(write) => new CompatibilityWriter(headers, write)
+		case None => NoBody
+	})
 {
     // OPERATORS    --------------------
     
@@ -107,18 +133,18 @@ class Response(val status: Status = OK, val headers: Headers = Headers.empty,
       * @param status New status to assign to this response
       * @return Copy of this response with the specified status
       */
-    def withStatus(status: Status) = new Response(status, headers, setCookies, writeBody)
+    override def withStatus(status: Status) = new Response(status, headers, setCookies, writeBody)
     /**
       * @param f A mapping function applied to this response's status
       * @return Copy of this response with modified status
       */
-    def mapStatus(f: Mutate[Status]) = withStatus(f(status))
+    override def mapStatus(f: Mutate[Status]) = withStatus(f(status))
     
     /**
       * @param f A mapping function applied to the headers of this response
       * @return Copy of this response with modified headers
       */
-    def mapHeaders(f: Mutate[Headers]) = new Response(status, f(headers), setCookies, writeBody)
+    override def mapHeaders(f: Mutate[Headers]) = new Response(status, f(headers), setCookies, writeBody)
     /**
      * Creates a new response with modified headers. The headers are modified in the provided 
      * function

@@ -88,7 +88,7 @@ object ContentWriter
 	 */
 	private def toXml(elementName: NamespacedString, model: Model)(implicit naming: XmlElementNames): XmlElement =
 		XmlElement(elementName,
-			children = model.propertiesIterator.map { p => toXml(p.name, p.value) }.toOptimizedSeq)
+			children = model.propertiesIterator.map { p => toXml(p.name.capitalize, p.value) }.toOptimizedSeq)
 			
 	
 	// NESTED   ----------------------------

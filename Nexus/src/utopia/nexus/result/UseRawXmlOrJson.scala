@@ -3,6 +3,8 @@ package utopia.nexus.result
 import utopia.access.model.enumeration.ContentCategory._
 import utopia.access.model.enumeration.Status
 import utopia.flow.generic.model.immutable.Value
+import utopia.nexus.controller.write.ContentWriter.JsonOrXmlContentWriter.PlainJsonOrXmlContentWriter
+import utopia.nexus.controller.write.ContentWriter.XmlContentWriter.XmlElementNames
 import utopia.nexus.http.Request
 
 /**
@@ -11,7 +13,10 @@ import utopia.nexus.http.Request
 * @since 24.5.2018
 **/
 @deprecated("Replaced with PlainJsonOrXmlContentWriter", "v2.0")
-case class UseRawXmlOrJson(rootElementName: String = "Response", preferJson: Boolean = true) extends RawResultParser
+case class UseRawXmlOrJson(rootElementName: String = "Response", preferJson: Boolean = true)
+	extends PlainJsonOrXmlContentWriter("", descriptionMayBePlainText = true)(
+		XmlElementNames(root = rootElementName, listItem = "element"))
+		with RawResultParser
 {
     private val xmlParser = UseRawXml(rootElementName)
     

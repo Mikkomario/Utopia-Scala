@@ -43,6 +43,13 @@ case class Response(status: Status = OK, headers: Headers = Headers.empty, newCo
 	// OTHER    -----------------------
 	
 	/**
+	 * @param status New status to assign to this response
+	 * @return A copy of this response with the specified status
+	 */
+	def withStatus(status: Status) = copy(status = status)
+	def mapStatus(f: Mutate[Status]) = withStatus(f(status))
+	
+	/**
 	 * @param headers New headers to assign
 	 * @param overwrite Whether to overwrite all current headers (default = false)
 	 * @return Copy of this response with the specified headers

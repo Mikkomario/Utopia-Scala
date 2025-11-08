@@ -6,6 +6,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 
 import scala.util.{Failure, Success, Try}
@@ -82,19 +83,22 @@ trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEm
 	/**
 	 * Whether this body is empty
 	 */
-	def isEmpty = headers.contentLength.contains(0) && !headers.isChunked
+	def isEmpty = headers.contentLength.contains(0)
 	
 	/**
+	 * @param log Implicit logging implementation used for recording failures during stream-closing
 	 * @return This request body with its contents buffered into a string.
 	 *         Failure if buffering failed.
 	 */
-	def bufferedToString(implicit ev: A <:< StreamOrReader) =
+	def bufferedToString(implicit log: Logger, ev: A <:< StreamOrReader) =
 		if (isEmpty) Success(withValue("")) else bufferWith { _.bufferToString }
 	/**
+	 * @param log Implicit logging implementation used for recording failures during stream-closing
 	 * @return This request body with its contents buffered into XML.
 	 *         Failure if buffering failed.
 	 */
-	def bufferedToXml(implicit ev: A <:< StreamOrReader) = bufferWith { _.bufferToXml }
+	def bufferedToXml(implicit log: Logger, ev: A <:< StreamOrReader) =
+		bufferWith { _.bufferToXml }
 	
 	/**
 	 * Buffers this requests contents into a [[Value]].
@@ -107,10 +111,11 @@ trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEm
 	 *      - Unspecified => Assumes that the contents are JSON
 	 *
 	 * @param jsonParser JSON parser used for interpreting JSON content, if applicable
+	 * @param log Implicit logging implementation used for recording failures during stream-closing
 	 * @return This request body with its contents buffered into a Value.
 	 *         Failure if buffering failed, or if the content type was not supported.
 	 */
-	def buffered(implicit jsonParser: JsonParser, ev: A <:< StreamOrReader) = {
+	def buffered(implicit jsonParser: JsonParser, log: Logger, ev: A <:< StreamOrReader) = {
 		if (isEmpty || value.isEmpty.isCertainlyTrue)
 			Success(withValue(Value.empty))
 		else
@@ -132,10 +137,11 @@ trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEm
 	/**
 	 * Buffers this requests contents into a [[Value]], assuming JSON content
 	 * @param jsonParser JSON parser to use
+	 * @param log Implicit logging implementation used for recording failures during stream-closing
 	 * @return This request body with its contents buffered into a Value. Failure if buffering failed.
 	 * @see [[buffered]]
 	 */
-	def bufferedAsJson(implicit jsonParser: JsonParser, ev: A <:< StreamOrReader) =
+	def bufferedAsJson(implicit jsonParser: JsonParser, log: Logger, ev: A <:< StreamOrReader) =
 		if (isEmpty || value.isEmpty.isCertainlyTrue) Success(withValue(Value.empty)) else bufferWith { _.bufferAsJson }
 	
 	

@@ -50,17 +50,17 @@ class TestRestResource(val name: String, initialValues: HasConstants = Model.emp
         
         request.method match 
         {
-            case Get => handleGet(request.path)
+            case Get => handleGet(request.pathOption)
             case Post =>
                 if (request.path.isEmpty) 
                     Response.plainText("Path required", BadRequest) 
                 else 
-                    handlePost(request.path.get, request.parameters)
+                    handlePost(request.pathOption.get, request.parameters)
             case Delete =>
                 if (request.path.isEmpty)
                     Response.plainText("Path required", BadRequest)
                 else
-                    handleDelete(request.path.get.lastElement)
+                    handleDelete(request.pathOption.get.lastElement)
             case Put => handlePut(request.parameters)
             case _ => Response.empty(NotImplemented)
         }

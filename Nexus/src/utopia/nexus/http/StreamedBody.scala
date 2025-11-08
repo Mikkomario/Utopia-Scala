@@ -10,6 +10,8 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.xml.XmlReader
+import utopia.nexus.model.request.{RequestBody, StreamOrReader}
+import utopia.nexus.model.request.RequestBody.StreamedRequestBody
 
 import java.io.{BufferedReader, OutputStream}
 import scala.language.postfixOps
@@ -23,10 +25,17 @@ import scala.util.{Success, Try}
 @deprecated("Replaced with StreamedRequestBody", "v2.0")
 class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Text.plain,
                    val contentLength: Option[Long] = None, val headers: Headers = Headers.currentDateHeaders,
-                   val name: Option[String] = None)
-	extends Body
+                   override val name: String = "")
+	extends Body with StreamedRequestBody
 {
-    // OTHER METHODS    --------------------
+	// IMPLEMENTED  ------------------------
+	
+	override lazy val value: StreamOrReader = StreamOrReader.readerOnly(contentType.charsetOrUtf8, reader)
+	
+	override def isEmpty: Boolean = super[Body].isEmpty
+	
+	
+	// OTHER METHODS    --------------------
     
     /**
       * @param f A function for handling stream contents
@@ -41,13 +50,11 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
       */
     def bufferedToString = buffered { reader =>
         Try { Iterator.continually(reader.readLine()).takeWhile(_ != null).mkString("\n") } }
-    
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value
       */
     def bufferedJson(implicit parser: JsonParser) =
         bufferedToString.map { _.flatMap { parser(_) } }
-    
     /**
       * @return A buffered version of this body where contents are parsed from a JSON into a value
       */
@@ -58,7 +65,6 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
             else
                 v.model.toTry { new DataTypeException(s"${v.description} can't be converted to model") }
         } } }
-    
     /**
       * @return A buffered version of this body where contents are parsed from a JSON array into a vector of values
       */
@@ -69,7 +75,6 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
             else
                 v.vector.toTry { new DataTypeException(s"${v.description} can't be converted to a vector") }
         } }
-    
     /**
       * @return A buffered version of this body where contents are parsed into an xml element
       */
@@ -88,7 +93,6 @@ class StreamedBody(val reader: BufferedReader, val contentType: ContentType = Te
             .takeWhile (-1 !=)
             .foreach (output.write))
     }
-    
     /**
      * Writes the contents of this body to a file
      * @param path Path where to write the stream contents

@@ -11,6 +11,7 @@ import utopia.flow.generic.model.immutable.Value
 import java.nio.charset.StandardCharsets
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.parse.xml.{XmlElement, XmlWriter}
+import utopia.nexus.controller.write.ContentWriter.XmlContentWriter.{PlainXmlContentWriter, XmlElementNames}
 
 /**
 * This result parser parses data into xml format
@@ -18,7 +19,8 @@ import utopia.flow.parse.xml.{XmlElement, XmlWriter}
 * @since 24.5.2018
 **/
 @deprecated("Replaced with PlainXmlContentWriter", "v2.0")
-case class UseRawXml(rootElementName: String = "Response") extends RawResultParser
+case class UseRawXml(rootElementName: String = "Response")
+	extends PlainXmlContentWriter()(XmlElementNames(root = rootElementName, listItem = "element")) with RawResultParser
 {
 	def parseDataResponse(data: Value, status: Status, request: Request) =
 	{

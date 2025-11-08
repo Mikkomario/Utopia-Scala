@@ -4,9 +4,11 @@ import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.EmptyInputStream
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.parse.string.StringFrom
+import utopia.flow.parse.string.{Lines, StringFrom}
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.logging.Logger
 
 import java.io.{BufferedReader, InputStream, InputStreamReader}
 import java.nio.charset.{Charset, StandardCharsets}
@@ -45,6 +47,18 @@ object StreamOrReader
 	         (stream: => InputStream)(reader: => BufferedReader): StreamOrReader =
 		new _StreamOrReader(stream, reader, charset, bufferSize, preferReader)
 	
+	/**
+	 * Wraps a buffered reader.
+	 *
+	 * Note: This function is mainly intended for backwards-compatibility.
+	 *       For most use-cases, I highly recommend using [[apply]] instead.
+	 *
+	 * @param charset Character set used
+	 * @param reader A buffered reader to wrap (call-by-name, called lazily)
+	 * @return A new interface for wrapping that reader
+	 */
+	def readerOnly(charset: Charset, reader: => BufferedReader): StreamOrReader = new ReaderWrapper(charset, reader)
+	
 	
 	// NESTED   -----------------------
 	
@@ -69,9 +83,54 @@ object StreamOrReader
 		
 		override def close(): Unit = ()
 		
-		override def bufferToString: Try[String] = Success("")
-		override def bufferToXml: Try[XmlElement] = Failure(new UnsupportedOperationException("This stream is empty"))
-		override def bufferAsJson(implicit jsonParser: JsonParser): Try[Value] = Success(Value.empty)
+		override def bufferToString(implicit log: Logger): Try[String] = Success("")
+		override def bufferToXml(implicit log: Logger): Try[XmlElement] =
+			Failure(new UnsupportedOperationException("This stream is empty"))
+		override def bufferAsJson(implicit jsonParser: JsonParser, log: Logger): Try[Value] = Success(Value.empty)
+		
+		override def iterateLines[A](f: Iterator[String] => A): Try[A] = Try { f(Iterator.empty) }
+	}
+	
+	private class ReaderWrapper(override val charset: Charset, getReader: => BufferedReader) extends StreamOrReader
+	{
+		// ATTRIBUTES   ---------------------
+		
+		private var _reader: Option[BufferedReader] = None
+		private var _closed = false
+		
+		override val isEmpty: UncertainBoolean = UncertainBoolean
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def closed: Boolean = _closed
+		
+		override def reader: BufferedReader = _reader.getOrElse {
+			testIfClosed()
+			val reader = getReader
+			_reader = Some(reader)
+			reader
+		}
+		override def stream: InputStream =
+			throw new IllegalStateException("Only a reader may be acquired from this interface")
+		override def either: Either[InputStream, BufferedReader] = Right(reader)
+		
+		override def close(): Unit = {
+			if (!_closed) {
+				_closed = true
+				val result = Try { _reader.foreach { _.close() } }
+				_reader = None
+				result.get
+			}
+		}
+		
+		
+		// OTHER    -------------------------
+		
+		private def testIfClosed() = {
+			if (_closed)
+				throw new IllegalStateException("This reader has already been closed")
+		}
 	}
 	
 	private class _StreamOrReader(openStream: => InputStream, getReader: => BufferedReader, getCharset: => Charset,
@@ -160,7 +219,6 @@ object StreamOrReader
  * @author Mikko Hilpinen
  * @since 05.11.2025, v2.0
  */
-// TODO: When buffering, close the stream afterwards
 trait StreamOrReader extends AutoCloseable
 {
 	// ABSTRACT ------------------------
@@ -216,49 +274,72 @@ trait StreamOrReader extends AutoCloseable
 	 * @return The string read from the underlying stream.
 	 *         Failure if an exception was encountered, or if this interface had already been closed.
 	 */
-	def bufferToString = {
-		if (closed)
-			Failure(new IllegalStateException("Already closed"))
-		else
-			either match {
-				case Left(stream) => StringFrom.stream(stream, charset)
-				case Right(reader) => readerToString(reader)
-			}
-	}
-	/**
-	 * Buffers this stream's contents into XML (assumes that the content is XML)
-	 * @return The XML element parsed from the stream.
-	 *         Failure if parsing failed or if this interface had already closed.
-	 */
-	def bufferToXml = {
-		if (closed)
-			Failure(new IllegalStateException("Already closed"))
-		else
-			either match {
-				case Left(stream) => XmlReader.parseStream(stream, charset)
-				case Right(reader) => readerToString(reader).flatMap(XmlReader.parseString)
-			}
-	}
-	
+	def bufferToString(implicit log: Logger) =
+		buffer { StringFrom.stream(_, charset) } { lines => Success(lines.mkString("\n")) }
 	/**
 	 * Buffers this stream's contents into a [[utopia.flow.generic.model.immutable.Value]],
 	 * assuming that the streamed content is JSON.
 	 * @param jsonParser JSON parser used for processing the streamed JSON
 	 * @return Parsed value. Failure if parsing failed, or if this interface had already closed.
 	 */
-	def bufferAsJson(implicit jsonParser: JsonParser) = {
+	def bufferAsJson(implicit jsonParser: JsonParser, log: Logger) =
+		buffer(jsonParser.apply) { lines => jsonParser(lines.mkString("\n")) }
+	/**
+	 * Buffers this stream's contents into XML (assumes that the content is XML)
+	 * @return The XML element parsed from the stream.
+	 *         Failure if parsing failed or if this interface had already closed.
+	 */
+	def bufferToXml(implicit log: Logger) =
+		buffer { XmlReader.parseStream(_, charset) } { lines => XmlReader.parseString(lines.mkString("\n")) }
+	/**
+	 * Buffers the contents of this stream.
+	 *
+	 * Note: The underlying stream is closed once the buffering completes.
+	 *
+	 * @param fromStream A function that buffers content from an input stream
+	 * @param fromReader A function that buffers content from a line iterator acquired from the wrapped buffered reader
+	 * @param log Implicit logging implementation used for logging failures during stream closing
+	 * @tparam A Type of buffered contents, when successful
+	 * @return The buffered data. Failure if this stream had already closed, an IO error occurred,
+	 *         or if the specified function yielded a failure.
+	 */
+	def buffer[A](fromStream: InputStream => Try[A])(fromReader: Iterator[String] => Try[A])
+	             (implicit log: Logger) =
+	{
+		// Case: Closed => Fails
+		if (closed)
+			Failure(new IllegalStateException("Already closed"))
+		else {
+			// Generates the result based on a stream, or a reader
+			val result = either match {
+				case Left(stream) => fromStream(stream)
+				case Right(reader) => Try { fromReader(linesFromReader(reader)) }.flatten
+			}
+			// Closes the stream afterwards. Logs errors.
+			Try { close() }.logWithMessage("Failure while closing a stream")
+			result
+		}
+	}
+	
+	/**
+	 * Iterates the lines available in this stream using the specified function
+	 * @param f A function that accepts a line iterator and yields a value
+	 * @tparam A Type of the resulting value
+	 * @return Result of 'f'. Failure if this stream was closed or if an IO error occurred.
+	 */
+	def iterateLines[A](f: Iterator[String] => A) = {
 		if (closed)
 			Failure(new IllegalStateException("Already closed"))
 		else
 			either match {
-				case Left(stream) => jsonParser(stream)
-				case Right(reader) => readerToString(reader).flatMap(jsonParser.apply)
+				case Left(stream) => Lines.iterate.stream(stream, charset)(f)
+				case Right(reader) => Try { f(linesFromReader(reader)) }
 			}
 	}
 	
 	
 	// OTHER    ---------------------
 	
-	private def readerToString(reader: BufferedReader) =
-		Try { OptionsIterator.continually { Option(reader.readLine()) }.mkString("\n") }
+	private def linesFromReader(reader: BufferedReader) =
+		OptionsIterator.continually { Option(reader.readLine()) }
 }

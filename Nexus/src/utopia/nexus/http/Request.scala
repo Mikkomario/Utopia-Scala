@@ -1,10 +1,13 @@
 package utopia.nexus.http
 
-import utopia.access.model.{Cookie, Headers}
 import utopia.access.model.enumeration.Method
+import utopia.access.model.{Cookie, Headers}
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
+import utopia.nexus.model
+import utopia.nexus.model.request.RequestBody.EmptyStreamedRequestBody
+import utopia.nexus.model.request.StreamOrReader
 
 import java.time.Instant
 
@@ -18,78 +21,35 @@ import java.time.Instant
   * @param path Path parsed from the targeted uri, if available (default = None)
   * @param parameters The parameters provided with the request (query or post)
   * @param headers Headers provided with this request (default = empty)
-  * @param body The body elements provided with this request (streamed)
+  * @param bodyParts The body elements provided with this request (streamed)
   * @param rawCookies Cookies provided with this request (default = empty)
  * @param created Creation time of this request (default = Now)
  */
 @deprecated("Replaced with a new version in package model.request", "v2.0")
-class Request(val method: Method, val targetUrl: String, val path: Option[Path] = None,
-              val parameters: Model = Model.empty, val headers: Headers = Headers.empty,
-              val body: Seq[StreamedBody] = Empty, rawCookies: Iterable[Cookie] = Empty,
-              val created: Instant = Now)
+class Request(method: Method, targetUrl: String, path: Option[Path] = None,
+              parameters: Model = Model.empty, headers: Headers = Headers.empty,
+              val bodyParts: Seq[StreamedBody] = Empty, rawCookies: Iterable[Cookie] = Empty,
+              created: Instant = Now)
+	extends model.request.Request[StreamOrReader](method, bodyParts.headOption.getOrElse(EmptyStreamedRequestBody),
+		targetUrl, path match {
+			case Some(path) => path.parts
+			case None => Empty
+		},
+		parameters, headers, rawCookies, created)
 {
-    // ATTRIBUTES    ---------------------------
-    
-    /**
-     * The cookies provided with the request. All keys are cookie names in lower case letters
-     */
-    val cookies = rawCookies.map { cookie => (cookie.name.toLowerCase(), cookie) }.toMap
-    
-    
-    // COMPUTED --------------------------------
-    
-    /**
-      * @return A string representation of this request's path
-      */
-    def pathString = path match {
-        case Some(p) => p.toString
-        case None => ""
-    }
-    
-    
-    // IMPLEMENTED  ----------------------------
-    
-    override def toString = {
-        val sb = new StringBuilder
-        sb ++= s"$method $targetUrl"
-        path.foreach { p => sb ++= s" ($p)" }
-        if (parameters.nonEmpty)
-            sb ++= s", parameters=$parameters"
-        if (headers.nonEmpty)
-            sb ++= s", headers=$headers"
-        if (cookies.nonEmpty)
-            sb ++= s", cookies: ${ Model.fromMap(cookies.view.mapValues { _.toModel }.toMap) }"
-        if (body.nonEmpty)
-        {
-            sb ++= " with a body"
-            if (body.size > 1)
-                sb ++= s" (${body.size} parts)"
-        }
-        
-        sb.result()
-    }
-    
-    
     // OPERATORS    ----------------------------
     
     /**
      * @return This request with added parameters
      */
-    def ++(params: Model) = withAddedParameters(params)
+    override def ++(params: Model) = withAddedParameters(params)
     
     
     // OTHER METHODS    ------------------------
     
     /**
-     * @param cookieName Name of the targeted cookie
-     * @return Value of that cookie. Empty value if no such cookie existed.
-     */
-    def cookieValue(cookieName: String) =
-        cookies.get(cookieName.toLowerCase).map { _.value }.getOrElse(Value.empty)
-    
-    /**
      * Creates a new request with some parameters added
      */
-    def withAddedParameters(params: Model) = new Request(method, targetUrl, path,
-            parameters ++ params, headers, body, cookies.values)
+    override def withAddedParameters(params: Model) =
+	    new Request(method, targetUrl, path, parameters ++ params, headers, bodyParts, rawCookies, created)
 }

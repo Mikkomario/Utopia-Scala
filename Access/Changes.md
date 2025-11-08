@@ -9,7 +9,7 @@
 - Added **HasHeaders** and **Headered** traits
 ### New methods
 - **ContentType**
-  - Added `.withDefaultCharset(=> Charset)` and `.withCharsetSpecified`
+  - Added `.charsetOrUtf8`, `.withDefaultCharset(=> Charset)` and `.withCharsetSpecified`
   - Added `.contains(ContentType)` and `.overlapsWith(ContentType)`
     - **ContentType** also now extends **ApproxSelfEquals**
 - **Headers**

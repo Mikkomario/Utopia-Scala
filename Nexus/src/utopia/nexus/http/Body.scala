@@ -27,7 +27,7 @@ trait Body
 	/**
 	 * The name of this part, if it has one
 	 */
-	def name: Option[String]
+	def name: String
 	
 	
 	// COMPUTED PROPERTIES    ---------

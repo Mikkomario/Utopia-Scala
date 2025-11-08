@@ -8,6 +8,7 @@ import utopia.flow.time.Now
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
+import utopia.nexus.http.Path
 
 import java.time.Instant
 import scala.util.Try
@@ -43,6 +44,8 @@ case class Request[+A](method: Method, body: RequestBody[A], url: String, path: 
 	extends Headered[Request[A]] with View[A]
 {
     // ATTRIBUTES    ---------------------------
+	
+	lazy val pathOption = if (path.isEmpty) None else Some(Path(path))
 	
 	/**
 	 * A model based on the specified cookies

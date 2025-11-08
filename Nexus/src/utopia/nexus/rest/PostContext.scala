@@ -69,8 +69,8 @@ abstract class PostContext extends Context
 	 *      - Right: The parsed request body as a [[Value]]
 	 *      - Left: Parsing failure as a [[Result.Failure]]
 	 */
-	val lazyParsedRequestBody = Lazy {
-		request.body.headOption match {
+	private val lazyParsedRequestBody = Lazy {
+		request.bodyParts.headOption match {
 			case Some(body) =>
 				// Accepts json, xml and text content types
 				val value = body.contentType.subType.toLowerCase match {

@@ -124,7 +124,7 @@ object HttpExtensions
             
             new StreamedBody(new BufferedReader(new InputStreamReader(part.getInputStream, charset)), 
                     contentType, Some(part.getSize), headers, 
-                   Option(part.getSubmittedFileName).orElse(Option(part.getName)))
+                   Option(part.getSubmittedFileName).getOrElse { Option(part.getName).getOrElse("") })
         }
         
         private def parseHeaders(headerNames: util.Collection[String], getValue: String => String) =

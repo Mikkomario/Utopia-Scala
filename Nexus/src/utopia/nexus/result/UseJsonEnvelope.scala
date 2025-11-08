@@ -1,9 +1,11 @@
 package utopia.nexus.result
 
+import utopia.access.model.enumeration.Status.{BadRequest, OK}
 import utopia.access.model.enumeration.{Status, StatusGroup}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.util.StringExtensions._
+import utopia.nexus.controller.write.ContentWriter.JsonContentWriter.JsonEnveloper
+import utopia.nexus.controller.write.ContentWriter.JsonContentWriter.JsonEnveloper.JsonEnvelopeNames
 import utopia.nexus.http.{Request, Response}
 
 /**
@@ -13,10 +15,12 @@ import utopia.nexus.http.{Request, Response}
 **/
 @deprecated("Replaced with JsonEnveloper", "v2.0")
 case class UseJsonEnvelope(getDataName: Status => String = s => if (s.group == StatusGroup.Success) "data" else "error",
-                           descriptionName: String = "description", statusName: String = "status") extends ResultParser
+                           descriptionName: String = "description", statusName: String = "status")
+	extends JsonEnveloper()(JsonEnvelopeNames(value = getDataName(OK), valueOnFailure = getDataName(BadRequest),
+		description = descriptionName))
+	with ResultParser
 {
-	def apply(result: Result, request: Request) = 
-	{
+	def apply(result: Result, request: Request) = {
 	    val buffer = Vector.newBuilder[(String, Value)]
 	    
 	    buffer += statusName -> result.status.code

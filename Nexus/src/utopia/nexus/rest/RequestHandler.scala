@@ -56,7 +56,7 @@ class RequestHandler[-C <: Context](childResources: Map[String, Iterable[Resourc
     /**
      * Forms a response for the specified request
      */
-    def apply(request: Request): Response = handleBasePath(request.path) match {
+    def apply(request: Request): Response = handleBasePath(if (request.path.isEmpty) None else Some(Path(request.path))) match {
         case Right((version, remaining)) =>
             remaining match {
                 // Targeting a resource under a version

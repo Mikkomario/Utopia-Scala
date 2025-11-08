@@ -6,6 +6,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
+import utopia.flow.util.StringExtensions._
 import utopia.nexus.http.{Path, Response, StreamedBody}
 import utopia.nexus.rest.ResourceSearchResult.Ready
 
@@ -72,13 +73,13 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
         {
             val counter = Iterator.iterate(1) { _ + 1 }
             val nameFromParam = request.parameters("filename").string.orElse(request.parameters("name").string)
-            val partNames = request.body.map { p =>
-                p.name.getOrElse {
-                    s"upload_${Now.toLocalDateTime}${ if (request.body.size > 1) s"_${ counter.next() }" else "" }"
+            val partNames = request.bodyParts.map { p =>
+                p.name.nonEmptyOrElse {
+                    s"upload_${Now.toLocalDateTime}${ if (request.bodyParts.size > 1) s"_${ counter.next() }" else "" }"
                 }
             }
             
-            val uploadResults = request.body.zip(partNames).map { case (b, partName) => upload(b, partName, remainingPath) }
+            val uploadResults = request.bodyParts.zip(partNames).map { case (b, partName) => upload(b, partName, remainingPath) }
             val successes = partNames.zip(uploadResults).filter(_._2.isSuccess).toMap.view.mapValues(_.get)
             
             if (successes.isEmpty) {
@@ -88,7 +89,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
             }
             else {
                 // TODO: Add better handling for cases where request path is empty for some reason
-                val myPath = myLocationFrom(request.path.getOrElse(Path(name)), remainingPath)
+                val myPath = myLocationFrom(request.pathOption.getOrElse(Path(name)), remainingPath)
                 val resultUrls = successes.mapValues(p => (myPath/p).toServerUrl(context.settings))
                 
                 val location = if (resultUrls.size == 1) resultUrls.head._2 else myPath.toServerUrl(context.settings)
