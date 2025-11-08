@@ -1,4 +1,4 @@
-package utopia.nexus.controller.api.node.scalable
+package utopia.nexus.controller.api.node.extendable
 
 import utopia.access.model.enumeration.Method
 import utopia.flow.collection.CollectionExtensions._
@@ -10,7 +10,47 @@ import scala.collection.mutable
 
 object ExtendableApiNodeFactory
 {
-	// TODO: Continue
+	// IMPLICIT    ------------------------
+	
+	/**
+	 * Creates a new API node factory, based on a function
+	 * @param newNode A function that accepts:
+	 *                      1. A node construction parameter
+	 *                      1. Follow implementations
+	 *                      1. Method implementations
+	 *
+	 *                and constructs a new API node
+	 * @tparam Param Type of the accepted node construction parameter
+	 * @tparam RC Type of the required request context
+	 * @tparam LC Type of the node's local context
+	 * @tparam N Type of the generated nodes
+	 * @return A new factory for API nodes
+	 */
+	implicit def apply[Param, RC, LC, N](newNode: (Param, Seq[FollowImplementation[RC]], Map[Method, Seq[UseCaseImplementation[RC, LC]]]) => N): ExtendableApiNodeFactory[Param, RC, LC, N] =
+		new _ExtendableApiNodeFactory[Param, RC, LC, N](newNode)
+		
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * Creates a new API node factory, based on a function.
+	 * All created nodes are cached indefinitely.
+	 * This version may be appropriate in situations where node construction parameters are very limited in number.
+	 * @param newNode A function that accepts:
+	 *                      1. A node construction parameter
+	 *                      1. Follow implementations
+	 *                      1. Method implementations
+	 *
+	 *                and constructs a new API node
+	 * @tparam Param Type of the accepted node construction parameter
+	 * @tparam RC Type of the required request context
+	 * @tparam LC Type of the node's local context
+	 * @tparam N Type of the generated nodes
+	 * @return A new factory for API nodes
+	 */
+	def caching[Param, RC, LC, N](newNode: (Param, Seq[FollowImplementation[RC]], Map[Method, Seq[UseCaseImplementation[RC, LC]]]) => N): ExtendableApiNodeFactory[Param, RC, LC, N] =
+		new CachingFactory[Param, RC, LC, N](newNode)
+		
 	
 	// NESTED   ------------------------
 	

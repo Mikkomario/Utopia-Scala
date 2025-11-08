@@ -1,4 +1,4 @@
-package utopia.nexus.controller.api.node.scalable
+package utopia.nexus.controller.api.node.extendable
 
 import utopia.access.model.enumeration.Method
 import utopia.flow.collection.immutable.caching.iterable.LazySeq

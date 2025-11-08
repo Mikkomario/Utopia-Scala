@@ -1,4 +1,4 @@
-package utopia.nexus.controller.api.node.scalable
+package utopia.nexus.controller.api.node.extendable
 
 import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Status.{MethodNotAllowed, NotImplemented}

@@ -15,6 +15,7 @@ import utopia.nexus.result.Result
  * @author Mikko Hilpinen
  * @since 17.6.2021, v1.6
  */
+@deprecated("Replaced with ModularApiNode", "v2.0")
 trait ModularResource[-C <: Context, P] extends Resource[C]
 {
 	// ABSTRACT ---------------------------

@@ -10,6 +10,7 @@ import utopia.nexus.rest.{Context, Resource}
  * @author Mikko Hilpinen
  * @since 18.6.2021, v1.6
  */
+@deprecated("Replaced with ExtendableApiNode", "v2.0")
 abstract class ExtendableResource[C <: Context, P] extends ModularResource[C, P]
 {
 	// ATTRIBUTES   ------------------------------

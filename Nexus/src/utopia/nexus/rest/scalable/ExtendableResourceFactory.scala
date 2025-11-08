@@ -9,6 +9,7 @@ import utopia.nexus.rest.Context
  * @author Mikko Hilpinen
  * @since 25.6.2021, v1.6
  */
+@deprecated("Replaced with ExtendableApiNodeFactory", "v2.0")
 abstract class ExtendableResourceFactory[A, C <: Context, P, +R <: ExtendableResource[C, P]]
 {
 	// ATTRIBUTES   --------------------

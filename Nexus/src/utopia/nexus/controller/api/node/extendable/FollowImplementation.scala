@@ -1,4 +1,4 @@
-package utopia.nexus.controller.api.node.scalable
+package utopia.nexus.controller.api.node.extendable
 
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.view.immutable.View
