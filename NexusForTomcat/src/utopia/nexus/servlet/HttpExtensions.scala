@@ -2,20 +2,29 @@ package utopia.nexus.servlet
 
 import utopia.access.model.enumeration.ContentCategory._
 import utopia.access.model.enumeration.Method
+import utopia.access.model.enumeration.Method.Get
 import utopia.access.model.{ContentType, Cookie, Headers}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.parse.string.Regex
+import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.nexus.http.{Path, Request, ServerSettings, StreamedBody}
+import utopia.nexus
+import utopia.nexus.http.{Path, ServerSettings, StreamedBody}
+import utopia.nexus.model.request.{Request, StreamOrReader}
 import utopia.nexus.model.response.Response
+import utopia.nexus.model.servlet.ParameterEncoding
 
 import java.io.{BufferedReader, InputStreamReader}
 import java.net.URLDecoder
-import java.nio.charset.Charset
+import java.nio.charset.{Charset, StandardCharsets}
 import java.util
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse, Part}
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,6 +39,13 @@ import scala.util.{Failure, Success, Try}
  */
 object HttpExtensions
 {
+	// ATTRIBUTES   ------------------------
+	
+	private val unwrittenHeaders = Set("content-type", "content-length")
+	
+	
+	// EXTENSIONS   ------------------------
+	
 	implicit class TomcatResponse2(val r: Response) extends AnyVal
 	{
 		/**
@@ -44,8 +60,12 @@ object HttpExtensions
 			Try[Try[Future[Try[Unit]]]] {
 				// Updates the status, headers & cookies
 				response.setStatus(r.status.code)
-				// TODO: See whether content type and content length must be specified separately
-				r.headers.fields.foreach { case (header, value) => response.addHeader(header, value) }
+				r.headers.contentType.foreach { cType => response.setContentType(cType.toString) }
+				r.headers.contentLength.foreach(response.setContentLengthLong)
+				r.headers.fields.foreach { case (header, value) =>
+					if (!unwrittenHeaders.contains(header.toLowerCase))
+						response.addHeader(header, value)
+				}
 				r.newCookies.foreach { cookie =>
 					val javaCookie = new javax.servlet.http.Cookie(cookie.name, cookie.value.toJson)
 					cookie.lifeLimitSeconds.foreach(javaCookie.setMaxAge)
@@ -91,9 +111,78 @@ object HttpExtensions
 	
 	implicit class ConvertibleRequest(val r: HttpServletRequest) extends AnyVal
 	{
+		def toNexusRequest(implicit jsonParser: JsonParser, expectedParameterEncoding: ParameterEncoding, log: Logger) = {
+			// Parses the method (defaulting to GET)
+			val method = Option(r.getMethod) match {
+				case Some(method) => Method(method)
+				case None => Get
+			}
+			// Parses the URL and the targeted path
+			val url = r.getRequestURL.toString
+			val path = r.getRequestURI.splitIterator(Regex.forwardSlash).filter { _.nonEmpty }.toOptimizedSeq
+			// Parses the request parameters (which may be specified as query parameters or form values)
+			val params = Model.withConstants(r.getParameterNames.asScala
+				.flatMap { paramName =>
+					Option(r.getParameterValues(paramName)).filter { _.nonEmpty }.map { paramValues =>
+						// Decodes the parameter values, if appropriate
+						val decodedValuesIter = expectedParameterEncoding.charset match {
+							case Some(encoding) =>
+								val encodingName = encoding.name()
+								paramValues.iterator.flatMap { value =>
+									Try { URLDecoder.decode(value, encodingName) }
+										.logWithMessage(s"Failed to parse the value of request parameter \"$paramName\"")
+								}
+							case None => paramValues.iterator
+						}
+						// Interprets the value
+						val value: Value = decodedValuesIter.toOptimizedSeq.emptyOneOrMany match {
+							// Case: Decoding failed => Empty
+							case None => Value.empty
+							// Case: Single value => Parses it as a JSON value
+							case Some(Left(value)) => jsonParser.valueOf(value)
+							// Case: Multiple values => Parses each as a JSON value and combines them into a Seq/Vector
+							case Some(Right(values)) => values.map(jsonParser.valueOf)
+						}
+						Constant(paramName, value)
+					}
+				}
+				.toOptimizedSeq)
+			// Parses the headers & cookies
+			val headers = Headers(r.getHeaderNames.asScala.map { header => header -> r.getHeader(header) }.toMap)
+			val cookies = Option(r.getCookies) match {
+				case Some(cookies) =>
+					cookies.iterator
+						.map { cookie =>
+							val value: Value = Option(cookie.getValue) match {
+								case Some(value) => jsonParser.valueOf(value)
+								case None => Value.empty
+							}
+							Cookie(cookie.getName, value, Some(cookie.getMaxAge).filter { _ >= 0 },
+								isSecure = cookie.getSecure)
+						}
+						.toOptimizedSeq
+				case None => Empty
+			}
+			// Parses the request body
+			val body = {
+				// Case: Content-length specified as 0 => Expects there to be no body
+				if (headers.contentLength.contains(0))
+					StreamOrReader.empty
+				// Case: There may be a body => Constructs a StreamOrReader to read the body contents, when needed
+				else
+					StreamOrReader(charset = headers.charset.getOrElse {
+						Option(r.getCharacterEncoding)
+							.flatMap { encoding => Try { Charset.forName(encoding) }.toOption }
+							.getOrElse(StandardCharsets.UTF_8)
+					}) { r.getInputStream } { r.getReader }
+			}
+			Request(method, body, url, path, params, headers, cookies)
+		}
+		
 		/**
 		 * Converts a httpServletRequest into a http Request
 		 */
+		@deprecated("Deprecated for removal. Please use .toNexusRequest instead", "v2.0")
 		def toRequest(implicit settings: ServerSettings, jsonParser: JsonParser) =
 		{
 			Option(r.getMethod).map(Method.apply).map { method =>
@@ -123,10 +212,10 @@ object HttpExtensions
 						new FileUpload(part.getName, part.getSize, _, part.getSubmittedFileName,
 						part.getInputStream, part.write) }}}*/
 				
-				new Request(method, r.getRequestURL.toString, path, parameters, headers, body, cookies)
+				new nexus.http.Request(method, r.getRequestURL.toString, path, parameters, headers, body, cookies)
 			}
 		}
-		
+		@deprecated("Deprecated for removal", "v2.0")
 		private def parseQueryParam(paramValue: String)(implicit settings: ServerSettings, jsonParser: JsonParser) =
 		{
 			val decoded = settings.expectedParameterEncoding match {
@@ -135,7 +224,7 @@ object HttpExtensions
 			}
 			decoded.map(jsonParser.valueOf)
 		}
-		
+		@deprecated("Deprecated for removal", "v2.0")
 		private def bodyFromRequest(request: HttpServletRequest, headers: Headers) =
 		{
 			val contentType = headers.contentType
@@ -148,7 +237,7 @@ object HttpExtensions
 				Vector(new StreamedBody(request.getReader, contentType.get,
 					Some(request.getContentLengthLong).filter {_ >= 0}, headers))
 		}
-		
+		@deprecated("Deprecated for removal", "v2.0")
 		private def partToBody(part: Part) =
 		{
 			val headers = parseHeaders(part.getHeaderNames, part.getHeader)

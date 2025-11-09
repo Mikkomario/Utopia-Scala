@@ -60,21 +60,18 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	 *      - Left: Parsing failure as a [[RequestResult]]
 	 */
 	val lazyParsedRequestBody = Lazy {
-		if (request.body.isEmpty)
-			Right(Value.empty)
-		else
-			request.body.buffered match {
-				case Success(body) => Right(body.value)
-				case Failure(error) =>
-					Left(RequestResult(ResponseContent(error.getMessage, "Failed to parse the request body"),
-						BadRequest))
-			}
+		request.bufferedValue match {
+			case Success(body) => Right(body)
+			case Failure(error) =>
+				Left(RequestResult(ResponseContent(error.getMessage, "Failed to parse the request body"),
+					BadRequest))
+		}
 	}
 	
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def close(): Unit = request.body.value.close()
+	override def close(): Unit = request.body.close()
 	
 	
 	// OTHER    ----------------------------

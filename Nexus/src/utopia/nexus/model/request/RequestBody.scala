@@ -11,6 +11,7 @@ import utopia.flow.view.immutable.View
 
 import scala.util.{Failure, Success, Try}
 
+@deprecated("Deprecated for removal", "v2.0")
 object RequestBody
 {
 	// TYPES    ----------------------
@@ -38,12 +39,10 @@ object RequestBody
 	/**
 	 * @param value The wrapped body value / content
 	 * @param headers The headers associated with this request or request body part
-	 * @param name The name of this part, if applicable
 	 * @tparam A Type of the wrapped value
 	 * @return A new request body
 	 */
-	def apply[A](value: A, headers: Headers, name: String = ""): RequestBody[A] =
-		_RequestBody(value, headers, name)
+	def apply[A](value: A, headers: Headers): RequestBody[A] = _RequestBody(value, headers)
 	
 	
 	// NESTED   ----------------------
@@ -53,14 +52,13 @@ object RequestBody
 	{
 		override val isEmpty: Boolean = true
 		override val headers: Headers = Headers.empty.withContentLength(0)
-		override val name: String = ""
 		
 		override def withValue[B](newValue: B): RequestBody[B] = new EmptyRequestBody[B](newValue)
 	}
 	
 	case object EmptyStreamedRequestBody extends EmptyRequestBody[StreamOrReader](StreamOrReader.empty)
 	
-	private case class _RequestBody[+A](value: A, headers: Headers, name: String) extends RequestBody[A]
+	private case class _RequestBody[+A](value: A, headers: Headers) extends RequestBody[A]
 }
 
 /**
@@ -68,16 +66,9 @@ object RequestBody
 * @author Mikko Hilpinen
 * @since 05.11.2025, v2.0 - Based on an earlier version written 12.5.2018
 **/
+@deprecated("Deprecated for removal", "v2.0")
 trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEmpty[RequestBody[A]]
 {
-    // ABSTRACT    -------------------
-    
-	/**
-	 * The name of this part, if applicable (empty otherwise)
-	 */
-	def name: String
-	
-	
 	// COMPUTED PROPERTIES    ---------
 	
 	/**
@@ -150,7 +141,7 @@ trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEm
 	override def self: RequestBody[A] = this
 	
 	override def withHeaders(headers: Headers, overwrite: Boolean): RequestBody[A] =
-		RequestBody(value, if (overwrite) headers else this.headers ++ headers, name)
+		RequestBody(value, if (overwrite) headers else this.headers ++ headers)
 	
 	override def mapValue[B](f: A => B) = map(f)
 	
@@ -162,7 +153,7 @@ trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEm
 	 * @tparam B Type of the new value
 	 * @return A copy of this body with the specified value
 	 */
-	def withValue[B](newValue: B) = RequestBody(newValue, headers, name)
+	def withValue[B](newValue: B) = RequestBody(newValue, headers)
 	/**
 	 * @param f A mapping function to apply to this body's value
 	 * @tparam B Type of the mapped value
@@ -183,6 +174,7 @@ trait RequestBody[+A] extends View[A] with Headered[RequestBody[A]] with MaybeEm
 	 * @return A buffered copy of this request body.
 	 *         Failure if parsing / buffering failed.
 	 */
+	@deprecated("Just use tryMap", "v2.0")
 	def bufferWith[B](f: StreamOrReader => Try[B])(implicit ev: A <:< StreamOrReader) =
 		f(value).map(withValue)
 }

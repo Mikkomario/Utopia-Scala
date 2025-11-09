@@ -66,7 +66,7 @@ class FilesResource(override val name: String, uploadPath: java.nio.file.Path) e
     {
         val request = context.request
         
-        if (request.body.isEmpty)
+        if (request.isEmpty || request.body.isEmpty.isCertainlyTrue)
             Response.plainText("No files were provided", BadRequest, 
                     request.headers.preferredCharsetOrUTF8)
         else

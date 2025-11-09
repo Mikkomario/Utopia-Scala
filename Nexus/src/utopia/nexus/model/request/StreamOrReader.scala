@@ -270,6 +270,15 @@ trait StreamOrReader extends AutoCloseable
 	def nonEmpty = !isEmpty
 	
 	/**
+	 * @return Whether this stream is known to be empty.
+	 */
+	def isCertainlyEmpty = isEmpty.isCertainlyTrue
+	/**
+	 * @return Whether this stream might be empty.
+	 */
+	def mayBeEmpty = isEmpty.mayBeTrue
+	
+	/**
 	 * Buffers this stream's contents into a string
 	 * @return The string read from the underlying stream.
 	 *         Failure if an exception was encountered, or if this interface had already been closed.
