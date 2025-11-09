@@ -272,7 +272,8 @@ object ContentWriter
 		          envelopParamNames: Iterable[String] = defaultEnvelopParamNames, preferXml: Boolean = false,
 		          envelopsByDefault: Boolean = false, noEmptyElementsInXmlEnvelope: Boolean = false,
 		          descriptionMayBePlainText: Boolean = false)
-		         (implicit jsonNaming: JsonEnvelopeNames, xmlNaming: XmlEnvelopeNames) =
+		         (implicit jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
+		          xmlNaming: XmlEnvelopeNames = XmlEnvelopeNames.default) =
 			new JsonOrXmlContentWriter(envelopHeaderNames, envelopParamNames, preferXml,
 				envelopsByDefault, noEmptyElementsInXmlEnvelope, descriptionMayBePlainText)
 		
@@ -287,7 +288,8 @@ object ContentWriter
 		 * @return A new content writer
 		 */
 		def enveloper(preferXml: Boolean = false, noEmptyXmlElements: Boolean = false)
-		             (implicit jsonNaming: JsonEnvelopeNames, xmlNaming: XmlEnvelopeNames) =
+		             (implicit jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
+		              xmlNaming: XmlEnvelopeNames = XmlEnvelopeNames.default) =
 			new JsonOrXmlEnveloper(preferXml, noEmptyXmlElements)
 		/**
 		 * Creates a new content writer that supports both JSON and XML
@@ -302,7 +304,7 @@ object ContentWriter
 		 */
 		def plain(descriptionPropName: String = defaultDescriptionPropName, preferXml: Boolean = false,
 		          descriptionMayBePlainText: Boolean = false)
-		         (implicit xmlNaming: XmlElementNames) =
+		         (implicit xmlNaming: XmlElementNames = XmlElementNames.default) =
 			new PlainJsonOrXmlContentWriter(descriptionPropName, preferXml, descriptionMayBePlainText)
 		
 		
@@ -318,7 +320,8 @@ object ContentWriter
 		 * @param xmlNaming Element names used in XML
 		 */
 		class JsonOrXmlEnveloper(preferXml: Boolean = false, noEmptyXmlElements: Boolean = false)
-		                        (implicit jsonNaming: JsonEnvelopeNames, xmlNaming: XmlEnvelopeNames)
+		                        (implicit jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
+		                         xmlNaming: XmlEnvelopeNames = XmlEnvelopeNames.default)
 			extends DelegatingMultiTypeContentWriter[HasHeaders]
 		{
 			override protected val delegates: Iterable[(ContentType, ContentWriter[HasHeaders])] = {
@@ -339,7 +342,7 @@ object ContentWriter
 		 */
 		class PlainJsonOrXmlContentWriter(descriptionPropName: String = defaultDescriptionPropName,
 		                                  preferXml: Boolean = false, descriptionMayBePlainText: Boolean = false)
-		                                 (implicit xmlNaming: XmlElementNames)
+		                                 (implicit xmlNaming: XmlElementNames = XmlElementNames.default)
 			extends DelegatingMultiTypeContentWriter[HasHeaders]
 		{
 			// ATTRIBUTES   --------------------
@@ -373,7 +376,8 @@ object ContentWriter
 	                             preferXml: Boolean = false, override protected val envelopsByDefault: Boolean = false,
 	                             noEmptyElementsInXmlEnvelope: Boolean = false,
 	                             descriptionMayBePlainText: Boolean = false)
-	                            (implicit jsonNaming: JsonEnvelopeNames, xmlNaming: XmlEnvelopeNames)
+	                            (implicit jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
+	                             xmlNaming: XmlEnvelopeNames = XmlEnvelopeNames.default)
 		extends PossiblyEnvelopingContentWriter[RequestContext[_]]
 	{
 		override protected lazy val envelopingDelegate: ContentWriter[RequestContext[_]] =
@@ -390,7 +394,7 @@ object ContentWriter
 		 * @param naming Implicit JSON property names to use
 		 * @return A content writer that writes all responses in JSON envelopes
 		 */
-		def enveloped(implicit naming: JsonEnvelopeNames) = new JsonEnveloper()
+		def enveloped(implicit naming: JsonEnvelopeNames = JsonEnvelopeNames.default) = new JsonEnveloper()
 		
 		
 		// OTHER    ----------------------------
@@ -409,7 +413,7 @@ object ContentWriter
 		def apply(envelopHeaderNames: Iterable[String] = defaultEnvelopHeaderNames,
 		          envelopParamNames: Iterable[String] = defaultEnvelopParamNames, envelopsByDefault: Boolean = false,
 		          mayWriteDescriptionAsPlainText: Boolean = false)
-		         (implicit naming: JsonEnvelopeNames) =
+		         (implicit naming: JsonEnvelopeNames = JsonEnvelopeNames.default) =
 			new JsonContentWriter(envelopHeaderNames, envelopParamNames, envelopsByDefault,
 				mayWriteDescriptionAsPlainText)
 		
@@ -457,7 +461,7 @@ object ContentWriter
 		 * A content writer that writes all responses in JSON envelopes
 		 * @param naming Implicit JSON property names to use
 		 */
-		class JsonEnveloper()(implicit naming: JsonEnvelopeNames) extends ContentWriter[Any]
+		class JsonEnveloper()(implicit naming: JsonEnvelopeNames = JsonEnvelopeNames.default) extends ContentWriter[Any]
 		{
 			override def prepare(content: ResponseContent, status: Status, headers: Headers)
 			                    (implicit context: Any): (WriteResponseBody, Status) =
@@ -566,7 +570,7 @@ object ContentWriter
 	                        override protected val envelopParamNames: Iterable[String] = defaultEnvelopParamNames,
 	                        override protected val envelopsByDefault: Boolean = false,
 	                        mayWriteDescriptionAsPlainText: Boolean = false)
-	                       (implicit naming: JsonEnvelopeNames)
+	                       (implicit naming: JsonEnvelopeNames = JsonEnvelopeNames.default)
 		extends PossiblyEnvelopingContentWriter[RequestContext[_]]
 	{
 		override protected lazy val envelopingDelegate: ContentWriter[RequestContext[_]] = new JsonEnveloper()
@@ -582,12 +586,12 @@ object ContentWriter
 		 * @param naming Implicit element names to apply
 		 * @return A new content writer that converts result values into XML elements
 		 */
-		def plain(implicit naming: XmlElementNames) = new PlainXmlContentWriter()
+		def plain(implicit naming: XmlElementNames = XmlElementNames.default) = new PlainXmlContentWriter()
 		/**
 		 * @param naming Implicit element names to apply
 		 * @return A content writer that always applies XML enveloping
 		 */
-		def enveloped(implicit naming: XmlEnvelopeNames) = new XmlEnveloper()
+		def enveloped(implicit naming: XmlEnvelopeNames = XmlEnvelopeNames.default) = new XmlEnveloper()
 		
 		
 		// OTHER    ----------------------------
@@ -604,7 +608,7 @@ object ContentWriter
 		def apply(envelopHeaderNames: Iterable[String] = defaultEnvelopHeaderNames,
 		          envelopParamNames: Iterable[String] = defaultEnvelopParamNames, envelopsByDefault: Boolean = false,
 		          noEmptyEnvelopeElements: Boolean = false)
-		         (implicit naming: XmlEnvelopeNames) =
+		         (implicit naming: XmlEnvelopeNames = XmlEnvelopeNames.default) =
 			new XmlContentWriter(envelopHeaderNames, envelopParamNames, envelopsByDefault, noEmptyEnvelopeElements)
 		
 		
@@ -635,7 +639,7 @@ object ContentWriter
 			 */
 			def apply(root: String = "Response", description: String = "Message", listItem: String = "ListItem",
 			          descriptionAttribute: String = "description", listLengthAttribute: String = "length")
-			         (implicit namespace: Namespace): XmlElementNames =
+			         (implicit namespace: Namespace = Namespace.empty): XmlElementNames =
 				_XmlElementNames(namespace, root, description, listItem, descriptionAttribute, listLengthAttribute)
 			
 			private case class _XmlElementNames(namespace: Namespace, root: String, description: String,
@@ -708,14 +712,15 @@ object ContentWriter
 			                            status: String = "Status", headers: String = "Headers",
 			                            listItem: String = "ListItem", listLengthAttribute: String = "length",
 			                            descriptionAttribute: String = "description")
-			                           (implicit val namespace: Namespace)
+			                           (implicit val namespace: Namespace = Namespace.empty)
 				extends XmlElementNames
 		}
 		/**
 		 * A content writer that always applies XML enveloping
 		 * @param naming Implicit element names to apply
 		 */
-		class XmlEnveloper(noEmptyElements: Boolean = false)(implicit naming: XmlEnvelopeNames)
+		class XmlEnveloper(noEmptyElements: Boolean = false)
+		                  (implicit naming: XmlEnvelopeNames = XmlEnvelopeNames.default)
 			extends ContentWriter[Any]
 		{
 			// ATTRIBUTES   -----------------------
@@ -762,7 +767,8 @@ object ContentWriter
 		 * A content writer that converts result values into XML elements
 		 * @param naming Implicit element names to apply
 		 */
-		class PlainXmlContentWriter(implicit naming: XmlElementNames) extends ContentWriter[Any]
+		class PlainXmlContentWriter(implicit naming: XmlElementNames = XmlElementNames.default)
+			extends ContentWriter[Any]
 		{
 			// COMPUTED ----------------------------
 			
@@ -814,7 +820,7 @@ object ContentWriter
 	                       override protected val envelopParamNames: Iterable[String] = defaultEnvelopParamNames,
 	                       override protected val envelopsByDefault: Boolean = false,
 	                       noEmptyEnvelopeElements: Boolean = false)
-	                      (implicit naming: XmlEnvelopeNames)
+	                      (implicit naming: XmlEnvelopeNames = XmlEnvelopeNames.default)
 		extends PossiblyEnvelopingContentWriter[RequestContext[_]]
 	{
 		override protected lazy val envelopingDelegate: ContentWriter[RequestContext[_]] =

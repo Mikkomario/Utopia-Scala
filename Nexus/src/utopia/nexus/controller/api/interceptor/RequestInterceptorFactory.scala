@@ -26,7 +26,7 @@ object RequestInterceptorFactory
 	
 	// NESTED   ----------------------
 	
-	private class _RequestInterceptorFactory[C](f: Request[Any] => RequestInterceptor[C])
+	private class _RequestInterceptorFactory[-C](f: Request[Any] => RequestInterceptor[C])
 		extends RequestInterceptorFactory[C]
 	{
 		override def apply(request: Request[Any]): RequestInterceptor[C] = f(request)
@@ -39,7 +39,7 @@ object RequestInterceptorFactory
  * @author Mikko Hilpinen
  * @since 07.11.2025, v2.0
  */
-trait RequestInterceptorFactory[C] extends InterceptRequest[C]
+trait RequestInterceptorFactory[-C] extends InterceptRequest[C]
 {
 	// ABSTRACT -------------------------
 	

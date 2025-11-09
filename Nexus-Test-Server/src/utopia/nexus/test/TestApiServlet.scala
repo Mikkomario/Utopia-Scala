@@ -2,16 +2,16 @@ package utopia.nexus.test
 
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
-import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.Version
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
-import utopia.nexus.http.{Path, Request, Response, ServerSettings}
-import utopia.nexus.rest.{PostContext, RequestHandler, Resource}
-import utopia.nexus.result.UseRawXmlOrJson
-import utopia.nexus.servlet.{ApiLogic, LogicWrappingServlet, ServletLogic}
+import utopia.nexus.controller.api.ApiRoot
+import utopia.nexus.controller.servlet.{ApiLogic, LogicWrappingServlet, ServletLogic}
+import utopia.nexus.controller.write.ContentWriter.JsonOrXmlContentWriter
+import utopia.nexus.model.request.StreamOrReader
+import utopia.nexus.model.servlet.ParameterEncoding
 
 import scala.concurrent.ExecutionContext
 import scala.io.Codec
@@ -34,37 +34,19 @@ class TestApiServlet extends LogicWrappingServlet
 	
 	implicit val codec: Codec = Codec.UTF8
 	implicit val exc: ExecutionContext = new ThreadPool("Test-API", 1, 20, 30.seconds)(SysErrLogger)
-	implicit val logger: Logger = new FileLogger("log/test-api", 1.seconds, copyToSysErr = true)
-	implicit val jsonParser: JsonParser = JsonBunny
-	implicit val serverSettings: ServerSettings = ServerSettings("http://localhost:9999")
+	override implicit val logger: Logger = new FileLogger("log/test-api", 1.seconds, copyToSysErr = true)
+	override implicit val jsonParser: JsonParser = JsonBunny
+	override implicit val expectedParameterEncoding: ParameterEncoding = ParameterEncoding.none
 	
-	private val slowNode = new SlowNode()
-	private val resources = Map(
-		versionedResources(1) { implicit v => Pair(new EchoNode(), slowNode) },
-		versionedResources(2) { implicit v => Vector(new EchoNode(), slowNode, MethodNotAllowedNode) }
-	)
-	private val resultParser = UseRawXmlOrJson()
-	private val requestHandler = RequestHandler(resources, Some(Path("test", "api"))) { req =>
-		PostContext(req, resultParser)
-	}
-	
-	override val logic: ServletLogic = new ApiLogic(requestHandler, Single(intercept), Single(postProcess))
-	
-	
-	// OTHER    -------------------------------
-	
-	private def intercept(request: Request) = {
-		logger.apply(s"Received request: ${ request.method } ${ request.pathString }")
-		request
-	}
-	private def postProcess(response: Response, request: Request) = {
-		logger.apply(s"Sending out response: ${ response.status } for ${ request.method } ${ request.pathString }")
-		response
-	}
-	
-	private def versionedResources(versionNumber: Int)(makeResources: Version => Seq[Resource[PostContext]]) = {
-		val version = Version(versionNumber)
-		val resources = makeResources(version)
-		s"v$versionNumber" -> resources
+	override val logic: ServletLogic = {
+		val api = ApiRoot.newBuilder[NexusTestContext, StreamOrReader]("test/api", JsonOrXmlContentWriter()) {
+			(request, version) => new NexusTestContext(request, version) }
+		
+		api ++= Pair(new EchoNode(), new SlowNode())
+		api(2) ++= Pair(MethodNotAllowedNode, new StreamNode())
+		
+		api += TestInterceptor
+		
+		new ApiLogic(api.result())
 	}
 }

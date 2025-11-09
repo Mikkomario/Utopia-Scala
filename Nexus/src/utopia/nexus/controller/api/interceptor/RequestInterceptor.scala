@@ -66,7 +66,7 @@ trait RequestInterceptor[-C] extends AutoCloseable
 	 * @param method The method that's about to be executed
 	 * @param context Request context about to be applied
 	 */
-	def beforeExecution(method: Method, context: C): Unit
+	def beforeExecution(method: Method)(implicit context: C): Unit
 	/**
 	 * This method is called after the targeted ApiNode has executed a request.
 	 * @param method  The method that was executed.

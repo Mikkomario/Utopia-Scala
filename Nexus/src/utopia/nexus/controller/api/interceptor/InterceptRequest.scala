@@ -17,7 +17,7 @@ object InterceptRequest
 	
 	// NESTED   -------------------------
 	
-	private class ReadOnlyInterceptor[C](f: Request[Any] => Unit) extends InterceptRequest[C]
+	private class ReadOnlyInterceptor[-C](f: Request[Any] => Unit) extends InterceptRequest[C]
 	{
 		override def intercept[B](request: Request[B]): (Request[B], Option[RequestInterceptor[C]]) = {
 			f(request)
@@ -37,7 +37,7 @@ object InterceptRequest
  * @author Mikko Hilpinen
  * @since 07.11.2025, v2.0
  */
-trait InterceptRequest[C]
+trait InterceptRequest[-C]
 {
 	/**
 	 * Intercepts a request before it is processed

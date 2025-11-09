@@ -4,6 +4,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.util.Mutate
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
@@ -63,6 +64,8 @@ case class ResponseContent(value: Value, description: String) extends View[Value
 	
 	override def self: ResponseContent = this
 	override def isEmpty: Boolean = value.isEmpty && description.isEmpty
+	
+	override def toString: String = description.nonEmptyOrElse { value.stringOr("<empty>") }
 	
 	
 	// OTHER    ------------------------

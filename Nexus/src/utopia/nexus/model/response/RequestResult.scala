@@ -1,8 +1,8 @@
 package utopia.nexus.model.response
 
-import utopia.access.model.{Headered, Headers}
 import utopia.access.model.enumeration.Status
 import utopia.access.model.enumeration.Status.{Found, MovedPermanently, NoContent, OK}
+import utopia.access.model.{Headered, Headers}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsBy
@@ -204,6 +204,14 @@ trait RequestResult extends Headered[RequestResult]
 	
 	
 	// IMPLEMENTED  ----------------------
+	
+	override def toString: String = {
+		val contentPart = output match {
+			case Right(body) => body.toString
+			case Left(_) => "<custom>"
+		}
+		s"$contentPart ($status)"
+	}
 	
 	override def withHeaders(headers: Headers, overwrite: Boolean = false): RequestResult =
 		new _RequestResult(status, output, if (overwrite) headers else this.headers ++ headers)

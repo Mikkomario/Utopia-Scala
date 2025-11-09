@@ -4,17 +4,15 @@ import utopia.access.model.enumeration.Status.{NoContent, OK}
 import utopia.access.model.enumeration.{Method, Status}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.util.Version
-import utopia.nexus.http.{Path, Response}
-import utopia.nexus.rest.{LeafResource, PostContext}
-import utopia.nexus.result.Result
+import utopia.nexus.controller.api.node.LeafNode
+import utopia.nexus.model.response.RequestResult
 
 /**
   * A restful resource which replies with request information
   * @author Mikko Hilpinen
   * @since 17.07.2024, v1.0
   */
-class EchoNode(implicit apiVersion: Version) extends LeafResource[PostContext]
+class EchoNode extends LeafNode[NexusTestContext]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -25,29 +23,25 @@ class EchoNode(implicit apiVersion: Version) extends LeafResource[PostContext]
 	
 	override def allowedMethods = Method.values
 	
-	override def toResponse(remainingPath: Option[Path])(implicit context: PostContext): Response = {
+	override def apply(method: Method, remainingPath: Seq[String])(implicit context: NexusTestContext): RequestResult =
 		context.handlePossibleValuePost { body =>
 			val req = context.request
-			val status = body("status").int.flatMap { code => Status.values.find { _.code == code } }.getOrElse(OK)
+			val status = body("status").int.flatMap { code => Status.values.find {_.code == code} }.getOrElse(OK)
 			if (status == NoContent)
-				Result.Empty
+				RequestResult.Empty
 			else {
 				val responseBody = Model.from(
-					"apiVersion" -> apiVersion.toString,
-					"method" -> req.method.toString,
+					"apiVersion" -> context.apiVersion.toString,
+					"method" -> method.toString,
 					"path" -> Model.from(
-						"full" -> req.path.map { _.toString },
-						"remaining" -> remainingPath.map { _.toString }
+						"full" -> req.path,
+						"remaining" -> remainingPath
 					),
 					"headers" -> req.headers,
 					"parameters" -> req.parameters,
 					"body" -> body
 				)
-				if (status.isFailure)
-					Result.Failure(status, data = responseBody)
-				else
-					Result.Success(responseBody, status)
+				RequestResult(responseBody, status)
 			}
-		}.toResponse
-	}
+		}
 }

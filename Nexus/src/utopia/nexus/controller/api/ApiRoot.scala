@@ -148,6 +148,12 @@ object ApiRoot
 		 * @return A builder for adding (custom) nodes to that version
 		 *         (nodes common to all versions should be added directly to this builder instead)
 		 */
+		def apply(version: Int): mutable.Growable[ApiNode[C]] = apply(ApiVersion(version))
+		/**
+		 * @param version Targeted API version
+		 * @return A builder for adding (custom) nodes to that version
+		 *         (nodes common to all versions should be added directly to this builder instead)
+		 */
 		def apply(version: ApiVersion): mutable.Growable[ApiNode[C]] =
 			versionedNodeBuilders.getOrElseUpdate(version, OptimizedIndexedSeq.newBuilder[ApiNode[C]])
 	}
@@ -220,7 +226,7 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 								val allowed = node.allowedMethods
 								// Case: Method supported => Fulfills the request using the targeted API node
 								if (allowed.exists { _ == method }) {
-									interceptors.foreach { _.beforeExecution(method, context) }
+									interceptors.foreach { _.beforeExecution(method) }
 									val result = node(method, remainingPath)
 									intercept(result, interceptors) { _.interceptNodeResult(method, _) }
 								}
