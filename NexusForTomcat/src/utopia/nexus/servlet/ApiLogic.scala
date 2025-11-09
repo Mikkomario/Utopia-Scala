@@ -25,6 +25,7 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
   * @param settings Implicit server settings
   * @param logger Implicit logging implementation
   */
+@deprecated("Replaced with a new version in the controller.servlet package", "v12.2")
 class ApiLogic(requestHandler: RequestHandler[_], interceptors: Seq[RequestInterceptor] = Empty,
                postProcessors: Seq[ResponseInterceptor] = Empty)
               (implicit override val jsonParser: JsonParser, override val settings: ServerSettings, logger: Logger)

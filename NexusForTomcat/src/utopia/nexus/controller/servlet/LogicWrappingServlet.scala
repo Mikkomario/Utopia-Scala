@@ -6,7 +6,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 import utopia.nexus.model.servlet.ParameterEncoding
-import utopia.nexus.servlet.HttpExtensions._
+import HttpExtensions._
 
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import scala.concurrent.ExecutionContext
@@ -58,7 +58,7 @@ abstract class LogicWrappingServlet extends HttpServlet
 	// IMPLEMENTED  ---------------------------
 	
 	override def service(req: HttpServletRequest, resp: HttpServletResponse) = {
-		// Default implementation doesn't support PATCH, so skips some validations from parent if possible
+		// Default implementation doesn't support PATCH, so skips some validations from the parent class, if possible
 		if (Method.values.exists { _.name ~== req.getMethod })
 			handleRequest(req, resp)
 		else

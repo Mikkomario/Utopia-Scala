@@ -2,7 +2,7 @@ package utopia.nexus.servlet
 
 import utopia.access.model.enumeration.Status.BadRequest
 import utopia.flow.operator.equality.EqualsExtensions._
-import HttpExtensions._
+import utopia.nexus.controller.servlet.HttpExtensions._
 import utopia.access.model.enumeration.Method
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger

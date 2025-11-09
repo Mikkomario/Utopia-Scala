@@ -1,4 +1,4 @@
-package utopia.nexus.servlet
+package utopia.nexus.controller.servlet
 
 import utopia.access.model.enumeration.ContentCategory._
 import utopia.access.model.enumeration.Method
