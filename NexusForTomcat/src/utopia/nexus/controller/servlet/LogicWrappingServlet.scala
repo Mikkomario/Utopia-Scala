@@ -1,17 +1,16 @@
-package utopia.nexus.servlet
+package utopia.nexus.controller.servlet
 
-import utopia.access.model.enumeration.Status.BadRequest
-import utopia.flow.operator.equality.EqualsExtensions._
-import HttpExtensions._
 import utopia.access.model.enumeration.Method
+import utopia.flow.async.AsyncExtensions._
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
-import utopia.nexus.http.ServerSettings
+import utopia.nexus.model.servlet.ParameterEncoding
+import utopia.nexus.servlet.HttpExtensions._
 
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import scala.concurrent.ExecutionContext
 
-@deprecated("Replaced with a new version in controller.servlet", "v2.0")
 object LogicWrappingServlet
 {
 	// OTHER    -----------------------------
@@ -20,14 +19,13 @@ object LogicWrappingServlet
 	  * @param logic Logic to wrap
 	  * @return A servlet using the specified logic
 	  */
-	def apply(logic: ServletLogic)(implicit exc: ExecutionContext, log: Logger): LogicWrappingServlet =
+	def apply(logic: ServletLogic)(implicit exc: ExecutionContext): LogicWrappingServlet =
 		new _LogicWrappingServlet(logic)
 	
 	
 	// NESTED   -----------------------------
 	
-	private class _LogicWrappingServlet(override val logic: ServletLogic)
-	                                   (implicit val exc: ExecutionContext, val logger: Logger)
+	private class _LogicWrappingServlet(override val logic: ServletLogic)(implicit val exc: ExecutionContext)
 		extends LogicWrappingServlet
 }
 
@@ -36,18 +34,25 @@ object LogicWrappingServlet
   * @author Mikko Hilpinen
   * @since 18.8.2022, v1.2.4
   */
-@deprecated("Replaced with a new version in controller.servlet", "v2.0")
 abstract class LogicWrappingServlet extends HttpServlet
 {
 	// ABSTRACT -------------------------------
 	
+	/**
+	 * @return Implicit execution context used in asynchronous processing
+	 */
 	implicit def exc: ExecutionContext
-	implicit def logger: Logger
-	
 	/**
 	  * @return Servlet logic implementation
 	  */
 	def logic: ServletLogic
+	
+	
+	// COMPUTED -------------------------------
+	
+	implicit def logger: Logger = logic.logger
+	implicit def jsonParser: JsonParser = logic.jsonParser
+	implicit def expectedParameterEncoding: ParameterEncoding = logic.expectedParameterEncoding
 	
 	
 	// IMPLEMENTED  ---------------------------
@@ -69,19 +74,16 @@ abstract class LogicWrappingServlet extends HttpServlet
 	// OTHER	------------------------------
 	
 	private def handleRequest(req: HttpServletRequest, res: HttpServletResponse) = {
-		implicit val jsonParser: JsonParser = logic.jsonParser
-		implicit val settings: ServerSettings = logic.settings
+		// Processes the request
+		val response = logic(req.toNexusRequest)
+		// Writes the acquired response
+		val writeCompletionFuture = response.update(res)
 		
-		// Request conversion may fail
-		req.toRequest match {
-			case Some(request) =>
-				// Generates the response
-				val response = logic(request)
-				// Returns the response
-				response.update(res)
-			case None =>
-				res.setStatus(BadRequest.code)
-				logic.processConversionFailure(req, res)
+		// Case: Response-writing will be completed asynchronously => Starts async mode
+		if (writeCompletionFuture.isEmpty) {
+			val asyncContext = req.startAsync()
+			// Completes the async mode once the writing finishes
+			writeCompletionFuture.onComplete { _ => asyncContext.complete() }
 		}
 	}
 }

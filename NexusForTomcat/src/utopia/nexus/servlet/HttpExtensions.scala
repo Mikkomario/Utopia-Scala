@@ -46,7 +46,8 @@ object HttpExtensions
 	
 	// EXTENSIONS   ------------------------
 	
-	implicit class TomcatResponse2(val r: Response) extends AnyVal
+	// TODO: Make sure the output stream is always flushed
+	implicit class TomcatResponse(val r: Response) extends AnyVal
 	{
 		/**
 		 * Updates an http servlet-response to match this response

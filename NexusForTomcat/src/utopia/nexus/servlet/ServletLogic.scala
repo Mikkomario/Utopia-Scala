@@ -10,6 +10,7 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
   * @author Mikko Hilpinen
   * @since 18.8.2022, v1.2.4
   */
+@deprecated("Replaced with a new version in the controller.servlet package", "v2.0")
 trait ServletLogic
 {
 	/**
