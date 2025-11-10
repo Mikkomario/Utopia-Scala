@@ -10,6 +10,7 @@ import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
@@ -206,57 +207,17 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 	 */
 	def apply(request: Request[Body]): Response = {
 		val (appliedRequest, interceptors) = intercept(request)
-		findTargetedVersion(appliedRequest.path, 0, rootPath.iterator) match {
+		val result = findTargetedVersion(appliedRequest.path, 0, rootPath.iterator) match {
 			case Right((version, nodes, path)) =>
 				// Acquires the request context
 				withContext(appliedRequest, version, path, interceptors) { implicit context =>
 					// Catches exceptions and wraps them as internal server errors
-					Try[RequestResult] {
-						// Finds the targeted API node
-						val nodeFindResult = {
-							if (path.isEmpty)
-								Right(new RootNode(version, nodes) -> Empty)
-							else
-								findTargetedNode(nodes, path, version)
+					Try[RequestResult] { _apply(version, nodes, path, appliedRequest.method, interceptors) }
+						.getOrMap[RequestResult] { error =>
+							// In addition to sending error data forward, logs it
+							log(error, s"Failed to handle $appliedRequest in API $version")
+							InternalServerError -> "Unexpected failure while processing the request"
 						}
-						nodeFindResult match {
-							// Case: Node found => Executes the method, if allowed
-							case Right((node, remainingPath)) =>
-								val method = appliedRequest.method
-								val allowed = node.allowedMethods
-								// Case: Method supported => Fulfills the request using the targeted API node
-								if (allowed.exists { _ == method }) {
-									interceptors.foreach { _.beforeExecution(method) }
-									val result = node(method, remainingPath)
-									intercept(result, interceptors) { _.interceptNodeResult(method, _) }
-								}
-								// Case: Method not supported => Yields 405 or 501
-								else {
-									val failure: RequestResult = {
-										// Case: No methods are supported => 501
-										if (allowed.isEmpty)
-											NotImplemented -> s"Node \"${ node.name }\" is not implemented at this time"
-										// Case: Method not supported => 405
-										else
-											RequestResult(ResponseContent(
-												Model.from("allowedMethods" -> allowed.view.map { _.name }.toOptimizedSeq),
-												s"$method is not allowed on node \"${ node.name }\""),
-												MethodNotAllowed,
-												Headers.empty.withAllowedMethods(allowed.toOptimizedSeq))
-									}
-									intercept(failure, interceptors) {
-										_.interceptExecutionNotAllowed(_, method, allowed)
-									}
-								}
-							// Case: No targeted node found => Yields the generated failure after interception
-							case Left(notFoundResult) =>
-								intercept(notFoundResult, interceptors) { _.interceptNotFound(_, path) }
-						}
-					}.getOrMap[RequestResult] { error =>
-						// In addition to sending error data forward, logs it
-						log(error, s"Failed to handle $appliedRequest in API $version")
-						InternalServerError -> "Unexpected failure while processing the request"
-					}
 				}
 			// Case: The request didn't target this node, or didn't target an existing version => Yields 404
 			case Left(failureMessage) =>
@@ -265,6 +226,60 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 						_.interceptNotFound(_, Empty)
 					}
 				}
+		}
+		interceptors.foreach { _.closeQuietly().logWithMessage("Failed to close a request interceptor") }
+		result
+	}
+	
+	private def _apply(version: ApiVersion, rootNodes: Iterable[ApiNode[C]], path: Seq[String], method: Method,
+	                   interceptors: Iterable[RequestInterceptor[C]])
+	                  (implicit context: C) =
+	{
+		// Finds the targeted API node
+		val nodeFindResult = {
+			if (path.isEmpty)
+				Right(new RootNode(version, rootNodes) -> Empty)
+			else
+				findTargetedNode(rootNodes, path, version)
+		}
+		nodeFindResult match {
+			// Case: Node found => Executes the method, if allowed
+			case Right((node, remainingPath)) =>
+				tryExecute(method, node, remainingPath, interceptors)
+			// Case: No targeted node found => Yields the generated failure after interception
+			case Left(notFoundResult) =>
+				intercept(notFoundResult, interceptors) { _.interceptNotFound(_, path) }
+		}
+	}
+	
+	private def tryExecute(method: Method, node: ApiNode[C], remainingPath: Seq[String],
+	                       interceptors: Iterable[RequestInterceptor[C]])
+	                      (implicit context: C) =
+	{
+		val allowed = node.allowedMethods
+		// Case: Method supported => Fulfills the request using the targeted API node
+		if (allowed.exists { _ == method }) {
+			interceptors.foreach { _.beforeExecution(method) }
+			val result = node(method, remainingPath)
+			intercept(result, interceptors) { _.interceptNodeResult(method, _) }
+		}
+		// Case: Method not supported => Yields 405 or 501
+		else {
+			val failure: RequestResult = {
+				// Case: No methods are supported => 501
+				if (allowed.isEmpty)
+					NotImplemented -> s"Node \"${ node.name }\" is not implemented at this time"
+				// Case: Method not supported => 405
+				else
+					RequestResult(ResponseContent(
+						Model.from("allowedMethods" -> allowed.view.map { _.name }.toOptimizedSeq),
+						s"$method is not allowed on node \"${ node.name }\""),
+						MethodNotAllowed,
+						Headers.empty.withAllowedMethods(allowed.toOptimizedSeq))
+			}
+			intercept(failure, interceptors) {
+				_.interceptExecutionNotAllowed(_, method, allowed)
+			}
 		}
 	}
 	
@@ -292,8 +307,8 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 		try { resultToResponse(f(appliedContext))(appliedContext) }
 		finally {
 			// Finally closes all open context instances
-			openContexts.reverseIterator.foreach { c => Try { c.close() }
-				.logWithMessage("Failed to close a request context") }
+			openContexts.reverseIterator
+				.foreach { _.closeQuietly().logWithMessage("Failed to close a request context") }
 		}
 	}
 	

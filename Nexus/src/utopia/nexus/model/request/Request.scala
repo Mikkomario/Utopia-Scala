@@ -79,7 +79,13 @@ case class Request[+A](method: Method, body: A, url: String, path: Seq[String] =
 	
 	override def toString =
 	    s"$method $url${
-		    parameters.propertiesIterator.map { p => s"${ p.name }:${ p.value }" }.mkString("&").prependIfNotEmpty("?") }"
+		    parameters.propertiesIterator.map { p =>
+			   val valueStr = p.value.notEmpty match {
+				   case Some(value) => s": $value"
+				   case None => ""
+			   }
+			    s"${ p.name }$valueStr"
+		    }.mkString("&").prependIfNotEmpty("?") }"
 	
 	override def withHeaders(headers: Headers, overwrite: Boolean): Request[A] =
 		copy(headers = if (overwrite) headers else this.headers ++ headers)

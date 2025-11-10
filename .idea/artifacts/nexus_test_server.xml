@@ -12,7 +12,7 @@
           <element id="module-output" name="NexusForTomcat" />
         </element>
         <element id="directory" name="lib">
-          <element id="library" level="application" name="scala-sdk-2.13.12" />
+          <element id="library" level="application" name="scala-sdk-2.13.14" />
         </element>
         <element id="file-copy" path="$PROJECT_DIR$/Nexus-Test-Server/data/web.xml" />
       </element>
