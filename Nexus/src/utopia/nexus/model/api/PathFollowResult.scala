@@ -34,9 +34,10 @@ object PathFollowResult
 	/**
 	 * Yielded in situations where the next node is not known, and a new request path should be taken.
 	 * @param newPath The new path to follow to the targeted API node.
+	 * @param noRemainder Whether to omit the path that remained after this node.
+	 *                    Default = false = the remaining path will be appended to 'newPath'.
 	 */
-    // TODO: Add parameter for appending the remaining path
-	case class Redirected(newPath: Seq[String]) extends PathFollowResult[Any]
+	case class Redirected(newPath: Seq[String], noRemainder: Boolean = false) extends PathFollowResult[Any]
 	
 	/**
 	 * Yielded in situations where the next node on the path can't be identified.

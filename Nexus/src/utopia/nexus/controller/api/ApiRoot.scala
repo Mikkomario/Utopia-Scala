@@ -430,7 +430,9 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 					case Ready => Right(lastNode -> path.drop(nextIndex))
 					case Follow(next) => follow(next, path, nextIndex + 1)
 					case failure: NotFound => Left(Left(failure.toRequestResult))
-					case Redirected(path) => Left(Right(path))
+					case Redirected(newPath, noRemainder) =>
+						val fullPath = if (noRemainder) newPath else newPath ++ path.view.drop(nextIndex + 1)
+						Left(Right(fullPath))
 				}
 			case None => Right(lastNode -> Empty)
 		}
