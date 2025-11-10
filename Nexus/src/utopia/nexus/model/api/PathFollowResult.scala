@@ -35,6 +35,7 @@ object PathFollowResult
 	 * Yielded in situations where the next node is not known, and a new request path should be taken.
 	 * @param newPath The new path to follow to the targeted API node.
 	 */
+    // TODO: Add parameter for appending the remaining path
 	case class Redirected(newPath: Seq[String]) extends PathFollowResult[Any]
 	
 	/**

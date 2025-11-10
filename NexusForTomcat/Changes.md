@@ -1,7 +1,23 @@
 # Utopia Nexus for Tomcat - List of changes
 
 ## v1.3.4 (in development)
-Adding Nexus v2.0 support...
+Rewrote every class
+### Breaking changes
+- Moved **HttpExtensions** to `controller.servlet` package
+- **LogicWrappingServlet** now requires `exc: ExecutionContext`
+### Deprecations
+- Replaced **ServletLogic** with a new version in the `controller.servlet` package
+  - The new version accepts **ParameterEncoding** instead of **ServerSettings**, and requires `logger: Logger`
+- Replaced **LogicWrappingServlet** with a new version in the `controller.servlet` package
+- Replaced **ApiLogic** with a new version in the `controller.servlet` package
+  - The new version no longer implements request or response -interception; These are now handled in **ApiRoot**.
+- Replaced `.toRequest` in **HttpExtensions** with `.toNexusRequest`
+### New features
+- Asynchronously completing requests are now supported
+- Added **ParameterEncoding** class; Expected parameter encoding is now communicated with it, 
+  instead of with **ServerSettings** 
+### New methods
+- Added `.toNexusRequest` to **HttpServletRequest** (via **HttpExtensions**)
 
 ## v1.3.3 - 01.11.2025
 A new build supporting **Flow v2.7**.

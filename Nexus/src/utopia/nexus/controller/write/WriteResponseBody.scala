@@ -46,6 +46,7 @@ object WriteResponseBody
 	 * @return The specified JSON as a buffered response body
 	 */
 	def json(json: String) = string(json, Application.json)
+	// TODO: Add support for NDJSON
 	/**
 	 * @param content JSON content to write
 	 * @param exc Implicit execution context

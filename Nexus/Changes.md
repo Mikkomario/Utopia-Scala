@@ -1,7 +1,64 @@
 # Utopia Nexus - List of Changes
 
 ## v2.0 (in development)
-TODO: Write documentation (rewrote everything)
+Rewrote the whole module
+### Breaking changes
+- `.path` in the (now deprecated) **http.Request** is now named `.pathOption`
+- `.cookies` in **Request** is no longer a **Map**; the **Map** version is available as `.cookieMap`
+- `.name` in **Body** is now **String** instead of an **Option**
+- Some **Request** functions receive different implicit parameters
+### Deprecations
+- Deprecated and replaced the following request-related classes:
+  - Replaced **http.Request** with a new version: **model.request.Request**
+  - Replaced **Body**, **BufferedBody**, **StreamedBody** with the new **Request** version, 
+    as well as the **StreamOrReader** class.
+- Deprecated and replaced the following response-related classes:
+  - Replaced **http.Response** with a new version: **model.response.Response**
+  - Replaced **Result** with **RequestResult**
+- Deprecated and replaced the following API node classes:
+  - Replaced **Resource** with **ApiNode**
+  - Replaced **ResourceWithChildren** with **NodeWithChildren**
+  - Replaced **LeafResource** with **LeafNode**
+  - Replaced **NotImplementedResource** with **NotImplemented**
+  - Replaced **ItemsByIdResource** with **FindById**
+  - Replaced **ModularResource** with **ModularApiNode**
+  - Replaced **ExtendableResource** with **ExtendableApiNode**
+  - Replaced **ExtendableResourceFactory** with **ExtendableApiNodeFactory**
+  - Replaced **rest.scalable.UseCaseImplementation** with a new version: 
+    **controller.api.node.extendable.UseCaseImplementation**
+    - Note that the new version uses different parameter ordering and has different constructors
+  - Replaced **rest.scalable.FollowImplementation** with a new version: 
+    **controller.api.node.extendable.FollowImplementation**
+- Deprecated and replaced the following request-handling classes:
+  - Replaced **RequestHandler** with **ApiRoot**
+  - Replaced **ResultParser** and all its subclasses with **ContentWriter**, **WriteResponseBody** and their subclasses
+    - However, notice the different defaults in the generated property names, in the built-in content writers
+  - Replaced **ResourceSearchResult** with **PathFollowResult**
+    - Note the different user-interface, however
+  - Replaced **Context** with **RequestContext**
+  - Replaced **rest.PostContext** with a new version: **controller.api.context.PostContext**
+  - Replaced **interceptor.RequestInterceptor** and **ResponseInterceptor** with **InterceptRequest** and 
+    **controller.api.interceptor.RequestInterceptor**
+- Instead of **Path**, a simple **Seq** is used now.
+- Deprecated **ServerSettings** for removal
+- Deprecated **FilesResource** for removal
+### New features
+- Added **ApiVersion** class, which is now yielded by **ApiRoot** for request context -creation
+- **ApiRoot** instances can now be built incrementally, making API setup easier
+- **RequestResult** now supports custom response-body writing, not just **Value**-based response bodies.
+- Request body is now accessible as both **InputStream** and **BufferedReader** (via **StreamOrReader**), 
+  allowing for wider streaming options
+- **Response**s may now be streamed (asynchronously)
+- **ContentWriter** and **InterceptRequest** are now specified when constructing **ApiRoot**
+  - Previously **ResultParser** was defined in **Context**
+  - Previously the interception logic was not setup in this module
+- **PathFollowResult** is now simpler and easier to construct than its predecessor: **ResourceSearchResult**:
+  - **Ready** is now an object; The responding **ApiNode** will always be considered the method execution target.
+  - **Follow** no longer receives the remaining path; Only one step is taken with each call to **ApiNode**'s `.follow(...)`.
+  - **Error** was replaced with **NotFound**, and no longer specifies the (failure) status; 
+    **NotFound** always yields the 404 Not Found -status.
+- The new request interception logic allows for a greater control at different points of request execution
+- **Request** class can now represent a buffered state
 
 ## v1.9.6 - 01.11.2025
 A new build supporting **Flow v2.7**.
