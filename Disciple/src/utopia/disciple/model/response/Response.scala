@@ -43,7 +43,6 @@ trait Response
      * The content type of the response
      */
     def contentType = headers.contentType
-    
     /**
      * The length of the response body
      */
@@ -52,5 +51,5 @@ trait Response
     /**
      * Whether the response is empty (i.e. contains no body)
      */
-    def isEmpty = headers.isContentLengthProvided && contentLength == 0 && !headers.isChunked
+    def isEmpty = headers.contentLength.contains(0) && !headers.isChunked
 }
