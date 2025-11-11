@@ -28,16 +28,19 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	  * Includes the initial forward slash, if present.
 	  * For example, matches: "https://api.example.com/", "http://128.0.0.1:8080/" and "www.palvelu.fi"
 	  */
+	// TODO: Should this accept something like "home.com"?
 	lazy val regex = 
-		(httpRegex || wwwRegex).withinParentheses + domainCharacterRegex.oneOrMoreTimes +
-			Regex.escape('.') + domainCharacterRegex.oneOrMoreTimes + portNumberRegex.noneOrOnce
+		((httpRegex + wwwRegex.noneOrOnce).withinParentheses || wwwRegex).withinParentheses +
+			domainCharacterRegex.oneOrMoreTimes + Regex.escape('.') + domainCharacterRegex.oneOrMoreTimes +
+			portNumberRegex.noneOrOnce
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def dataFactory = DomainData
 	
-	override protected def complete(model: HasProperties, data: DomainData) = model("id").tryInt.map { apply(_, data) }
+	override protected def complete(model: HasProperties, data: DomainData) =
+		model("id").tryInt.map { apply(_, data) }
 }
 
 /**
