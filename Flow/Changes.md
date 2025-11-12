@@ -21,6 +21,9 @@
   - Added `.writeUsing(...)`
 - **Regex** (object)
   - Added multiple new static values
+- **Value**
+  - Added `.leftOrRight(...)`, `.getLeftOrRight(...)`, `.tryLeftOrRight(...)`, 
+    `.intOrString`, `.getIntOrString` and `.tryIntOrString`
 ### Other changes
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
 - Internal refactoring within **Extreme**'s `.by(...)`

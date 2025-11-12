@@ -14,7 +14,7 @@ import utopia.flow.time._
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.collection.mutable
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object Value
 {
@@ -319,7 +319,78 @@ case class Value(content: Option[Any], dataType: DataType)
         tryPair.flatMap { p => f(p.first).flatMap { first => f(p.second).map { Pair(first, _) } } }
     def tryTupleWith[F, S](first: Value => Try[F])(second: Value => Try[S]): Try[(F, S)] =
         tryPair.flatMap { p => first(p.first).flatMap { f => second(p.second).map { f -> _ } } }
-    
+	
+	/**
+	 * @return Either:
+	 *              1. Some(Left): This value as an Int, if possible
+	 *              1. Some(Right): This value as a non-empty String
+	 *              1. None: If this value was empty
+	 */
+	def intOrString = leftOrRight { _.int } { _.string }
+	/**
+	 * @return Either:
+	 *              1. Left: This value as an Int, if possible
+	 *              1. Right: This value as a String
+	 */
+	def getIntOrString = getLeftOrRight { _.int } { _.getString }
+	/**
+	 * @return Either:
+	 *              1. Success(Left): This value as an Int, if possible
+	 *              1. Success(Right): This value as a non-empty String
+	 *              1. Failure: If this value was empty
+	 */
+	def tryIntOrString = tryLeftOrRight { _.tryInt } { _.string }
+	
+	/**
+	 * Attempts to cast this value to a left value. And if that doesn't work, tries to cast this to a right value.
+	 * @param toLeft A function for casting this value into a left type. Yields None if casting was not possible.
+	 * @param toRight A function for casting this value into a right type. Yields None if casting was not possible.
+	 * @tparam L Type of the left cast result, when successful
+	 * @tparam R Type of the right cast result, when successful
+	 * @return Either:
+	 *              1. Some(Left): The result of 'toLeft', if successful
+	 *              1. Some(Right): The result of 'toRight', if 'toLeft' failed.
+	 *              1. None: If both of these functions yielded None.
+	 */
+	def leftOrRight[L, R](toLeft: Value => Option[L])(toRight: Value => Option[R]): Option[Either[L, R]] =
+		toLeft(this) match {
+			case Some(left) => Some(Left[L, R](left))
+			case None => toRight(this).map(Right.apply[L, R])
+		}
+	/**
+	 * Attempts to cast this value to a left value. And if that doesn't work, casts this to a right value.
+	 * @param toLeft A function for casting this value into a left type. Yields None if casting was not possible.
+	 * @param getRight A function for casting this value into a right type.
+	 * @tparam L Type of the left cast result, when successful
+	 * @tparam R Type of the right cast result
+	 * @return Either
+	 *              1. Left: The result of 'toLeft', if successful
+	 *              1. Right: The result of 'getRight', if 'toLeft' failed.
+	 */
+	def getLeftOrRight[L, R](toLeft: Value => Option[L])(getRight: Value => R) = toLeft(this) match {
+		case Some(left) => Left[L, R](left)
+		case None => Right[L, R](getRight(this))
+	}
+	/**
+	 * Attempts to cast this value to a left value. And if that doesn't work, tries to cast this to a right value.
+	 * @param tryLeft A function for casting this value into a left type. Yields a failure if casting was not possible.
+	 * @param toRight A function for casting this value into a right type. Yields None if casting was not possible.
+	 * @tparam L Type of the left cast result, when successful
+	 * @tparam R Type of the right cast result, when successful
+	 * @return Either:
+	 *              1. Success(Left): The result of 'toLeft', if successful
+	 *              1. Success(Right): The result of 'toRight', if 'toLeft' failed.
+	 *              1. Failure: If both of these functions failed
+	 */
+	def tryLeftOrRight[L, R](tryLeft: Value => Try[L])(toRight: Value => Option[R]) = tryLeft(this) match {
+		case Success(left) => Success(Left[L, R](left))
+		case Failure(error) =>
+			toRight(this) match {
+				case Some(right) => Success(Right[L, R](right))
+				case None => Failure(error)
+			}
+	}
+	
     private def getTry[A](targetType: DataType)(extract: Value => A) =
         castTo(targetType).toTry { new DataTypeException(s"Can't cast $description to $targetType") }.map(extract)
     
