@@ -9,6 +9,7 @@
   - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
+- Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
 ### New features
 - Added **EmptyInputStream**
 ### New methods

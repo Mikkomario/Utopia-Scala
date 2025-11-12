@@ -34,7 +34,15 @@ object Pair
 	implicit def pairIsIterable[A]: PairIsIterable[A] = new PairIsIterable[A]()
 	// implicit def pairIsIterableOnce[A]: PairIsIterableOnce[A] = new PairIsIterableOnce[A]()
 	
-	implicit def tupleToPair[A](tuple: (A, A)): Pair[A] = apply(tuple._1, tuple._2)
+	/**
+	 * @param tuple A tuple
+	 * @tparam A Common type of the values in the specified tuple
+	 * @return A pair containing both tuple values
+	 */
+	implicit def from[A](tuple: (A, A)): Pair[A] = apply(tuple._1, tuple._2)
+	@deprecated("Please use .from(Tuple) instead", "v2.8")
+	def tupleToPair[A](tuple: (A, A)): Pair[A] = from(tuple)
+	
 	implicit def pairToTuple[A](pair: Pair[A]): (A, A) = pair.toTuple
 	
 	
