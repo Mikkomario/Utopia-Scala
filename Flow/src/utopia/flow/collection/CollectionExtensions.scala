@@ -21,7 +21,7 @@ import utopia.flow.view.mutable.eventful.SettableFlag
 
 import scala.collection.generic.{IsIterable, IsIterableOnce, IsSeq}
 import scala.collection.immutable.{HashSet, VectorBuilder}
-import scala.collection.{AbstractIterator, AbstractView, BuildFrom, IterableOps, SeqOps, View, mutable}
+import scala.collection.{AbstractIterator, AbstractView, BuildFrom, IterableOps, MapView, SeqOps, View, mutable}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 import scala.math.Ordered.orderingToOrdered
@@ -820,6 +820,17 @@ object CollectionExtensions
 		  * @return A lazily initialized collection containing the mapping results
 		  */
 		def lazyFlatMap[B](f: A => IterableOnce[Lazy[B]]) = LazySeq[B](i.iterator.flatMap(f))
+		
+		/**
+		 * Divides the items in this collection into two groups, based on boolean result
+		 * @param f  A function that separates the items
+		 * @return A Pair that contains first the 'false' group, and then the 'true' group
+		 */
+		def divideToSeqsBy(f: A => Boolean) = {
+			val builders = Pair.fill { OptimizedIndexedSeq.newBuilder[A] }
+			i.iterator.foreach { a => if (f(a)) builders.second += a else builders.first += a }
+			builders.map { _.result() }
+		}
 		
 		/**
 		 * @param f A key-mapping function
@@ -3108,7 +3119,7 @@ object CollectionExtensions
 		}
 	}
 	
-	implicit class RichMap[K, V](val m: Map[K, V]) extends AnyVal
+	implicit class RichMap[K, +V](val m: Map[K, V]) extends AnyVal
 	{
 		/**
 		  * Maps the keys of this map
@@ -3117,7 +3128,6 @@ object CollectionExtensions
 		  * @return A copy of this map with updated keys
 		  */
 		def mapKeys[K2](f: K => K2) = m.map { case (k, v) => f(k) -> v }
-		
 		/**
 		  * Maps an individual key within this map
 		  * @param key Targeted key (must exist)
@@ -3127,6 +3137,20 @@ object CollectionExtensions
 		  */
 		@throws[NoSuchElementException]("If this map didn't contain the specified key")
 		def mapValue[V2 >: V](key: K)(f: V => V2) = m + (key -> f(m(key)))
+		
+		/**
+		 * @param f A mapping function applied to keys before they're passed to this map
+		 * @tparam K2 Type of the new keys used
+		 * @return A view into this map that maps all used keys using 'f'
+		 */
+		def mapInputView[K2](f: K2 => K) = PartialMapView.wrap(m).mapInput(f)
+		/**
+		 * @param f A mapping function applied to keys before they're passed to this map.
+		 *          May yield None, in which case the key is treated as if it didn't exist in this map.
+		 * @tparam K2 Type of the new keys used
+		 * @return A view into this map that maps all used keys using 'f'
+		 */
+		def flatMapInputView[K2](f: K2 => Option[K]) = PartialMapView.wrap(m).flatMapInput(f)
 		
 		/**
 		  * Merges this map with another map. If value is present only in one map, it is preserved as is.
@@ -3166,7 +3190,24 @@ object CollectionExtensions
 		}
 	}
 	
-	private class RepeatingIterator[A, CC[X]](val c: IterableOps[A, CC, _]) extends Iterator[A]
+	implicit class RichMapView[K, V](val m: MapView[K, V]) extends AnyVal
+	{
+		/**
+		 * @param f A mapping function applied to keys before they're passed to this map
+		 * @tparam K2 Type of the new keys used
+		 * @return A copy of this view that maps all used keys using 'f'
+		 */
+		def mapInput[K2](f: K2 => K) = PartialMapView.wrap(m).mapInput(f)
+		/**
+		 * @param f A mapping function applied to keys before they're passed to this map.
+		 *          May yield None, in which case the key is treated as if it didn't exist in this map.
+		 * @tparam K2 Type of the new keys used
+		 * @return A copy of this view that maps all used keys using 'f'
+		 */
+		def flatMapInput[K2](f: K2 => Option[K]) = PartialMapView.wrap(m).flatMapInput(f)
+	}
+	
+	private class RepeatingIterator[A, CC[_]](val c: IterableOps[A, CC, _]) extends Iterator[A]
 	{
 		// ATTRIBUTES   -----------------
 		

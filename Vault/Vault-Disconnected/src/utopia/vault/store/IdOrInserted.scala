@@ -16,9 +16,22 @@ object IdOrInserted
 	 * @return A wrapper for the specified item
 	 */
 	implicit def apply[A <: HasId[Int]](idOrInserted: Either[A, Int]): IdOrInserted[A] = _IdOrInserted(idOrInserted)
+	/**
+	 * @param id The ID to wrap
+	 * @tparam A Type of the theoretical inserted instance
+	 * @return A new wrapper for the specified ID
+	 */
+	implicit def apply[A <: HasId[Int]](id: Int): IdOrInserted[A] = ExistingIdWrapper(id)
 	
 	
 	// NESTED   ------------------------
+	
+	private case class ExistingIdWrapper[+A <: HasId[Int]](id: Int) extends IdOrInserted[A]
+	{
+		override val isNew: Boolean = false
+		override val inserted: Option[A] = None
+		override val existingId: Option[Int] = Some(id)
+	}
 	
 	private case class _IdOrInserted[+A <: HasId[Int]](data: Either[A, Int]) extends IdOrInserted[A]
 	{

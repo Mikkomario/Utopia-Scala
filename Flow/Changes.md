@@ -11,6 +11,7 @@
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
 ### New features
+- Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
 ### New methods
 - **Extreme**
@@ -18,6 +19,11 @@
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
+  - Added `.divideToSeqsBy(...)`
+- **Map** (via **CollectionExtensions**)
+  - Added `.mapInputView(...)` and `.flatMapInputView(...)`
+- **MapView** (via **CollectionExtensions**)
+  - Added `.mapInput(...)` and `.flatMapInput(...)`
 - **OutputStream** (via **StreamExtensions**)
   - Added `.writeUsing(...)`
 - **Regex** (object)

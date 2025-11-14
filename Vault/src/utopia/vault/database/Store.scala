@@ -87,6 +87,76 @@ object Store
 		 * @return An interface for storing items to the DB
 		 */
 		def keyMapped[K, V](toData: (K, V) => D) = new PreparedKeyMappedStore[K, V, D, S](model, None)(toData)
+		
+		/**
+		 * @param toData A function for converting values into data.
+		 *               Accepts:
+		 *                  1. Value to convert
+		 *                  1. A store construction parameter
+		 * @tparam V Type of the converted values
+		 * @tparam I Type of the additional construction parameter
+		 * @return A new factory for creating store interfaces, using construction parameters
+		 */
+		def generic[V, I](toData: (V, I) => D) = new GenericStoreFactory[V, D, S, I](model, None)(toData)
+		/**
+		 * @param toData A function for converting key-value pairs into data.
+		 *               Accepts:
+		 *                  1. A unique key
+		 *                  1. Value linked to that key
+		 *                  1. A store construction parameter
+		 * @tparam K Type of the unique keys used
+		 * @tparam V Type of the converted values
+		 * @tparam I Type of the additional construction parameter
+		 * @return A new factory for creating store interfaces, using construction parameters
+		 */
+		def genericKeyMapped[K, V, I](toData: (K, V, I) => D) =
+			new GenericKeyMapStoreFactory[K, V, D, S, I](model, None)(toData)
+	}
+	
+	trait GenericStoreFactoryLike[+V, +S <: HasId[Int], -I, +A, +Repr] extends CanUseReplaceHandler[V, S, Repr]
+	{
+		// ABSTRACT    ----------------------------
+		
+		/**
+		 * @param param A store construction parameter
+		 * @return A store interface, based on that parameter
+		 */
+		def apply(param: I): A
+		
+		
+		// COMPUTED -------------------------------
+		
+		/**
+		 * @param param A store construction parameter (implicit)
+		 * @return A store interface, based on the implicit parameter
+		 */
+		def contextual(implicit param: I) = apply(param)
+	}
+	class GenericStoreFactory[V, -D, S <: HasId[Int], -I](model: Inserter[D, S],
+	                                                    replaceHandler: Option[ReplaceHandler[V, S]])
+	                                                   (toData: (V, I) => D)
+		extends GenericStoreFactoryLike[V, S, I, PreparedStore[V, D, S], GenericStoreFactory[V, D, S, I]]
+	{
+		// IMPLEMENTED  ---------------------------
+		
+		override def apply(param: I) =
+			new PreparedStore[V, D, S](model, replaceHandler)({ value => toData(value, param) })
+		
+		override def using(handler: ReplaceHandler[V, S]): GenericStoreFactory[V, D, S, I] =
+			new GenericStoreFactory[V, D, S, I](model, Some(handler))(toData)
+	}
+	class GenericKeyMapStoreFactory[K, V, -D, S <: HasId[Int], -I](model: Inserter[D, S],
+	                                                             replaceHandler: Option[ReplaceHandler[(K, V), S]])
+	                                                            (toData: (K, V, I) => D)
+		extends GenericStoreFactoryLike[(K, V), S, I, PreparedKeyMappedStore[K, V, D, S], GenericKeyMapStoreFactory[K, V, D, S, I]]
+	{
+		// IMPLEMENTED  ----------------------------
+		
+		override def apply(param: I): PreparedKeyMappedStore[K, V, D, S] =
+			new PreparedKeyMappedStore[K, V, D, S](model, replaceHandler)({ (key, value) => toData(key, value, param) })
+		
+		override def using(handler: ReplaceHandler[(K, V), S]): GenericKeyMapStoreFactory[K, V, D, S, I] =
+			new GenericKeyMapStoreFactory[K, V, D, S, I](model, Some(handler))(toData)
 	}
 	
 	class PreparedStore[V, -D, S <: HasId[Int]](model: Inserter[D, S],
@@ -206,8 +276,8 @@ object Store
 			super.keyMap[K](itemsToStore, existingItems) { dataToKey(_) } { e => dataToKey(e.wrapped) }
 	}
 	class PreparedKeyMappedStore[K, V, -D, S <: HasId[Int]](model: Inserter[D, S],
-	                                                       replaceHandler: Option[ReplaceHandler[(K, V), S]])
-	                                                      (toData: (K, V) => D)
+	                                                        replaceHandler: Option[ReplaceHandler[(K, V), S]])
+	                                                       (toData: (K, V) => D)
 		extends PreparedStore[(K, V), D, S](model, replaceHandler)({ case (key, value) => toData(key, value) })
 			with Store[(K, V), S, PreparedKeyMappedStore[K, V, D, S]]
 	{
@@ -441,13 +511,7 @@ object Store
 	}
 }
 
-/**
- * A prepared interface for performing various store functions
- * @tparam V Type of accepted input / items to store
- * @tparam S Type of existing database entries / inserted items
- * @tparam Repr Type of this store interface
- */
-trait Store[V, S <: HasId[Int], +Repr]
+trait CanUseReplaceHandler[+V, +S <: HasId[Int], +Repr]
 {
 	// ABSTRACT ------------------------
 	
@@ -457,32 +521,8 @@ trait Store[V, S <: HasId[Int], +Repr]
 	 */
 	def using(handler: ReplaceHandler[V, S]): Repr
 	
-	/**
-	 * Stores an individual item to the database.
-	 * If the specified item was a duplicate entry, no insertion is performed.
-	 * @param item The item to store
-	 * @param existingMatch An existing matching entry from the database. None if there was no matching entry.
-	 * @param connection Implicit DB connection
-	 * @return Result of this store operation, either containing the inserted entry, or 'existingMatch'.
-	 */
-	def single(item: V, existingMatch: Option[S])(implicit connection: Connection): StoreResult[S]
 	
-	/**
-	 * Stores 0-n items to the database. Checks against existing data and won't insert any duplicate entries.
-	 * @param itemsToStore The items that should be stored to the DB.
-	 *                     Each item is mapped to a unique key,
-	 *                     which is used for matching it with a possible existing DB entry.
-	 * @param existingItems Matching items from the database. These, also, are mapped to unique (matching) keys.
-	 * @param connection Implicit DB connection
-	 * @tparam K type of keys used
-	 * @return A map where keys are the specified keys and values are store results,
-	 *         either containing a newly inserted item, or one of the existing DB entries.
-	 */
-	def keyMapped[K](itemsToStore: IterableOnce[(K, V)], existingItems: Map[K, S])
-	                (implicit connection: Connection): Map[K, StoreResult[S]]
-	
-	
-	// OTHER    ------------------------
+	// OTHER    -----------------------
 	
 	/**
 	 * @param rootAccess Root-level access to the matching database entries.
@@ -512,22 +552,44 @@ trait Store[V, S <: HasId[Int], +Repr]
 	 */
 	def replacing(shouldReplace: (V, S) => Boolean)(replace: (IndexedSeq[Pair[S]], Connection) => Unit) =
 		using(ReplaceHandler(shouldReplace)(replace))
+}
+
+/**
+ * A prepared interface for performing various store functions
+ * @tparam V Type of accepted input / items to store
+ * @tparam S Type of existing database entries / inserted items
+ * @tparam Repr Type of this store interface
+ */
+trait Store[V, S <: HasId[Int], +Repr] extends CanUseReplaceHandler[V, S, Repr]
+{
+	// ABSTRACT ------------------------
 	
 	/**
-	 * Inserts a new item to the database. Assumes that no matching entry exists in the database.
-	 * @param item The item to insert
+	 * Stores an individual item to the database.
+	 * If the specified item was a duplicate entry, no insertion is performed.
+	 * @param item The item to store
+	 * @param existingMatch An existing matching entry from the database. None if there was no matching entry.
 	 * @param connection Implicit DB connection
-	 * @return The inserted item
+	 * @return Result of this store operation, either containing the inserted entry, or 'existingMatch'.
 	 */
-	def unique(item: V)(implicit connection: Connection) = single(item, None)
+	def single(item: V, existingMatch: Option[S])(implicit connection: Connection): StoreResult[S]
+	
 	/**
-	 * Inserts 0-n items to the database. Assumes that no matching entries exist in the database.
-	 * @param items The items to insert
+	 * Stores 0-n items to the database. Checks against existing data and won't insert any duplicate entries.
+	 * @param itemsToStore The items that should be stored to the DB.
+	 *                     Each item is mapped to a unique key,
+	 *                     which is used for matching it with a possible existing DB entry.
+	 * @param existingItems Matching items from the database. These, also, are mapped to unique (matching) keys.
 	 * @param connection Implicit DB connection
-	 * @return The inserted items (not necessarily in the same order as specified).
+	 * @tparam K type of keys used
+	 * @return A map where keys are the specified keys and values are store results,
+	 *         either containing a newly inserted item, or one of the existing DB entries.
 	 */
-	def unique(items: IterableOnce[V])(implicit connection: Connection) =
-		keyMapped(items.iterator.map { item => item -> item }, Map.empty[V, S]).values
+	def keyMapped[K](itemsToStore: IterableOnce[(K, V)], existingItems: Map[K, S])
+	                (implicit connection: Connection): Map[K, StoreResult[S]]
+	
+	
+	// OTHER    ------------------------
 	
 	/**
 	 * Stores an individual item to the database.
@@ -556,4 +618,39 @@ trait Store[V, S <: HasId[Int], +Repr]
 	             (itemToKey: V => K)(existingToKey: S => K)(implicit connection: Connection) =
 		keyMapped[K](itemsToStore.iterator.map { item => itemToKey(item) -> item },
 			existingItems.iterator.map { existing => existingToKey(existing) -> existing }.toMap)
+	
+	/**
+	 * Inserts a new item to the database. Assumes that no matching entry exists in the database.
+	 * @param item The item to insert
+	 * @param connection Implicit DB connection
+	 * @return The inserted item
+	 */
+	def unique(item: V)(implicit connection: Connection) = single(item, None)
+	/**
+	 * Inserts 0-n items to the database. Assumes that no matching entries exist in the database.
+	 * @param items The items to insert
+	 * @param connection Implicit DB connection
+	 * @return The inserted items (not necessarily in the same order as specified).
+	 */
+	def unique(items: IterableOnce[V])(implicit connection: Connection) =
+		keyMapUnique(items)(Identity).values
+	
+	/**
+	 * Inserts 0-n items to the database. Assumes that no matching entries exist in the database.
+	 * Performs key-mapping in order to get the store results as a map.
+	 * @param items The items to insert
+	 * @param toKey A function that converts an item into a unique map key
+	 * @param connection Implicit DB connection
+	 * @return A map containing the inserted items, each mapped to a key produced with 'toKey'
+	 */
+	def keyMapUnique[K](items: IterableOnce[V])(toKey: V => K)(implicit connection: Connection) =
+		keyMappedUnique(items.iterator.map { i => toKey(i) -> i })
+	/**
+	 * Inserts 0-n key-mapped items to the database. Assumes that no matching entries exist in the database.
+	 * @param items The items to insert as key-value pairs.
+	 * @param connection Implicit DB connection
+	 * @return A map containing the inserted items, each mapped to their respective key.
+	 */
+	def keyMappedUnique[K](items: IterableOnce[(K, V)])(implicit connection: Connection) =
+		keyMapped(items, Map.empty[K, S])
 }

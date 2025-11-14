@@ -32,7 +32,7 @@ object MapAccess
 	// NESTED   ----------------------------
 	
 	/**
-	  * A function that acts as an map-like instance
+	  * A function that acts as a map-like instance
 	  * @param f Wrapped function
 	  * @tparam K Type of keys used
 	  * @tparam V Types of values returned

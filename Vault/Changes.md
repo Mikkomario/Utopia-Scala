@@ -1,5 +1,15 @@
 # Utopia Vault - List of Changes
 
+## v2.0.1 (in development)
+### New methods
+- **IdOrInserted** (object)
+  - Added a new implicit constructor from an existing ID (Int)
+- **Store**
+  - Object
+    - Added new "generic" constructor functions that support additional custom construction parameters
+  - Trait
+    - Added `.keyMapUnique(...)` and `.keyMappedUnique(...)`
+
 ## v2.0 - 01.11.2025
 This is a very major update, focusing on the following areas:
 1. Rewritten low level query execution and row modeling, now supporting streaming database requests
