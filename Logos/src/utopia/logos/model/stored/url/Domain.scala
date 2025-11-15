@@ -25,8 +25,7 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	
 	/**
 	  * A regular expression that matches a domain part of a link.
-	  * Includes the initial forward slash, if present.
-	  * For example, matches: "https://api.example.com/", "http://128.0.0.1:8080/" and "www.palvelu.fi"
+	  * For example, matches: "https://api.example.com", "http://128.0.0.1:8080" and "www.palvelu.fi"
 	  */
 	// TODO: Should this accept something like "home.com"?
 	lazy val regex = 
@@ -41,6 +40,48 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	
 	override protected def complete(model: HasProperties, data: DomainData) =
 		model("id").tryInt.map { apply(_, data) }
+		
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * Standardizes a URL, so that it includes:
+	 *      - "http://" or "https://"
+	 *      - "www.", unless based on a numeric address
+	 * @param url URL to standardize
+	 * @param preferHttps Whether to prepend "https://" instead of "http://". Default = false.
+	 * @return A standardized copy of the specified URL. If the specified URL was empty, returns it as it is.
+	 */
+	def standardize(url: String, preferHttps: Boolean = false) = {
+		// Case: Empty string => No changes
+		if (url.isEmpty)
+			url
+		// Looks for the http(s) part
+		else
+			httpRegex.endIndexIteratorIn(url).nextOption() match {
+				// Case: Http(s) found => Looks for www.
+				case Some(httpEndIndex) =>
+					// Case: www also found => Yields the same URL
+					if (wwwRegex.existsIn(url))
+						url
+					// Case: No www => Checks whether needed (not used on number-based URLs)
+					else {
+						val (toHttp, afterHttp) = url.splitAt(httpEndIndex)
+						if (afterHttp.headOption.exists { _.isDigit })
+							url
+						else
+							s"${toHttp}www.$url"
+					}
+					
+				// Case: No http(s) => Adds it and also looks, whether www. should be added
+				case None =>
+					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
+					if (wwwRegex.existsIn(url) || url.headOption.exists { _.isDigit })
+						httpPart + url
+					else
+						s"${httpPart}www.$url"
+			}
+	}
 }
 
 /**

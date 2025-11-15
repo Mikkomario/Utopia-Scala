@@ -3,6 +3,9 @@
 ## v0.6.1 (in development)
 ### Bugfixes
 - Bugfix to `Domain.regex`: The previous version didn't accept all domain prefixes.
+### New methods
+- **Domain** (object)
+  - Added `.standardize(String)`
 
 ## v0.6 - 01.11.2025
 A small update following the changes in **Vault v2.0**.
