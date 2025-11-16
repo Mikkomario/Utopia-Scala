@@ -13,21 +13,33 @@ object Headers
   * Represents a headers-row or a headers-column
   * @author Mikko Hilpinen
   * @since 31/01/2024, v1.0
-  * @param keyToIndex Each (primary) key mapped to its corresponding cell index
+  * @param primaryKeyToIndex Each (primary) key mapped to its corresponding cell index
   * @param alternativeKeys Secondary keys **in lower case**, mapped to the primary key they correspond with
   */
-case class Headers(keyToIndex: Map[String, Int], alternativeKeys: Map[String, String] = Map())
+case class Headers(primaryKeyToIndex: Map[String, Int], alternativeKeys: Map[String, String] = Map())
 {
 	// ATTRIBUTES   ---------------------
 	
 	/**
-	  * A map that maps each lower-cased key to its matching (cell) index
+	  * A map that maps each lower-cased key (primary, as well as secondary) to its matching (cell) index
 	  */
-	lazy val lowerKeyToIndex = keyToIndex.map { case (k, i) => k.toLowerCase -> i }.withDefaultValue(-1)
+	lazy val lowerKeyToIndex = {
+		val primaryMap = primaryKeyToIndex.map { case (k, i) => k.toLowerCase -> i }
+		val combined = primaryMap ++ alternativeKeys.iterator.map { case (secondary, primary) =>
+			secondary.toLowerCase -> primaryKeyToIndex.getOrElse(primary.toLowerCase, -1)
+		}
+		combined.withDefaultValue(-1)
+	}
 	/**
 	  * A map that maps each index to its original header / key
 	  */
-	lazy val keyAtIndex = keyToIndex.map { case (k, i) => i -> k }.withDefaultValue("")
+	lazy val keyAtIndex = primaryKeyToIndex.map { case (k, i) => i -> k }.withDefaultValue("")
+
+	
+	// COMPUTED ------------------------
+	
+	@deprecated("Please use primaryKeyToIndex instead", "v1.0.4")
+	def keyToIndex = primaryKeyToIndex
 	
 	
 	// OTHER    ------------------------
@@ -50,8 +62,7 @@ case class Headers(keyToIndex: Map[String, Int], alternativeKeys: Map[String, St
 	  * @return Index of that key in these headers.
 	  *         None if that key was not present in these headers.
 	  */
-	def lift(key: String): Option[Int] =
-		lowerKeyToIndex.get(key.toLowerCase).orElse { alternativeKeys.get(key.toLowerCase).flatMap(lift) }
+	def lift(key: String): Option[Int] = lowerKeyToIndex.get(key.toLowerCase)
 	/**
 	  * @param index Header index
 	  * @return Key associated with that index.
@@ -63,13 +74,7 @@ case class Headers(keyToIndex: Map[String, Int], alternativeKeys: Map[String, St
 	  * @param header A header
 	  * @return Whether these headers contain the specified value in some form
 	  */
-	def contains(header: String): Boolean = {
-		val lower = header.toLowerCase
-		alternativeKeys.get(lower) match {
-			case Some(primaryForm) => contains(primaryForm)
-			case None => lowerKeyToIndex.contains(lower)
-		}
-	}
+	def contains(header: String): Boolean = lowerKeyToIndex.contains(header.toLowerCase)
 	/**
 	  * @param header A header
 	  * @param index The index at which that header should appear

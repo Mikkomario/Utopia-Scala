@@ -423,6 +423,10 @@ object Model
 		}
 	}
 	
+	/**
+	 * A lazily building property name to property value -map, based on an iterator of constants
+	 * @param propsIter Iterator that yields the properties to map
+	 */
 	private class BuildingPropertyMap(propsIter: Iterator[Constant])
 		extends MapAccess[String, Option[Constant]] with mutable.Growable[(String, Constant)]
 	{
@@ -460,6 +464,11 @@ object Model
 		
 		// OTHER    ----------------------------
 		
+		/**
+		 * @param propName Name of the targeted property (case-insensitive)
+		 * @return Whether this map contains that property.
+		 *         Uncertain, if further iteration would be required in order to know for certain.
+		 */
 		def knownContains(propName: String): UncertainBoolean = {
 			if (map.contains(propName.toLowerCase))
 				CertainlyTrue

@@ -6,7 +6,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.shape.template.Dimensions
 
 /**
-  * Represents an individual cell in a spread-sheet
+  * Represents an individual cell in a spreadsheet
   * @author Mikko Hilpinen
   * @since 31/01/2024, v1.0
   */

@@ -1,7 +1,7 @@
 package utopia.manuscript.excel
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.manuscript.excel.SheetTarget.OrTarget
@@ -10,7 +10,7 @@ import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Common trait for different ways of locating the targeted spread-sheet
+  * Common trait for different ways of locating the targeted spreadsheet
   * @author Mikko Hilpinen
   * @since 31/01/2024, v1.0
   */
@@ -40,11 +40,11 @@ object SheetTarget
 	// COMPUTED -----------------------------
 	
 	/**
-	  * @return Target that always targets the first available spread-sheet
+	  * @return Target that always targets the first available spreadsheet
 	  */
 	def first = FirstSheet
 	/**
-	  * @return Target that always targets the last available spread-sheet
+	  * @return Target that always targets the last available spreadsheet
 	  */
 	def last = LastSheet
 	
@@ -57,7 +57,7 @@ object SheetTarget
 	  *          May return a failure.
 	  * @return A new sheet target which wraps the specified function
 	  */
-	implicit def apply(f: Seq[String] => Try[Int]): SheetTarget = new FunctionalSheetTarget(f)
+	implicit def apply(f: Seq[String] => Try[Int]): SheetTarget = new _SheetTarget(f)
 	
 	
 	// OTHER    --------------------------
@@ -73,16 +73,30 @@ object SheetTarget
 	  */
 	def name(name: String) = SheetWithName(name)
 	/**
-	  * @param string String to search from spread-sheet names
+	  * @param string String to search from spreadsheet names
 	  * @return A target that selects a sheet which contains the specified string
 	  */
 	def containing(string: String) = SheetContaining(string)
+	
+	/**
+	 * @param one A string that must appear on the spreadsheet name
+	 * @param another Another string that must appear
+	 * @param more Other strings that must appear
+	 * @return A target that selects a spreadsheet that contains all the specified parts (in any order, case-insensitive)
+	 */
+	def containingAll(one: String, another: String, more: String*): SheetContainingAll =
+		containingAll(Pair(one, another) ++ more)
+	/**
+	 * @param parts Strings that must appear on the spreadsheet name
+	 * @return A target that selects a spreadsheet that contains all the specified parts (in any order, case-insensitive)
+	 */
+	def containingAll(parts: Iterable[String]) = SheetContainingAll(parts)
 	
 	
 	// NESTED   --------------------------
 	
 	/**
-	  * Target that always reads the first spread-sheet
+	  * Target that always reads the first spreadsheet
 	  */
 	case object FirstSheet extends SheetTarget
 	{
@@ -90,7 +104,7 @@ object SheetTarget
 			if (sheetNames.isEmpty) Failure(new IllegalArgumentException("No sheets available")) else Success(0)
 	}
 	/**
-	  * Target that always reads the last spread-sheet
+	  * Target that always reads the last spreadsheet
 	  */
 	case object LastSheet extends SheetTarget
 	{
@@ -103,8 +117,8 @@ object SheetTarget
 	}
 	
 	/**
-	  * Target that reads a spread-sheet at a specific index
-	  * @param index Targeted spread-sheet index
+	  * Target that reads a spreadsheet at a specific index
+	  * @param index Targeted spreadsheet index
 	  */
 	case class SheetAtIndex(index: Int) extends SheetTarget
 	{
@@ -129,7 +143,7 @@ object SheetTarget
 	object SheetWithName
 	{
 		/**
-		  * @param name Targeted spread-sheet name
+		  * @param name Targeted spreadsheet name
 		  * @param maxVariance Maximum differences (missing, additional or different characters) allowed (default = 1)
 		  * @return A target that searches for the specified name, allowing for some difference
 		  */
@@ -137,8 +151,8 @@ object SheetTarget
 			SheetWithNameResembling(name, maxVariance)
 	}
 	/**
-	  * Target which reads a spread-sheet with a specific name
-	  * @param name Targeted spread-sheet name (case-insensitive)
+	  * Target which reads a spreadsheet with a specific name
+	  * @param name Targeted spreadsheet name (case-insensitive)
 	  */
 	case class SheetWithName(name: String) extends SheetTarget
 	{
@@ -172,11 +186,11 @@ object SheetTarget
 	/**
 	  * A target which searches for the specified sheet name, but allows for some difference (typos etc.).
 	  * Prefers exact matches, of course.
-	  * @param name Targeted spread-sheet name
+	  * @param name Targeted spreadsheet name
 	  * @param allowedVariance Maximum number of differences allowed.
 	  *                        A difference may be:
 	  *                             1. A missing character,
-	  *                             1. An additional chracter,
+	  *                             1. An additional character,
 	  *                             1. A wrong character
 	  *
   *                            Default maximum is 1.
@@ -223,11 +237,84 @@ object SheetTarget
 	  */
 	case class SheetContaining(string: String) extends SheetTarget
 	{
+		// IMPLEMENTED  ----------------------
+		
 		override def apply(sheetNames: Seq[String]): Try[Int] =
 			sheetNames.findIndexWhere { _.containsIgnoreCase(string) }
 				.toTry { new NoSuchElementException(
 					s"None of the specified sheet names contained the searched string '$string'. Searched from: ${
 						sheetNames.map { n => s"'$n'" }.mkString(", ") }") }
+						
+		
+		// OTHER    --------------------------
+		
+		/**
+		 * @param anotherString Another string that must appear on the spreadsheet name
+		 * @return A copy of this target that requires that both strings appear on the spreadsheet name
+		 */
+		def andAlsoContaining(anotherString: String): SheetContainingAll =
+			SheetContainingAll(Pair(string, anotherString))
+		/**
+		 * @return A copy of this target that requires that this and the other strings all
+		 *         appear on the spreadsheet name
+		 */
+		def andAlsoContaining(anotherString: String, another: String, more: String*): SheetContainingAll =
+			andAlsoContaining(Pair(anotherString, another) ++ more)
+		/**
+		 * @param others Other strings that must appear on the spreadsheet name
+		 * @return A copy of this target that requires that this and the other strings all
+		 *         appear on the spreadsheet name
+		 */
+		def andAlsoContaining(others: Seq[String]) = SheetContainingAll(string +: others)
+	}
+	
+	/**
+	 * A sheet target that requires the sheets to contain all n elements
+	 * @param parts Parts that must all appear on the spreadsheet name. Case-insensitive.
+	 * @since 16.11.2025, v1.0.4
+	 */
+	case class SheetContainingAll(parts: Iterable[String]) extends SheetTarget
+	{
+		// COMPUTED ----------------------------
+		
+		/**
+		 * @return A copy of this target requiring specific ordering
+		 */
+		def inOrder = SheetContainingAllInOrder(parts.toOptimizedSeq)
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override def apply(sheetNames: Seq[String]): Try[Int] =
+			sheetNames.findIndexWhere { _.containsAll(parts, ignoreCase = true) }.toTry {
+				new NoSuchElementException(s"No spreadsheet contained all of [${
+					parts.iterator.map { _.quoted }.mkString(", ") }]. Sheet names were: [${
+					sheetNames.iterator.map { _.quoted }.mkString(", ") }]")
+			}
+	}
+	/**
+	 * A sheet target that requires the sheets to contain all n elements in order.
+	 * @param parts Parts that must all appear on the spreadsheet name. Case-insensitive. Ordered.
+	 * @since 16.11.2025, v1.0.4
+	 */
+	case class SheetContainingAllInOrder(parts: Seq[String]) extends SheetTarget
+	{
+		// COMPUTED ---------------------------
+		
+		/**
+		 * @return A copy of this target without the ordering requirement
+		 */
+		def inAnyOrder = SheetContainingAll(parts)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def apply(sheetNames: Seq[String]): Try[Int] =
+			sheetNames.findIndexWhere { _.containsInOrder(parts, ignoreCase = true) }.toTry {
+				new NoSuchElementException(s"None of the spreadsheets contained [${
+					parts.iterator.map { _.quoted }.mkString(", ") }] (in order). Searched from: [${
+					sheetNames.iterator.map { _.quoted }.mkString(", ") }]")
+			}
 	}
 	
 	private class OrTarget(primary: SheetTarget, secondary: SheetTarget) extends SheetTarget
@@ -235,7 +322,7 @@ object SheetTarget
 		override def apply(sheetNames: Seq[String]): Try[Int] = primary(sheetNames).orElse(secondary(sheetNames))
 	}
 	
-	private class FunctionalSheetTarget(f: Seq[String] => Try[Int]) extends SheetTarget
+	private class _SheetTarget(f: Seq[String] => Try[Int]) extends SheetTarget
 	{
 		override def apply(sheetNames: Seq[String]): Try[Int] = f(sheetNames)
 	}

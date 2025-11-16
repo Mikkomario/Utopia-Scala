@@ -1,5 +1,14 @@
 # Utopia Manuscript - List of changes
 
+## v1.0.4 (in development)
+### Deprecations
+- Renamed `.keyToIndex` in **Headers** to `.primaryKeyToIndex`
+### New features
+- Added **SheetTarget** implementations that require containment of multiple strings
+### Other changes
+- Rewrote **LinearCellGroup**'s `.toModel` implementation
+- Refactored some **Headers** functions
+
 ## v1.0.3 - 01.11.2025
 A new build supporting **Flow v2.7**
 

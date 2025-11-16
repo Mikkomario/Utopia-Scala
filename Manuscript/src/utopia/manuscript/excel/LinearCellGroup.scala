@@ -1,19 +1,20 @@
 package utopia.manuscript.excel
 
-import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.generic.factory.PropertyFactory.ConstantFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.util.UncertainBoolean
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.enumeration.Axis2D
 import utopia.paradigm.shape.template.Dimensions
 
 import scala.collection.immutable.VectorBuilder
+import scala.collection.mutable
 
 /**
-  * Represents a row or a column in a spread-sheet
+  * Represents a row or a column in a spreadsheet
   * @author Mikko Hilpinen
   * @since 31/01/2024, v1.0
   */
@@ -66,22 +67,24 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 				Some(None)
 			else
 				None
-		}.flatten
+		}
+		.flatten
 	
 	/**
 	  * Converts this group of cells into a model
 	  * @param headers Headers which provide mapping between cell indices and header names
 	  * @param preLoad Whether all cell values should be read immediately.
 	  *                If false (default), the resulting model may only be used while the cells are available
-	  *                (i.e. while the spread-sheet is open).
-	  *                Set to true if you want to store or use the models after the spread-sheet closes.
+	  *                (i.e. while the spreadsheet is open).
+	  *                Set to true if you want to store or use the models after the spreadsheet closes.
 	  * @return A model based on this row or column
 	  */
 	def toModel(headers: Headers, preLoad: Boolean = false) = {
 		if (preLoad)
-			Model.withConstants(headers.keyToIndex.map { case (key, index) => Constant(key, apply(index)) })
+			new BufferedRowModel(
+				headers.primaryKeyToIndex.map { case (key, index) => index -> Constant(key, apply(index)) }, headers)
 		else
-			Model(Empty, new CellsToPropsFactory(headers))
+			new LazyRowModel(headers)
 	}
 	
 	/**
@@ -93,7 +96,7 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 	  * @param headers A set of already located headers
 	  * @return Whether this line matches those headers (i.e. lists all the same keys in some form at the same indices)
 	  */
-	def matchesHeaders(headers: Headers) = headers.keyToIndex.forall { case (header, index) =>
+	def matchesHeaders(headers: Headers) = headers.primaryKeyToIndex.forall { case (header, index) =>
 		apply(index).string.forall { value =>
 			(value ~== header) || headers.alternativeKeys.get(value.toLowerCase).exists { _ ~== header }
 		}
@@ -105,7 +108,7 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 	  * @param headers Headers to include in the result.
 	  *                Expects a complete set of used header names.
 	  * @return Headers where each of the specified name matches a cell index.
-	  *         None if this line didn't contain all of the specified headers.
+	  *         None if this line didn't contain all the specified headers.
 	  */
 	def locateHeaders(headers: UnallocatedHeaders) = {
 		val builder = new VectorBuilder[(String, Int)]()
@@ -125,7 +128,7 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 	  * Completes, if possible, a partial set of headers to match the cell values in this row
 	  * @param partialHeaders Headers that must appear on this line in order to form the complete headers
 	  * @return Complete set of headers from this line.
-	  *         None if this line didn't contain all of the specified headers.
+	  *         None if this line didn't contain all the specified headers.
 	  */
 	def completeHeaders(partialHeaders: UnallocatedHeaders) = {
 		val potentialHeaders = cells.map { c => c.value.getString -> c.index(direction) }
@@ -159,5 +162,108 @@ class LinearCellGroup(val cells: CachingSeq[Cell], val index: Int, val direction
 		}
 		
 		override def generatesNonEmpty(propertyName: String): Boolean = headers.lift(propertyName).exists(containsIndex)
+	}
+	
+	private class BufferedRowModel(props: Map[Int, Constant], headers: Headers) extends Model
+	{
+		// ATTRIBUTES   ---------------------
+		
+		override lazy val properties: Seq[Constant] = props.toOptimizedSeq.sortBy { _._1 }.map { _._2 }
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = props.valuesIterator
+		
+		override def knownContains(propName: String): UncertainBoolean = contains(propName)
+		override def contains(propName: String): Boolean = headers.contains(propName)
+		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
+		
+		override def existingProperty(propName: String): Option[Constant] = headers.lift(propName).map(props.apply)
+	}
+	
+	/**
+	 * A model that lazily maps headers to cell values
+	 * @param headers Headers to map
+	 */
+	private class LazyRowModel(headers: Headers) extends Model
+	{
+		// ATTRIBUTES   ---------------------
+		
+		/**
+		 * Lazily iterates over the cells, attaching them to matching headers.
+		 * Also stores the cell index, which is used in map-accessing.
+		 */
+		private val indexedProps = cells.flatMap { cell =>
+			val index = cell.index(direction)
+			headers.lift(index).map { name => index -> Constant.lazily(name, cell.lazyValue) }
+		}
+		override val properties: Seq[Constant] = indexedProps.map { _._2 }
+		
+		/**
+		 * An iterator from which cell properties are mapped to their respective indices, when necessary
+		 */
+		private val toMapIterator = indexedProps.iterator
+		/**
+		 * A mutable map containing all collected cell-index -> cell property -links
+		 */
+		private val indexToProp = mutable.Map[Int, Constant]()
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = properties.iterator
+		
+		// Implements containment through the headers
+		override def knownContains(propName: String): UncertainBoolean = contains(propName)
+		override def contains(propName: String): Boolean = headers.contains(propName)
+		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
+		
+		override def existingProperty(propName: String): Option[Constant] = headers.lift(propName).map(apply)
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		 * Acquires a property for an index. Caches the result.
+		 * @param index Targeted cell index. Must be present in [[headers]].
+		 * @return A cell property matching that index.
+		 */
+		private def apply(index: Int) = indexToProp.getOrElse(index, {
+			// If not cached, looks for a property with the matching index from the lazy iterator
+			// Case: More items to iterate => Iterates further
+			if (toMapIterator.hasNext) {
+				var result: Option[Option[Constant]] = None
+				do {
+					// Moves to the next cell
+					val (nextIndex, nextProp) = toMapIterator.next()
+					// Caches the generated propert
+					indexToProp += (nextIndex -> nextProp)
+					
+					// Case: Index matches => Yields this property
+					if (nextIndex == index)
+						result = Some(Some(nextProp))
+					// Case: Already passed the targeted index => Won't iterate further
+					else if (nextIndex > index)
+						result = None
+				}
+				while (result.isEmpty && toMapIterator.hasNext)
+				
+				result.flatten.getOrElse { newEmptyProp(index) }
+			}
+			// Case: All cells already iterated => Generates an empty property
+			else
+				newEmptyProp(index)
+		})
+		
+		private def newEmptyProp(index: Int) = {
+			val prop = Constant(headers(index), Value.empty)
+			indexToProp += (index -> prop)
+			prop
+		}
 	}
 }
