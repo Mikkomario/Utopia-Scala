@@ -5,6 +5,7 @@
 - **Iterable**'s `.find(Extreme)` (in **CollectionExtensions**) is now named `.findExtreme(Extreme)`
   - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
 - **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
+- **Constant** is now a trait instead of a class
 - `OptimizedIndexedSeq.newBuilder` now yields **OptimizedSeqBuilder** instead of **Builder**
   - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
@@ -13,7 +14,10 @@
 ### New features
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
+- Added support for lazily initialized **Constant**s
 ### New methods
+- **Constant** (object)
+  - Added `.lazily(...)`
 - **Extreme**
   - Added `.compare(...)`
 - **IterableOnce**
