@@ -1,6 +1,9 @@
 # Utopia Vault - List of Changes
 
 ## v2.0.1 (in development)
+### New features
+- Added classes for lazily initializing values from the DB: 
+  **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
 ### New methods
 - **IdOrInserted** (object)
   - Added a new implicit constructor from an existing ID (Int)
