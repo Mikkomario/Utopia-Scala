@@ -1,5 +1,8 @@
 # Utopia Paradigm - List of Changes
 
+## v1.8.1 (in development)
+A new build supporting **Flow v2.8**
+
 ## v1.8 - 01.11.2025
 This small update focuses on the following 4 areas:
 1. New constructors for velocity and acceleration classes (following **Flow**'s **Duration** update)

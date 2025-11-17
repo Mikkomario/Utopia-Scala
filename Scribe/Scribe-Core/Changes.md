@@ -1,5 +1,8 @@
 # Utopia Scribe Core - list of changes
 
+## v1.2.1 (in development)
+A new build supporting **Flow v2.8**
+
 ## v1.2 - 01.11.2025
 This version adds the basis for new **Scribe API** features (i.e. for the new console commands), 
 and also reflects the changes in **Vault v2.0**.
