@@ -5,7 +5,7 @@ import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.targeting.TargetingWrapper
-import utopia.vault.sql.{Condition, OrderBy}
+import utopia.vault.sql.{Condition, OrderBy, OrderDirection}
 
 /**
   * Common trait for access points that target multiple items at a time by wrapping another targeted access point
@@ -45,9 +45,10 @@ trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +
 	override def count(column: Column, distinct: Boolean)(implicit connection: Connection) =
 		wrapped.count(column, distinct)
 	
-	override def streamColumn[B](column: Column, distinct: Boolean)(f: Iterator[Value] => B)
+	override def streamColumn[B](column: Column, order: Option[OrderDirection], distinct: Boolean)
+	                            (f: Iterator[Value] => B)
 	                            (implicit connection: Connection) =
-		wrapped.streamColumn(column, distinct)(f)
+		wrapped.streamColumn(column, order, distinct)(f)
 	override def streamColumns[B](columns: Seq[Column])(f: Iterator[Seq[Value]] => B)
 	                             (implicit connection: Connection) =
 		wrapped.streamColumns(columns)(f)

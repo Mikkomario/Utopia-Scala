@@ -100,10 +100,11 @@ trait AccessManyLike[+A, +Repr] extends TargetingManyLike[A, Repr, TargetingOne[
 	override def count(column: Column, distinct: Boolean)(implicit connection: Connection) =
 		pullWith(Count(target, column, distinct), 0, ordering = None) { _.rowIntValuesIterator.sum }
 	
-	override def streamColumn[B](column: Column, distinct: Boolean)(f: Iterator[Value] => B)
+	override def streamColumn[B](column: Column, order: Option[OrderDirection], distinct: Boolean)
+	                            (f: Iterator[Value] => B)
 	                            (implicit connection: Connection) =
-		pullWith(Select.distinctIf(target, column, distinct),
-			f(Iterator.empty)) { result => f(result.rowValuesIterator) }
+		pullWith(Select.distinctIf(target, column, distinct), f(Iterator.empty),
+			ordering = order.map { OrderBy(column, _) }) { result => f(result.rowValuesIterator) }
 	override def streamColumns[B](columns: Seq[Column])(f: Iterator[Seq[Value]] => B)
 	                             (implicit connection: Connection) =
 		pullWith(Select(target, columns), f(Iterator.empty)) { result =>

@@ -1,6 +1,8 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.{BinarySigned, Sign}
 
@@ -32,6 +34,23 @@ object OrderDirection
 	  * All possible order direction values
 	  */
 	lazy val values = Pair(Ascending, Descending)
+	
+	
+	// OTHER    -------------------------
+	
+	/**
+	 * @param extreme The extreme that will be placed last
+	 * @return Order direction that places 'extreme' last
+	 */
+	def towards(extreme: Extreme): OrderDirection = extreme match {
+		case Min => Descending
+		case Max => Ascending
+	}
+	/**
+	 * @param extreme The extreme that will be placed first
+	 * @return Order direction that places 'extreme' first
+	 */
+	def startingFrom(extreme: Extreme) = towards(extreme.opposite)
 	
 	
 	// VALUES   -------------------------

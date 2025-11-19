@@ -6,6 +6,7 @@ import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
+import utopia.vault.sql.OrderDirection
 
 /**
   * Common trait for access points which target multiple rows at once, providing column value access
@@ -36,13 +37,16 @@ trait AccessManyColumns extends AccessColumns[Seq[Value], Seq[Seq[Value]]]
 	/**
 	  * Accesses values of a single column in a streamed fashion
 	  * @param column Targeted column
-	  * @param distinct Whether to only target distinct column values (default = false)
+	  * @param order Ordering direction, in which the column values should be returned.
+	 *              None if the values may be returned in any order (default).
+	 * @param distinct Whether to only target distinct column values (default = false)
 	  * @param f A function that processes the streamed column values
 	  * @param connection Implicit DB connection
 	  * @tparam A Type of function results
 	  * @return Function results
 	  */
-	def streamColumn[A](column: Column, distinct: Boolean = false)(f: Iterator[Value] => A)
+	def streamColumn[A](column: Column, order: Option[OrderDirection] = None, distinct: Boolean = false)
+	                   (f: Iterator[Value] => A)
 	                   (implicit connection: Connection): A
 	/**
 	  * Accesses column values in a streamed fashion

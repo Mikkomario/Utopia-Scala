@@ -70,7 +70,17 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 	
 	// OTHER    ---------------------------
 	
-	private def fromOrdered(orderedInput: IterableOnce[Int]) = {
+	/**
+	 * @param ordered A collection sorted in ascending order
+	 * @return An int-set from that collection
+	 */
+	@throws[IllegalArgumentException]("If the specified collection is not ordered")
+	def fromOrdered(ordered: IterableOnce[Int]) = ordered match {
+		case i: IntSet => i
+		case i => _fromOrdered(i)
+	}
+	
+	private def _fromOrdered(orderedInput: IterableOnce[Int]) = {
 		val iterator = orderedInput.iterator
 		if (iterator.hasNext)
 			fromPreparedIterator(iterator)
@@ -94,6 +104,8 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 					currentEnd = i
 				}
 			}
+			else if (i < currentEnd)
+				throw new IllegalArgumentException("The specified iterator was not ordered")
 		}
 		builder += NumericSpan(currentStart, currentEnd)
 		
@@ -250,8 +262,8 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 			i.compareTo(otherSize)
 	}
 	
-	override def filter(pred: Int => Boolean) = IntSet.fromOrdered(iterator.filter(pred))
-	override def filterNot(pred: Int => Boolean) = IntSet.fromOrdered(iterator.filterNot(pred))
+	override def filter(pred: Int => Boolean) = IntSet._fromOrdered(iterator.filter(pred))
+	override def filterNot(pred: Int => Boolean) = IntSet._fromOrdered(iterator.filterNot(pred))
 	
 	override def take(n: Int) = {
 		val builder = OptimizedIndexedSeq.newBuilder[IntSpan]
@@ -274,7 +286,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 	}
 	
 	override def takeRight(n: Int) = if (n >= size) this else drop(size - n)
-	override def takeWhile(p: Int => Boolean) = IntSet.fromOrdered(iterator.takeWhile(p))
+	override def takeWhile(p: Int => Boolean) = IntSet._fromOrdered(iterator.takeWhile(p))
 	
 	override def drop(n: Int) = {
 		if (n <= 0)
@@ -299,7 +311,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 	}
 	
 	override def dropRight(n: Int) = if (n >= size) IntSet.empty else take(size - n)
-	override def dropWhile(p: Int => Boolean) = IntSet.fromOrdered(iterator.dropWhile(p))
+	override def dropWhile(p: Int => Boolean) = IntSet._fromOrdered(iterator.dropWhile(p))
 	
 	
 	// OTHER    ------------------------

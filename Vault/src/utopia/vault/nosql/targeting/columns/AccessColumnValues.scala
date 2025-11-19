@@ -1,6 +1,7 @@
 package utopia.vault.nosql.targeting.columns
 
-import utopia.flow.collection.immutable.IntSet
+import utopia.flow.collection.immutable.{Empty, IntSet}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.Extreme
@@ -9,6 +10,8 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
+import utopia.vault.sql.OrderDirection
+import utopia.vault.sql.OrderDirection.{Ascending, Descending}
 
 import scala.util.Try
 
@@ -115,7 +118,7 @@ object AccessColumnValues
 		 * @param connection Implicit DB connection
 		 * @return All accessible values as an [[IntSet]]
 		 */
-		def toIntSet(implicit connection: Connection) = a.streamDistinct(IntSet.from)
+		def toIntSet(implicit connection: Connection) = a.streamOrdered(Ascending, distinct = true)(IntSet.fromOrdered)
 	}
 }
 
@@ -217,7 +220,7 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	 * @tparam B Function result type
 	 * @return Function 'f' results
 	 */
-	override def stream[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f, distinct = false)
+	override def stream[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f)
 	
 	override protected def parse(value: Seq[Value]): Seq[A] = fromValue match {
 		case Left(flatMap) => value.flatMap(flatMap)
@@ -257,7 +260,50 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 			}
 		}
 	
+	/**
+	 * Collects 'count' smallest accessible values
+	 * @param count Maximum number of values to collect
+	 * @param connection Implicit DB connection
+	 * @return Up to 'count' smallest accessible values. Ordered.
+	 */
+	def takeMin(count: Int)(implicit connection: Connection) = take(Min, count)
+	/**
+	 * Collects 'count' largest accessible values
+	 * @param count Maximum number of values to collect
+	 * @param connection Implicit DB connection
+	 * @return Up to 'count' largest accessible values. Ordered.
+	 */
+	def takeMax(count: Int)(implicit connection: Connection) = take(Max, count)
+	/**
+	 * Collects 'count' most extreme accessible values
+	 * @param extreme Targeted extreme
+	 * @param count Maximum number of values to collect
+	 * @param connection Implicit DB connection
+	 * @return Up to 'count' most extreme accessible values. Ordered.
+	 */
+	def take(extreme: Extreme, count: Int)(implicit connection: Connection) = {
+		if (count <= 0)
+			Empty
+		else
+			streamOrdered(OrderDirection.startingFrom(extreme)) { _.take(count).toOptimizedSeq }
+	}
+	
+	/**
+	 * Reduces the accessible column values using the specified function
+	 * @param f A reduce function, which combines two accessible column values
+	 * @param connection Implicit DB connection
+	 * @tparam B Type of the combined values
+	 * @return Reduce result
+	 */
+	@throws[UnsupportedOperationException]("If no value is accessible")
 	def reduce[B >: A](f: (B, B) => B)(implicit connection: Connection) = stream { _.reduce(f) }
+	/**
+	 * Reduces the accessible column values using the specified function
+	 * @param f A reduce function, which combines two accessible column values
+	 * @param connection Implicit DB connection
+	 * @tparam B Type of the combined values
+	 * @return Reduce result. None if no values were accessible.
+	 */
 	def reduceOption[B >: A](f: (B, B) => B)(implicit connection: Connection) = stream { _.reduceOption(f) }
 	
 	/**
@@ -269,8 +315,38 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 	  */
 	def streamDistinct[B](f: Iterator[A] => B)(implicit connection: Connection) = _stream(f, distinct = true)
 	
-	private def _stream[B](f: Iterator[A] => B, distinct: Boolean)(implicit connection: Connection) =
-		access.streamColumn(column, distinct) { valuesIter =>
+	/**
+	 * Streams accessible values of this column in ascending order
+	 * @param f A function that receives a value iterator and yields some value
+	 * @param connection Implicit DB connection
+	 * @tparam B Type of the value yielded by 'f'
+	 * @return Result of 'f'
+	 */
+	def streamAscending[B](f: Iterator[A] => B)(implicit connection: Connection) = streamOrdered(Ascending)(f)
+	/**
+	 * Streams accessible values of this column in descending order
+	 * @param f A function that receives a value iterator and yields some value
+	 * @param connection Implicit DB connection
+	 * @tparam B Type of the value yielded by 'f'
+	 * @return Result of 'f'
+	 */
+	def streamDescending[B](f: Iterator[A] => B)(implicit connection: Connection) = streamOrdered(Descending)(f)
+	/**
+	 * Streams accessible values of this column in order
+	 * @param direction Order in which the values are presented to 'f'
+	 * @param f A function that receives a value iterator and yields some value
+	 * @param distinct Whether to only include distinct values (default = false)
+	 * @param connection Implicit DB connection
+	 * @tparam B Type of the value yielded by 'f'
+	 * @return Result of 'f'
+	 */
+	def streamOrdered[B](direction: OrderDirection, distinct: Boolean = false)(f: Iterator[A] => B)
+	                    (implicit connection: Connection) =
+		_stream(f, Some(direction), distinct)
+	
+	private def _stream[B](f: Iterator[A] => B, order: Option[OrderDirection] = None, distinct: Boolean = false)
+	                      (implicit connection: Connection) =
+		access.streamColumn(column, order, distinct = distinct) { valuesIter =>
 			fromValue match {
 				case Left(flatMap) => f(valuesIter.flatMap(flatMap))
 				case Right(map) => f(valuesIter.map(map))

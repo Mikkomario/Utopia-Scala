@@ -1,10 +1,15 @@
 # Utopia Vault - List of Changes
 
 ## v2.0.1 (in development)
+### Breaking changes
+- `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
 ### New features
 - Added classes for lazily initializing values from the DB: 
   **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
 ### New methods
+- **AccessColumnValues**
+  - Added `.takeMin(Int)(...)`, `.takeMax(Int)(...)` and `.take(Extreme, Int)(...)`
+  - Added `.streamAscending(...)`, `.streamDescending(...)` and `.streamOrdered(Extreme, Boolean)(...)`
 - **IdOrInserted** (object)
   - Added a new implicit constructor from an existing ID (Int)
 - **Store**
@@ -12,6 +17,8 @@
     - Added new "generic" constructor functions that support additional custom construction parameters
   - Trait
     - Added `.keyMapUnique(...)` and `.keyMappedUnique(...)`
+### Other
+- Optimized **IntSet**-building in **AccessColumnValues**
 
 ## v2.0 - 01.11.2025
 This is a very major update, focusing on the following areas:

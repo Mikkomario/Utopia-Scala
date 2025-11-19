@@ -20,6 +20,8 @@
   - Added `.lazily(...)`
 - **Extreme**
   - Added `.compare(...)`
+- **IntSet** (object)
+  - Added `.fromOrdered(IterableOnce)`
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
