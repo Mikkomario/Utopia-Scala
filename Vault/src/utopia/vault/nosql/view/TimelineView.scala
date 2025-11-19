@@ -8,6 +8,37 @@ import utopia.vault.sql.Condition
 
 import java.time.Instant
 
+object TimelineView
+{
+	// EXTENSIONS   ---------------------
+	
+	implicit class DeprecatingTimelineView[+Repr](val v: TimelineView[Repr] with TimeDeprecatableView[Repr])
+		extends AnyVal
+	{
+		/**
+		 * @param instant A timestamp
+		 * @return Access to items that were in a non-deprecated state at the specified instant
+		 */
+		def activeDuring(instant: Instant): Repr = {
+			val deprCol = v.model.deprecationColumn
+			val deprecationCondition = {
+				if (deprCol.allowsNull)
+					deprCol.isNull || deprCol < instant
+				else
+					deprCol < instant
+			}
+			v.filter(v.timestampColumn <= instant && deprecationCondition)
+		}
+		
+		/**
+		 * @param threshold A time threshold (inclusive)
+		 * @return Access to items that were either created or deprecated since the specified time threshold
+		 */
+		def modifiedSince(threshold: Instant): Repr =
+			v.filter(v.timestampColumn >= threshold || v.model.deprecatedSinceCondition(threshold))
+	}
+}
+
 /**
  * Common trait for views which may be filtered based on a timestamp column
  *

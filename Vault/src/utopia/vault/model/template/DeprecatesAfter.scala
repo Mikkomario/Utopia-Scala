@@ -45,10 +45,15 @@ trait DeprecatesAfter extends Deprecates
 	// OTHER    -----------------------------------
 	
 	/**
-	  * @param threshold A time threshold
+	  * @param threshold A time threshold (exclusive)
 	  * @return A condition that returns items that were deprecated after the specified time threshold
 	  */
 	def deprecatedAfterCondition(threshold: Instant) = deprecationColumn > threshold
+	/**
+	 * @param threshold A time threshold (inclusive)
+	 * @return A condition that returns items that were deprecated after the specified time threshold
+	 */
+	def deprecatedSinceCondition(threshold: Instant) = deprecationColumn >= threshold
 	/**
 	  * @param threshold A time threshold
 	  * @return A condition that returns items that were deprecated before the specified time threshold

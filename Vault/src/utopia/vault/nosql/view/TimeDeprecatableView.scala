@@ -31,12 +31,17 @@ trait TimeDeprecatableView[+Sub] extends DeprecatableView[Sub]
 	// OTHER    ----------------------
 	
 	/**
-	  * @param threshold A time threshold
+	  * @param threshold A time threshold (exclusive)
 	  * @return Access to items that were deprecated after the specified time threshold
 	  */
 	def deprecatedAfter(threshold: Instant) = filter(model.deprecatedAfterCondition(threshold))
 	/**
-	  * @param threshold A time threshold
+	 * @param threshold A time threshold (inclusive)
+	 * @return Access to items that were deprecated since the specified time threshold
+	 */
+	def deprecatedSince(threshold: Instant) = filter(model.deprecatedSinceCondition(threshold))
+	/**
+	  * @param threshold A time threshold (exclusive)
 	  * @return Access to items that were deprecated before the specified time threshold
 	  */
 	def deprecatedBefore(threshold: Instant) = filter(model.deprecatedBeforeCondition(threshold))

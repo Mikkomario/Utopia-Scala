@@ -10,6 +10,8 @@
 - **AccessColumnValues**
   - Added `.takeMin(Int)(...)`, `.takeMax(Int)(...)` and `.take(Extreme, Int)(...)`
   - Added `.streamAscending(...)`, `.streamDescending(...)` and `.streamOrdered(Extreme, Boolean)(...)`
+- **DeprecatesAfter**
+  - Added `.deprecatedSinceCondition(Instant)`
 - **IdOrInserted** (object)
   - Added a new implicit constructor from an existing ID (Int)
 - **Store**
@@ -17,6 +19,10 @@
     - Added new "generic" constructor functions that support additional custom construction parameters
   - Trait
     - Added `.keyMapUnique(...)` and `.keyMappedUnique(...)`
+- **TimeDeprecatableView**
+  - Added `.deprecatedSince(Instant)`
+- **TimelineView**
+  - Added `.modifiedSince(Instant)` and `.activeDuring(Instant)` for views that also extend **TimeDeprecatableView**
 ### Other
 - Optimized **IntSet**-building in **AccessColumnValues**
 
