@@ -2684,6 +2684,7 @@ object CollectionExtensions
 		 * @param ord Implicit ordering
 		 * @return The minimum and the maximum value found from this iterator
 		 */
+		@throws[NoSuchElementException]("If this collection is empty")
 		def minMax(implicit ord: Ordering[A]) = {
 			val first = i.next()
 			var currentMin = first

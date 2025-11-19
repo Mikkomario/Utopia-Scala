@@ -1,5 +1,10 @@
 # Utopia Terra - list of changes
 
+## v1.3.2 (in development)
+### New methods
+- **LatLong** (object)
+  - Added `.areaAround(Iterable)` and `.areaAroundOption(Iterable)`
+
 ## v1.3.1 - 01.11.2025
 This version supports **Flow v2.7**.
 

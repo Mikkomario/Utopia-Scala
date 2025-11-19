@@ -114,7 +114,7 @@ object Angle extends RotationFactory[Angle]
 	
 	/**
 	 * @param angles A number of angles
-	 * @return An average between the angles
+	 * @return An average between the angles. Returns zero if the specified collection is empty.
 	 */
 	def average(angles: Iterable[Angle]) = {
 		if (angles.isEmpty)

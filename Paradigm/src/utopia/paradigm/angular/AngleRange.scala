@@ -65,6 +65,22 @@ object AngleRange
 	  */
 	def around(center: Angle, spread: Rotation) =
 		apply(center + spread.counterclockwise, center + spread.clockwise, Clockwise)
+	/**
+	 * @param angles A collection of angles. Must not be empty.
+	 * @return Shortest possible clockwise angle range that covers all the specified values
+	 */
+	@throws[NoSuchElementException]("If the specified collection is empty")
+	def around(angles: Iterable[Angle]) = {
+		val avg = Angle.average(angles)
+		val spread = angles.iterator.map { a => (a - avg).clockwise }.minMax
+		apply(avg + spread.first.clockwise, spread.mapAndMerge { _.abs } { _ + _ }.clockwise)
+	}
+	/**
+	 * @param angles Angles to span
+	 * @return Shortest possible clockwise angle range that covers all the specified values.
+	 *         None if the specified collection was empty.
+	 */
+	def aroundOption(angles: Iterable[Angle]) = if (angles.isEmpty) None else Some(around(angles))
 	
 	/**
 	  * Creates an angle range which only covers a single angle

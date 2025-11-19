@@ -2,11 +2,12 @@ package utopia.terra.model.angular
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
-import utopia.paradigm.angular.{Angle, Rotation}
+import utopia.paradigm.angular.{Angle, AngleRange, Rotation}
 import utopia.paradigm.enumeration.Axis
-import utopia.paradigm.shape.template.{DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}
+import utopia.paradigm.shape.template._
 import utopia.terra.model.enumeration.CompassDirection._
 
 object LatLong extends DimensionalFactory[Rotation, LatLong] with FromDimensionsFactory[Rotation, LatLong]
@@ -73,6 +74,31 @@ object LatLong extends DimensionalFactory[Rotation, LatLong] with FromDimensions
 	def degrees(latLongDegrees: Pair[Double]): LatLong = degrees(latLongDegrees.first, latLongDegrees.second)
 	@deprecated("Replaced with .degrees(Double, Double)", "v1.1")
 	def fromDegrees(latitude: Double, longitude: Double): LatLong = degrees(latitude, longitude)
+	
+	/**
+	 * @param locations A set of locations. Must not be empty.
+	 * @return Returns the area covering all those locations.
+	 *         The area is returned as 2 spans:
+	 *              1. Span between the lowest & highest latitude coordinates
+	 *              1. Span between the most extreme longitude angles
+	 */
+	@throws[NoSuchElementException]("If the specified collection is empty")
+	def areaAround(locations: Iterable[LatLong]) = {
+		val latitudeRange = locations.iterator.map { _.latitude }.minMax
+		val longitudeRange = AngleRange.around { locations.map { _.longitude } }
+		Span(latitudeRange) -> longitudeRange
+	}
+	/**
+	 * @param locations A set of locations.
+	 * @return Returns the area covering all those locations.
+	 *         The area is returned as 2 spans:
+	 *              1. Span between the lowest & highest latitude coordinates
+	 *              1. Span between the most extreme longitude angles
+	 *
+	 *         Yields None if 'locations' is empty.
+	 */
+	def areaAroundOption(locations: Iterable[LatLong]) =
+		if (locations.isEmpty) None else Some(areaAround(locations))
 	
 	private def _apply(values: Seq[Rotation]) = {
 		if (values.isEmpty)
