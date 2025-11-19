@@ -50,6 +50,12 @@ trait Uncertain[A]
 	  * @return Whether this item is known to not match the specified value
 	  */
 	def isCertainlyNot(v: A) = !mayBe(v)
+	/**
+	 * @param v A value
+	 * @tparam B Type of the specified value
+	 * @return Whether this item might have a different value than the one specified
+	 */
+	def mightNotBe[B >: A](v: B) = !exact.contains(v)
 	
 	/**
 	 * @param default Value returned in uncertain cases (call-by-name)

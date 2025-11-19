@@ -11,6 +11,8 @@
 ### Deprecation
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
+### Bugfixes
+- JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
 ### New features
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
@@ -34,6 +36,8 @@
   - Added `.writeUsing(...)`
 - **Regex** (object)
   - Added multiple new static values
+- **Uncertain**
+  - Added `.mightNotBe(...)`
 - **Value**
   - Added `.leftOrRight(...)`, `.getLeftOrRight(...)`, `.tryLeftOrRight(...)`, 
     `.intOrString`, `.getIntOrString` and `.tryIntOrString`
