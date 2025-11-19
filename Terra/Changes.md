@@ -3,7 +3,13 @@
 ## v1.3.2 (in development)
 ### New methods
 - **LatLong** (object)
+  - Added `.longitudeToDegrees(Angle)` and `.degreesToLongitude(Double)`
   - Added `.areaAround(Iterable)` and `.areaAroundOption(Iterable)`
+- **NorthSouthRotation**
+  - Object
+    - Added `.fromLatitudeDegrees(Double)`
+  - Class
+    - Added `.toLatitudeDegrees`
 
 ## v1.3.1 - 01.11.2025
 This version supports **Flow v2.7**.

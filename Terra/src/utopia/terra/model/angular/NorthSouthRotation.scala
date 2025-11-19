@@ -24,6 +24,16 @@ object NorthSouthRotation extends BidirectionalRotationFactory[NorthSouth, North
 	
 	override protected def _apply(absolute: Rotation, direction: NorthSouth): NorthSouthRotation =
 		new NorthSouthRotation(absolute, direction)
+		
+	
+	// OTHER    ----------------------
+	
+	/**
+	 * @param latitudeDegrees A latitude coordinate as a value in degrees
+	 * @return A north rotation representing the specified latitude coordinate
+	 */
+	def fromLatitudeDegrees(latitudeDegrees: Double) =
+		apply(Rotation.degrees(latitudeDegrees), North)
 }
 
 /**
@@ -35,6 +45,31 @@ object NorthSouthRotation extends BidirectionalRotationFactory[NorthSouth, North
 class NorthSouthRotation private(override val absolute: Rotation, override val direction: NorthSouth)
 	extends CompassRotationLike[NorthSouth, NorthSouthRotation] with CompassRotation
 {
+	// ATTRIBUTES   ---------------------
+	
+	/**
+	 * This rotation as a degree-based latitude coordinate
+	 * (assuming that this rotation originates from the equator / 0 latitude)
+	 */
+	lazy val toLatitudeDegrees = {
+		// Corrects the amount to [-90, 90] degree range
+		val base = north.degrees
+		val div = base.abs / 90.0
+		val segment = div.toInt
+		val remainder = base % 90.0
+		/*val corrected = */segment % 4 match {
+			// Case: 0-90 degrees => Returns value as is
+			case 0 => remainder
+			// Case: 90-180 degrees => Goes from the "pole" towards the equator
+			case 1 => 90.0 - remainder
+			// Case: 180-270 degrees => Opposite latitude
+			case 2 => -remainder
+			// Case: 270-360 degrees => Goes from the opposite "pole" towards the equator
+			case 3 => -(90.0 - remainder)
+		}
+	}
+	
+	
 	// COMPUTED -------------------------
 	
 	/**

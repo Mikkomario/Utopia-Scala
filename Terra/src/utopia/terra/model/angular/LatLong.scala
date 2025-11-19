@@ -66,7 +66,7 @@ object LatLong extends DimensionalFactory[Rotation, LatLong] with FromDimensions
 	 * @return A new map point
 	 */
 	def degrees(latitude: Double, longitude: Double): LatLong =
-		apply(North.degrees(latitude), Angle.degrees(East.sign * longitude))
+		apply(NorthSouthRotation.fromLatitudeDegrees(latitude), degreesToLongitude(longitude))
 	/**
 	  * @param latLongDegrees A pair containing the latitude (first, north) and the longitude (second, east) as degrees
 	  * @return A coordinate that matches the specified degrees input
@@ -99,6 +99,23 @@ object LatLong extends DimensionalFactory[Rotation, LatLong] with FromDimensions
 	 */
 	def areaAroundOption(locations: Iterable[LatLong]) =
 		if (locations.isEmpty) None else Some(areaAround(locations))
+	
+	/**
+	 * @param longitude A longitude angle
+	 * @return A longitude degrees value
+	 */
+	def longitudeToDegrees(longitude: Angle) = {
+		val base = longitude.degrees
+		// Corrects to [-180, 180] range
+		val corrected = if (base <= 180) base else base - 360
+		// Returns in correct direction (EASTWARD)
+		East.sign * corrected
+	}
+	/**
+	 * @param longitudeDegrees A longitude coordinate as degrees
+	 * @return A longitude angle matching that value
+	 */
+	def degreesToLongitude(longitudeDegrees: Double) = Angle.degrees(East.sign * longitudeDegrees)
 	
 	private def _apply(values: Seq[Rotation]) = {
 		if (values.isEmpty)
@@ -139,37 +156,10 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	override lazy val components = super.components
 	
 	/**
-	 * The latitude portion of this coordinate as degrees of rotation from the equator towards the NORTH [-90, 90].
-	 * Negative values are used for south-side points.
-	 */
-	lazy val latitudeDegrees: Double = {
-		// Corrects the amount to [-90, 90] degree range
-		val base = latitude.north.degrees
-		val div = base.abs / 90.0
-		val segment = div.toInt
-		val remainder = base % 90.0
-		/*val corrected = */segment % 4 match {
-			// Case: 0-90 degrees => Returns value as is
-			case 0 => remainder
-			// Case: 90-180 degrees => Goes from the "pole" towards the equator
-			case 1 => 90.0 - remainder
-			// Case: 180-270 degrees => Opposite latitude
-			case 2 => -remainder
-			// Case: 270-360 degrees => Goes from the opposite "pole" towards the equator
-			case 3 => -(90.0 - remainder)
-		}
-	}
-	/**
 	 * The longitude portion of this coordinate as rotation from Greenwich, England towards EAST [-180,180].
 	 * Negative values represent points towards the west.
 	 */
-	lazy val longitudeDegrees: Double = {
-		val base = longitude.degrees
-		// Corrects to [-180, 180] range
-		val corrected = if (base <= 180) base else base - 360
-		// Returns in correct direction (EASTWARD)
-		East.sign * corrected
-	}
+	lazy val longitudeDegrees: Double = LatLong.longitudeToDegrees(longitude)
 	
 	/**
 	  * The side of the equator on which this location resides (North or South).
@@ -193,6 +183,11 @@ case class LatLong(latitude: NorthSouthRotation = NorthSouthRotation.zero, longi
 	
 	// COMPUTED -----------------------
 	
+	/**
+	 * The latitude portion of this coordinate as degrees of rotation from the equator towards the NORTH [-90, 90].
+	 * Negative values are used for south-side points.
+	 */
+	def latitudeDegrees: Double = latitude.toLatitudeDegrees
 	/**
 	 * @return The latitude and longitude coordinates of this point, as degrees
 	 *         (between lat: -90 and 90, and lon: -180 and 180)
