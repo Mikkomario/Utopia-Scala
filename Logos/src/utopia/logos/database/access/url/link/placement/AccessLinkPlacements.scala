@@ -63,7 +63,7 @@ case class AccessLinkPlacementRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessLinkPlacementRows(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessLinkPlacement(target)
@@ -81,7 +81,7 @@ case class AccessCombinedLinkPlacements[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedLinkPlacements(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessLinkPlacement(target)

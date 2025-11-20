@@ -64,7 +64,7 @@ trait ManyRequestPathsAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = RequestPathDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyRequestPathsAccess = ManyRequestPathsAccess(condition)
 }

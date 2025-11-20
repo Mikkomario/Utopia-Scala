@@ -53,7 +53,7 @@ trait ColumnValueAccess[V, +A, +C, -In]
 	  * @param value An input value
 	  * @return Value to assign to the column
 	  */
-	protected def valueOf(value: In): Value
+	def valueOf(value: In): Value
 	
 	/**
 	 * Streams accessible values of this column

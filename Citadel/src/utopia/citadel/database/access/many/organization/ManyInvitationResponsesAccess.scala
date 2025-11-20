@@ -93,7 +93,7 @@ trait ManyInvitationResponsesAccess
 	
 	override def factory = InvitationResponseFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyInvitationResponsesAccess = 
 		ManyInvitationResponsesAccess(condition)

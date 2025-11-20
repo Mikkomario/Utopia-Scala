@@ -49,7 +49,7 @@ trait UniqueVaryingIssueAccess
 	
 	override def factory = VaryingIssueFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueVaryingIssueAccess = UniqueVaryingIssueAccess(condition)
 }

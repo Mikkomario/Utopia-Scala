@@ -106,7 +106,7 @@ trait UniqueStackTraceElementRecordAccess
 	
 	override def factory = StackTraceElementRecordFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueStackTraceElementRecordAccess = 
 		UniqueStackTraceElementRecordAccess(condition)

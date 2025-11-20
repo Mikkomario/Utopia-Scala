@@ -73,7 +73,7 @@ trait ManyScopesAccess
 	
 	override protected def manyDescriptionsAccess = DbScopeDescriptions
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyScopesAccess = ManyScopesAccess(condition)
 	

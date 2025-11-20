@@ -77,7 +77,7 @@ case class AccessIssueOccurrenceRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessIssueOccurrenceRows(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssueOccurrence(target)
@@ -96,7 +96,7 @@ case class AccessCombinedIssueOccurrences[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedIssueOccurrences(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssueOccurrence(target)

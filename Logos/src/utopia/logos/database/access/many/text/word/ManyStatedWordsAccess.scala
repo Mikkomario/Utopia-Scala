@@ -70,7 +70,7 @@ trait ManyStatedWordsAccess
 	
 	override def factory = StatedWordDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyStatedWordsAccess = ManyStatedWordsAccess(condition)
 }

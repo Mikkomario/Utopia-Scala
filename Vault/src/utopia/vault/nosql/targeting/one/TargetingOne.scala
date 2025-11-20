@@ -19,7 +19,7 @@ object TargetingOne
 	private class Wrapper[O, +R](override val wrapped: TargetingOne[O], f: O => R)
 		extends TargetingOne[R] with TargetingOneWrapper[TargetingOne[O], O, R, TargetingOne[R]]
 	{
-		override protected def self: TargetingOne[R] = this
+		override def self: TargetingOne[R] = this
 		
 		override protected def wrapResult(result: O): R = f(result)
 		override protected def wrap(newTarget: TargetingOne[O]): TargetingOne[R] = new Wrapper(newTarget, f)
@@ -29,7 +29,7 @@ object TargetingOne
 		extends TargetingOne[Option[A]]
 			with TargetingWrapper[T, Seq[A], Seq[Value], Seq[Seq[Value]], Option[A], Value, Option[Seq[Value]], TargetingOne[Option[A]]]
 	{
-		override protected def self: TargetingOne[Option[A]] = this
+		override def self: TargetingOne[Option[A]] = this
 		
 		override protected def wrapResult(result: Seq[A]): Option[A] = result.headOption
 		override protected def wrapValue(value: Seq[Value]): Value = value.headOption.getOrElse(Value.empty)

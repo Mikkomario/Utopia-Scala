@@ -29,7 +29,7 @@ trait ManyMembershipsAccess
 	
 	override def factory = MembershipFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyMembershipsAccess = ManyMembershipsAccess(condition)
 }

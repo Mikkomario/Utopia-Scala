@@ -52,7 +52,7 @@ trait ManyScopesAccess extends ManyScopesAccessLike[Scope, ManyScopesAccess] wit
 	
 	override def factory = ScopeFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyScopesAccess = ManyScopesAccess(condition)
 }

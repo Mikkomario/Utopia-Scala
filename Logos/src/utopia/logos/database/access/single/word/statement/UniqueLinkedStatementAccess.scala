@@ -41,7 +41,7 @@ trait UniqueLinkedStatementAccess
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self: UniqueLinkedStatementAccess = this
+	override def self: UniqueLinkedStatementAccess = this
 	
 	
 	// OTHER	--------------------

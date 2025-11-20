@@ -45,7 +45,7 @@ trait ManyAuthPreparationScopeLinksAccess
 	
 	override def factory = AuthPreparationScopeLinkFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyAuthPreparationScopeLinksAccess = 
 		ManyAuthPreparationScopeLinksAccess(condition)

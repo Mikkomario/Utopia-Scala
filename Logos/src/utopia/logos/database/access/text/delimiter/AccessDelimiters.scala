@@ -52,7 +52,7 @@ case class AccessDelimiterRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessDelimiterRows(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessDelimiter(target)
@@ -70,7 +70,7 @@ case class AccessCombinedDelimiters[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedDelimiters(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessDelimiter(target)

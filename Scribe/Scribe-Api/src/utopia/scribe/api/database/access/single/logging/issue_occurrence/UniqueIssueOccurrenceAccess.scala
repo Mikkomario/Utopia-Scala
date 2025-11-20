@@ -87,7 +87,7 @@ trait UniqueIssueOccurrenceAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = IssueOccurrenceFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueIssueOccurrenceAccess = UniqueIssueOccurrenceAccess(condition)
 	

@@ -43,7 +43,7 @@ trait ManyEmailValidationAttemptsAccess
 	
 	override def factory = EmailValidationAttemptFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyEmailValidationAttemptsAccess = 
 		ManyEmailValidationAttemptsAccess(condition)

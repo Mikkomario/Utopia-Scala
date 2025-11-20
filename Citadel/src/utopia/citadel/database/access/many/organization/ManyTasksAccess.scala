@@ -58,7 +58,7 @@ trait ManyTasksAccess
 	
 	override protected def manyDescriptionsAccess = DbTaskDescriptions
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyTasksAccess = ManyTasksAccess(condition)
 	

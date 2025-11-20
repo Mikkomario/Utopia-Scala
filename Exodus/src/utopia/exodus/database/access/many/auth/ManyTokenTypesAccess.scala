@@ -81,7 +81,7 @@ trait ManyTokenTypesAccess
 	
 	override def factory = TokenTypeFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyTokenTypesAccess = ManyTokenTypesAccess(condition)
 	

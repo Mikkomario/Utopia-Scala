@@ -55,7 +55,7 @@ trait UniqueLinkPlacementAccess
 	  * Model which contains the primary database properties interacted with in this access point
 	  */
 	override protected def model = LinkPlacementDbModel
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueLinkPlacementAccess = UniqueLinkPlacementAccess(condition)
 }

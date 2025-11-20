@@ -1,7 +1,7 @@
 # Utopia Scribe Api - list of changes
 
 ## v1.1.1 (in development)
-A new build supporting **Flow v2.8**
+Supports **Flow v2.8** and **Vault v2.1**
 
 ## v1.1 - 01.11.2025
 Following **Vault v2.0** update, this version introduces new targeting-based database interaction classes. 

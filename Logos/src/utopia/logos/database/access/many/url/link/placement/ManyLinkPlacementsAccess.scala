@@ -60,7 +60,7 @@ trait ManyLinkPlacementsAccess
 	  */
 	override protected def model = LinkPlacementDbModel
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyLinkPlacementsAccess = ManyLinkPlacementsAccess(condition)
 	

@@ -52,7 +52,7 @@ trait UniqueIssueVariantInstancesAccess
 	
 	override def factory = IssueVariantInstancesFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueIssueVariantInstancesAccess = 
 		UniqueIssueVariantInstancesAccess(condition)

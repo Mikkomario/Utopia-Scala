@@ -52,7 +52,7 @@ object LatestOrEarliestModelAccess
 	                                     override val accessCondition: Option[Condition] = None)
 		extends LatestOrEarliestModelAccess[A]
 	{
-		override protected def self = this
+		override def self = this
 		
 		override def apply(condition: Condition): LatestOrEarliestModelAccess[A] =
 			copy(accessCondition = Some(condition))

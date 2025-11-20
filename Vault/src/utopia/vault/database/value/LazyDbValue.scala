@@ -37,7 +37,7 @@ object LazyDbValue
 /**
  * Common trait for values that may be initialized lazily through DB interaction
  * @author Mikko Hilpinen
- * @since 17.11.2025, v2.0.1
+ * @since 17.11.2025, v2.1
  */
 trait LazyDbValue[+A] extends Lazy[A]
 {

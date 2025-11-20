@@ -127,7 +127,7 @@ case class AccessIssueVariantRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessIssueVariantRows(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssueVariant(target)
@@ -145,7 +145,7 @@ case class AccessCombinedIssueVariants[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedIssueVariants(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssueVariant(target)

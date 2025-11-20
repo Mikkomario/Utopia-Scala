@@ -21,7 +21,7 @@ trait FilterableViewWrapper[+A <: FilterableView[A]] extends FilterableView[A]
 	
 	// IMPLEMENTED  ------------------
 	
-	override protected def self: A = wrapped
+	override def self: A = wrapped
 	override def target: SqlTarget = wrapped.target
 	override def accessCondition: Option[Condition] = wrapped.accessCondition
 	override def apply(condition: Condition): A = wrapped(condition)

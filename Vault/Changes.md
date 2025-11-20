@@ -1,11 +1,15 @@
 # Utopia Vault - List of Changes
 
-## v2.0.1 (in development)
+## v2.1 (in development)
 ### Breaking changes
+- **FilterableView**'s required `self` -property is now public instead of protected
+  - This will likely cause build errors. However, these should be easily fixed with a simple find-and-replace.
 - `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
 ### New features
 - Added classes for lazily initializing values from the DB: 
   **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
+- Added a new **DbMap** class for pulling and caching values from a database table
+- Added **Filterable** trait
 ### New methods
 - **AccessColumnValues**
   - Added `.takeMin(Int)(...)`, `.takeMax(Int)(...)` and `.take(Extreme, Int)(...)`

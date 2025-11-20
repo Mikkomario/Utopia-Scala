@@ -72,7 +72,7 @@ trait ManyUserRolesAccess
 	
 	override protected def manyDescriptionsAccess = DbUserRoleDescriptions
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyUserRolesAccess = ManyUserRolesAccess(condition)
 	

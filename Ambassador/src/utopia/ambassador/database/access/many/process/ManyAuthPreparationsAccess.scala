@@ -80,7 +80,7 @@ trait ManyAuthPreparationsAccess
 	
 	override def factory = AuthPreparationFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	
 	// OTHER	--------------------

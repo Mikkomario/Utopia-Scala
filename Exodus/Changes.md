@@ -1,5 +1,8 @@
 # Utopia Exodus - List of Changes
 
+## v4.1.11 (in development)
+Supports **Vault v2.1**
+
 ## v4.1.10 - 01.11.2025
 Supports latest changes in **Flow** and **Vault**
 

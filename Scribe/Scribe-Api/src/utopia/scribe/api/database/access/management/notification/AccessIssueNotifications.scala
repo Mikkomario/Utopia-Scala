@@ -51,7 +51,7 @@ case class AccessIssueNotificationRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessIssueNotificationRows(newTarget)
 	
@@ -71,7 +71,7 @@ case class AccessCombinedIssueNotifications[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedIssueNotifications(newTarget)
 	

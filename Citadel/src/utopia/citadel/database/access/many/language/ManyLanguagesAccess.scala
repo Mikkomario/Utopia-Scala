@@ -73,7 +73,7 @@ trait ManyLanguagesAccess
 	
 	override protected def manyDescriptionsAccess = DbLanguageDescriptions
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyLanguagesAccess = ManyLanguagesAccess(condition)
 	

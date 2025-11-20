@@ -51,7 +51,7 @@ case class AccessStackTraceElementRecordRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = 
 		AccessStackTraceElementRecordRows(newTarget)
@@ -73,7 +73,7 @@ case class AccessCombinedStackTraceElementRecords[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = 
 		AccessCombinedStackTraceElementRecords(newTarget)

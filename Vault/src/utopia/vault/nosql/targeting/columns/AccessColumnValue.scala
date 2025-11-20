@@ -117,7 +117,13 @@ object AccessColumnValue
 
 /**
   * An interface for accessing individual column values
-  * @author Mikko Hilpinen
+ *  @tparam A Type of parsed column values
+ *  @tparam C Type of concrete (iterable) column values. May be same as 'A'.
+ *
+ *            E.g. If 'A' is Option[Int], 'C' would be Int. If 'A' is String, 'C' would also be String.
+ *
+ *  @tparam In Type of accepted input when assigning values
+ * @author Mikko Hilpinen
   * @since 20.05.2025, v1.21
   */
 class AccessColumnValue[+A, +C, -In](override protected val access: AccessColumn, override val column: Column)
@@ -125,7 +131,7 @@ class AccessColumnValue[+A, +C, -In](override protected val access: AccessColumn
 	extends ColumnValueAccess[Value, A, C, In]
 {
 	override protected def parse(value: Value): A = f(value)
-	override protected def valueOf(value: In): Value = toValue(value)
+	override def valueOf(value: In): Value = toValue(value)
 	
 	override def stream[B](f: Iterator[C] => B)(implicit connection: Connection): B =
 		f(iterate(this.f(access(column))).iterator)

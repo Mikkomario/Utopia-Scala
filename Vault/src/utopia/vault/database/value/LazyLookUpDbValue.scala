@@ -1,11 +1,20 @@
 package utopia.vault.database.value
 
+import utopia.flow.view.mutable.Resettable
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import scala.annotation.unchecked.uncheckedVariance
 
 object LazyLookUpDbValue
 {
+	// COMPUTED ---------------------
+	
+	/**
+	 * @return Access to look-up constructors, which regularly refresh the cached value
+	 */
+	def refreshing = RefreshingLookUpDbValue
+	
+	
 	// OTHER    ---------------------
 	
 	/**
@@ -29,10 +38,11 @@ object LazyLookUpDbValue
 
 /**
  * An abstract implementation of the [[LazyDbValue]] trait, based on a database look-up
+ * @tparam A Type of the cached value
  * @author Mikko Hilpinen
- * @since 17.11.2025, v2.0.1
+ * @since 17.11.2025, v2.1
  */
-abstract class LazyLookUpDbValue[+A](implicit cPool: ConnectionPool) extends LazyDbValue[A]
+abstract class LazyLookUpDbValue[+A](implicit cPool: ConnectionPool) extends LazyDbValue[A] with Resettable
 {
 	// ATTRIBUTES   ----------------
 	
@@ -63,5 +73,13 @@ abstract class LazyLookUpDbValue[+A](implicit cPool: ConnectionPool) extends Laz
 		val value = lookUp
 		_current = Some(value)
 		value
+	}
+	
+	override def isSet: Boolean = _current.isDefined
+	
+	override def reset(): Boolean = {
+		val wasSet = isSet
+		_current = None
+		wasSet
 	}
 }

@@ -29,7 +29,7 @@ object LazyDbValueWrapper
 /**
  * Common trait for implementations of [[LazyDbValue]], which are based on lazily wrapping another such instance.
  * @author Mikko Hilpinen
- * @since 17.11.2025, v2.0.1
+ * @since 17.11.2025, v2.1
  */
 trait LazyDbValueWrapper[+A] extends LazyDbValue[A]
 {

@@ -60,7 +60,7 @@ trait UniqueWordPlacementAccess
 	  * Model which contains the primary database properties interacted with in this access point
 	  */
 	override protected def model = WordPlacementDbModel
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueWordPlacementAccess = UniqueWordPlacementAccess(condition)
 }

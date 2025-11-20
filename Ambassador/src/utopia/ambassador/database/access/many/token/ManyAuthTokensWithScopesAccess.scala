@@ -57,7 +57,7 @@ trait ManyAuthTokensWithScopesAccess
 	
 	override def factory = AuthTokenWithScopesFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyAuthTokensWithScopesAccess = 
 		ManyAuthTokensWithScopesAccess(condition)

@@ -37,7 +37,7 @@ trait UniqueRequestPathAccess
 	
 	override def factory = RequestPathDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueRequestPathAccess = UniqueRequestPathAccess(condition)
 }

@@ -55,7 +55,7 @@ case class AccessDetailedRequestPath[A](wrapped: TargetingOne[Option[A]])
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingOne[Option[A]]) = AccessDetailedRequestPath(newTarget)
 	
@@ -70,7 +70,7 @@ case class AccessDetailedRequestPath[A](wrapped: TargetingOne[Option[A]])
 	{
 		// IMPLEMENTED	--------------------
 		
-		override protected def self: AccessDetailedRequestPath[A] = AccessDetailedRequestPath.this
+		override def self: AccessDetailedRequestPath[A] = AccessDetailedRequestPath.this
 		override def accessCondition = AccessDetailedRequestPath.this.accessCondition
 		override def table = AccessDetailedRequestPath.this.table
 		override def target = AccessDetailedRequestPath.this.target

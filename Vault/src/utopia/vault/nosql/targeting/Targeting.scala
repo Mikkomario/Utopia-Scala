@@ -13,7 +13,7 @@ object Targeting
 	private class Wrapper[O, V, VV, +R](override val wrapped: Targeting[O, V, VV], f: O => R)
 		extends Targeting[R, V, VV] with TargetingWrapper[Targeting[O, V, VV], O, V, VV, R, V, VV, Targeting[R, V, VV]]
 	{
-		override protected def self: Targeting[R, V, VV] = this
+		override def self: Targeting[R, V, VV] = this
 		
 		override protected def wrapResult(result: O): R = f(result)
 		override protected def wrapValue(value: V) = value

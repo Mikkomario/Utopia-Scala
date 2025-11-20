@@ -39,7 +39,7 @@ trait ManyTaskScopesAccess
 	
 	override def factory = TaskScopeFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyTaskScopesAccess = ManyTaskScopesAccess(condition)
 }

@@ -60,7 +60,7 @@ object AccessManyRows
 		
 		// IMPLEMENTED  -----------------
 		
-		override protected def self = this
+		override def self = this
 		override protected def limitedToOne = if (limit.contains(1)) this else withLimit(1)
 		
 		override def pullOnly(implicit connection: Connection): Option[A] = withLimit(2).stream { iter =>

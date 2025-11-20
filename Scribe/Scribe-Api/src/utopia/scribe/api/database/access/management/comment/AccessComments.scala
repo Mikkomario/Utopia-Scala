@@ -47,7 +47,7 @@ case class AccessCommentRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessCommentRows(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessComment(target)
@@ -65,7 +65,7 @@ case class AccessCombinedComments[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedComments(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessComment(target)

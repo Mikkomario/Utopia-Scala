@@ -64,7 +64,7 @@ trait ManyUserRoleRightsAccess
 	
 	override def factory = UserRoleRightFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyUserRoleRightsAccess = ManyUserRoleRightsAccess(condition)
 	

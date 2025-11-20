@@ -74,7 +74,7 @@ trait ManyUserPasswordsAccess
 	
 	override def factory = UserPasswordFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyUserPasswordsAccess = ManyUserPasswordsAccess(condition)
 	

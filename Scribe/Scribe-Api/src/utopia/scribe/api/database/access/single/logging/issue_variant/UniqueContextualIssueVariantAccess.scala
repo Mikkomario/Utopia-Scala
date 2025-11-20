@@ -75,7 +75,7 @@ trait UniqueContextualIssueVariantAccess
 	
 	override def factory = ContextualIssueVariantFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueContextualIssueVariantAccess = 
 		UniqueContextualIssueVariantAccess(condition)

@@ -67,7 +67,7 @@ trait UniqueDomainAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = DomainDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueDomainAccess = UniqueDomainAccess(condition)
 	

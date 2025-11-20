@@ -39,7 +39,7 @@ trait ManyFullUserLanguagesAccess
 	
 	override def factory = FullUserLanguageFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	
 	// OTHER	--------------------

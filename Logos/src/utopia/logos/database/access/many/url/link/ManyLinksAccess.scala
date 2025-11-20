@@ -67,7 +67,7 @@ trait ManyLinksAccess extends ManyLinksAccessLike[StoredLink, ManyLinksAccess] w
 	// IMPLEMENTED	--------------------
 	
 	override def factory = LinkDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyLinksAccess = ManyLinksAccess(condition)
 }

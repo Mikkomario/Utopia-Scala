@@ -45,7 +45,7 @@ trait UniqueTextStatementLinkAccess
 	
 	override protected def config: StatementLinkDbConfig = factory.config
 	
-	override protected def self: UniqueTextStatementLinkAccess = this
+	override def self: UniqueTextStatementLinkAccess = this
 	
 	override def apply(condition: Condition): UniqueTextStatementLinkAccess = 
 		UniqueTextStatementLinkAccess(factory, condition)

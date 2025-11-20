@@ -105,7 +105,7 @@ trait ManyWordsInTextsAccess
 	
 	// IMPLEMENTED  --------------------
 	
-	override protected def self: ManyWordsInTextsAccess = this
+	override def self: ManyWordsInTextsAccess = this
 	
 	override def apply(condition: Condition): ManyWordsInTextsAccess = ManyWordsInTextsAccess(factory, condition)
 	

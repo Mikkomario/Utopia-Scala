@@ -78,7 +78,7 @@ trait ManyVaryingIssuesAccess extends ManyIssuesAccessLike[VaryingIssue, ManyVar
 	
 	override def factory = VaryingIssueFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyVaryingIssuesAccess = ManyVaryingIssuesAccess(condition)
 	

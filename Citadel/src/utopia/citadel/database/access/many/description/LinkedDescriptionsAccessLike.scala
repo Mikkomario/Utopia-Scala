@@ -63,7 +63,7 @@ trait LinkedDescriptionsAccessLike
 	
 	// IMPLEMENTED  --------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): LinkedDescriptionsAccessLike =
 		LinkedDescriptionsAccessLike._LinkedDescriptionsAccess(factory, linkModel, Some(condition))

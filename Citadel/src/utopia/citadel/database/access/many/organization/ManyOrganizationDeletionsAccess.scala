@@ -50,7 +50,7 @@ trait ManyOrganizationDeletionsAccess
 	
 	override def factory = OrganizationDeletionFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyOrganizationDeletionsAccess = 
 		ManyOrganizationDeletionsAccess(condition)

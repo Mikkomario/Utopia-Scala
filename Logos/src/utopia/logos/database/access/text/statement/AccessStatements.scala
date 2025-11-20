@@ -82,7 +82,7 @@ case class AccessStatementRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessStatementRows(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessStatement(target)
@@ -100,7 +100,7 @@ case class AccessCombinedStatements[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedStatements(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessStatement(target)

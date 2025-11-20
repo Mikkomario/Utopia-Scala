@@ -72,7 +72,7 @@ case class AccessRequestPathRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessRequestPathRows(newTarget)
 	
@@ -91,7 +91,7 @@ case class AccessCombinedRequestPaths[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedRequestPaths(newTarget)
 	

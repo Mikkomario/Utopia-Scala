@@ -69,7 +69,7 @@ trait ManyAuthTokenScopeLinksAccess
 	
 	override def factory = AuthTokenScopeLinkFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyAuthTokenScopeLinksAccess = 
 		ManyAuthTokenScopeLinksAccess(condition)

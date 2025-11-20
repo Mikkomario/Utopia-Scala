@@ -82,7 +82,7 @@ trait ManyIssueOccurrencesAccess
 	
 	override def factory = IssueOccurrenceFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	
 	// OTHER	--------------------

@@ -42,7 +42,7 @@ trait ManyAuthPreparationScopesAccess
 	
 	override def factory = AuthPreparationScopeFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyAuthPreparationScopesAccess = 
 		ManyAuthPreparationScopesAccess(condition)

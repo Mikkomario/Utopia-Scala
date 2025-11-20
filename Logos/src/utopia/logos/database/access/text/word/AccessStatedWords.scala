@@ -56,7 +56,7 @@ case class AccessStatedWords[A](wrapped: TargetingManyRows[A])
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessStatedWords(newTarget)
 	
@@ -73,7 +73,7 @@ case class AccessStatedWords[A](wrapped: TargetingManyRows[A])
 	{
 		// IMPLEMENTED	--------------------
 		
-		override protected def self: AccessStatedWords[A] = AccessStatedWords.this
+		override def self: AccessStatedWords[A] = AccessStatedWords.this
 		override def accessCondition = AccessStatedWords.this.accessCondition
 		override def table = AccessStatedWords.this.table
 		override def target = AccessStatedWords.this.target

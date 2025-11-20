@@ -67,7 +67,7 @@ case class AccessErrorRecordRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessErrorRecordRows(newTarget)
 	
@@ -86,7 +86,7 @@ case class AccessCombinedErrorRecords[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedErrorRecords(newTarget)
 	

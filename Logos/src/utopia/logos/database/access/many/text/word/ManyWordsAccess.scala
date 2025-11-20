@@ -33,7 +33,7 @@ trait ManyWordsAccess extends ManyWordsAccessLike[StoredWord, ManyWordsAccess] w
 	// IMPLEMENTED	--------------------
 	
 	override def factory = WordDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyWordsAccess = ManyWordsAccess(condition)
 }

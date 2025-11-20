@@ -22,7 +22,7 @@ object InitializedDbValue
 /**
  * Common trait for implementations of [[LazyDbValue]], which simply wrap a value
  * @author Mikko Hilpinen
- * @since 17.11.2025, v2.0.1
+ * @since 17.11.2025, v2.1
  */
 trait InitializedDbValue[+A] extends LazyDbValue[A]
 {

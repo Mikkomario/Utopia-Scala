@@ -50,7 +50,7 @@ object AccessMany
 	{
 		// IMPLEMENTED  ----------------------
 		
-		override protected def self: AccessMany[A] = this
+		override def self: AccessMany[A] = this
 		override protected def limitedToOne = this
 		
 		override protected def finalizeStatement(statement: SqlSegment) = prepare(statement)

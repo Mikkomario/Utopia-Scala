@@ -34,7 +34,7 @@ trait UniqueLinkAccess
 	// IMPLEMENTED	--------------------
 	
 	override def factory = LinkDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueLinkAccess = UniqueLinkAccess(condition)
 }

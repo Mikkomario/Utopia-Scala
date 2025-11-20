@@ -44,7 +44,7 @@ trait ManyMemberRoleLinksAccess
 	
 	override def factory = MemberRoleLinkFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyMemberRoleLinksAccess = ManyMemberRoleLinksAccess(condition)
 }

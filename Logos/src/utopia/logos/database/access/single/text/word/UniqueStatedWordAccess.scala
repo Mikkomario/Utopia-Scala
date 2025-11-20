@@ -72,7 +72,7 @@ trait UniqueStatedWordAccess
 	
 	override def factory = StatedWordDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueStatedWordAccess = UniqueStatedWordAccess(condition)
 }

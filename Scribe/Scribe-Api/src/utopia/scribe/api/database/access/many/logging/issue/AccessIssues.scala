@@ -44,7 +44,7 @@ case class AccessIssues[A](wrapped: TargetingMany[A])
 	
 	// IMPLEMENTED  --------------------------
 	
-	override protected def self: AccessIssues[A] = this
+	override def self: AccessIssues[A] = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]): AccessIssues[A] = AccessIssues(newTarget)
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessIssue(target)

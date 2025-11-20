@@ -44,7 +44,7 @@ trait ManyUserLanguageLinksWithFamiliaritiesAccess
 	
 	override def factory = UserLanguageLinkWithFamiliarityFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyUserLanguageLinksWithFamiliaritiesAccess = 
 		ManyUserLanguageLinksWithFamiliaritiesAccess(condition)

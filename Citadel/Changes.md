@@ -1,7 +1,7 @@
 # Utopia Disciple - List of changes
 
 ## v2.1.12 (in development)
-Supports **Flow v2.8**
+Supports **Flow v2.8** and **Vault v2.1**
 
 ## v2.1.11 - 01.11.2025
 Supports latest changes in **Flow** and **Vault**

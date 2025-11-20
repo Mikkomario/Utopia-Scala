@@ -41,7 +41,7 @@ case class AccessDomains[A](wrapped: TargetingManyRows[A])
 	
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessDomains(newTarget)
 	

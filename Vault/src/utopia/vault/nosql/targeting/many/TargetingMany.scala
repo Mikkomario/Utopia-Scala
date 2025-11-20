@@ -17,7 +17,7 @@ object TargetingMany
 		extends TargetingMany[R]
 			with TargetingManyWrapper[TargetingMany[O], TargetingOne[Option[O]], O, R, TargetingMany[R], TargetingOne[Option[R]]]
 	{
-		override protected def self: TargetingMany[R] = this
+		override def self: TargetingMany[R] = this
 		override protected def mapResult(result: O): R = f(result)
 		
 		override protected def wrap(newTarget: TargetingMany[O]): TargetingMany[R] = new Wrapper(newTarget)(f)

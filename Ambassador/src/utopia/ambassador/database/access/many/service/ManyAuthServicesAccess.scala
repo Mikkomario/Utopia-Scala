@@ -67,7 +67,7 @@ trait ManyAuthServicesAccess
 	
 	override def factory = AuthServiceFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyAuthServicesAccess = ManyAuthServicesAccess(condition)
 	

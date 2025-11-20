@@ -55,7 +55,7 @@ case class AccessResolutionRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessResolutionRows(newTarget)
 	
@@ -74,7 +74,7 @@ case class AccessCombinedResolutions[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedResolutions(newTarget)
 	

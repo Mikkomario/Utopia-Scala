@@ -48,7 +48,7 @@ case class AccessIssueAliasRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessIssueAliasRows(newTarget)
 	
@@ -67,7 +67,7 @@ case class AccessCombinedIssueAliases[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedIssueAliases(newTarget)
 	

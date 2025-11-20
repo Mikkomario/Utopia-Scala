@@ -66,7 +66,7 @@ trait UniqueDelimiterAccess
 	
 	override def factory = DelimiterDbFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): UniqueDelimiterAccess = UniqueDelimiterAccess(condition)
 }

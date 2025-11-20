@@ -45,7 +45,7 @@ trait ManyIssueInstancesAccess
 	
 	override def factory: FromResultFactory[IssueInstances] = IssueInstancesFactory
 	
-	override protected def self: ManyIssueInstancesAccess = this
+	override def self: ManyIssueInstancesAccess = this
 	
 	override def apply(condition: Condition): ManyIssueInstancesAccess = ManyIssueInstancesAccess(condition)
 	

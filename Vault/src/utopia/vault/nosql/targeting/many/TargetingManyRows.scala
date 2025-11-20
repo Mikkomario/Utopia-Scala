@@ -15,7 +15,7 @@ object TargetingManyRows
 		extends TargetingManyRows[R]
 			with TargetingManyRowsWrapper[TargetingManyRows[O], TargetingOne[Option[O]], O, R, TargetingManyRows[R], TargetingOne[Option[R]]]
 	{
-		override protected def self: TargetingManyRows[R] = this
+		override def self: TargetingManyRows[R] = this
 		
 		override protected def mapResult(result: O): R = f(result)
 		override protected def wrap(newTarget: TargetingManyRows[O]): TargetingManyRows[R] = new Wrapper(newTarget)(f)

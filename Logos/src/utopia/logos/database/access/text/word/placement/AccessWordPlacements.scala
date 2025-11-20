@@ -52,7 +52,7 @@ case class AccessWordPlacementRows[A](wrapped: TargetingManyRows[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessWordPlacementRows(newTarget)
 	
@@ -71,7 +71,7 @@ case class AccessCombinedWordPlacements[A](wrapped: TargetingMany[A])
 {
 	// IMPLEMENTED	--------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedWordPlacements(newTarget)
 	

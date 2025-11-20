@@ -50,7 +50,7 @@ trait ManyInvitationsAccess extends ManyInvitationsAccessLike[Invitation, ManyIn
 	
 	override def factory = InvitationFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyInvitationsAccess = ManyInvitationsAccess(condition)
 }

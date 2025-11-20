@@ -82,7 +82,7 @@ trait DescriptionLinksAccess
 	
 	// IMPLEMENTED  -------------------------------
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): DescriptionLinksAccess =
 		DescriptionLinksAccess(factory, linkModel, Some(condition))

@@ -226,7 +226,7 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 		case Left(flatMap) => value.flatMap(flatMap)
 		case Right(map) => value.map(map)
 	}
-	override protected def valueOf(value: In): Value = toValue(value)
+	override def valueOf(value: In): Value = toValue(value)
 	
 	
 	// OTHER    -----------------

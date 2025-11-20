@@ -43,7 +43,7 @@ trait ManyTokensAccess extends ManyTokensAccessLike[Token, ManyTokensAccess] wit
 	
 	override def factory = TokenFactory
 	
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyTokensAccess = ManyTokensAccess(condition)
 }

@@ -72,7 +72,7 @@ trait ManyDomainsAccess extends ManyRowModelAccess[Domain] with FilterableView[M
 	// IMPLEMENTED	--------------------
 	
 	override def factory = DomainDbFactory
-	override protected def self = this
+	override def self = this
 	
 	override def apply(condition: Condition): ManyDomainsAccess = ManyDomainsAccess(condition)
 	
