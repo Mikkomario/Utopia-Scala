@@ -1,6 +1,6 @@
 package utopia.flow.util.logging
 
-import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
+import utopia.flow.collection.mutable.builder.CompoundingSeqBuilder
 import utopia.flow.util.StringExtensions._
 
 import scala.collection.immutable.VectorBuilder
@@ -15,7 +15,7 @@ class LogQueue extends Logger
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val builder = new CompoundingVectorBuilder[(Option[Throwable], String)]()
+	private val builder = new CompoundingSeqBuilder[(Option[Throwable], String)]()
 	
 	
 	// COMPUTED ---------------------------

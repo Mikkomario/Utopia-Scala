@@ -75,6 +75,10 @@ object Constant
 			case Some(value) => Constant(name, value)
 			case None => new LazyConstant(name, lazyValue)
 		}
+		override def mapValue(f: Value => Value): Constant = lazyValue.current match {
+			case Some(value) => Constant(name, f(value))
+			case None => new LazyConstant(name, lazyValue.lightMap(f))
+		}
 	}
 	
 	private case class _Constant(name: String, value: Value) extends Constant

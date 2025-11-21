@@ -603,9 +603,8 @@ object FileExtensions
 		  *               within this directory and its sub-directories (including the directories themselves).
 		  * @return Paths accepted by the filter
 		  */
-		def findDescendants(filter: Path => Boolean): Try[Vector[Path]] = {
-			allChildrenIterator.tryFlatMap { _.map { Some(_).filter(filter) } }.map { _.toVector }
-		}
+		def findDescendants(filter: Path => Boolean): Try[IndexedSeq[Path]] =
+			allChildrenIterator.mapSuccesses { Some(_).filter(filter) }.tryFlatten
 		
 		/**
 		  * @param extension A file extension (Eg. "png"), not including the '.'

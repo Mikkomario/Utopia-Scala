@@ -1,12 +1,13 @@
 package utopia.flow.collection.immutable.caching.iterable
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.mutable.builder.CompoundingVectorBuilder
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
+import utopia.flow.collection.mutable.builder.CompoundingSeqBuilder
 import utopia.flow.collection.mutable.iterator.PollableOnce
 import utopia.flow.view.immutable.View
 
 import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.immutable.{SeqOps, VectorBuilder}
+import scala.collection.immutable.SeqOps
 import scala.collection.{SeqFactory, mutable}
 
 object CachingSeq extends SeqFactory[CachingSeq]
@@ -20,14 +21,45 @@ object CachingSeq extends SeqFactory[CachingSeq]
 	
 	override def from[A](source: IterableOnce[A]) = source match {
 		case c: CachingSeq[A] => c
-		case v: Vector[A] => initialized(v)
+		case s: Seq[A] => initialized(s)
 		case c => new CachingSeq[A](c.iterator, externallyKnownSize = Some(c.knownSize).filter { _ >= 0 })
 	}
 	
 	override def empty[A]: CachingSeq[A] = _empty
 	
 	override def newBuilder[A] =
-		new VectorBuilder[A]().mapResult { v => new CachingSeq[A](v.iterator) }
+		OptimizedIndexedSeq.newBuilder[A].mapResult(initialized)
+	
+	override def concat[A](xss: Iterable[A]*): CachingSeq[A] = xss.emptyOneOrMany match {
+		// Case: Empty collection
+		case None => _empty
+		// Case: Only a single collection specified => Uses 'from'
+		case Some(Left(only)) => from(only)
+		// Case: Multiple collections => Determines the pre-cached range
+		case Some(Right(xss)) =>
+			// Caches as long as the specified collections are not views or uncached
+			val (cached, lazyRemainder) = xss
+				.splitAtFirstWhere {
+					case _: scala.collection.View[A] => true
+					case c: CachingSeq[A] => !c.isFullyCached
+					case _ => false
+				}
+				.toTuple
+			val preCached: IndexedSeq[A] = cached.emptyOneOrMany match {
+				case None => Empty
+				case Some(Left(only)) => OptimizedIndexedSeq.from(only)
+				case Some(Right(parts)) => OptimizedIndexedSeq.concat(parts: _*)
+			}
+			// Attempts to determine the known size of the resulting collection
+			val knownSize = preCached.sizeIfKnown.flatMap { cachedSize =>
+				lazyRemainder
+					.foldLeftIterator[Option[Int]](Some(cachedSize)) { (size, coll) =>
+						size.flatMap { size => coll.sizeIfKnown.map { size + _ } }
+					}
+					.takeTo { _.isEmpty }.last
+			}
+			new CachingSeq[A](lazyRemainder.iterator.flatten, preCached, knownSize)
+	}
 	
 	
 	// OTHER    ----------------------------
@@ -41,24 +73,39 @@ object CachingSeq extends SeqFactory[CachingSeq]
 	  * @tparam A Type of items returned by that iterator
 	  * @return A caching iterable based on that iterator
 	  */
-	def apply[A](source: IterableOnce[A], preCached: Vector[A] = Vector()) = {
+	def apply[A](source: IterableOnce[A], preCached: Seq[A] = Empty) = {
 		if (preCached.isEmpty)
 			from(source)
 		else
-			new CachingSeq[A](source.iterator, preCached,
-				Some(source.knownSize).filter { _ >= 0 }.map { _ + preCached.size })
+			preCached match {
+				case c: CachingSeq[A] if !c.isFullyCached => c ++ source
+				case _ =>
+					val newKnownSize = source.sizeIfKnown.flatMap { sourceSize =>
+						preCached.sizeIfKnown.map { _ + sourceSize }
+					}
+					new CachingSeq[A](source.iterator, preCached, newKnownSize)
+			}
 	}
 	
-	def apply[A](items: View[A]*) = new CachingSeq[A](items.iterator.map { _.value },
-		externallyKnownSize = Some(items.size))
+	def apply[A](items: View[A]*) = fromViews(items)
+	def fromViews[A](views: IterableOnce[View[A]]) =
+		new CachingSeq[A](views.iterator.map { _.value }, externallyKnownSize = views.sizeIfKnown)
+	def flattenViews[A](views: IterableOnce[View[IterableOnce[A]]]) =
+		views.nonEmptyIterator match {
+			case Some(iter) => new CachingSeq[A](iter.flatMap { _.value })
+			case None => _empty
+		}
 	
 	/**
-	  * Creates a new pre-initialized sequence by wrapping a vector
-	  * @param vector A vector to wrap
-	  * @tparam A Type of items in that vector
-	  * @return A sequence wrapping that vector
+	  * Creates a new pre-initialized sequence by wrapping a Seq
+	  * @param contents A seq to wrap
+	  * @tparam A Type of items in that collection
+	  * @return A sequence wrapping that collection
 	  */
-	def initialized[A](vector: Vector[A]) = new CachingSeq[A](Iterator.empty, vector, Some(vector.size))
+	def initialized[A](contents: Seq[A]) = contents match {
+		case c: CachingSeq[A] => c
+		case c => new CachingSeq[A](Iterator.empty, c, c.sizeIfKnown)
+	}
 	
 	/**
 	  * @param item A single item (lazily initialized / call-by-name)
@@ -76,9 +123,9 @@ object CachingSeq extends SeqFactory[CachingSeq]
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
-class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A](), externallyKnownSize: Option[Int] = None)
-	extends AbstractCachingIterable[A, CompoundingVectorBuilder[A @uncheckedVariance], Vector[A]](
-		source, new CompoundingVectorBuilder[A](preCached), externallyKnownSize)
+class CachingSeq[+A](source: Iterator[A], preCached: Seq[A] = Empty, externallyKnownSize: Option[Int] = None)
+	extends AbstractCachingIterable[A, CompoundingSeqBuilder[A @uncheckedVariance], Seq[A]](
+		source, new CompoundingSeqBuilder[A](preCached), externallyKnownSize)
 		with Seq[A] with SeqOps[A, CachingSeq, CachingSeq[A]]
 {
 	// ATTRIBUTES   ----------------------------
@@ -91,14 +138,14 @@ class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A](), ex
 	override def empty = CachingSeq.empty
 	override def iterableFactory = CachingSeq
 	
-	override def toVector = fullyCached()
-	override def toIndexedSeq = toVector
+	override def toVector = Vector.from(fullyCached())
+	override def toIndexedSeq = IndexedSeq.from(fullyCached())
 	
 	override def isEmpty = super[AbstractCachingIterable].isEmpty
 	
 	override def lift = getOption
 	
-	override def apply(i: Int) = builder.getOption(i).getOrElse { cacheIterator.drop(i - builder.size).next() }
+	override def apply(i: Int) = builder.lift(i).getOrElse { cacheIterator.drop(i - builder.size).next() }
 	
 	override protected def fromSpecific(coll: IterableOnce[A @uncheckedVariance]) =
 		CachingSeq.from(coll)
@@ -232,7 +279,7 @@ class CachingSeq[+A](source: Iterator[A], preCached: Vector[A] = Vector[A](), ex
 		if (index < 0)
 			None
 		else
-			builder.getOption(index).orElse {
+			builder.lift(index).orElse {
 				val diff = index - builder.size
 				cacheNext(diff + 1).getOption(diff)
 			}

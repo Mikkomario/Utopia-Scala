@@ -9,6 +9,7 @@ import scala.collection.immutable.VectorBuilder
   * @param initialState The initial "intermediate" value of this builder
   * @tparam A Type of items that will be added to the resulting Vector
   */
+@deprecated("Please use CompoundingSeqBuilder instead, if possible", "v2.8")
 class CompoundingVectorBuilder[A](initialState: Vector[A] = Vector.empty)
 	extends CompoundingBuilder[A, VectorBuilder[A], Vector[A], Vector[A]](initialState) with Seq[A]
 {

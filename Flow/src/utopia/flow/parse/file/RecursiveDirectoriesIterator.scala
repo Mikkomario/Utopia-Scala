@@ -13,13 +13,13 @@ import scala.util.Try
   * @author Mikko Hilpinen
   * @since 21.9.2022, v1.17
   */
-class RecursiveDirectoriesIterator(origin: Path) extends Iterator[Try[(Path, Vector[Path])]]
+class RecursiveDirectoriesIterator(origin: Path) extends Iterator[Try[(Path, Seq[Path])]]
 {
 	// ATTRIBUTES   ---------------------
 	
 	private val originConsumedFlag = Settable()
-	// Left side is regular children, right side is sub-directories
-	private lazy val children = origin.iterateChildren { _.divideBy { _.isDirectory }.map { _.toVector } }
+	// Left side is regular children, right side is subdirectories
+	private lazy val children = origin.iterateChildren { _.divideToSeqsBy { _.isDirectory } }
 	private lazy val subDirectoriesIterator = children.toOption.iterator
 		.flatMap { case Pair(_, dirs) => dirs.iterator.flatMap { new RecursiveDirectoriesIterator(_) } }
 	

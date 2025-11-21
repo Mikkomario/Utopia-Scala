@@ -210,7 +210,7 @@ object TryExtensions
 		def toTry = {
 			val iter = tries.iterator
 			if (iter.hasNext) {
-				val successesBuilder = new VectorBuilder[A]()
+				val successesBuilder = OptimizedIndexedSeq.newBuilder[A]
 				var failure: Option[Throwable] = None
 				do {
 					iter.next() match {
@@ -250,14 +250,9 @@ object TryExtensions
 		  * Divides this collection to two separate collections, one for failures and one for successes
 		  * @return Failures + successes
 		  */
-		def divided = {
-			val successesBuilder = OptimizedIndexedSeq.newBuilder[A]
-			val failuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
-			tries.iterator.foreach {
-				case Success(a) => successesBuilder += a
-				case Failure(error) => failuresBuilder += error
-			}
-			failuresBuilder.result() -> successesBuilder.result()
+		def divided = tries.divideWith {
+			case Success(v) => Right(v)
+			case Failure(error) => Left(error)
 		}
 		
 		/**
@@ -268,6 +263,29 @@ object TryExtensions
 		  * @return The first failure that was encountered. None if no failures were encountered.
 		  */
 		def anyFailure = tries.iterator.findMap { _.failure }
+		
+		/**
+		 * @tparam B Type of the inner items
+		 * @return All collections in this collection, flattened.
+		 *         A failure if this collection contained any failures.
+		 */
+		def tryFlatten[B](implicit ev: A <:< IterableOnce[B]) = {
+			val builder = OptimizedIndexedSeq.newBuilder[B]
+			var failure: Option[Throwable] = None
+			val iter = tries.iterator
+			
+			while (failure.isEmpty && iter.hasNext) {
+				iter.next() match {
+					case Success(coll) => builder ++= coll
+					case Failure(error) => failure = Some(error)
+				}
+			}
+			
+			failure match {
+				case Some(failure) => Failure(failure)
+				case None => Success(builder.result())
+			}
+		}
 	}
 	
 	implicit class TryCatchesIterableOnce[A](val tries: IterableOnce[TryCatch[A]]) extends AnyVal

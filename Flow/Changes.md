@@ -2,13 +2,18 @@
 
 ## v2.8 (in development)
 ### Breaking changes
+- Moved a large number of functions from **IterableOnce** to **Iterable** (in **CollectionExtensions**)
 - **Iterable**'s `.find(Extreme)` (in **CollectionExtensions**) is now named `.findExtreme(Extreme)`
   - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
 - **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
 - **Constant** is now a trait instead of a class
+- Some **LogQueue** functions now yields **IndexedSeq** instead of **Vector**
+- **RecursiveDirectoriesIterator** now yields **IndexedSeq**s instead of **Vector**s
+- `.findDescendants(...)` in **FileExtensions** now yields **IndexedSeq** instead of **Vector**
 - `OptimizedIndexedSeq.newBuilder` now yields **OptimizedSeqBuilder** instead of **Builder**
   - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
+- Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
 ### Bugfixes
@@ -17,6 +22,7 @@
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
+- Added **CompoundingSeqBuilder**
 ### New methods
 - **Constant** (object)
   - Added `.lazily(...)`
@@ -24,14 +30,19 @@
   - Added `.compare(...)`
 - **IntSet** (object)
   - Added `.fromOrdered(IterableOnce)`
+- **Iterable**
+  - Added `.splitAtFirstWhere(...)`
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
   - Added `.divideToSeqsBy(...)`
+  - Added `.tryFlatten` for collections of **Try**
 - **Map** (via **CollectionExtensions**)
   - Added `.mapInputView(...)` and `.flatMapInputView(...)`
 - **MapView** (via **CollectionExtensions**)
   - Added `.mapInput(...)` and `.flatMapInput(...)`
+- **ModelLike**
+  - Added various mapping functions that target individual properties
 - **OutputStream** (via **StreamExtensions**)
   - Added `.writeUsing(...)`
 - **Regex** (object)
@@ -42,9 +53,13 @@
   - Added `.leftOrRight(...)`, `.getLeftOrRight(...)`, `.tryLeftOrRight(...)`, 
     `.intOrString`, `.getIntOrString` and `.tryIntOrString`
 ### Other changes
+- **UncertainBoolean**'s `||(Boolean)` and `&&(Boolean)` parameters are now call-by-name
+- Various optimizations within **CachingSeq**
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
+- Further optimizations within **Model** and **ModelLike**
 - Internal refactoring within **Extreme**'s `.by(...)`
 - Internal refactoring within **Lazy**
+- Internal refactoring within some collection functions in **CollectionExtensions** and **TryExtensions**
 
 ## v2.7 - 01.11.2025
 This update focuses on the following features:

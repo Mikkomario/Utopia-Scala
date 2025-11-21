@@ -77,17 +77,22 @@ sealed trait UncertainBoolean
 	def orElse(other: => UncertainBoolean) = if (isExact) this else other
 	
 	/**
-	 * @param other Another known boolean value
+	 * @param other Another known boolean value (call-by-name)
 	 * @return AND of these two values (known if other is false or this value is known)
 	 */
-	def &&(other: Boolean): UncertainBoolean = {
-		if (other)
-			exact match {
-				case Some(known) => CertainBoolean(known && other)
-				case None => UncertainBoolean
-			}
-		else
-			CertainlyFalse
+	def &&(other: => Boolean): UncertainBoolean = {
+		if (isCertainlyFalse)
+			this
+		else {
+			val o = other
+			if (o)
+				exact match {
+					case Some(known) => CertainBoolean(known && o)
+					case None => UncertainBoolean
+				}
+			else
+				CertainlyFalse
+		}
 	}
 	/**
 	 * @param other Another boolean value
@@ -95,20 +100,20 @@ sealed trait UncertainBoolean
 	 */
 	def &&(other: UncertainBoolean): UncertainBoolean = other match {
 		case c: CertainBoolean => this && c.value
-		case UncertainBoolean => if (isCertainlyFalse) CertainlyFalse else UncertainBoolean
+		case uncertain => uncertain
 	}
 	/**
 	 * @param other Another known boolean value
 	 * @return OR of these two values (known if other is true or if this value is known)
 	 */
-	def ||(other: Boolean) = if (other) CertainlyTrue else this
+	def ||(other: => Boolean) = if (isCertainlyTrue || !other) this else CertainlyTrue
 	/**
 	 * @param other Another boolean value
 	 * @return OR of these two values (known if either of these is known to be true or if both are known)
 	 */
 	def ||(other: UncertainBoolean): UncertainBoolean = other.exact match {
 		case Some(known) => this || known
-		case None => if (isCertainlyTrue) CertainlyTrue else UncertainBoolean
+		case None => UncertainBoolean
 	}
 	
 	/**

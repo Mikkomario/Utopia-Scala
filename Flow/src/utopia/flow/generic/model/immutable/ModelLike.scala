@@ -85,7 +85,7 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 		else if (knownContains(prop.name).isCertainlyFalse)
 			withProperties(properties :+ prop)
 		else
-			withProperties(propertiesIterator.filterNot {_.name ~== prop.name} :+ prop)
+			withProperties(propertiesIterator.filterNot { _.name ~== prop.name } ++ Iterator.single(prop))
 	}
 	/**
 	 * @param prop A new property as a key value -pair
@@ -97,7 +97,14 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @param prop A property
 	 * @return A copy of this model with that property prepended
 	 */
-	def +:(prop: Constant) = withProperties(prop +: propertiesIterator.filterNot { _.name ~== prop.name })
+	def +:(prop: Constant) = {
+		if (isEmpty)
+			withProperties(Single(prop))
+		else if (knownContains(prop.name).isCertainlyFalse)
+			withProperties(prop +: properties)
+		else
+			withProperties(Iterator.single(prop) ++ propertiesIterator.filterNot { _.name ~== prop.name })
+	}
 	/**
 	 * @param prop A property as a key value -pair
 	 * @return A copy of this model with that property prepended
@@ -254,7 +261,13 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @tparam A Type of sorting key
 	 * @return A sorted copy of this model
 	 */
-	def sortBy[A](f: Constant => A)(implicit ord: Ordering[A]) = withProperties(properties.sortBy(f))
+	def sortBy[A](f: Constant => A)(implicit ord: Ordering[A]) = {
+		val props = properties
+		if (props.hasSize < 2)
+			self
+		else
+			withProperties(props.sortBy(f))
+	}
 	@deprecated("Renamed to sortBy", "v2.7")
 	def sortPropertiesBy[A](f: Constant => A)(implicit ord: Ordering[A]) = sortBy(f)
 	
@@ -276,6 +289,99 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 * @return A mapped copy of this model
 	 */
 	def mapValues(f: Mutate[Value]) = withProperties(properties.map { _.mapValue(f) })
+	
+	/**
+	 * Modifies and replaces a single property in this model
+	 * @param propName Name of the targeted property
+	 * @param requireExisting Whether, if there didn't exist a property with name 'propName',
+	 *                        this mapping should be skipped.
+	 *                        Default = false = mapping will be performed using a simulated property instead.
+	 * @param f A mapping function to apply
+	 * @return A copy of this model with a modified version of that property.
+	 */
+	def map(propName: String, requireExisting: Boolean = false)(f: Mutate[Constant]) = existingProperty(propName) match {
+		case Some(prop) =>
+			val modified = f(prop)
+			// Case: Only value was modified => Replaces the original property
+			if (modified.name ~== propName)
+				withProperties(propertiesIterator.filterNot { _ == prop } :+ modified)
+			// Case: Name was also modified => Replaces the original, as well as a potential duplicate property
+			else {
+				val oldNames = Set(propName.toLowerCase, modified.name.toLowerCase)
+				withProperties(propertiesIterator.filterNot { p => oldNames.contains(p.name.toLowerCase) } :+ modified)
+			}
+		// Case: No such property => May still add a new propert
+		case None =>
+			if (requireExisting)
+				self
+			else
+				this + f(Constant(propName, simulateValueFor(propName)))
+	}
+	/**
+	 * Modifies and replaces a single property in this model
+	 * @param propName Name of the targeted property
+	 * @param f A mapping function to apply
+	 * @return A copy of this model with a modified version of that property.
+	 *         Note: If this model didn't contain the specified property, no changes are made.
+	 */
+	def mapExisting(propName: String)(f: Mutate[Constant]) = map(propName, requireExisting = true)(f)
+	/**
+	 * Modifies the value of a single property in this model
+	 * @param propName Name of the targeted property
+	 * @param requireExisting Whether, if there didn't exist a property with name 'propName',
+	 *                        this mapping should be skipped.
+	 *                        Default = false = mapping will be performed using a simulated property value instead.
+	 * @param f A mapping function applied to the targeted property's value
+	 * @return A copy of this model where the specified property's value was modified.
+	 */
+	def mapValue(propName: String, requireExisting: Boolean = false)(f: Mutate[Value]) =
+		map(propName, requireExisting) { _.mapValue(f) }
+	/**
+	 * Modifies the value of a single property in this model
+	 * @param propName Name of the targeted property
+	 * @param f A mapping function applied to the targeted property's value
+	 * @return A copy of this model where the specified property's value was modified.
+	 *         Note: If this model didn't contain the specified property, no changes are made.
+	 */
+	def mapExistingValue(propName: String)(f: Mutate[Value]) = mapValue(propName, requireExisting = true)(f)
+	/**
+	 * Adds a "computed property" to this model
+	 * @param propName Name of the property from which a new value is computed
+	 * @param newName Name of the new "computed" property
+	 * @param replace Whether to replace the original property with the computed property.
+	 *                Default = false = Both properties will be present in the new model
+	 *                (except if they have the same name)
+	 * @param requireExisting Whether, if there doesn't exist a property with name 'propName',
+	 *                        no computed property should be generated either.
+	 *                        Default = false = a computed property will be generated using a simulated property value.
+	 * @param mapValue A function which produces the value for the computed property.
+	 *                 Accepts the value of the original property (or possibly a simulated property value)
+	 * @return A copy of this model with the computed property added.
+	 *         Returns an unmodified copy of this model,
+	 *         if 'requireExisting' was set to true and no 'propName' existed on this model.
+	 */
+	def addComputed(propName: String, newName: String, replace: Boolean = false, requireExisting: Boolean = false)
+	               (mapValue: Mutate[Value]) =
+	{
+		// Case: Replacing the original property with another using the same name => Simply maps the property value
+		if (newName ~== propName)
+			this.mapValue(propName, requireExisting)(mapValue)
+		// Case: Replacing the original property => Maps it
+		else if (replace)
+			map(propName, requireExisting) { p => Constant(newName, mapValue(p.value)) }
+		// Case: Both properties should be kept
+		else
+			existingProperty(propName) match {
+				// Case: Existing prop found => Generates the computed property and adds it to this model
+				case Some(prop) => this + Constant(newName, mapValue(prop.value))
+				// Case: No existing property => May skip the computed property, also
+				case None =>
+					if (requireExisting)
+						self
+					else
+						this + Constant(newName, mapValue(simulateValueFor(propName)))
+			}
+	}
 	
 	/**
 	 * Creates a mutable copy of this model

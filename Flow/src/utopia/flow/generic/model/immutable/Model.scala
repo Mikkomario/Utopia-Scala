@@ -6,13 +6,14 @@ import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Singl
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.factory.PropertyFactory
-import utopia.flow.generic.model.immutable.Model.RenamedModel
+import utopia.flow.generic.model.immutable.Model.{AppendingModel, RenamedModel, SwappingModel, withConstants}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.{HasPropertiesLike, Property, ValueConvertible}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
+import utopia.flow.util.{Mutate, UncertainBoolean}
+import utopia.flow.view.immutable.caching.Lazy
 
 import scala.collection.mutable
 
@@ -37,12 +38,12 @@ object Model
 	 * @return A model containing that key and value
 	 */
 	def from[A](pair: (String, A))(implicit valueConversion: A => ValueConvertible): Model =
-		new _Model(Single(Constant(pair._1, valueConversion(pair._2).toValue)))
+		new SinglePropModel(Constant(pair._1, valueConversion(pair._2).toValue))
 	/**
 	 * @param pair A key-value pair
 	 * @return A model containing that key and value
 	 */
-	def from(pair: (String, Value)): Model = new _Model(Single(Constant(pair._1, pair._2)))
+	def from(pair: (String, Value)): Model = new SinglePropModel(Constant(pair._1, pair._2))
 	/**
 	 * @param first The first key-value pair
 	 * @param second The second key-value pair
@@ -50,33 +51,45 @@ object Model
 	 * @return A model containing the specified key-value pairs
 	 */
 	def from(first: (String, Value), second: (String, Value), more: (String, Value)*): Model =
-		new _Model(OptimizedIndexedSeq.from(Pair(first, second).view ++ more).map { case (k, v) => Constant(k, v) })
+		new _Model(OptimizedIndexedSeq.from((Pair(first, second).view ++ more).map { case (k, v) => Constant(k, v) }))
 	
 	/**
 	 * @param properties Key value pairs to assign to this model
 	 * @return A new model with the specified properties
 	 */
 	def apply(properties: IterableOnce[(String, Value)]): Model = properties match {
+		// Case: The properties are computed lazily => Constructs a lazy model (unless empty)
 		case v: scala.collection.View[(String, Value)] =>
-			if (v.knownSize == 0)
-				EmptyModel
-			else
-				new LazyModel(v.map { case (name, value) => Constant(name, value) })
+			v.knownSize match {
+				case 0 => EmptyModel
+				case 1 => new LazySinglePropModel(Lazy { Constant(v.head) })
+				case _ => new LazyModel(v.map { case (name, value) => Constant(name, value) })
+			}
+		// Case: The properties are cached lazily => Constructs a lazy model (unless empty or size of 1)
 		case s: CachingSeq[(String, Value)] =>
 			if (s.isEmpty)
 				EmptyModel
+			else if (s.hasSize(1))
+				new SinglePropModel(Constant(s.head))
 			else
 				new LazyModel(s.map { case (name, value) => Constant(name, value) })
-			
+		// Case: Properties may be iterated multiple times (assumes that they're cached as well)
+		//       => Constructs a fully cached model
 		case i: Iterable[(String, Value)] =>
 			if (i.isEmpty)
 				EmptyModel
+			else if (i.hasSize(1))
+				new SinglePropModel(Constant(i.head))
 			else
 				new _Model(OptimizedIndexedSeq.from(i.view.map { case (name, value) => Constant(name, value) }))
-			
+		// Case: Lazily iterated collection => Caches it lazily
 		case i =>
 			i.nonEmptyIterator match {
-				case Some(iterator) => new LazyModel(iterator.map { case (name, value) => Constant(name, value) })
+				case Some(iterator) =>
+					if (iterator.knownSize == 1)
+						new LazySinglePropModel(Lazy { Constant(iterator.next()) })
+					else
+						new LazyModel(iterator.map { case (name, value) => Constant(name, value) })
 				case None => EmptyModel
 			}
 	}
@@ -85,7 +98,7 @@ object Model
 	 * @param only The only constant to store in this model
 	 * @return A model containing the specified constant
 	 */
-	def withConstants(only: Constant): Model = new _Model(Single(only))
+	def withConstants(only: Constant): Model = new SinglePropModel(only)
 	/**
 	 * @param first First constant to store
 	 * @param second Second constant to store
@@ -99,11 +112,39 @@ object Model
 	 * @return A new model based on the specified constants
 	 */
 	def withConstants(constants: IterableOnce[Constant]): Model = constants match {
-		case s: CachingSeq[Constant] => if (s.isEmpty) EmptyModel else new LazyModel(s)
-		case s: Seq[Constant] => if (s.isEmpty) EmptyModel else new _Model(s)
-		case v: scala.collection.View[Constant] => if (v.knownSize == 0) EmptyModel else new LazyModel(v)
-		case i: Iterable[Constant] => if (i.isEmpty) EmptyModel else new _Model(OptimizedIndexedSeq.from(i))
-		case i => if (i.knownSize == 0) EmptyModel else new LazyModel(i)
+		case s: CachingSeq[Constant] =>
+			if (s.isEmpty)
+				EmptyModel
+			else if (s.isFullyCached)
+				new _Model(s)
+			else if (s.hasSize(1))
+				new SinglePropModel(s.head)
+			else
+				new LazyModel(s)
+		case s: Seq[Constant] =>
+			s.emptyOneOrMany match {
+				case None => EmptyModel
+				case Some(Left(only)) => new SinglePropModel(only)
+				case Some(Right(props)) => new _Model(props)
+			}
+		case v: scala.collection.View[Constant] =>
+			v.knownSize match {
+				case 0 => EmptyModel
+				case 1 => new LazySinglePropModel(Lazy { v.head })
+				case _ => new LazyModel(v)
+			}
+		case i: Iterable[Constant] =>
+			i.emptyOneOrMany match {
+				case None => EmptyModel
+				case Some(Left(only)) => new SinglePropModel(only)
+				case Some(Right(props)) => new _Model(OptimizedIndexedSeq.from(props))
+			}
+		case i =>
+			i.knownSize match {
+				case 0 => EmptyModel
+				case 1 => new LazySinglePropModel(Lazy { i.iterator.next() })
+				case _ => new LazyModel(i)
+			}
 	}
 	/**
 	 * @param original The original model
@@ -193,13 +234,102 @@ object Model
 		
 		override def propertiesIterator: Iterator[Constant] = Iterator.empty
 		
+		override def sorted: Model = this
+		override def withoutEmptyValues: Model = this
+		
 		override def existingProperty(propName: String): Option[Constant] = None
 		
 		override def contains(propName: String): Boolean = false
 		override def containsNonEmpty(propName: String): Boolean = false
 		override def knownContains(propName: String): UncertainBoolean = CertainlyFalse
+		
+		override def +(renames: PropertyRenames): Model = this
+		override def +(prop: Constant): Model = new SinglePropModel(prop)
+		override def +:(prop: Constant): Model = new SinglePropModel(prop)
+		
+		override def ++(props: IterableOnce[Constant]): Model = Model.withConstants(props)
+		override def ++(other: HasPropertiesLike[Constant]): Model = Model.from(other)
+		
+		override def -(prop: Property): Model = this
+		override def -(propName: String): Model = this
+		override def without(propName: String): Model = this
+		override def --(propNames: IterableOnce[String]): Model = this
+		override def without(keys: IterableOnce[String]): Model = this
+		override def withoutProperties(properties: Set[Constant]): Model = this
+		
+		override def filter(f: Constant => Boolean): Model = this
+		override def filterNot(f: Constant => Boolean): Model = this
+		
+		override def renamed(renames: IterableOnce[Pair[String]]): Model = this
+		override def renamed(oldName: String, newName: String): Model = this
+		
+		override def sortBy[A](f: Constant => A)(implicit ord: Ordering[A]): Model = this
+		
+		override def map(f: Mutate[Constant]): Model = this
+		override def mapKeys(f: Mutate[String]): Model = this
+		override def mapValues(f: Mutate[Value]): Model = this
+		
+		override def map(propName: String, requireExisting: Boolean)(f: Mutate[Constant]): Model = {
+			if (requireExisting)
+				this
+			else
+				this + f(Constant(propName, Value.empty))
+		}
+		override def mapValue(propName: String, requireExisting: Boolean)(f: Mutate[Value]): Model = {
+			if (requireExisting)
+				this
+			else
+				this + Constant(propName, f(Value.empty))
+		}
+		override def addComputed(propName: String, newName: String, replace: Boolean, requireExisting: Boolean)
+		                        (mapValue: Mutate[Value]): Model =
+		{
+			if (requireExisting)
+				this
+			else
+				this + Constant(newName, mapValue(Value.empty))
+		}
 	}
 	
+	private class SinglePropModel(property: Constant) extends Model
+	{
+		// ATTRIBUTES   --------------------
+		
+		override lazy val properties: Seq[Constant] = Single(property)
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = Iterator.single(property)
+		
+		override def sorted: Model = this
+		
+		override def contains(propName: String): Boolean = property.name ~== propName
+		override def knownContains(propName: String): UncertainBoolean = contains(propName)
+		override def containsNonEmpty(propName: String): Boolean =
+			property.nonEmpty && (property.name ~== propName)
+		
+		override def existingProperty(propName: String): Option[Constant] =
+			Some(property).filter { _.name ~== propName }
+		
+		override def +(prop: Constant): Model = Model.withConstants(Pair(property, prop))
+		override def +:(prop: Constant): Model = Model.withConstants(Pair(prop, property))
+		
+		override def -(prop: Property): Model = if (property == prop) EmptyModel else this
+		override def -(propName: String): Model = if (property.name ~== propName) EmptyModel else this
+		override def --(propNames: IterableOnce[String]): Model =
+			if (propNames.iterator.exists { _ ~== property.name }) EmptyModel else this
+		
+		override def filter(f: Constant => Boolean): Model = if (f(property)) this else EmptyModel
+		
+		override def sortBy[A](f: Constant => A)(implicit ord: Ordering[A]): Model = this
+		
+		override def map(f: Mutate[Constant]): Model = new SinglePropModel(f(property))
+		override def mapKeys(f: Mutate[String]): Model = new SinglePropModel(property.mapName(f))
+		override def mapValues(f: Mutate[Value]): Model = new SinglePropModel(property.mapValue(f))
+	}
 	private class _Model(override val properties: Seq[Constant]) extends Model
 	{
 		// ATTRIBUTES   -----------------------
@@ -220,6 +350,44 @@ object Model
 		override def knownContains(propName: String): UncertainBoolean = contains(propName)
 	}
 	
+	private class LazySinglePropModel(lazyProp: Lazy[Constant]) extends Model
+	{
+		// ATTRIBUTES   ---------------------
+		
+		override lazy val properties: Seq[Constant] = Single(prop)
+		
+		
+		// COMPUTED ------------------------
+		
+		private def prop = lazyProp.value
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = lazyProp.valueIterator
+		
+		override def contains(propName: String): Boolean = prop.name ~== propName
+		override def containsNonEmpty(propName: String): Boolean = {
+			val p = prop
+			p.nonEmpty && (p.name ~== propName)
+		}
+		override def knownContains(propName: String): UncertainBoolean = lazyProp.current match {
+			case Some(prop) => CertainBoolean(prop.name ~== propName)
+			case None => UncertainBoolean
+		}
+		
+		override def existingProperty(propName: String): Option[Constant] =
+			Some(prop).filter { _.name ~== propName }
+		
+		override def sortBy[A](f: Constant => A)(implicit ord: Ordering[A]): Model = this
+		
+		override def map(f: Mutate[Constant]): Model = lazyProp.current match {
+			case Some(prop) => new SinglePropModel(f(prop))
+			case None => new LazySinglePropModel(lazyProp.lightMap(f))
+		}
+	}
 	private class LazyModel(props: IterableOnce[Constant]) extends Model
 	{
 		// ATTRIBUTES   -----------------------
@@ -278,6 +446,71 @@ object Model
 			}
 		
 		override def +(renames: PropertyRenames) = new RenamedModel(source, this.renames ++ renames)
+	}
+	
+	// NB: Assumes that no overlap exists between source and added
+	private class AppendingModel(source: Model, added: Iterable[Constant]) extends Model
+	{
+		// ATTRIBUTES   ---------------------
+		
+		private val lazyAddedPropMap = Lazy { added.iterator.map { p => p.name.toLowerCase -> p }.toMap }
+		override lazy val properties: Seq[Constant] = source.properties ++ added
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = source.propertiesIterator ++ added
+		
+		override def contains(propName: String): Boolean = lazyAddedPropMap.current match {
+			case Some(map) => map.contains(propName.toLowerCase) || source.contains(propName)
+			case None => source.contains(propName) || lazyAddedPropMap.value.contains(propName.toLowerCase)
+		}
+		override def containsNonEmpty(propName: String): Boolean =
+			lazyAddedPropMap.value.get(propName.toLowerCase) match {
+				case Some(prop) => prop.nonEmpty
+				case None => source.containsNonEmpty(propName)
+			}
+		override def knownContains(propName: String): UncertainBoolean =
+			source.knownContains(propName) || (lazyAddedPropMap.current match {
+				case Some(map) => CertainBoolean(map.contains(propName.toLowerCase))
+				case None => UncertainBoolean
+			})
+		
+		override def existingProperty(propName: String): Option[Constant] = lazyAddedPropMap.current match {
+			case Some(map) => map.get(propName.toLowerCase).orElse(source.existingProperty(propName))
+			case None => source.existingProperty(propName).orElse { lazyAddedPropMap.value.get(propName.toLowerCase) }
+		}
+	}
+	/**
+	 * Wraps another model, modifying some of its properties
+	 * @param source The original model
+	 * @param added Added properties (as a Model)
+	 * @param removed Names of 'source' properties (lower-case), which should not appear in 'properties'
+	 */
+	private class SwappingModel(source: Model, added: Model, removed: Set[String]) extends Model
+	{
+		// ATTRIBUTES   ----------------------
+		
+		override val properties: Seq[Constant] =
+			CachingSeq.from(source.propertiesIterator.filterNot { p => removed.contains(p.name.toLowerCase) } ++
+				added.propertiesIterator)
+		
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def self: Model = this
+		
+		override def propertiesIterator: Iterator[Constant] = properties.iterator
+		
+		override def contains(propName: String): Boolean = added.contains(propName) || source.contains(propName)
+		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
+		override def knownContains(propName: String): UncertainBoolean =
+			added.knownContains(propName) || source.knownContains(propName)
+		
+		override def existingProperty(propName: String): Option[Constant] =
+			added.existingProperty(propName).orElse { source.existingProperty(propName) }
 	}
 	
 	private class ValidatedModel(source: HasProperties, declaration: ModelDeclaration,
@@ -490,4 +723,64 @@ trait Model extends ModelLike[Model]
 	override def withProperties(properties: IterableOnce[Constant]): Model = Model.withConstants(properties)
 	
 	override def +(renames: PropertyRenames): Model = new RenamedModel(this, renames)
+	
+	override def +(prop: Constant): Model = {
+		if (isEmpty)
+			Model.withConstants(prop)
+		else if (knownContains(prop.name).mayBeTrue)
+			new SwappingModel(this, Model.withConstants(prop), Set(prop.name.toLowerCase))
+		else
+			new AppendingModel(this, Single(prop))
+	}
+	override def ++(props: IterableOnce[Constant]): Model = {
+		if (isEmpty)
+			withConstants(props)
+		else
+			props match {
+				case v: scala.collection.View[Constant] => super.++(v)
+				case i: Iterable[Constant] =>
+					i.emptyOneOrMany match {
+						case None => self
+						case Some(Left(only)) => this + only
+						case Some(Right(many)) =>
+							val propNames = many.iterator.map { _.name.toLowerCase }.toSet
+							if (propNames.forall { knownContains(_).isCertainlyFalse })
+								new AppendingModel(this, many)
+							else
+								new SwappingModel(this, Model.withConstants(many), propNames)
+					}
+				case i => super.++(i)
+			}
+	}
+	
+	override def map(propName: String, requireExisting: Boolean)(f: Mutate[Constant]): Model = {
+		if (knownContains(propName).isCertainlyFalse) {
+			if (requireExisting)
+				self
+			else
+				this + f(Constant(propName, simulateValueFor(propName)))
+		}
+		else
+			existingProperty(propName) match {
+				case Some(prop) =>
+					val newProp = f(prop)
+					new SwappingModel(this, Model.withConstants(newProp),
+						Set(propName.toLowerCase, newProp.name.toLowerCase))
+					
+				case None =>
+					if (requireExisting)
+						self
+					else
+						this + f(Constant(propName, simulateValueFor(propName)))
+			}
+	}
+	override def addComputed(propName: String, newName: String, replace: Boolean, requireExisting: Boolean)
+	                        (mapValue: Mutate[Value]): Model =
+	{
+		if (requireExisting)
+			super.addComputed(propName, newName, replace, requireExisting)(mapValue)
+		else
+			new SwappingModel(this, Model.withConstants(Constant.lazily(newName, Lazy { mapValue(apply(propName)) })),
+				Set(propName.toLowerCase, newName.toLowerCase))
+	}
 }
