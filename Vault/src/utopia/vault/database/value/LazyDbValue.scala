@@ -2,9 +2,12 @@ package utopia.vault.database.value
 
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.database.Connection
+import utopia.vault.database.value.LazyDbValue.MappedLazyDbValue
 
 object LazyDbValue
 {
+	// OTHER    ------------------------
+	
 	/**
 	 * @return Access to look-up value constructors
 	 */
@@ -32,6 +35,32 @@ object LazyDbValue
 	 * @return A lazily initialized value wrapper
 	 */
 	def wrapLazily[A](getValue: => LazyDbValue[A]): LazyDbValue[A] = LazyDbValueWrapper(getValue)
+	
+	
+	// NESTED   -------------------------
+	
+	private class MappedLazyDbValue[A, B](original: LazyDbValue[A], f: A => B) extends LazyDbValue[B]
+	{
+		// ATTRIBUTES   -----------------
+		
+		private var _current: Option[B] = original.current.map(f)
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def value: B = _current.getOrElse {
+			val value = f(original.value)
+			_current = Some(value)
+			value
+		}
+		override def current: Option[B] = _current
+		
+		override def connectedValue(implicit connection: Connection): B = _current.getOrElse {
+			val value = f(original.connectedValue)
+			_current = Some(value)
+			value
+		}
+	}
 }
 
 /**
@@ -41,9 +70,22 @@ object LazyDbValue
  */
 trait LazyDbValue[+A] extends Lazy[A]
 {
+	// ABSTRACT ------------------------
+	
 	/**
 	 * @param connection Implicit DB connection to utilize, if necessary
 	 * @return Wrapped value
 	 */
 	def connectedValue(implicit connection: Connection): A
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def map[B](f: A => B): LazyDbValue[B] = current match {
+		case Some(value) => LazyDbValue.initialized(f(value))
+		case None => new MappedLazyDbValue[A, B](this, f)
+	}
+	
+	override def lightMap[B](f: A => B) = map(f)
+	override def mapValue[B](f: A => B) = map(f)
 }
