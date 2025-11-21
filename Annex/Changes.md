@@ -1,5 +1,8 @@
 # Utopia Annex - List of Changes
 
+## v1.11.1 (in development)
+Supports **Flow v2.8**
+
 ## v1.11 - 01.11.2025
 A small update introducing support for path parameters in API requests.
 ### Breaking changes

@@ -1,5 +1,8 @@
 # Utopia Reflection - List of Changes
 
+## v2.3.1 (in development)
+Supports **Flow v2.8**
+
 ## v2.3 - 01.11.2025
 This update reflects changes in **Firmament v1.6** and **Flow v2.7**.
 ### Breaking changes

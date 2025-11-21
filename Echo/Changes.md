@@ -1,5 +1,8 @@
 # Utopia Echo - List of Changes
 
+## v1.4.1 (in development)
+Supports **Flow v2.8**
+
 ## v1.4 - 01.11.2025
 This update introduces two new integrations:
 1. ComfyUI for image-generation

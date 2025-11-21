@@ -1,5 +1,8 @@
 # Utopia Genesis - List of Changes
 
+## v4.2.3 (in development)
+Supports **Flow v2.8**
+
 ## v4.2.2 - 01.11.2025
 This small update only introduces some minor refactoring, and a few new utility features.
 ### Breaking changes

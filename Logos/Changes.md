@@ -1,7 +1,7 @@
 # Utopia Logos - List of Changes
 
 ## v0.6.1 (in development)
-Supports **Vault v2.1**
+Supports **Vault v2.1** and **Flow v2.8**
 ### Bugfixes
 - Bugfix to `Domain.regex`: The previous version didn't accept all domain prefixes.
 ### New methods

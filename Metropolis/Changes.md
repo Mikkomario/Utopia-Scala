@@ -1,5 +1,8 @@
 # Utopia Metropolis - List of Changes
 
+## v2.3.1 (in development)
+Supports **Flow v2.8**
+
 ## v2.3 - 01.11.2025
 In this update, we replaced the stored traits with their **Vault** (disconnected) versions.
 ### Deprecations
