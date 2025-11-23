@@ -4,7 +4,8 @@
 Rewrote every class
 ### Breaking changes
 - Moved **HttpExtensions** to `controller.servlet` package
-- **LogicWrappingServlet** now requires `exc: ExecutionContext`
+- **LogicWrappingServlet** now requires `logger: Logger`, `jsonParser: JsonParser` `exc: ExecutionContext` and 
+  `expectedParameterEncoding: ParameterEncoding`
 ### Deprecations
 - Replaced **ServletLogic** with a new version in the `controller.servlet` package
   - The new version accepts **ParameterEncoding** instead of **ServerSettings**, and requires `logger: Logger`

@@ -20,8 +20,6 @@ object JsonSettingsAccess
 	 * A regular expression that finds a file that contains "settings" or "Settings" in its file name
 	 */
 	val defaultSettingsRegex = Regex.any + (Regex("s") || Regex("S")).withinParentheses + Regex("ettings") + Regex.any
-	
-	private val splitterRegex = Regex.escape('/')
 }
 
 /**
@@ -34,6 +32,8 @@ object JsonSettingsAccess
  *                      Default = current working directory.
  * @param fileNameRegex A regular expression that must be fulfilled by the targeted settings file's file name -part.
  *                      By default, accepts any file that contains "settings" or "Settings" in its name.
+ *                      Note: This file name -part doesn't include the file type extension,
+ *                      which is required to match "json".
  * @param schema        A model declaration that must be fulfilled by the json object contents of the targeted file.
  *                      By default, accepts any json object.
  * @param jsonReader    A json parser used to parse the settings json file(s)

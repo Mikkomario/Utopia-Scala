@@ -27,6 +27,11 @@ object LogicWrappingServlet
 	
 	private class _LogicWrappingServlet(override val logic: ServletLogic)(implicit val exc: ExecutionContext)
 		extends LogicWrappingServlet
+	{
+		override implicit def logger: Logger = logic.logger
+		override implicit def jsonParser: JsonParser = logic.jsonParser
+		override implicit def expectedParameterEncoding: ParameterEncoding = logic.expectedParameterEncoding
+	}
 }
 
 /**
@@ -39,9 +44,22 @@ abstract class LogicWrappingServlet extends HttpServlet
 	// ABSTRACT -------------------------------
 	
 	/**
+	 * @return Logging implementation used (implicit)
+	 */
+	implicit def logger: Logger
+	/**
+	 * @return JSON parser used (implicit)
+	 */
+	implicit def jsonParser: JsonParser
+	/**
 	 * @return Implicit execution context used in asynchronous processing
 	 */
 	implicit def exc: ExecutionContext
+	/**
+	 * @return Expected parameter encoding (implicit)
+	 */
+	implicit def expectedParameterEncoding: ParameterEncoding
+	
 	/**
 	  * @return Servlet logic implementation
 	  */
@@ -50,9 +68,8 @@ abstract class LogicWrappingServlet extends HttpServlet
 	
 	// COMPUTED -------------------------------
 	
-	implicit def logger: Logger = logic.logger
-	implicit def jsonParser: JsonParser = logic.jsonParser
-	implicit def expectedParameterEncoding: ParameterEncoding = logic.expectedParameterEncoding
+	// FIXME: These easily form a cyclic loop within the application, at least when combined with ApiRoot
+	
 	
 	
 	// IMPLEMENTED  ---------------------------
