@@ -1,11 +1,14 @@
 package utopia.vault.database.columnlength
 
-import utopia.flow.collection.immutable.DeepMap
+import utopia.flow.collection.immutable.{DeepMap, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.TryExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.{Throw, TryCrop, TryExpand}
 import utopia.vault.model.immutable.{Column, Table}
@@ -88,56 +91,56 @@ object ColumnLengthRules
 		specifics += (Vector(databaseName, tableName, propertyName) -> rule)
 	
 	/**
-	  * Loads column length rules from a .json file. The file should contain a json object with database names as
-	  * property names and objects as values. The nested objects should contain tables in a similar fashion, which
-	  * then again should contain column properties. The column properties should have values such as "throw", "crop",
-	  * "expand" or "expand to X" where X is the maximum allowed length.
-	  * @param path Path to the json file to read
-	  * @param jsonParser Json parser to use
-	  * @param exc Implicit execution context (used when handling connections opened during rule handling)
-	  * @param connectionPool Implicit connection pool (used for expanding column lengths when needed)
-	  * @return Success or failure, based on json parse result
-	  */
-	def loadFrom(path: Path)(implicit jsonParser: JsonParser, exc: ExecutionContext, connectionPool: ConnectionPool) =
-		jsonParser(path).map { json =>
-			val limits = json.getModel.properties.flatMap { dbAtt =>
-				loadFromDbModel(dbAtt.name, dbAtt.value.getModel)
-			}
-			specifics ++= DeepMap(limits)
-		}
-	
-	/**
-	  * Loads column length rules from a .json file. The file should contain a json object with table names as
+	  * Loads column length rules from a .json file. The file should contain a JSON object with table names as
 	  * property names and objects as values. The nested objects should contain column properties.
 	  * The column properties should have values such as "throw", "crop",
 	  * "expand" or "expand to X" where X is the maximum allowed length.
-	  * @param path Path to the json file to read
+	  * @param path Path to the JSON file to read, or to a directory containing length-rule JSON files.
 	  * @param databaseName Name of the database to which to apply these rules.
 	 *                     Call-by-name; Not called if the file itself specifies database names.
-	  * @param jsonParser Json parser to use
+	 *                     Optional. If not specified, files without database names cannot be parsed properly.
+	  * @param jsonParser JSON parser to use
 	  * @param exc Implicit execution context (used when handling connections opened during rule handling)
 	  * @param connectionPool Implicit connection pool (used for expanding column lengths when needed)
-	  * @return Success or failure, based on json parse result
+	  * @return Paths to the files from which column lengths were read.
+	 *         May yield full or partial failures.
 	  */
-	def loadFrom(path: Path, databaseName: => String)
+	def loadFrom(path: Path, databaseName: => String = "")
 	            (implicit jsonParser: JsonParser, exc: ExecutionContext, connectionPool: ConnectionPool) =
 	{
-		jsonParser(path).map { json =>
-			val model = json.getModel
-			
+		val lazyDbName = Lazy(databaseName)
+		loadFromJsonIn(path) { model =>
 			// Checks whether the file specifies a database name already
 			val limits = {
-				// Case: Database names are specified within the file => These overwrite the specified DB name
+				// Case: Database names are specified within the file, or database name has not been specified
+				//       => These overwrite the specified DB name
 				if (model.propertiesIterator.nextOption()
 					.exists { _.value.model.exists { _.propertiesIterator.nextOption()
-						.exists { _.value.model.isDefined } } })
+						.exists { _.value.model.isDefined } } } || lazyDbName.value.isEmpty)
 					model.properties.flatMap { dbAtt => loadFromDbModel(dbAtt.name, dbAtt.value.getModel) }
 				// Case: Database names not specified => Continues with the specified database name
 				else
-					loadFromDbModel(databaseName, json.getModel)
+					loadFromDbModel(lazyDbName.value, model)
 			}
 			specifics ++= DeepMap(limits)
 		}
+	}
+	
+	private def loadFromJsonIn(path: Path)(process: Model => Unit)(implicit jsonParser: JsonParser) = {
+		// Case: Directory specified => Loads from all JSON files within the directory and its subdirectories
+		if (path.isDirectory)
+			path.allChildrenIterator
+				.filter { _.toOption.forall { _.fileType ~== "json" } }
+				.map { _.flatMap { path =>
+					jsonParser(path).flatMap { _.tryModel }.map { model =>
+						process(model)
+						path
+					}
+				} }
+				.toTryCatch
+		// Case: Regular file specified => Attempts to parse it
+		else
+			jsonParser(path).flatMap { _.tryModel.map(process) }.toTryCatch.map { _ => Single(path) }
 	}
 	
 	private def loadFromDbModel(dbName: String, model: Model)

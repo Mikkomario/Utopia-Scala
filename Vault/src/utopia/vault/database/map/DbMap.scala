@@ -1,7 +1,10 @@
 package utopia.vault.database.map
 
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.time.Duration
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.time.{Duration, TimeUnit}
 import utopia.flow.view.mutable.Resettable
 import utopia.vault.database.map.DbMap.DbMapValue
 import utopia.vault.database.value.{LazyDbValue, LazyLookUpDbValue}
@@ -13,6 +16,7 @@ import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 import utopia.vault.nosql.template.Filterable
 import utopia.vault.sql.Condition
 
+import java.nio.file.Path
 import scala.util.Try
 
 object DbMap
@@ -268,4 +272,76 @@ trait DbMap[-K, -C]
 	 */
 	def required[A](key: K)(parse: Value => Try[A])(implicit valueOf: A => Value) =
 		accessWith(key) { _.tryParse(parse) }
+	
+	/**
+	 * @param key Targeted key
+	 * @param parse A function which parses individual values
+	 * @param valueOf An implicit function for converting a parsed value into a [[Value]] for storing it into the DB
+	 * @tparam A Type of individually processed values
+	 * @return Access to the specified key, applying parsing logic which supports Vector values
+	 */
+	def seq[A](key: K)(parse: Value => A)(implicit valueOf: A => Value) =
+		accessWith(key) { _ { _.getVector.view.map(parse).toOptimizedSeq } }
+	
+	/**
+	 * @param key Targeted key
+	 * @return Access to the specified key, parsing the values as [[Path]] options
+	 */
+	def getPath(key: K) =
+		getCustom(key) { _.string.map { p => p: Path } } { p: Path => p.toJson }
+	/**
+	 * @param key Targeted key
+	 * @param default Default setting value (call-by-name)
+	 * @return Access to the specified key, parsing the values as [[Path]].
+	 *         Replacing empty values with the specified default.
+	 */
+	def pathOr(key: K, default: => Path) =
+		customOr(key, default) { _.string.map { p => p: Path } } { p: Path => p.toJson }
+	
+	/**
+	 * @param key Targeted key
+	 * @return Access to the specified key, parsing the values as [[Duration]].
+	 */
+	def getDuration(key: K, unit: TimeUnit) =
+		getCustom(key) { _.long.map { Duration(_, unit) } } { d: Duration => d.to(unit) }
+	/**
+	 * @param key Targeted key
+	 * @param default Default setting value (call-by-name)
+	 * @return Access to the specified key, parsing the values as [[Duration]].
+	 *         Replacing empty values with the specified default.
+	 */
+	def durationOr(key: K, unit: TimeUnit, default: => Duration) =
+		customOr(key, default) { _.long.map { Duration(_, unit) } } { d: Duration => d.to(unit) }
+	
+	/**
+	 * @param key Targeted key
+	 * @param parse A function which parses column values.
+	 * @param toValue A function for converting a parsed value (of some type) into a [[Value]] for storing it into the DB
+	 * @tparam A Type of the parsed values
+	 * @tparam In Type of input values in set functions
+	 * @return Access to the specified key, applying the specified parsing logic
+	 */
+	def custom[A, In](key: K)(parse: Value => A)(toValue: In => Value) =
+		accessWith(key) { _.custom(parse)(toValue).concrete }
+	/**
+	 * @param key Targeted key
+	 * @param parse A function which parses column values. May yield None.
+	 * @param toValue A function for converting a parsed value (of some type) into a [[Value]] for storing it into the DB
+	 * @tparam A Type of the parsed values
+	 * @tparam In Type of input values in set functions
+	 * @return Access to the specified key, applying the specified parsing logic
+	 */
+	def getCustom[A, In](key: K)(parse: Value => Option[A])(toValue: In => Value) =
+		accessWith(key) { _.custom(parse)(toValue).iterable }
+	/**
+	 * @param key Targeted key
+	 * @param default The default value to use, if parsing yields None.
+	 * @param parse A function which parses column values. May yield None.
+	 * @param toValue A function for converting a parsed value (of some type) into a [[Value]] for storing it into the DB
+	 * @tparam A Type of the parsed values
+	 * @tparam In Type of input values in set functions
+	 * @return Access to the specified key, applying the specified parsing logic
+	 */
+	def customOr[A, In](key: K, default: => A)(parse: Value => Option[A])(toValue: In => Value) =
+		custom(key) { parse(_).getOrElse(default) }(toValue)
 }
