@@ -24,9 +24,12 @@
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
+- Added **NothingBuilder**
 - Added **CompoundingSeqBuilder**
 - Added **LimitedCountIterator**
 ### New methods
+- **Builder** (via **BuilderExtensions**)
+  - Added `.mapInput(...)`
 - **Constant** (object)
   - Added `.lazily(...)`
 - **Extreme**
