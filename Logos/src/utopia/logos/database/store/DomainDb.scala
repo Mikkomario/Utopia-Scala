@@ -15,7 +15,7 @@ import utopia.vault.sql.{OrderBy, Update, Where}
 /**
  * An interface for interacting with domain information in the DB
  * @author Mikko Hilpinen
- * @since 25.11.2025, v0.6.1
+ * @since 25.11.2025, v0.7
  */
 object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 {

@@ -1,12 +1,16 @@
 package utopia.logos.controller.app
 
+import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.util.Version
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.logos.database.LogosContext
 import utopia.logos.database.store.DomainDb
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, ConnectionPool, Tables}
 
 import scala.io.StdIn
 
@@ -20,6 +24,9 @@ object MigrateLogos extends App
 	// ATTRIBUTES   -----------------------
 	
 	private implicit val log: Logger = SysErrLogger
+	private implicit val exc: ThreadPool = new ThreadPool("Logos-Migrate", coreSize = 1, maxIdleDuration = 15.seconds)
+	private implicit val cPool: ConnectionPool = new ConnectionPool(maxConnections = 10, maxClientsPerConnection = 20)
+	private implicit val jsonParser: JsonParser = JsonReader
 	
 	
 	// APP CODE ---------------------------
@@ -40,6 +47,7 @@ object MigrateLogos extends App
 					StdIn.readNonEmptyLine("Which database should we modify?").foreach { dbName =>
 						Connection.modifySettings { _.copy(user = user, password = password,
 							defaultDBName = Some(dbName)) }
+						LogosContext.setup(exc, cPool, dbName, new Tables(cPool), jsonParser, log)
 						
 						new Connection(Some(dbName)).consume { implicit c =>
 							println("Cleaning http:// prefixes from domains")

@@ -1,6 +1,6 @@
 -- 
 -- Database structure for logos models
--- Version: v0.6.1
+-- Version: v0.7
 -- Last generated: 2025-11-25
 --
 
