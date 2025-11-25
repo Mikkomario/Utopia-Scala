@@ -40,11 +40,18 @@ trait Uncertain[A]
 	// OTHER    --------------------------
 	
 	/**
+	 * @param v A value
+	 * @tparam B Type of the specified value
+	 * @return Whether this item is known to exactly match the specified value
+	 */
+	def isCertainly[B >: A](v: B) = exact.contains(v)
+	/**
 	  * @param v A value
 	  * @tparam B Type of the specified value
 	  * @return Whether this item is known to exactly match the specified value
 	  */
-	def isCertainlyExactly[B >: A](v: B) = exact.contains(v)
+	@deprecated("Renamed to .isCertainly(...)", "v2.8")
+	def isCertainlyExactly[B >: A](v: B) = isCertainly(v)
 	/**
 	  * @param v A value
 	  * @return Whether this item is known to not match the specified value

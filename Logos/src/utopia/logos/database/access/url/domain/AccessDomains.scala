@@ -2,17 +2,17 @@ package utopia.logos.database.access.url.domain
 
 import utopia.logos.database.reader.url.DomainDbReader
 import utopia.logos.model.stored.url.Domain
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows}
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
+import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
 import utopia.vault.nosql.targeting.one.TargetingOne
 
-import scala.language.implicitConversions
-
-object AccessDomains extends AccessManyRoot[AccessDomainRows[Domain]]
+object AccessDomains 
+	extends WrapRowAccess[AccessDomainRows] with WrapOneToManyAccess[AccessCombinedDomains] 
+		with AccessManyRoot[AccessDomainRows[Domain]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessDomainRows(AccessManyRows(DomainDbReader))
+	override lazy val root = apply(DomainDbReader)
 	
 	
 	// IMPLICIT	--------------------
@@ -22,6 +22,13 @@ object AccessDomains extends AccessManyRoot[AccessDomainRows[Domain]]
 	  * @param access Access point whose values are accessed
 	  */
 	implicit def accessValues(access: AccessDomains[_, _]): AccessDomainValues = access.values
+	
+	
+	// IMPLEMENTED	--------------------
+	
+	override def apply[A](access: TargetingManyRows[A]) = AccessDomainRows(access)
+	
+	override def apply[A](access: TargetingMany[A]) = AccessCombinedDomains(access)
 }
 
 /**
@@ -30,14 +37,15 @@ object AccessDomains extends AccessManyRoot[AccessDomainRows[Domain]]
   * @since 10.07.2025, v0.4
   */
 abstract class AccessDomains[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
-	extends TargetingManyLike[A, Repr, AccessDomain[A]] with FilterDomains[Repr]
+	extends TargetingManyLike[A, Repr, AccessDomain[A]] with HasValues[AccessDomainValues] 
+		with FilterDomains[Repr]
 {
 	// ATTRIBUTES	--------------------
 	
 	/**
 	  * Access to the values of accessible domains
 	  */
-	lazy val values = AccessDomainValues(wrapped)
+	override lazy val values = AccessDomainValues(wrapped)
 }
 
 /**

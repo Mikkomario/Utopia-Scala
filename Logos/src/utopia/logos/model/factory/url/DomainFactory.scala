@@ -1,5 +1,7 @@
 package utopia.logos.model.factory.url
 
+import utopia.flow.util.UncertainBoolean
+
 import java.time.Instant
 
 /**
@@ -17,6 +19,12 @@ trait DomainFactory[+A]
 	  * @return Copy of this item with the specified created
 	  */
 	def withCreated(created: Instant): A
+	
+	/**
+	  * @param isHttps New is https to assign
+	  * @return Copy of this item with the specified is https
+	  */
+	def withIsHttps(isHttps: UncertainBoolean): A
 	
 	/**
 	  * @param url New url to assign

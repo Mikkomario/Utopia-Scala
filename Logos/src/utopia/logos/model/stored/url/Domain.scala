@@ -1,14 +1,13 @@
 package utopia.logos.model.stored.url
 
-import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.string.Regex
-import utopia.logos.database.access.single.url.domain.DbSingleDomain
+import utopia.logos.database.access.url.domain.AccessDomain
 import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.factory.url.DomainFactoryWrapper
 import utopia.logos.model.partial.url.DomainData
-import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
+import utopia.vault.store.{FromIdFactory, StandardStoredFactory, StoredModelConvertible}
 
-object Domain extends StoredFromModelFactory[DomainData, Domain]
+object Domain extends StandardStoredFactory[DomainData, Domain]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -18,7 +17,10 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	lazy val forwardSlashRegex = Regex.escape('/')
 	private lazy val colonRegex = Regex.escape(':')
 	private lazy val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
-	private lazy val httpRegex = 
+	/**
+	 * A regular expression that identifies "http://" and "https://"
+	 */
+	lazy val httpRegex =
 		(Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2)).withinParentheses
 	private lazy val wwwRegex = (Regex("w").times(3) + Regex.escape('.')).withinParentheses
 	private lazy val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
@@ -37,9 +39,6 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 	// IMPLEMENTED	--------------------
 	
 	override def dataFactory = DomainData
-	
-	override protected def complete(model: HasProperties, data: DomainData) =
-		model("id").tryInt.map { apply(_, data) }
 		
 	
 	// OTHER    ------------------------
@@ -77,7 +76,7 @@ object Domain extends StoredFromModelFactory[DomainData, Domain]
 				case None =>
 					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
 					if (wwwRegex.existsIn(url) || url.headOption.exists { _.isDigit })
-						httpPart + url
+						s"$httpPart$url"
 					else
 						s"${httpPart}www.$url"
 			}
@@ -100,14 +99,14 @@ case class Domain(id: Int, data: DomainData)
 	/**
 	  * An access point to this domain in the database
 	  */
-	def access = DbSingleDomain(id)
+	def access = AccessDomain(id)
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override protected def wrappedFactory = data
 	
-	override def toString = data.url
+	override def toString = data.toString
 	
 	override def withId(id: Int) = copy(id = id)
 	override protected def wrap(data: DomainData) = copy(data = data)

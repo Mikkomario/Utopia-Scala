@@ -1,9 +1,8 @@
 package utopia.logos.database.access.url.domain
 
 import utopia.logos.model.stored.url.Domain
+import utopia.vault.nosql.targeting.columns.HasValues
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
-
-import scala.language.implicitConversions
 
 object AccessDomain extends AccessOneRoot[AccessDomain[Domain]]
 {
@@ -27,14 +26,15 @@ object AccessDomain extends AccessOneRoot[AccessDomain[Domain]]
   * @since 10.07.2025, v0.4
   */
 case class AccessDomain[A](wrapped: TargetingOne[Option[A]]) 
-	extends AccessOneWrapper[Option[A], AccessDomain[A]] with FilterDomains[AccessDomain[A]]
+	extends AccessOneWrapper[Option[A], AccessDomain[A]] with HasValues[AccessDomainValue] 
+		with FilterDomains[AccessDomain[A]]
 {
 	// ATTRIBUTES	--------------------
 	
 	/**
 	  * Access to the values of accessible domain
 	  */
-	lazy val values = AccessDomainValue(wrapped)
+	override lazy val values = AccessDomainValue(wrapped)
 	
 	
 	// IMPLEMENTED	--------------------

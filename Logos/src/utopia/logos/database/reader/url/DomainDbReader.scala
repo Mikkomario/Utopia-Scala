@@ -1,6 +1,7 @@
 package utopia.logos.database.reader.url
 
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.util.UncertainBoolean
 import utopia.logos.database.storable.url.DomainDbModel
 import utopia.logos.model.partial.url.DomainData
 import utopia.logos.model.stored.url.Domain
@@ -30,7 +31,9 @@ object DomainDbReader extends DbRowReader[Domain] with ParseTableModel[Domain] w
 	override def table = model.table
 	
 	override def fromValid(valid: Model) = 
-		Success(Domain(valid(this.model.id.name).getInt, DomainData(valid(this.model.url.name).getString, 
-			valid(this.model.created.name).getInstant)))
+		Success(Domain(valid(this.model.id.name).getInt, 
+			DomainData(url = valid(this.model.url.name).getString, 
+			created = valid(this.model.created.name).getInstant, 
+			isHttps = UncertainBoolean(valid(this.model.isHttps.name).boolean))))
 }
 

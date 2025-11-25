@@ -16,6 +16,8 @@
 - Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
+- Renamed **Iterator**'s `.groupBy(...)` to `.groupConsecutiveBy(...)`
+- Renamed **Uncertain**'s `.isCertainlyExactly(...)` to `.isCertainly(...)`
 ### Bugfixes
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
 ### New features
@@ -23,6 +25,7 @@
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
 - Added **CompoundingSeqBuilder**
+- Added **LimitedCountIterator**
 ### New methods
 - **Constant** (object)
   - Added `.lazily(...)`

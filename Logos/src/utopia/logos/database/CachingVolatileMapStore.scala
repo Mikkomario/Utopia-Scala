@@ -37,16 +37,18 @@ abstract class CachingVolatileMapStore[I, K, V]
 	/**
 	 * Finds the values that are different between the two sets of values.
 	 * May perform some sort of standardization, or just use `proposed -- existing`
-	 * @param proposed Proposed new values
-	 * @param existing Existing set of values
-	 * @return Proposed new values that don't match any of the existing values
+	 * @param proposed Proposed new values. Not standardized.
+	 * @param existing Existing set of values. These have already been standardized, and function as map keys.
+	 * @return Proposed new values that don't match any of the existing values.
+	 *         Note: The new values should not be modified in a way that would negatively affect [[insertAndMap]].
 	 */
 	protected def diff(proposed: Set[I], existing: Set[K]): Set[I]
 	/**
 	 * Pulls matching values from the database
-	 * @param values Values for which DB matches are searched
+	 * @param values Values for which DB matches are searched. These have not been standardized.
 	 * @param connection Implicit DB connection
-	 * @return A map where keys are the specified values and values are their DB matches
+	 * @return A map where keys are the specified values and values are their DB matches.
+	 *         Note: The keys should be standardized.
 	 */
 	protected def pullMatchMap(values: Set[I])(implicit connection: Connection): Map[K, V]
 	/**

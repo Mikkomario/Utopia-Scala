@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.logging.Logger
 import utopia.logos.database.CachingVolatileMapStore
-import utopia.logos.database.access.many.url.domain.DbDomains
+import utopia.logos.database.store.DomainDb
 import utopia.logos.model.cached.Link
 import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.partial.url.RequestPathData
@@ -64,7 +64,7 @@ object DbRequestPaths
 		else
 			storeLock.synchronized {
 				// Stores the domains first
-				val domainValues = DbDomains
+				val domainValues = DomainDb
 					.storeFrom(values)(extractDomain) { (domain, value, wasInserted) => (domain, value, wasInserted) }
 				
 				// Next, stores the request paths

@@ -27,12 +27,10 @@ class TerminatingIterator[+A](source: Iterator[A])(terminator: A => Boolean) ext
 	
 	override def hasNext = !terminated && source.hasNext
 	
-	override def next() =
-	{
+	override def next() = {
 		if (terminated)
 			throw new NoSuchElementException("This iterator has already terminated")
-		else
-		{
+		else {
 			val nextItem = source.next()
 			if (terminator(nextItem))
 				terminated = true

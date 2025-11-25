@@ -1,6 +1,7 @@
 package utopia.logos.database.access.url.domain
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.util.UncertainBoolean
 import utopia.logos.database.storable.url.DomainDbModel
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 
@@ -33,5 +34,10 @@ case class AccessDomainValues(access: AccessManyColumns) extends AccessValues
 	  * Time when this domain was added to the database
 	  */
 	lazy val creationTimes = apply(model.created) { v => v.getInstant }
+	
+	/**
+	  * Whether to connect using HTTPS instead of HTTP. Uncertain if both forms have been encountered.
+	  */
+	lazy val isHttpses = apply(model.isHttps).flatten { v => UncertainBoolean(v.boolean) }
 }
 

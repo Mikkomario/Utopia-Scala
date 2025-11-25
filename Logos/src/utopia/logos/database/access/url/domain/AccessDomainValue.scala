@@ -1,6 +1,7 @@
 package utopia.logos.database.access.url.domain
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.util.UncertainBoolean
 import utopia.logos.database.storable.url.DomainDbModel
 import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 import utopia.vault.nosql.targeting.columns.AccessValue
@@ -23,16 +24,18 @@ case class AccessDomainValue(access: AccessColumn) extends AccessValue
 	  * Access to domain id
 	  */
 	lazy val id = apply(model.index).optional { _.int }
-	
 	/**
 	  * Full http(s) address of this domain in string format. Includes protocol, domain name and 
 	  * possible port number.
 	  */
 	lazy val url = apply(model.url) { v => v.getString }
-	
 	/**
 	  * Time when this domain was added to the database
 	  */
 	lazy val created = apply(model.created).optional { v => v.instant }
+	/**
+	  * Whether to connect using HTTPS instead of HTTP. Uncertain if both forms have been encountered.
+	  */
+	lazy val isHttps = apply(model.isHttps) { v => UncertainBoolean(v.boolean) }
 }
 

@@ -1,7 +1,14 @@
 # Utopia Logos - List of Changes
 
-## v0.6.1 (in development)
+## v0.7 (in development)
 Supports **Vault v2.1** and **Flow v2.8**
+### Breaking changes
+- **Domain** model structure changed; `url` no longer contains the protocol part. 
+  The protocol is now specified in the `isHttps` property.
+  - You can update the existing entries with `DomainDb.cleanHttpPrefixes()` or by using the new migration application.
+- **Domain** storage logic was moved from **DbDomains** to **DomainDb**
+### Deprecations
+- Deprecated **DbDomains** in favor of **AccessDomains** and **DomainDb**
 ### Bugfixes
 - Bugfix to `Domain.regex`: The previous version didn't accept all domain prefixes.
 ### New methods

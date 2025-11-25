@@ -13,5 +13,8 @@ import utopia.vault.nosql.view.{FilterableView, FilterableViewWrapper}
 case class FilterByDomain[+A <: FilterableView[A]](wrapped: A) 
 	extends FilterDomains[A] with FilterableViewWrapper[A]
 {
+	// IMPLEMENTED	--------------------
+	
 	override def table: Table = model.table
 }
+

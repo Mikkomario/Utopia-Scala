@@ -1,6 +1,6 @@
 package utopia.logos.model.factory.url
 
-import utopia.flow.util.Mutate
+import utopia.flow.util.{Mutate, UncertainBoolean}
 
 import java.time.Instant
 
@@ -31,6 +31,8 @@ trait DomainFactoryWrapper[A <: DomainFactory[A], +Repr] extends DomainFactory[R
 	// IMPLEMENTED	--------------------
 	
 	override def withCreated(created: Instant) = mapWrapped { _.withCreated(created) }
+	
+	override def withIsHttps(isHttps: UncertainBoolean) = mapWrapped { _.withIsHttps(isHttps) }
 	
 	override def withUrl(url: String) = mapWrapped { _.withUrl(url) }
 	

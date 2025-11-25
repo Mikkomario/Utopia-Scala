@@ -13,9 +13,9 @@ import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
+import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.{HasSize, TryCatch}
-import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
@@ -985,14 +985,8 @@ object CollectionExtensions
 		def takeCount[To](count: Int)(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) = {
 			if (count <= 0)
 				bf.fromSpecific(coll)(Empty)
-			else {
-				var encountered = 0
-				bf.fromSpecific(coll)(ops.iterator.takeTo { item =>
-					if (f(item))
-						encountered += 1
-					encountered >= count
-				})
-			}
+			else
+				bf.fromSpecific(coll)(ops.iterator.takeCount(count)(f))
 		}
 		
 		/**
@@ -2772,7 +2766,22 @@ object CollectionExtensions
 		 * @return A copy of this iterator that will not return items after the terminating item
 		 */
 		def takeTo(condition: A => Boolean) = TerminatingIterator(i)(condition)
+		/**
+		 * @param n Number of targeted items to yield (at maximum)
+		 * @param f A function that yields true for targeted items and false for others
+		 * @return An iterator that terminates once 'n' targeted items have been found
+		 */
+		def takeCount(n: Int)(f: A => Boolean) =
+			if (n <= 0) Iterator.empty else new LimitedCountIterator[A](i, n)(f)
 		
+		/**
+		 * Groups the *consecutive* items in this iterator using the specified grouping function.
+		 * The resulting iterator returns items as groups based on the group function result.
+		 * @param f A grouping function
+		 * @tparam G Type of group identifier
+		 * @return An iterator that returns groups of consecutive items, including the group identifiers
+		 */
+		def groupConsecutiveBy[G](f: A => G) = GroupIterator(i)(f)
 		/**
 		 * Groups the <b>consecutive</b> items in this iterator using the specified grouping function.
 		 * The resulting iterator returns items as groups based on the group function result.
@@ -2780,7 +2789,8 @@ object CollectionExtensions
 		 * @tparam G Type of group identifier
 		 * @return An iterator that returns groups of consecutive items, including the group identifiers
 		 */
-		def groupBy[G](f: A => G) = GroupIterator(i)(f)
+		@deprecated("Renamed to groupConsecutiveBy(...)", "v2.8")
+		def groupBy[G](f: A => G) = groupConsecutiveBy(f)
 		/**
 		 * Maps the items in this iterator, one group at a time
 		 * @param groupSize The maximum size of an individual group of items to map

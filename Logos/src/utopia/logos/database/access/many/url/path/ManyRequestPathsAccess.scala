@@ -1,7 +1,7 @@
 package utopia.logos.database.access.many.url.path
 
 import utopia.flow.collection.immutable.Empty
-import utopia.logos.database.access.many.url.domain.DbDomains
+import utopia.logos.database.access.url.domain.AccessDomains
 import utopia.logos.database.factory.url.RequestPathDbFactory
 import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.stored.url.RequestPath
@@ -52,7 +52,7 @@ trait ManyRequestPathsAccess
 		val paths = pull
 		if (paths.nonEmpty) {
 			// Pulls the associated domains
-			val domainMap = DbDomains(paths.map { _.domainId }.toSet).toMapBy { _.id }
+			val domainMap = AccessDomains(paths.view.map { _.domainId }).toMapBy { _.id }
 			// Combines the information together
 			paths.map { p => DetailedRequestPath(p, domainMap(p.domainId)) }
 		}
