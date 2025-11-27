@@ -14,6 +14,8 @@ Supports **Vault v2.1** and **Flow v2.8**
 ### New methods
 - **Domain** (object)
   - Added `.standardize(String)`
+### Other
+- Moved statement-pulling functions from **AccessStatementPlacementRows** to **AccessStatementLinkRows**
 
 ## v0.6 - 01.11.2025
 A small update following the changes in **Vault v2.0**.

@@ -707,8 +707,8 @@ object ContentWriter
 			 *                             Default = "description".
 			 * @param namespace Implicit XML namespace to apply
 			 */
-			case class XmlEnvelopeNames(root: String = "Response", value: String = "value",
-			                            valueOnFailure: String = "value", description: String = "Message",
+			case class XmlEnvelopeNames(root: String = "Response", value: String = "Value",
+			                            valueOnFailure: String = "Value", description: String = "Message",
 			                            status: String = "Status", headers: String = "Headers",
 			                            listItem: String = "ListItem", listLengthAttribute: String = "length",
 			                            descriptionAttribute: String = "description")
