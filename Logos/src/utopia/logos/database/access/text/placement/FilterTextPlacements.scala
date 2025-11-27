@@ -27,7 +27,6 @@ trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 	  * @return Copy of this access point that only includes text placements with the specified order index
 	  */
 	def at(orderIndex: Int) = filter(model.orderIndex.column <=> orderIndex)
-	
 	/**
 	  * @param orderIndices Targeted order indices
 	  * @return Copy of this access point that only includes text placements where order index is within the 
@@ -41,7 +40,6 @@ trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 	  * @return Copy of this access point that only includes text placements with the specified placed id
 	  */
 	def placing(placedId: Int) = filter(model.placedId.column <=> placedId)
-	
 	/**
 	  * @param placedIds Targeted placed ids
 	  * @return Copy of this access point that only includes text placements where placed id is within the 
@@ -54,7 +52,6 @@ trait FilterTextPlacements[+Repr] extends FilterableView[Repr]
 	  * @return Copy of this access point that only includes text placements with the specified parent id
 	  */
 	def withinText(parentId: Int) = filter(model.parentId.column <=> parentId)
-	
 	/**
 	  * @param parentIds Targeted parent ids
 	  * @return Copy of this access point that only includes text placements where parent id is within the 

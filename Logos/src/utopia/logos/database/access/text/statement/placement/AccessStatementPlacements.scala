@@ -1,17 +1,12 @@
 package utopia.logos.database.access.text.statement.placement
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.logos.database.LogosTables
-import utopia.logos.database.access.text.delimiter.AccessDelimiters
 import utopia.logos.database.access.text.statement.{AccessStatementValues, FilterByStatement}
 import utopia.logos.database.access.text.word.placement.{AccessWordPlacementValues, FilterByWordPlacement}
 import utopia.logos.database.access.text.word.{AccessWordValues, FilterByWord}
-import utopia.logos.database.access.url.link.placement.AccessLinkPlacements
-import utopia.logos.database.factory.text.TextBuildingStatementDbReader
-import utopia.logos.model.combined.text.TextBuildingStatement
 import utopia.logos.model.partial.text.HasTextPlacementProps
 import utopia.vault.database.Connection
-import utopia.vault.nosql.targeting.many.{TargetingManyLike, TargetingManyRowsLike}
+import utopia.vault.nosql.targeting.many.TargetingManyLike
 
 /**
  * Common trait for access points which yield some form of statement-placements
@@ -48,13 +43,21 @@ object AccessStatementPlacementRows
 		extends AnyVal
 	{
 		/**
+		 * Pulls all accessible text. Intended to be used with access points limited to a single text's statements.
+		 * @param connection Implicit DB connection
+		 * @return All accessible text as a single string, including full text, delimiters and links.
+		 */
+		def text(implicit connection: Connection) =
+			a.pullWithText.sortBy { _._1.orderIndex }.iterator.map { _._2 }.mkString
+		
+		/**
 		 * Converts all accessible statement placements to a full text mapping
 		 * @param connection Implicit DB connection
 		 * @return A map where keys are IDs of the text items and values are their full text content.
 		 */
 		def toTextMap(implicit connection: Connection) =
 			a.pullWithText.groupBy { _._1.parentId }.view
-				.mapValues { placements => placements.sortBy { _._1.orderIndex }.view.map { _._2 }.mkString }
+				.mapValues { placements => placements.sortBy { _._1.orderIndex }.iterator.map { _._2 }.mkString }
 				.toMap.withDefaultValue("")
 	}
 }
@@ -65,49 +68,4 @@ object AccessStatementPlacementRows
  * @tparam One Type of the access point which targets only one item at a time
  */
 trait AccessStatementPlacementRows[+A, +Repr <: TargetingManyLike[_, Repr, _], +One]
-	extends AccessStatementPlacements[A, Repr, One] with TargetingManyRowsLike[A, Repr, One]
-{
-	/**
-	 * Loads all accessible statement-placements and includes their text content
-	 * @param connection Implicit DB connection
-	 * @return All accessible statement placements, each accompanied by their full text content
-	 */
-	def pullWithText(implicit connection: Connection) = {
-		// Pulls the items, including statement word data
-		val placements = withTextBuildingStatements { (item, statement) => item -> statement }.pull
-		val statementIds = placements.view.map { _._2.id }.toIntSet
-		
-		// Pulls delimiter and link data in order to complete the statements
-		val delimiterIds = placements.view.flatMap { _._2.delimiterId }.toIntSet
-		val delimiterPerId = AccessDelimiters(delimiterIds).idToText
-		val linksPerStatement = AccessLinkPlacements.detailed.withinStatements(statementIds).pull
-			.groupBy { _.statementId }.view
-			.mapValues { _.map { placement => placement.orderIndex -> placement.link.toString } }
-			.toMap
-		
-		// Combines the statement data in order to form the full text
-		placements.map { case (placement, statement) =>
-			// Combines the words, links and the delimiter
-			val allWords = linksPerStatement.get(statement.id) match {
-				case Some(links) => (statement.indexedWords ++ links).sortBy { _._1 }
-				case None => statement.indexedWords
-			}
-			val delimiter = statement.delimiterId.flatMap(delimiterPerId.get).getOrElse("")
-			val text = s"${ allWords.iterator.map { _._2 }.mkString(" ") }$delimiter"
-			placement -> text
-		}
-	}
-	
-	/**
-	 * Attaches text-building statements to accessible items
-	 * @param f A function which combines the read items with the read text-building statements
-	 * @tparam B Type of 'f' results
-	 * @return Copy of this access which yields 'f' results
-	 */
-	def withTextBuildingStatements[B](f: (A, TextBuildingStatement) => B) =
-		combineWithMany(TextBuildingStatementDbReader, neverEmpty = true) { (placement, statements) =>
-			// Only links to one statement per link, because there's a one-to-one connection
-			// Assumes that 'statements' always contains just that one element
-			f(placement, statements.head)
-		}
-}
+	extends AccessStatementPlacements[A, Repr, One] with AccessStatementLinkRows[A, Repr, One]
