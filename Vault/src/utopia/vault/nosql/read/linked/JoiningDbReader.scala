@@ -68,17 +68,19 @@ abstract class JoiningDbReader[+L, +R, +A](protected val left: DbRowReader[L], p
 	override lazy val target: SqlTarget = {
 		// Applies the joins as conditional, if applicable
 		val joined = {
+			val appliedConditions = joinConditions.filterNot { _.isAlwaysTrue }
+			
 			// No join conditions applied => Just joins the tables
-			if (joinConditions.isEmpty)
+			if (appliedConditions.isEmpty)
 				bridges ++ right.tables
 			// Case: Join conditions applicable
 			else {
 				(bridges ++ right.tables).oneOrMany match {
 					// Case: Only one table joined => All conditions are applied to that table
-					case Left(table) => Single(table.onlyJoinIf(Condition.and(joinConditions)))
+					case Left(table) => Single(table.onlyJoinIf(Condition.and(appliedConditions)))
 					// Case: Multiple tables joined => Join conditions are applied to the tables which they concern
 					case Right(tables) =>
-						val conditionByTable = joinConditions.iterator
+						val conditionByTable = appliedConditions.iterator
 							.map { condition =>
 								val table = condition.toWhereClause.targetTables.find(tables.contains)
 									// If a condition doesn't concern any of the joined tables,
@@ -107,6 +109,16 @@ abstract class JoiningDbReader[+L, +R, +A](protected val left: DbRowReader[L], p
 	
 	override def table: Table = left.table
 	
-	override def onlyJoinIf(condition: Condition): DbReader[Seq[A]] =
-		JoiningDbReader(left, right, bridges, joinType, this.joinConditions :+ condition)(apply)
+	override def onlyJoinIf(condition: Condition): DbReader[Seq[A]] = {
+		if (condition.isAlwaysTrue)
+			this
+		else
+			JoiningDbReader(left, right, bridges, joinType, this.joinConditions :+ condition)(apply)
+	}
+	override def onlyJoinIf(conditions: Seq[Condition]): DbReader[Seq[A]] = {
+		if (conditions.isEmpty)
+			this
+		else
+			JoiningDbReader(left, right, bridges, joinType, this.joinConditions ++ conditions)(apply)
+	}
 }

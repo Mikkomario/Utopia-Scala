@@ -70,6 +70,16 @@ abstract class PossiblyCombiningDbRowReader[L, R, +A](left: DbRowReader[L],
 	override def shouldParse(row: Row): Boolean = left.shouldParse(row)
 	override def apply(row: Row): Try[A] = left(row).map { combine(_, right.tryParse(row)) }
 	
-	override def onlyJoinIf(condition: Condition) =
-		PossiblyCombiningDbRowReader(left, right, bridges, joinConditions)(combine)
+	override def onlyJoinIf(condition: Condition): DbRowReader[A] = {
+		if (condition.isAlwaysTrue)
+			this
+		else
+			PossiblyCombiningDbRowReader(left, right, bridges, joinConditions :+ condition)(combine)
+	}
+	override def onlyJoinIf(conditions: Seq[Condition]): DbRowReader[A] = {
+		if (conditions.isEmpty)
+			this
+		else
+			PossiblyCombiningDbRowReader(left, right, bridges, joinConditions ++ conditions)(combine)
+	}
 }

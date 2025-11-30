@@ -30,7 +30,6 @@ object Joinable
   * @author Mikko Hilpinen
   * @since 19.12.2021, v1.12
   */
-// TODO: Add a trait that specifies the .where(Condition) -function(s)
 trait Joinable extends ConditionallyJoinable[Joinable]
 {
 	// ABSTRACT -------------------------
@@ -47,7 +46,10 @@ trait Joinable extends ConditionallyJoinable[Joinable]
 	
 	// IMPLEMENTED  --------------------
 	
-	override def onlyJoinIf(condition: Condition): Joinable = new _ConditionalJoinable(this, condition)
+	override def onlyJoinIf(condition: Condition): Joinable =
+		if (condition.isAlwaysTrue) this else new _ConditionalJoinable(this, condition)
+	
+	override def onlyJoinIf(conditions: Seq[Condition]): Joinable = onlyJoinIf(Condition.and(conditions))
 	
 	
 	// OTHER    ------------------------

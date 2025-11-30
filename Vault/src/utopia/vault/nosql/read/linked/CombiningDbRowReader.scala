@@ -33,7 +33,7 @@ object CombiningDbRowReader
 	
 	private class _CombiningDbRowReader[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
 	                                             bridges: Seq[Table], joinConditions: Seq[Condition], f: (L, R) => A)
-		extends CombiningDbRowReader[L, R, A](left, right, bridges)
+		extends CombiningDbRowReader[L, R, A](left, right, bridges, joinConditions)
 	{
 		override protected def combine(left: L, right: R): A = f(left, right)
 	}
@@ -65,6 +65,16 @@ abstract class CombiningDbRowReader[L, R, +A](left: DbRowReader[L], right: DbRow
 	override def shouldParse(row: Row): Boolean = left.shouldParse(row) && right.shouldParse(row)
 	override def apply(row: Row): Try[A] = left(row).flatMap { left => right(row).map { combine(left, _) } }
 	
-	override def onlyJoinIf(condition: Condition) =
-		CombiningDbRowReader(left, right, bridges, joinConditions)(combine)
+	override def onlyJoinIf(condition: Condition): DbRowReader[A] = {
+		if (condition.isAlwaysTrue)
+			this
+		else
+			CombiningDbRowReader(left, right, bridges, joinConditions :+ condition)(combine)
+	}
+	override def onlyJoinIf(conditions: Seq[Condition]): DbRowReader[A] = {
+		if (conditions.isEmpty)
+			this
+		else
+			CombiningDbRowReader(left, right, bridges, joinConditions ++ conditions)(combine)
+	}
 }
