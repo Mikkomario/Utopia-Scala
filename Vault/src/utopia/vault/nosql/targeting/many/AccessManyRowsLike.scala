@@ -131,7 +131,7 @@ trait AccessManyRowsLike[+A, +Repr]
 					.flatMap { rows => parse(rows.head).map { _ -> map(rows) } }
 					.toOptimizedSeq
 				 */
-				result.rowsIterator.groupBy { row => indices.map(row.apply) }
+				result.rowsIterator.groupConsecutiveBy { row => indices.map(row.apply) }
 					.flatMap { case (_, rows) => parse(rows.head).map { _ -> map(rows) } }
 					.toOptimizedSeq
 		}

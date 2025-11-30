@@ -48,10 +48,10 @@ trait ConcreteAccessManyLike[+A, +Repr <: TargetingManyLike[A, Repr, _]] extends
 		table.primaryColumn match {
 			case Some(index) =>
 				val joinToApply = where match {
-					case Some(condition) => table.where(condition)
+					case Some(condition) => table.onlyJoinIf(condition)
 					case None => table
 				}
-				join(joinToApply).filter(index.isNull)
+				leftJoin(joinToApply).filter(index.isNull)
 				
 			case None => throw new ColumnNotFoundException(s"$table doesn't have a primary key")
 		}

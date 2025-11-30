@@ -2,7 +2,7 @@ package utopia.vault.model.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.vault.model.immutable.Table
-import utopia.vault.model.template.Joinable.{ConditionalJoinable, RenamedJoinable}
+import utopia.vault.model.template.Joinable.{_ConditionalJoinable, RenamedJoinable}
 import utopia.vault.sql.JoinType.Inner
 import utopia.vault.sql.{Condition, Join, JoinType}
 
@@ -12,7 +12,7 @@ object Joinable
 {
 	// NESTED   -------------------------
 	
-	private class ConditionalJoinable(original: Joinable, condition: Condition) extends Joinable
+	private class _ConditionalJoinable(original: Joinable, condition: Condition) extends Joinable
 	{
 		override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType) =
 			original.toJoinsFrom(originTables, joinType).map { _.mapHead { _.where(condition) } }
@@ -30,7 +30,8 @@ object Joinable
   * @author Mikko Hilpinen
   * @since 19.12.2021, v1.12
   */
-trait Joinable
+// TODO: Add a trait that specifies the .where(Condition) -function(s)
+trait Joinable extends ConditionallyJoinable[Joinable]
 {
 	// ABSTRACT -------------------------
 	
@@ -44,13 +45,20 @@ trait Joinable
 	def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner): Try[Seq[Join]]
 	
 	
+	// IMPLEMENTED  --------------------
+	
+	override def onlyJoinIf(condition: Condition): Joinable = new _ConditionalJoinable(this, condition)
+	
+	
 	// OTHER    ------------------------
 	
 	/**
 	 * @param condition A condition that must be met for this join to occur
 	 * @return A copy of this joinable item, joined only when the specified condition is met
 	 */
-	def where(condition: Condition): Joinable = new ConditionalJoinable(this, condition)
+	 // TODO: After v2.1 has been released, move this function exclusively to Join and remove the deprecation
+    @deprecated("Renamed to onlyJoinIf(Condition)", "v2.1")
+	def where(condition: Condition): Joinable = onlyJoinIf(condition)
 	
 	/**
 	 * @param alias An alias given to the joined table

@@ -80,7 +80,7 @@ trait ParseGroupedRows[+A] extends ParseRows[Seq[A]] with HasTable
 	private def apply(rows: Seq[Row], index: Column) =
 		rows.groupBy { _(index) }.valuesIterator.flatMap(tryParseGroup).toOptimizedSeq
 	private def apply(rowsIter: Iterator[Row], index: Column) =
-		rowsIter.groupBy { _(index) }.flatMap { case (_, rows) => tryParseGroup(rows) }.toOptimizedSeq
+		rowsIter.groupConsecutiveBy { _(index) }.flatMap { case (_, rows) => tryParseGroup(rows) }.toOptimizedSeq
 	
 	/**
 	  * Attempts to parse rows without grouping.

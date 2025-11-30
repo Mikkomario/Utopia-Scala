@@ -94,8 +94,9 @@ object AccessManyRows
 				AccessMany(newTarget, table, newSelect, accessCondition, ordering, prepare = finalizeStatement) {
 					result =>
 						// NB: Assumes that same index rows are consecutive
-						OptimizedIndexedSeq.from(f(result.rowsIterator.groupBy { row => indices.map(row.apply) }
-							.flatMap { case (_, rows) => parse(rows.head).map { _ -> rows } }))
+						OptimizedIndexedSeq.from(
+							f(result.rowsIterator.groupConsecutiveBy { row => indices.map(row.apply) }
+								.flatMap { case (_, rows) => parse(rows.head).map { _ -> rows } }))
 				}
 			}
 		

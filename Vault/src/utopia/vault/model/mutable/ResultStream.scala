@@ -147,7 +147,7 @@ class ResultStream(val closedFlag: Flag = AlwaysTrue,
 	 *         effectively combining related rows together
 	 */
 	def rowsByIndexIterator(table: Table) = table.primaryColumn match {
-		case Some(index) => rowsIterator.groupBy { _(index) }
+		case Some(index) => rowsIterator.groupConsecutiveBy { _(index) }
 		case None => PollableOnce { Value.empty -> rowsIterator.toOptimizedSeq }
 	}
 	

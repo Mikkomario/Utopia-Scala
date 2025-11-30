@@ -7,7 +7,7 @@ import utopia.vault.model.immutable.{Column, Row, Table}
 import utopia.vault.nosql.read.DbRowReader.MappingDbRowReader
 import utopia.vault.nosql.read.linked.{CombiningDbRowReader, MultiLinkedDbReader, PossiblyCombiningDbRowReader}
 import utopia.vault.nosql.read.parse.{ParseRow, ParseRows}
-import utopia.vault.sql.SqlTarget
+import utopia.vault.sql.{Condition, SqlTarget}
 
 import scala.collection.View
 import scala.util.Try
@@ -48,41 +48,44 @@ trait DbRowReader[+A] extends DbReader[Seq[A]] with ParseRow[A]
 	  * Combines this reader with another reader
 	  * @param right Reader to join to this one
 	  * @param bridges Joins to perform before joining 'right'
-	  * @param merge A function for merging the results
+	  * @param conditions Conditions that must be met for joining to occur (default = empty)
+	 * @param merge A function for merging the results
 	  * @tparam R Type of parsed joined items
 	  * @tparam B Type of merge results
 	  * @return A reader which combines the results of these two readers
 	  * @see [[leftJoin]]
 	  */
-	def join[R, B](right: DbRowReader[R], bridges: Seq[Table] = Empty)
+	def join[R, B](right: DbRowReader[R], bridges: Seq[Table] = Empty, conditions: Seq[Condition] = Empty)
 	              (merge: (A, R) => B): DbRowReader[B] =
-		CombiningDbRowReader(this, right, bridges)(merge)
+		CombiningDbRowReader(this, right, bridges, conditions)(merge)
 	/**
 	  * Combines this reader with another reader
 	  * @param right Reader to join to this one
 	  * @param bridges Joins to perform before joining 'right'
-	  * @param merge A function for merging the results.
+	  * @param conditions Conditions that must be met for joining to occur (default = empty)
+	 * @param merge A function for merging the results.
 	  *              The right side element is provided, if one was parsed.
 	  * @tparam R Type of parsed joined items
 	  * @tparam B Type of merge results
 	  * @return A reader which combines the results of these two readers
 	  */
-	def leftJoin[R, B](right: DbRowReader[R], bridges: Seq[Table] = Empty)
+	def leftJoin[R, B](right: DbRowReader[R], bridges: Seq[Table] = Empty, conditions: Seq[Condition] = Empty)
 	                  (merge: (A, Option[R]) => B): DbRowReader[B] =
-		PossiblyCombiningDbRowReader(this, right, bridges)(merge)
+		PossiblyCombiningDbRowReader(this, right, bridges, conditions)(merge)
 	/**
 	 * Combines this reader with another reader in one-to-many linking
 	 * @param right Reader to join to this one
 	 * @param bridges Joins to perform before joining 'right'
+	 * @param conditions Conditions that must be met for joining to occur (default = empty)
 	 * @param merge A function for merging the results. n right side elements are provided.
 	 * @tparam R Type of parsed joined items
 	 * @tparam B Type of merge results
 	 * @return A reader which combines the results of these two readers
 	 */
-	def multiJoin[R, B](right: DbRowReader[R], bridges: Seq[Table] = Empty,
+	def multiJoin[R, B](right: DbRowReader[R], bridges: Seq[Table] = Empty, conditions: Seq[Condition] = Empty,
 	                    neverEmptyRight: Boolean = false)
 	                   (merge: (A, Seq[R]) => B): DbReader[Seq[B]] =
-		MultiLinkedDbReader(this, right, bridges, neverEmptyRight)(merge)
+		MultiLinkedDbReader(this, right, bridges, conditions, neverEmptyRight)(merge)
 	
 	/**
 	 * @param rows Rows to parse
@@ -118,5 +121,6 @@ trait DbRowReader[+A] extends DbReader[Seq[A]] with ParseRow[A]
 		parseMultiLinked(rows) { (left, rows) => f(left, parser(OptimizedIndexedSeq.from(rows))) }
 		
 	private def _parseMultiLinked[B](rowsIter: Iterator[Row], index: Column)(f: (A, Iterable[Row]) => B) =
-		rowsIter.groupBy { _(index) }.flatMap { case (_, rows) => tryParse(rows.head).map { left => f(left, rows) } }
+		rowsIter.groupConsecutiveBy { _(index) }
+			.flatMap { case (_, rows) => tryParse(rows.head).map { left => f(left, rows) } }
 }

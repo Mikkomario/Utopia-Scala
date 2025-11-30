@@ -5,11 +5,16 @@
 - **FilterableView**'s required `self` -property is now public instead of protected
   - This will likely cause build errors. However, these should be easily fixed with a simple find-and-replace.
 - `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
+### Deprecations
+- Deprecated **Joinable**'s `.where(Condition)` in favor of `.onlyJoinIf(Condition)` 
+  (same functionality, different name)
 ### New features
 - Added classes for lazily initializing values from the DB: 
   **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
 - Added a new **DbMap** class for pulling and caching values from a database table
+- **JoiningDbReader** now supports the addition of new join conditions after instance creation
 - Added **Filterable** trait
+- Added **ConditionallyJoinable** trait
 ### New methods
 - **AccessColumnValues**
   - Added `.takeMin(Int)(...)`, `.takeMax(Int)(...)` and `.take(Extreme, Int)(...)`

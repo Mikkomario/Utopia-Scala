@@ -2,8 +2,9 @@ package utopia.vault.nosql.read.linked
 
 import utopia.flow.collection.immutable.Empty
 import utopia.vault.model.immutable.{Row, Table}
+import utopia.vault.model.template.ConditionallyJoinable
 import utopia.vault.nosql.read.DbRowReader
-import utopia.vault.sql.JoinType
+import utopia.vault.sql.{Condition, JoinType}
 
 import scala.util.Try
 
@@ -15,24 +16,26 @@ object PossiblyCombiningDbRowReader
 	  * @param left Reader used for parsing left side items
 	  * @param right Reader used for parsing joined items
 	  * @param bridges Joins to perform between the left and the right target (default = empty)
-	  * @param merge A function for merging both sides together
+	  * @param joinConditions Conditions that must be met in order for joining to occur (default = empty)
+	 * @param merge A function for merging both sides together
 	  * @tparam L Type of the parsed left-side items
 	  * @tparam R Type of the parsed right-side items
 	  * @tparam A Type of the merge results
 	  * @return A DB reader that combines the results of the specified two readers
 	  */
 	def apply[L, R, A](left: DbRowReader[L], right: DbRowReader[R],
-	                   bridges: Seq[Table] = Empty)
+	                   bridges: Seq[Table] = Empty, joinConditions: Seq[Condition] = Empty)
 	                  (merge: (L, Option[R]) => A): PossiblyCombiningDbRowReader[L, R, A] =
-		new _PossiblyCombiningDbRowReader[L, R, A](left, right, bridges, merge)
+		new _PossiblyCombiningDbRowReader[L, R, A](left, right, bridges, joinConditions, merge)
 	
 	
 	// NESTED   ---------------------------
 	
 	private class _PossiblyCombiningDbRowReader[L, R, A](left: DbRowReader[L],
 	                                                     right: DbRowReader[R],
-	                                                     bridges: Seq[Table], f: (L, Option[R]) => A)
-		extends PossiblyCombiningDbRowReader[L, R, A](left, right, bridges)
+	                                                     bridges: Seq[Table], joinConditions: Seq[Condition],
+	                                                     f: (L, Option[R]) => A)
+		extends PossiblyCombiningDbRowReader[L, R, A](left, right, bridges, joinConditions)
 	{
 		override protected def combine(left: L, right: Option[R]): A = f(left, right)
 	}
@@ -46,8 +49,10 @@ object PossiblyCombiningDbRowReader
   */
 abstract class PossiblyCombiningDbRowReader[L, R, +A](left: DbRowReader[L],
                                                       right: DbRowReader[R],
-                                                      bridges: Seq[Table] = Empty)
-	extends JoiningDbReader[L, R, A](left, right, bridges, JoinType.Left) with DbRowReader[A]
+                                                      bridges: Seq[Table] = Empty,
+                                                      joinConditions: Seq[Condition] = Empty)
+	extends JoiningDbReader[L, R, A](left, right, bridges, JoinType.Left, joinConditions) with DbRowReader[A]
+		with ConditionallyJoinable[DbRowReader[A]]
 {
 	// ABSTRACT -------------------------
 	
@@ -64,4 +69,7 @@ abstract class PossiblyCombiningDbRowReader[L, R, +A](left: DbRowReader[L],
 	
 	override def shouldParse(row: Row): Boolean = left.shouldParse(row)
 	override def apply(row: Row): Try[A] = left(row).map { combine(_, right.tryParse(row)) }
+	
+	override def onlyJoinIf(condition: Condition) =
+		PossiblyCombiningDbRowReader(left, right, bridges, joinConditions)(combine)
 }
