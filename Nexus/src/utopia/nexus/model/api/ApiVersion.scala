@@ -1,9 +1,11 @@
 package utopia.nexus.model.api
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.operator.ScopeUsable
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.view.immutable.View
 
+import scala.language.implicitConversions
 import scala.util.Failure
 
 object ApiVersion
@@ -14,6 +16,15 @@ object ApiVersion
 	 * The first API version
 	 */
 	lazy val v1 = apply(1)
+	
+	
+	// IMPLICIT ------------------------
+	
+	/**
+	 * @param version The major API version number to wrap
+	 * @return An API version based on that version number
+	 */
+	implicit def apply(version: Int): ApiVersion = new ApiVersion(version)
 	
 	
 	// OTHER    ------------------------
@@ -44,8 +55,21 @@ object ApiVersion
  * @author Mikko Hilpinen
  * @since 07.11.2025, v2.0
  */
-case class ApiVersion(value: Int) extends View[Int] with SelfComparable[ApiVersion]
+case class ApiVersion(value: Int) extends View[Int] with SelfComparable[ApiVersion] with ScopeUsable[ApiVersion]
 {
+	// COMPUTED ----------------------
+	
+	/**
+	 * @return The API version previous to this one
+	 */
+	def previous = ApiVersion(value - 1)
+	
+	/**
+	 * @return An iterator that yields this version, as well as all the previous API versions
+	 */
+	def decreasing = Iterator.iterate(this) { _.previous }.takeWhile { _.value >= 1 }
+	
+	
 	// IMPLEMENTED  ------------------
 	
 	override def self: ApiVersion = this

@@ -10,7 +10,6 @@ import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.nexus.controller.api.ApiRoot
 import utopia.nexus.controller.servlet.{ApiLogic, LogicWrappingServlet, ServletLogic}
 import utopia.nexus.controller.write.JsonOrXmlContentWriter
-import utopia.nexus.model.request.StreamOrReader
 import utopia.nexus.model.servlet.ParameterEncoding
 
 import scala.concurrent.ExecutionContext
@@ -39,7 +38,7 @@ class TestApiServlet extends LogicWrappingServlet
 	override implicit val expectedParameterEncoding: ParameterEncoding = ParameterEncoding.none
 	
 	override val logic: ServletLogic = {
-		val api = ApiRoot.newBuilder[NexusTestContext, StreamOrReader]("test/api", JsonOrXmlContentWriter()) {
+		val api = ApiRoot.newBuilder[NexusTestContext]("test/api", JsonOrXmlContentWriter()) {
 			(request, version) => new NexusTestContext(request, version) }
 		
 		api ++= Pair(new EchoNode(), new SlowNode())

@@ -19,46 +19,74 @@ import utopia.nexus.controller.api.node.ApiNode
 import utopia.nexus.controller.write.ContentWriter
 import utopia.nexus.model.api.ApiVersion
 import utopia.nexus.model.api.PathFollowResult.{Follow, NotFound, Ready, Redirected}
-import utopia.nexus.model.request.Request
+import utopia.nexus.model.request.{Request, StreamOrReader}
 import utopia.nexus.model.response.{RequestResult, Response, ResponseContent}
 
 import scala.annotation.tailrec
 import scala.collection.{View, mutable}
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object ApiRoot
 {
-	// OTHER    ---------------------------
+	// COMPUTED    -------------------------
 	
 	/**
-	 * Creates a new API builder
-	 * @param rootPath Path to the API root node (i.e. the last node before the version number).
-	 *                 Typically, this doesn't include elements from the server domain.
-	 *
-	 *                 E.g. "api" or "my-service/api".
-	 * @param contentWriter Interface used for converting [[ResponseContent]] from [[RequestResult]]
-	 *                      into response body content.
-	 *
-	 *                      See [[ContentWriter]] companion object for existing implementations.
-	 * @param prepareContext A function for preparing the request context.
-	 *                       Receives:
-	 *                          1. The received request
-	 *                          1. The targeted API version
-	 * @param log An implicit logging implementation which receives errors thrown during request-processing and
-	 *            interceptor-closing.
-	 * @tparam C Type of the request context used
-	 * @tparam Body Type of the expected request body
-	 * @return A builder for setting up an [[ApiRoot]] instance
+	 * Initializes a new API builder factory, using the default request body type (a stream)
+	 * @return A builder factory for setting up an [[ApiRoot]] instance
 	 */
-	def newBuilder[C <: AutoCloseable, Body](rootPath: String, contentWriter: ContentWriter[C])
-	                                        (prepareContext: (Request[Body], ApiVersion) => C)
-	                                        (implicit log: Logger) =
-		new ApiBuilder[C, Body](Regex.forwardSlash.split(rootPath), contentWriter, prepareContext)
+	def default = expectingBody[StreamOrReader]
+	/**
+	 * Initializes a new API builder factory that supports a specific request body type
+	 * @tparam Body Type of the expected request body
+	 * @return A builder factory for setting up an [[ApiRoot]] instance
+	 */
+	def expectingBody[Body] = new ApiBuilderFactory[Body]
+	
+	
+	// IMPLICIT ---------------------------
+	
+	implicit def objectAsBuilderFactory(o: ApiRoot.type): ApiBuilderFactory[StreamOrReader] = o.default
 	
 	
 	// NESTED   ---------------------------
 	
+	/**
+	 * Specifies expected request body type. Provides a function for creating a new ApiBuilder.
+	 * @tparam Body Type of the expected request body
+	 */
+	class ApiBuilderFactory[Body]
+	{
+		/**
+		 * Creates a new API builder
+		 * @param rootPath Path to the API root node (i.e. the last node before the version number).
+		 *                 Typically, this doesn't include elements from the server domain.
+		 *
+		 *                 E.g. "api" or "my-service/api".
+		 * @param contentWriter Interface used for converting [[ResponseContent]] from [[RequestResult]]
+		 *                      into response body content.
+		 *
+		 *                      See [[ContentWriter]] companion object for existing implementations.
+		 * @param latestVersion The latest API version. Default = v1.
+		 *                      Note: Will always be adjusted to include all versions mentioned in 'nodesByVersion'.
+		 * @param prepareContext A function for preparing the request context.
+		 *                       Receives:
+		 *                          1. The received request
+		 *                          1. The targeted API version
+		 * @param log An implicit logging implementation which receives errors thrown during request-processing and
+		 *            interceptor-closing.
+		 * @tparam C Type of the request context used
+		 * @return A builder for setting up an [[ApiRoot]] instance
+		 */
+		def newBuilder[C <: AutoCloseable](rootPath: String, contentWriter: ContentWriter[C],
+		                                   latestVersion: ApiVersion = ApiVersion.v1)
+		                                  (prepareContext: (Request[Body], ApiVersion) => C)
+		                                  (implicit log: Logger) =
+			new ApiBuilder[C, Body](Regex.forwardSlash.split(rootPath), contentWriter, latestVersion, prepareContext)
+	}
+	
 	class ApiBuilder[C <: AutoCloseable, B](rootPath: Seq[String], contentWriter: ContentWriter[C],
+	                                        latestVersion: ApiVersion,
 	                                        prepareContext: (Request[B], ApiVersion) => C)
 	                                       (implicit log: Logger)
 		extends mutable.Builder[ApiNode[C], ApiRoot[C, B]]
@@ -87,8 +115,8 @@ object ApiRoot
 				else if (commonNodes.isEmpty)
 					versionedNodeBuilders.view.mapValues { _.result() }.toMap
 				// Case: Versions share nodes
-				else
-					versionedNodeBuilders.view
+				else {
+					val default = versionedNodeBuilders.view
 						.mapValues { builder =>
 							val customNodes = builder.result()
 							// Case: This version has no custom nodes => Applies the common nodes
@@ -99,8 +127,15 @@ object ApiRoot
 								View.concat(commonNodes, customNodes)
 						}
 						.toMap
+					// Makes sure v1 is included
+					if (default.contains(ApiVersion.v1))
+						default
+					else
+						default + (ApiVersion.v1 -> commonNodes)
+				}
 			}
-			new ApiRoot[C, B](nodes, contentWriter, rootPath, interceptorsBuilder.result())(prepareContext)
+			new ApiRoot[C, B](nodes, contentWriter, rootPath, latestVersion, interceptorsBuilder.result())(
+				prepareContext)
 		}
 		
 		override def addOne(elem: ApiNode[C]): ApiBuilder.this.type = {
@@ -165,12 +200,15 @@ object ApiRoot
  * Used for processing API requests by identifying and utilizing the targeted ApiNode.
  * Supports versioning.
  *
- * @param nodesByVersion A map where keys are API versions and values are the root nodes present in that version
+ * @param nodesByVersion A map where keys are API versions and values are the root nodes present in that version.
+ *                       In cases where versions are missing, a previous version's nodes are used instead.
  * @param contentWriter Interface used for converting [[ResponseContent]] from [[RequestResult]]
  *                      into response body content.
  *
  *                      See [[ContentWriter]] companion object for existing implementations.
  *
+ * @param latestVersion The latest API version. Default = v1.
+ *                      Note: Will always be adjusted to include all versions mentioned in 'nodesByVersion'.
  * @param interceptors Interceptors used for recording and/or modifying the received requests,
  *                     request context and outgoing request results.
  *                     Default = empty.
@@ -188,14 +226,15 @@ object ApiRoot
  * @since 06.11.2025, based on RequestHandler written 9.9.2017
  */
 class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterable[ApiNode[C]]],
-                                        contentWriter: ContentWriter[C], rootPath: Seq[String] = Empty,
-                                        interceptors: Iterable[InterceptRequest[C]])
-                                       (prepareContext: (Request[Body], ApiVersion) => C)
-                                       (implicit log: Logger)
+                                         contentWriter: ContentWriter[C], rootPath: Seq[String] = Empty,
+                                         latestVersion: ApiVersion = ApiVersion.v1,
+                                         interceptors: Iterable[InterceptRequest[C]])
+                                        (prepareContext: (Request[Body], ApiVersion) => C)
+                                        (implicit log: Logger)
 {
 	// ATTRIBUTES   -----------------------
 	
-	private lazy val latestVersion = nodesByVersion.keysIterator.max
+	private val _latestVersion = nodesByVersion.keysIterator.max max latestVersion
 	
 	
 	// OTHER    ---------------------------
@@ -221,7 +260,7 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 				}
 			// Case: The request didn't target this node, or didn't target an existing version => Yields 404
 			case Left(failureMessage) =>
-				withContext(appliedRequest, latestVersion, Empty, interceptors) { implicit context =>
+				withContext(appliedRequest, _latestVersion, Empty, interceptors) { implicit context =>
 					intercept((Status.NotFound, failureMessage): RequestResult, interceptors) {
 						_.interceptNotFound(_, Empty)
 					}
@@ -360,7 +399,7 @@ class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterabl
 					case None =>
 						ApiVersion.parse(nextStep) match {
 							case Success(version) =>
-								nodesByVersion.get(version) match {
+								version.decreasing.findMap(nodesByVersion.get) match {
 									// Case: Found a valid version => Continues with the resources in that version
 									case Some(nodes) => Right(version, nodes, path.drop(nextIndex + 1))
 									// Case: Targeted version not found => Fails
