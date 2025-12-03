@@ -9,7 +9,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.nexus.controller.api.ApiRoot
 import utopia.nexus.controller.servlet.{ApiLogic, LogicWrappingServlet, ServletLogic}
-import utopia.nexus.controller.write.ContentWriter.JsonOrXmlContentWriter
+import utopia.nexus.controller.write.JsonOrXmlContentWriter
 import utopia.nexus.model.request.StreamOrReader
 import utopia.nexus.model.servlet.ParameterEncoding
 

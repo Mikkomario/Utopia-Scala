@@ -4,8 +4,8 @@ import utopia.access.model.enumeration.Status.{BadRequest, OK}
 import utopia.access.model.enumeration.{Status, StatusGroup}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.nexus.controller.write.ContentWriter.JsonContentWriter.JsonEnveloper
-import utopia.nexus.controller.write.ContentWriter.JsonContentWriter.JsonEnveloper.JsonEnvelopeNames
+import utopia.nexus.controller.write.JsonContentWriter.JsonEnveloper
+import utopia.nexus.controller.write.JsonContentWriter.JsonEnveloper.JsonEnvelopeNames
 import utopia.nexus.http.{Request, Response}
 
 /**

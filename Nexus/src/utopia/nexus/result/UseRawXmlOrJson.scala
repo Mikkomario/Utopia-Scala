@@ -3,8 +3,8 @@ package utopia.nexus.result
 import utopia.access.model.enumeration.ContentCategory._
 import utopia.access.model.enumeration.Status
 import utopia.flow.generic.model.immutable.Value
-import utopia.nexus.controller.write.ContentWriter.JsonOrXmlContentWriter.PlainJsonOrXmlContentWriter
-import utopia.nexus.controller.write.ContentWriter.XmlContentWriter.XmlElementNames
+import utopia.nexus.controller.write.JsonOrXmlContentWriter.PlainJsonOrXmlContentWriter
+import utopia.nexus.controller.write.XmlContentWriter.XmlElementNames
 import utopia.nexus.http.Request
 
 /**

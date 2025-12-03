@@ -11,7 +11,7 @@ import utopia.flow.generic.model.immutable.Value
 import java.nio.charset.StandardCharsets
 import utopia.flow.generic.model.mutable.DataType.{ModelType, VectorType}
 import utopia.flow.parse.xml.{XmlElement, XmlWriter}
-import utopia.nexus.controller.write.ContentWriter.XmlContentWriter.{PlainXmlContentWriter, XmlElementNames}
+import utopia.nexus.controller.write.XmlContentWriter.{PlainXmlContentWriter, XmlElementNames}
 
 /**
 * This result parser parses data into xml format

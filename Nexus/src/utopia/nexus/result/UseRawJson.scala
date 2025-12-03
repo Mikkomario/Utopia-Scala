@@ -2,7 +2,7 @@ package utopia.nexus.result
 
 import utopia.access.model.enumeration.Status
 import utopia.flow.generic.model.immutable.Value
-import utopia.nexus.controller.write.ContentWriter.JsonContentWriter.PlainJsonContentWriter
+import utopia.nexus.controller.write.JsonContentWriter.PlainJsonContentWriter
 import utopia.nexus.http.{Request, Response}
 
 /**

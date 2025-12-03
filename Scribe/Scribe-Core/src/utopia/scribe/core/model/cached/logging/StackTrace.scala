@@ -7,8 +7,8 @@ import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration, PropertyDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
-import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
@@ -134,10 +134,10 @@ case class StackTrace(fileName: String, className: String, methodName: String, l
 	  */
 	def logLinesIterator = {
 		// Groups by file, class and method (consecutive only)
-		topToBottomIterator.groupBy { _.fileName }.flatMap { case (_, elements) =>
-			elements.iterator.groupBy { _.fileAndClassName }.flatMap { case (className, elements) =>
+		topToBottomIterator.groupConsecutiveBy { _.fileName }.flatMap { case (_, elements) =>
+			elements.iterator.groupConsecutiveBy { _.fileAndClassName }.flatMap { case (className, elements) =>
 				val prefix = MutatingOnce(className)("\t")
-				elements.iterator.groupBy { _.methodName }.map { case (methodName, elements) =>
+				elements.iterator.groupConsecutiveBy { _.methodName }.map { case (methodName, elements) =>
 					// Groups multiple line number instances to a single set
 					val lineNumberStr = elements.flatMap { _.lineNumber }.oneOrMany match {
 						case Left(number) => s": $number"
