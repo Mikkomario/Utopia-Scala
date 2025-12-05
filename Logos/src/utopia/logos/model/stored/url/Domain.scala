@@ -29,7 +29,6 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	  * A regular expression that matches a domain part of a link.
 	  * For example, matches: "https://api.example.com", "http://128.0.0.1:8080" and "www.palvelu.fi"
 	  */
-	// TODO: Should this accept something like "home.com"?
 	lazy val regex = 
 		((httpRegex + wwwRegex.noneOrOnce).withinParentheses || wwwRegex).withinParentheses +
 			domainCharacterRegex.oneOrMoreTimes + Regex.escape('.') + domainCharacterRegex.oneOrMoreTimes +
@@ -69,7 +68,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 						if (afterHttp.headOption.exists { _.isDigit })
 							url
 						else
-							s"${toHttp}www.$url"
+							s"${toHttp}www.$afterHttp"
 					}
 					
 				// Case: No http(s) => Adds it and also looks, whether www. should be added
