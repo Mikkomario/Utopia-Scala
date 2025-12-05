@@ -1,6 +1,5 @@
 package utopia.access.model.header
 
-import utopia.access.model.header.HeaderValue.EmptyHeaderValue
 import utopia.flow.generic.model.template.ValueConvertible
 
 object Header

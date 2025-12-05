@@ -16,7 +16,7 @@ object HeaderValues
 	
 	// OTHER    ---------------------------
 	
-	def apply[A](values: Seq[A], separator: String = comma)(toText: A => String = _.toString)
+	def apply[A](values: Seq[A], separator: String = comma)(toText: A => String = { a: A => a.toString })
 	            (implicit toValue: A => ValueConvertible): HeaderValues[A] =
 		new _HeaderValues[A](values, separator, toText, v => toValue(v).toValue)
 	

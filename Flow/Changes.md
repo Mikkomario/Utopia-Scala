@@ -51,6 +51,8 @@
   - Added various mapping functions that target individual properties
 - **OutputStream** (via **StreamExtensions**)
   - Added `.writeUsing(...)`
+- **StringFrom**
+  - Added `.take(Int)`
 - **Regex** (object)
   - Added multiple new static values
 - **Uncertain**

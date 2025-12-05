@@ -1,5 +1,6 @@
 package utopia.disciple.controller.parse
 
+import utopia.flow.async.TryFuture
 import utopia.flow.parse.AutoClose._
 import utopia.flow.view.template.Extender
 
@@ -48,11 +49,18 @@ object ResponseParseResult
 	def async[A](f: => A)(implicit exc: ExecutionContext) = future(Future(f))
 	
 	/**
-	  * @param cause Cause of failure
+	  * @param cause Cause of this failure
 	  * @tparam A Value type which would have been used had the result been successful
 	  * @return A failed response parse result
 	  */
 	def failed[A](cause: Throwable) = buffered(Failure[A](cause))
+	/**
+	 * @param cause Cause of this failure
+	 * @tparam A Type of the results, had they been successful
+	 * @return A failed (asynchronous) response-parse result
+	 */
+	def failedFuture[A](cause: Throwable) =
+		buffered(TryFuture.failure[A](cause))
 }
 
 /**

@@ -59,13 +59,13 @@ class StreamedResponse(override val status: Status, override val headers: Header
 	// OTHER    ----------------------
 	
 	/**
-	  * Consumes this response by parsing the response body
+	  * Consumes this response by parsing the response body.
+	 * Closes this response automatically, once parsing completes.
 	  * @param parser A parser used for processing the response body stream
 	  * @param exc Implicit execution context (used for closing the stream if the parsing is completed asynchronously)
 	  * @throws IllegalStateException If this response has already been consumed before
 	  * @tparam A Type of parse results
-	  * @return Parse result, including a future which indicates when the underlying response object may be closed /
-	  *         when response-parsing has finished.
+	  * @return Parse result
 	  */
 	@throws[IllegalStateException]("If this response has already been consumed before")
 	def consume[A](parser: ResponseParser[A])(implicit exc: ExecutionContext) = {
@@ -82,12 +82,11 @@ class StreamedResponse(override val status: Status, override val headers: Header
 						stream.foreach { _.closeQuietly() }
 						closeDependencies()
 					}
-					else {
+					else
 						parseResult.parseCompletion.onComplete { _ =>
 							stream.foreach { _.closeQuietly() }
 							closeDependencies()
 						}
-					}
 					// Returns the parse result
 					parseResult
 				
