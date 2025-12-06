@@ -17,6 +17,7 @@ import utopia.vault.sql.{OrderBy, Update, Where}
  * @author Mikko Hilpinen
  * @since 25.11.2025, v0.7
  */
+// FIXME: There is some issue that causes duplicate domain inserts (one with https specified and one without, inserted at the same second, back to back)
 object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 {
 	// ATTRIBUTES   -------------------------
@@ -27,14 +28,19 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 	
 	// IMPLEMENTED  -------------------------
 	
-	// Removes the http:// and https://, and maps the remainder in lower-case
-	override protected def standardize(value: String): String = removeHttp(value).toLowerCase
+	// Removes the http:// and https://
+	// Assumes that the strings are already in lower case
+	override protected def standardize(value: String): String = removeHttp(value)
 	
-	override protected def diff(proposed: Set[String], existing: Set[String]): Set[String] =
-		proposed.filterNot { p => existing.contains(standardize(p)) }
+	override protected def diff(proposed: Set[String], existing: Set[String]): Set[String] = {
+		if (existing.isEmpty)
+			proposed
+		else
+			proposed.filterNot { p => existing.contains(standardize(p)) }
+	}
 	
 	override protected def pullMatchMap(values: Set[String])(implicit connection: Connection): Map[String, Domain] =
-		access.withUrls(values.map(removeHttp)).toMapBy { _.url.toLowerCase }
+		access.withUrls(values.map(removeHttp)).toMapBy { _.url }
 	
 	override protected def insertAndMap(values: Seq[String])(implicit connection: Connection): Map[String, Domain] =
 		model.insertFrom(values.map { d =>
@@ -49,11 +55,13 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 	
 	override def store(values: Set[String])(implicit connection: Connection) = {
 		// Stores the domain values normally
-		val result = super.store(values)
+		// All URLS are converted into lower case
+		val lowerCaseValues = values.map { _.toLowerCase }
+		val result = super.store(lowerCaseValues)
 		
 		// For domains that were previously stored as either http or https,
 		// checks whether to remove that specification
-		val modifiedHttpDomains = values.iterator.filter { _.startsWith("http") }
+		val modifiedHttpDomains = lowerCaseValues.iterator.filter { _.startsWith("http") }
 			.flatMap { url =>
 				val key = standardize(url)
 				result.get(key).filter { case (domain, inserted) => !inserted && domain.isHttps.isCertain }
