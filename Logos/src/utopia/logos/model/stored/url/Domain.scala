@@ -14,22 +14,21 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	/**
 	  * A regular expression that matches a forward slash (/)
 	  */
-	lazy val forwardSlashRegex = Regex.escape('/')
-	private lazy val colonRegex = Regex.escape(':')
-	private lazy val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
+	val forwardSlashRegex = Regex.escape('/')
+	private val colonRegex = Regex.escape(':')
+	private val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
 	/**
 	 * A regular expression that identifies "http://" and "https://"
 	 */
-	lazy val httpRegex =
-		(Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2)).withinParentheses
-	private lazy val wwwRegex = (Regex("w").times(3) + Regex.escape('.')).withinParentheses
-	private lazy val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
+	val httpRegex = (Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2)).withinParentheses
+	private val wwwRegex = ((Regex("w").times(3) || Regex("W").times(3)) + Regex.escape('.')).withinParentheses
+	private val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
 	
 	/**
 	  * A regular expression that matches a domain part of a link.
 	  * For example, matches: "https://api.example.com", "http://128.0.0.1:8080" and "www.palvelu.fi"
 	  */
-	lazy val regex = 
+	val regex =
 		((httpRegex + wwwRegex.noneOrOnce).withinParentheses || wwwRegex).withinParentheses +
 			domainCharacterRegex.oneOrMoreTimes + Regex.escape('.') + domainCharacterRegex.oneOrMoreTimes +
 			portNumberRegex.noneOrOnce
@@ -55,8 +54,8 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 		if (url.isEmpty)
 			url
 		// Looks for the http(s) part
-		else
-			httpRegex.endIndexIteratorIn(url).nextOption() match {
+		else {
+			val modified = httpRegex.endIndexIteratorIn(url).nextOption() match {
 				// Case: Http(s) found => Looks for www.
 				case Some(httpEndIndex) =>
 					// Case: www also found => Yields the same URL
@@ -79,6 +78,12 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 					else
 						s"${httpPart}www.$url"
 			}
+			// Removes the trailing forward slash, also
+			if (modified.endsWith("/"))
+				modified.dropRight(1)
+			else
+				modified
+		}
 	}
 }
 
