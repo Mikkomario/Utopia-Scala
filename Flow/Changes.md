@@ -2,6 +2,17 @@
 
 ## v2.8 (in development)
 ### Breaking changes
+- Multiple breaking changes to **Changing**:
+  - **Changing** now extends the new **SynchronizedView**, requiring the implementation of `lockWhile(...)`
+    - This is implemented in **AbstractChanging**, **ChangingWrapper** and **Fixed**, but not in **OptimizedChanging**
+    - **Volatile**'s existing `.lockWhile(...)` function was renamed to `.viewLocked(...) `
+  - `fireEvent(...)`, `fireEventIfNecessary(...)` and `fireEventFor(...)` now detach the listeners earlier, one by one. 
+    Reflecting this change, the function parameters are also different.
+  - **ChangingWithListeners** now requires the implementation of `removeListener(End, ChangeListener)`, 
+    instead of `removeListeners(End, Iterable)`
+- **Volatile**'s required function `assign(...)` now receives two parameters instead of one.
+- Rewrote the `mapParallel` function variants in **CollectionExtensions**; 
+  The new versions yield **Future**s instead of synchronously built collections. 
 - Moved a large number of functions from **IterableOnce** to **Iterable** (in **CollectionExtensions**)
 - **Iterable**'s `.find(Extreme)` (in **CollectionExtensions**) is now named `.findExtreme(Extreme)`
   - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
@@ -14,26 +25,41 @@
   - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
 - Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
+- Deprecated `.foreachParallel(...)` in **CollectionExtensions**
+- Deprecated **Volatile**'s `synchronizedValue`
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
 - Renamed **Iterator**'s `.groupBy(...)` to `.groupConsecutiveBy(...)`
 - Renamed **Uncertain**'s `.isCertainlyExactly(...)` to `.isCertainly(...)`
+- Renamed **VolatileFlag**'s `.lockWhileIfNotSet(...)` to `.viewLockedIfNotSet(...)`
 ### Bugfixes
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
+- Events fired from **EventfulVolatile** are now always ordered, and can no longer occur in parallel.
+- Bugfix to **OptimizedBridge**, which would sometimes not auto-detach from the origin pointer correctly
+- Bugfix to **TwoThreadBuffer.Output**'s `.push(Iterable)`, which threw under some rare circumstances
 ### New features
+- Added **ParallelBuilder** for building collections from multiple threads
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
-- Added **NothingBuilder**
+- Added **BuildNothing**
 - Added **CompoundingSeqBuilder**
+- Added **TryCatchBuilder**
 - Added **LimitedCountIterator**
+- Added **SynchronizedView** trait
 ### New methods
 - **Builder** (via **BuilderExtensions**)
+  - Added `.mapInput(...)`
+- **ChangeListener**
   - Added `.mapInput(...)`
 - **Constant** (object)
   - Added `.lazily(...)`
 - **Extreme**
   - Added `.compare(...)`
+- **Future** (via **AsyncExtensions**)
+  - Added `.toTryFuture`
+  - Added `.unwrap` to **Future**s containing **Try**s
+  - Added `.foreachResult(...)` to **Future**s containing **TryCatch**es
 - **IntSet** (object)
   - Added `.fromOrdered(IterableOnce)`
 - **Iterable**
@@ -43,6 +69,9 @@
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
   - Added `.divideToSeqsBy(...)`
   - Added `.tryFlatten` for collections of **Try**
+  - Added various `.mapParallelTo(...)` functions
+- **Lazy** (object)
+  - Added `.resettable` and `.volatile(...)` for constructing different **Lazy** types
 - **Map** (via **CollectionExtensions**)
   - Added `.mapInputView(...)` and `.flatMapInputView(...)`
 - **MapView** (via **CollectionExtensions**)
@@ -51,19 +80,32 @@
   - Added various mapping functions that target individual properties
 - **OutputStream** (via **StreamExtensions**)
   - Added `.writeUsing(...)`
-- **StringFrom**
-  - Added `.take(Int)`
+- **Pointer**
+  - Added `.pop(Int)` to **Seq**-based **Pointer**s
 - **Regex** (object)
   - Added multiple new static values
+- **StringFrom**
+  - Added `.take(Int)`
 - **Uncertain**
   - Added `.mightNotBe(...)`
 - **Value**
   - Added `.leftOrRight(...)`, `.getLeftOrRight(...)`, `.tryLeftOrRight(...)`, 
     `.intOrString`, `.getIntOrString` and `.tryIntOrString`
 ### Other changes
+- **TimeLogger** now supports auto-flushing
+- Various changes to **Changing**:
+  - `.once(...)` and `findMapFuture` variants now lock the changing item from changes during method execution, 
+    similarly as was previously only the case in **EventfulVolatile**.
+  - After-effects generated in `addListenerAndSimulateEvent(...)` are now wrapped in **Try**; 
+    Errors are logged.
+- **OptimizedSeqBuilder**'s `.knownSize` now functions past size 2
 - **UncertainBoolean**'s `||(Boolean)` and `&&(Boolean)` parameters are now call-by-name
-- Various optimizations within **CachingSeq**
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
+- Removed **AsyncCollectionExtensions** that was deprecated in v2.5.1
+- Remove **Changing**'s `listenerDebuggingLimit` property, which was deprecated in v2.7
+- Removed **AbstractChanging** functions that were deprecated in v2.2
+- Rewrote **ActionQueue**
+- Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
 - Internal refactoring within **Extreme**'s `.by(...)`
 - Internal refactoring within **Lazy**

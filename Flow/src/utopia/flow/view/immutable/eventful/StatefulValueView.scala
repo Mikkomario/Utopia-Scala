@@ -117,6 +117,8 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 		case None => s"Mirroring($origin).stateful"
 	}
 	
+	override def lockWhile[B](operation: => B): B = origin.lockWhile(operation)
+	
 	
 	// OTHER    ------------------------
 	

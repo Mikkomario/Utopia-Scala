@@ -31,6 +31,13 @@ object AsyncExtensions
      */
 	implicit class RichFuture[A](val f: Future[A]) extends AnyVal
 	{
+		/**
+		 * @param exc Implicit execution context
+		 * @return A future that will contain a Success if this future succeeded, and a Failure if this future failed.
+		 */
+		def toTryFuture(implicit exc: ExecutionContext) =
+			f.map(Success.apply).recover { case e => Failure(e) }
+		
 	    /**
 	     * Waits for the result of this future (blocks) and returns it once it's ready
 	     * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
@@ -243,6 +250,10 @@ object AsyncExtensions
 		}
 		
 		/**
+		 * @return A copy of this future that fails if it contains a failure
+		 */
+		def unwrap(implicit exc: ExecutionContext) = f.map { _.get }
+		/**
 		 * @param exc Implicit execution context
 		 * @return A copy of this future where the underlying Try is converted into a TryCatch
 		 */
@@ -383,6 +394,15 @@ object AsyncExtensions
 					
 				case TryCatch.Failure(error) => Future.successful(TryCatch.Failure(error))
 			}
+		
+		/**
+		 * Calls the specified function when this future completes. Same as calling .onComplete and then .flattenCatching
+		 * @param f A function that handles both success and failure cases
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 */
+		def foreachResult[U](f: TryCatch[A] => U)(implicit exc: ExecutionContext) =
+			this.f.onComplete { r => f(r.flattenCatching) }
 	}
 	
 	implicit class TryFutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal

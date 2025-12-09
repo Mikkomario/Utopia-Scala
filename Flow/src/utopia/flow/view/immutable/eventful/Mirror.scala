@@ -86,4 +86,6 @@ class Mirror[+O, R](source: Changing[O], initialValue: R, condition: Changing[Bo
 			val suffix = if (condition.isFixed) "" else s".while($condition)"
 			s"Mirroring($source)$suffix"
 	}
+	
+	override def lockWhile[B](operation: => B) = source.lockWhile { condition.lockWhile(operation) }
 }

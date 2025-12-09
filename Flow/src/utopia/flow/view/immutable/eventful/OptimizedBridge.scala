@@ -138,7 +138,7 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		}
 		DetachIfAppropriate(afterEffects)
 	}
-	private val activeTrackingListener = ChangeListener.continuous { e: ChangeEvent[Boolean] =>
+	private val activeTrackingListener = ChangeListener { e: ChangeEvent[Boolean] =>
 		// Case: Should start tracking actively => Attaches itself to origin
 		if (e.newValue)
 			origin.addHighPriorityListener(originListener)
@@ -160,7 +160,7 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 	// INITIAL CODE -------------------------
 	
 	// Whenever listeners are assigned to this mirror, starts following the origin pointer more carefully.
-	trackActivelyFlag.addListener(activeTrackingListener)
+	trackActivelyFlag.addHighPriorityListener(activeTrackingListener)
 	
 	
 	// COMPUTED ----------------------------
@@ -218,10 +218,14 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 	
 	private object DetachIfAppropriate extends ChangeResponse
 	{
+		// ATTRIBUTES   --------------------
+		
+		override val afterEffects: Iterable[() => Unit] = Empty
+		
+		
 		// IMPLEMENTED  --------------------
 		
 		override def shouldContinueListening: Boolean = shouldListen
-		override def afterEffects: Iterable[() => Unit] = Empty
 		
 		override def and[U](afterEffect: => U): ChangeResponse = new DetachIfAppropriate(Single(() => afterEffect))
 		

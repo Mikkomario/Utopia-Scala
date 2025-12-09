@@ -120,6 +120,15 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 		case None => queuedStopListeners :+= listener
 	}
 	
+	override def viewLocked[B](operation: A => B): B = pointer match {
+		case Some(p) => p.viewLocked(operation)
+		case None => this.synchronized { operation(placeholderValue) }
+	}
+	override def lockWhile[B](operation: => B): B = pointer match {
+		case Some(p) => p.lockWhile(operation)
+		case None => this.synchronized(operation)
+	}
+	
 	
 	// OTHER    -------------------------
 	
@@ -130,7 +139,7 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	  * @throws IllegalStateException If a (different) pointer had already been defined.
 	  */
 	@throws[IllegalStateException]("If a pointer has already been defined")
-	def complete(pointer: Changing[A]) = {
+	def complete(pointer: Changing[A]) = this.synchronized {
 		if (this.pointer.isEmpty) {
 			// Assigns the pointer
 			this.pointer = Some(pointer)
@@ -189,7 +198,7 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	  * @param pointer A pointer to wrap (call-by-name).
 	  * @return Whether this pointer was completed. False if this was already completed.
 	  */
-	def tryComplete(pointer: => Changing[A]) = {
+	def tryComplete(pointer: => Changing[A]) = this.synchronized {
 		if (this.pointer.isEmpty) {
 			complete(pointer)
 			true

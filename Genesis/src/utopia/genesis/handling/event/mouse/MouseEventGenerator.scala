@@ -58,7 +58,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
     override val handleCondition: Flag = !stopFlag && activeCondition
     
     // Generated events are fired one at a time using an event queue
-    private val eventQueue = new ActionQueue()
+    private val eventQueue = ActionQueue()
     
     private val componentPointer = WeakReference(c)
     

@@ -293,7 +293,7 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 		  */
 		def tryClose() = {
 			if (closed.set())
-				clientCount.lockWhile { count => if (count <= 0) closeConnection() }
+				clientCount.viewLocked { count => if (count <= 0) closeConnection() }
 			connectionClosePromise.future
 		}
 		private def closeConnection(): Unit = {

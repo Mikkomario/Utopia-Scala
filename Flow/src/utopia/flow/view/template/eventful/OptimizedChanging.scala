@@ -38,14 +38,10 @@ abstract class OptimizedChanging[A]
 			_.mapSide(priority) { q => if (q.contains(lazyListener.value)) q else q :+ lazyListener.value }
 		}
 	
-	override def removeListener(changeListener: Any): Unit = {
-		if (listenersPointer.unlocked)
-			listenersPointer.update { _.map { _.filterNot { _ == changeListener } } }
-	}
-	override protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit = {
-		if (listenersPointer.unlocked)
-			listenersPointer.update { _.mapSide(priority) { _.filterNot { l => listenersToRemove.exists { _ == l } } } }
-	}
+	override def removeListener(changeListener: Any): Unit =
+		listenersPointer.tryUpdate { _.map { _.filterNot { _ == changeListener } } }
+	override protected def removeListener(priority: End, listenerToRemove: ChangeListener[A]): Unit =
+		listenersPointer.tryUpdate { _.mapSide(priority) { _.filterNot { _ == listenerToRemove } } }
 	
 	override protected def declareChangingStopped(): Unit = {
 		clearListeners()

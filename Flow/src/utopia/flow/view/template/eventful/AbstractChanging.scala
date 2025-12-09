@@ -7,8 +7,11 @@ import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
+
+import scala.util.Try
 
 /**
   * An abstract implementation of the [[Changing]] trait. Handles [[ChangeListener]] handling.
@@ -39,23 +42,6 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 	protected def standardListeners_=(newListeners: Seq[ChangeListener[A]]) =
 		_listeners = _listeners.withSecond(newListeners)
 	
-	/**
-	  * @return Listeners that are informed of changes within this item
-	  */
-	@deprecated("Replaced with .standardListeners and .allListeners", "v2.2")
-	def listeners = standardListeners
-	/**
-	  * Replaces the listeners of this changing item
-	  * @param newListeners New listeners to assign
-	  */
-	@deprecated("Replaced with .standardListeners = ...", "v2.2")
-	def listeners_=(newListeners: Seq[ChangeListener[A]]) = standardListeners = newListeners
-	
-	@deprecated("Replaced with .highPriorityListeners", "v2.2")
-	def dependencies = highPriorityListeners
-	@deprecated("Replaced with .highPriorityListeners = ...", "v2.2")
-	def dependencies_=(newDependencies: Seq[ChangeListener[A]]) = highPriorityListeners = newDependencies
-	
 	
 	// IMPLEMENTED	----------------
 	
@@ -68,8 +54,10 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 	}
 	
 	override def removeListener(listener: Any) = _listeners = _listeners.map { _.filterNot { _ == listener } }
-	override protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit =
-		_listeners = _listeners.mapSide(priority) { _.filterNot { l => listenersToRemove.exists { _ == l } } }
+	override protected def removeListener(priority: End, listenerToRemove: ChangeListener[A]): Unit =
+		_listeners = _listeners.mapSide(priority) { _.filterNot { _ == listenerToRemove } }
+	
+	override def lockWhile[B](operation: => B): B = this.synchronized(operation)
 	
 	
 	// OTHER	--------------------
@@ -78,24 +66,6 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 	  * Removes all change listeners from this item
 	  */
 	def clearListeners() = _listeners = Pair.twice(Empty)
-	
-	/**
-	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.
-	  * @param oldValue The old value of this changing element (call-by-name)
-	  */
-	@deprecated("Replaced with fireEventIfNecessary(A, A)", "v2.2")
-	protected def fireChangeEvent(oldValue: => A) = fireEventIfNecessary(oldValue, value).foreach { _() }
-	
-	private def _fireEvent(event: => Option[ChangeEvent[A]], targetedPriority: End) = {
-		// Informs the listeners and collects the after effects to trigger later
-		// (may remove some listeners in the process)
-		val responses = fireEventFor(_listeners(targetedPriority), event)
-		val listenersToRemove = responses.flatMap { case (l, r) => if (r.shouldDetach) Some(l) else None }
-		if (listenersToRemove.nonEmpty)
-			removeListeners(targetedPriority, listenersToRemove)
-		// Returns the scheduled after-effects
-		responses.flatMap { _._2.afterEffects }
-	}
 	
 	/**
 	  * Starts mirroring another pointer
@@ -127,7 +97,8 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 				val firstEffects = _fireEvent(Some(event2), First)
 				Continue.and {
 					val moreEffects = _fireEvent(Some(event2), Last)
-					(firstEffects.iterator ++ moreEffects).foreach { _() }
+					(firstEffects.iterator ++ moreEffects)
+						.foreach { e => Try { e() }.logWithMessage("Failure during a change effect") }
 				}
 			}
 			// Case: Projected value didn't change => No change event takes place
@@ -135,4 +106,7 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 				Continue
 		}
 	}
+	
+	private def _fireEvent(event: => Option[ChangeEvent[A]], targetedPriority: End) =
+		fireEventFor(_listeners(targetedPriority), event) { removeListener(targetedPriority, _) }
 }

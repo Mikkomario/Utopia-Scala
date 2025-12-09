@@ -52,6 +52,9 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def hasListeners: Boolean = wrapped.hasListeners
 	override def numberOfListeners: Int = wrapped.numberOfListeners
 	
+	override def lockWhile[B](operation: => B): B = wrapped.lockWhile(operation)
+	override def viewLocked[B](operation: A => B): B = wrapped.viewLocked(operation)
+	
 	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]) =
 		wrapped.addListenerOfPriority(priority)(listener)
 	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =

@@ -23,9 +23,9 @@ trait ChangingWithListeners[A] extends Changing[A]
 	
 	/**
 	  * @param priority Targeted priority group
-	  * @param listenersToRemove Listeners to remove from that priority group
+	  * @param listenerToRemove Listener to remove from that priority group
 	  */
-	protected def removeListeners(priority: End, listenersToRemove: Iterable[ChangeListener[A]]): Unit
+	protected def removeListener(priority: End, listenerToRemove: ChangeListener[A]): Unit
 	
 	
 	// COMPUTED --------------------------
@@ -67,7 +67,7 @@ trait ChangingWithListeners[A] extends Changing[A]
 	  * @return After-effects that should be triggered now or later
 	  */
 	protected def fireEventIfNecessary(oldValue: => A, currentValue: => A = value): IndexedSeq[() => Unit] =
-		super.fireEventIfNecessary(oldValue, currentValue)(listenersByPriority.apply)(removeListeners)
+		super.fireEventIfNecessary(oldValue, currentValue)(listenersByPriority.apply)(removeListener)
 	
 	/**
 	  * Informs all listeners about a possible change event.
@@ -78,7 +78,7 @@ trait ChangingWithListeners[A] extends Changing[A]
 	  * @return After-effects that should be triggered now or later
 	  */
 	protected def fireEvent(lazyEvent: View[Option[ChangeEvent[A]]]): IndexedSeq[() => Unit] =
-		super.fireEvent[A](lazyEvent)(listenersByPriority.apply)(removeListeners)
+		super.fireEvent[A](lazyEvent)(listenersByPriority.apply)(removeListener)
 	
 	/**
 	  * Fires a change event for all the listeners. Informs possible dependencies before informing any listeners.

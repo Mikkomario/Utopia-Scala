@@ -1,5 +1,6 @@
 package utopia.flow.test.collection
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.Wait
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
@@ -17,10 +18,13 @@ object MapAllParallelTest extends App
 {
 	println("Starting parallel processing. Estimated completion in 3 seconds")
 	private val startTime = Now.toInstant
-	private val result = (0 until 30).toVector.mapAllParallel { i =>
-		Wait((Random.nextDouble() * 6).seconds)
-		i
-	}
+	private val result = (0 until 30).toVector
+		.mapAllParallel { i =>
+			Wait((Random.nextDouble() * 6).seconds)
+			i
+		}
+		.waitForResult().get
+	
 	private val duration = Now - startTime
 	println(s"Complete. Took ${ duration.description }")
 	

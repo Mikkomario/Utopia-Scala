@@ -27,8 +27,7 @@ class VolatileLazy[A](generator: => A) extends Lazy[A]
 	override def current = this.synchronized { _value }
 	
 	override def value = this.synchronized {
-		_value match
-		{
+		_value match {
 			case Some(value) => value
 			case None =>
 				val newValue = generator

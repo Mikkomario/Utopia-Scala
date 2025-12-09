@@ -1,11 +1,9 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
-import utopia.flow.operator.enumeration.End
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.util.TryExtensions._
-import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.FlagView
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.{Fixed, FlagView}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Flag}
 
 import scala.util.Try
@@ -88,16 +86,12 @@ object LockableFlag
 		}
 	}
 	
-	private class AlreadySetFlag extends LockableFlag
+	private class AlreadySetFlag extends Fixed[Boolean] with LockableFlag
 	{
 		// ATTRIBUTES   ---------------------
 		
-		override implicit val listenerLogger: Logger = SysErrLogger
-		
 		override val value: Boolean = true
-		
-		override val numberOfListeners: Int = 0
-		override val hasListeners: Boolean = false
+		override val destiny = Sealed
 		
 		private var _locked = false
 		
@@ -113,9 +107,6 @@ object LockableFlag
 		override def set(): Boolean = false
 		override def lock(): Unit = _locked = true
 		
-		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Boolean]]): Unit = ()
-		override def removeListener(changeListener: Any): Unit = ()
-		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 		override protected def declareChangingStopped(): Unit = ()
 	}
 }

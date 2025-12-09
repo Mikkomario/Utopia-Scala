@@ -16,6 +16,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
+import utopia.flow.view.template.SynchronizedView
 import utopia.flow.view.template.eventful.Flag.wrap
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -24,19 +25,6 @@ import scala.util.{Failure, Success, Try}
 
 object Changing
 {
-	// ATTRIBUTES   ----------------------
-	
-	/**
-	  * A limit to place on the number of listeners that may be assigned to an individual pointer.
-	  * Setting this value to >= 0 will cause this software to throw errors when too many listeners are assigned.
-	  *
-	  * Please note that this feature is NOT INDENTED FOR USE IN PRODUCTION
-	  * and is merely for testing and debugging purposes.
-	  */
-	@deprecated("Deprecated for removal", "v2.7")
-	var listenerDebuggingLimit = -1
-	
-	
 	// COMPUTED --------------------------
 	
 	/**
@@ -253,7 +241,7 @@ object Changing
   * @author Mikko Hilpinen
   * @since 26.5.2019, v1.9
   */
-trait Changing[+A] extends View[A]
+trait Changing[+A] extends SynchronizedView[A]
 {
 	// ABSTRACT	---------------------
 	
@@ -422,10 +410,6 @@ trait Changing[+A] extends View[A]
 	  *                 if appropriate (i.e. this item will still change) (call-by-name)
 	  */
 	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = {
-		// TODO: Remove this debugging feature at v2.8 or later
-		// Debugging feature: May follow the maximum number of listeners
-		if (Changing.listenerDebuggingLimit >= 0 && numberOfListeners >= Changing.listenerDebuggingLimit)
-			throw new IllegalStateException(s"Maximum (debugging) limit (${Changing.listenerDebuggingLimit}) of change event listeners reached.")
 		if (mayChange)
 			_addListenerOfPriority(priority, Lazy(listener))
 	}
@@ -463,7 +447,7 @@ trait Changing[+A] extends View[A]
 		if (simulationResult.shouldContinueListening)
 			addListenerOfPriority(if (isHighPriority) First else Last)(lazyNewListener.value)
 		// Triggers the caused after-effects
-		simulationResult.afterEffects.foreach { _() }
+		simulationResult.afterEffects.foreach { e => Try { e() }.logWithMessage("Failure during a simulated effect") }
 	}
 	
 	/**
@@ -678,12 +662,17 @@ trait Changing[+A] extends View[A]
 	  * @tparam U Arbitrary function result type
 	  */
 	def once[U](condition: A => Boolean)(f: A => U): Unit = {
-		// Case: Current values is accepted => Calls the specified function for the current value
-		if (condition(value))
-			f(value)
-		// Case: Current value is not accepted => Waits for a suitable value
-		else
-			onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
+		// Locks this pointer while testing for immediate trigger
+		val immediateTrigger = viewLocked { value =>
+			if (condition(value))
+				Some(value)
+			else {
+				onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
+				None
+			}
+		}
+		// The triggered function is called, if appropriate, outside of this lock
+		immediateTrigger.foreach(f)
 	}
 	
 	/**
@@ -1507,22 +1496,21 @@ trait Changing[+A] extends View[A]
 	  * Updates the list of active listeners accordingly.
 	  *
 	  * Won't generate any event or action in cases where the old and the new value would resolve in the same value.
-	  *
 	  * @param oldValue The previous value of this changing item
 	  *                 (call-by-name, called only if there are listeners assigned to this item)
 	  * @param currentValue Current value of this changing item
 	  *                     (call-by-name, called only if there are listeners assigned to this item)
 	  * @param acquireListeners A function that acquires the listeners of this item, based on their priority
-	  * @param detachListeners  A function that removes a set of listeners from this item.
-	  *                         Accepts:
-	  *                         1) Priority to target, and
-	  *                         2) Listeners to remove (never empty)
+	  * @param detachListener A function that removes a listener from this item.
+	 *                        Accepts:
+	 *                          1. Priority to target
+	 *                          1. Listener to remove
 	  * @tparam B Type of events and listeners applied here
 	  * @return The effects to trigger afterwards
 	  */
 	protected def fireEventIfNecessary[B >: A](oldValue: => B, currentValue: => B)
 	                                          (acquireListeners: End => Iterable[ChangeListener[B]])
-	                                          (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit) =
+	                                          (detachListener: (End, ChangeListener[B]) => Unit) =
 	{
 		// Calculates the event lazily
 		// In case where the current and old value are equal, won't generate an event
@@ -1534,7 +1522,7 @@ trait Changing[+A] extends View[A]
 			else
 				Some(ChangeEvent(o, n))
 		}
-		fireEvent[B](eventView)(acquireListeners)(detachListeners)
+		fireEvent[B](eventView)(acquireListeners)(detachListener)
 	}
 	/**
 	  * Informs all listeners about a possible change event.
@@ -1543,54 +1531,55 @@ trait Changing[+A] extends View[A]
 	  *                  Contains None in case there was no change after all.
 	  *                  Won't be viewed in cases where there are no listeners assigned to this item.
 	  * @param acquireListeners A function that acquires the listeners of this item, based on their priority
-	  * @param detachListeners A function that removes a set of listeners from this item.
+	  * @param detachListener A function that removes a listener from this item.
 	  *                        Accepts:
-	  *                             1) Priority to target, and
-	  *                             2) Listeners to remove (never empty)
+	  *                             1. Priority to target
+	  *                             1. Listener to remove
 	  * @tparam B Type of events and listeners applied here
 	  * @return The effects to trigger afterwards
 	  */
 	protected def fireEvent[B >: A](lazyEvent: View[Option[ChangeEvent[B]]])
 	                               (acquireListeners: End => Iterable[ChangeListener[B]])
-	                               (detachListeners: (End, Iterable[ChangeListener[B]]) => Unit)
-	                                =
+	                               (detachListener: (End, ChangeListener[B]) => Unit) =
 	{
 		// Informs the listeners in order or priority
 		End.values.flatMap { priority =>
-			val responses = fireEventFor(acquireListeners(priority), lazyEvent.value)
-			// Immediately detaches the listeners that are no longer needed
-			val listenersToRemove = responses
-				.flatMap { case (l, response) => if (response.shouldDetach) Some(l) else None }
-			if (listenersToRemove.nonEmpty)
-				detachListeners(priority, listenersToRemove)
 			// Returns the scheduled after-effects
-			responses.flatMap { _._2.afterEffects }
+			fireEventFor(acquireListeners(priority), lazyEvent.value) { detachListener(priority, _) }
 		}
 	}
 	/**
 	  * Informs a specific set of change listeners of a new change event.
-	  * Collects the actions to perform, based on their responses.
+	  * Detaches listeners that responded with a request to do so.
 	  * @param listeners listeners to inform of a new change
 	  * @param event A view to the generated change event (call-by-name, not called if there are no listeners).
 	  *              Contains None if no change occurred after all.
 	  * @tparam B Type of change events and listeners applied
-	  * @return The specified listeners, coupled with their responses to the change events
+	  * @return After-effects that should be triggered once change-handling completes.
 	  */
-	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]]) = {
+	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]])
+	                                  (detachListener: ChangeListener[B] => Unit) =
+	{
 		// Case: No listeners => No events required
 		if (listeners.isEmpty)
 			Empty
 		// Case: Listeners present => Informs them and collects the after effects to trigger later
-		//       (may schedule some listeners to be removed, based on their change responses)
 		else
 			event match {
 				// Case: Event is real => Relays if to the listeners
 				case Some(event) =>
 					listeners.flatMap { listener =>
 						// Catches and logs failures, in case the listener throws
-						Try { listener.onChangeEvent(event) }
-							.logWithMessage(s"Failure while processing $event")
-							.map { listener -> _ }
+						Try { listener.onChangeEvent(event) } match {
+							case Success(response) =>
+								if (response.shouldDetach)
+									detachListener(listener)
+								response.afterEffects
+							
+							case Failure(error) =>
+								listenerLogger(error, s"Failure while processing $event")
+								Empty
+						}
 					}
 				// Case: There wasn't a change event after all => Skips the process
 				case None => Empty
@@ -1610,45 +1599,47 @@ trait Changing[+A] extends View[A]
 	  * @return A value future where the specified condition returns true (may never complete)
 	  */
 	protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean = false) = {
-		// Tests with the current value first, unless disabled
-		val initialCandidate = if (disableImmediateTrigger) None else Some(value)
-		initialCandidate.flatMap { c =>
-			// Handles possible errors thrown by the test function
-			Try { condition(c) } match {
-				case Success(result) => result.map(Success.apply)
-				// Case: Testing failed => Immediately returns as a failure
-				case Failure(error) => Some(Failure(error))
-			}
-		} match {
-			// Case: Completes with the current value
-			case Some(result) => Future.fromTry(result)
-			case None =>
-				// Case: May change => Listens to changes until the searched state is found
-				if (mayChange) {
-					val promise = Promise[B]()
-					addListener { e =>
-						// Handles possible failures thrown by the test function
-						Try { condition(e.newValue) } match {
-							case Success(result) =>
-								result match {
-									// Case: Result found => Completes the future
-									case Some(result) =>
-										promise.trySuccess(result)
-										Detach
-									// Case: No result found => Waits for the next change event
-									case None => Continue
-								}
-							// Case: Test function threw => Propagates the failure to the resulting Future
-							case Failure(error) =>
-								promise.tryFailure(error)
-								Detach
-						}
-					}
-					promise.future
+		viewLocked { value =>
+			// Tests with the current value first, unless disabled
+			val initialCandidate = if (disableImmediateTrigger) None else Some(value)
+			initialCandidate.flatMap { c =>
+				// Handles possible errors thrown by the test function
+				Try { condition(c) } match {
+					case Success(result) => result.map(Success.apply)
+					// Case: Testing failed => Immediately returns as a failure
+					case Failure(error) => Some(Failure(error))
 				}
-				// Case: Impossible to succeed
-				else
-					Future.never
+			} match {
+				// Case: Completes with the current value
+				case Some(result) => Future.fromTry(result)
+				case None =>
+					// Case: May change => Listens to changes until the searched state is found
+					if (mayChange) {
+						val promise = Promise[B]()
+						addListenerAndSimulateEvent(value) { e =>
+							// Handles possible failures thrown by the test function
+							Try { condition(e.newValue) } match {
+								case Success(result) =>
+									result match {
+										// Case: Result found => Completes the future
+										case Some(result) =>
+											promise.trySuccess(result)
+											Detach
+										// Case: No result found => Waits for the next change event
+										case None => Continue
+									}
+								// Case: Test function threw => Propagates the failure to the resulting Future
+								case Failure(error) =>
+									promise.tryFailure(error)
+									Detach
+							}
+						}
+						promise.future
+					}
+					// Case: Impossible to succeed
+					else
+						Future.never
+			}
 		}
 	}
 	

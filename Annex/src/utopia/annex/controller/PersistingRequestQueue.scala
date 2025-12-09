@@ -57,7 +57,7 @@ object PersistingRequestQueue
 	{
 		// ATTRIBUTES	----------------
 		
-		override protected val queue = new ActionQueue(width)
+		override protected val queue = ActionQueue(width)
 		override protected val requestContainer = new ModelsFileContainer(fileLocation, saveLogic)
 	}
 }

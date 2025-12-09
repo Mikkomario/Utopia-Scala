@@ -67,6 +67,9 @@ abstract class Fixed[+A] extends Changing[A] with EqualsBy
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	
+	// Synchronization is not required since this pointer is fixed
+	override def lockWhile[B](operation: => B): B = operation
+	
 	override def mergeWith[B, R](other: Changing[B])(f: (A, B) => R) = other.map { f(value, _) }
 }
 

@@ -114,6 +114,9 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 		Future.successful(())
 	}
 	
+	override def lockWhile[B](operation: => B): B =
+		if (stopped) operation else origin1.lockWhile { origin2.lockWhile(operation) }
+	
 	
 	// NESTED   ----------------------
 	

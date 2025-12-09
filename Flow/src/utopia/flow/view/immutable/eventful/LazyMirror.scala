@@ -29,8 +29,7 @@ object LazyMirror
   * @tparam Origin Type of item before mirroring
   * @tparam Reflection Type of item after mirroring
   */
-class LazyMirror[+Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection)
-	extends Lazy[Reflection]
+class LazyMirror[+Origin, Reflection](source: Changing[Origin])(f: Origin => Reflection) extends Lazy[Reflection]
 {
 	// ATTRIBUTES	--------------------------
 	

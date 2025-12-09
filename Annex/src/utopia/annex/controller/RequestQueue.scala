@@ -30,7 +30,7 @@ object RequestQueue
 	                                (implicit exc: ExecutionContext, log: Logger)
 		extends SystemRequestQueue
 	{
-		override protected val queue = new ActionQueue(width)
+		override protected val queue = ActionQueue(width)
 	}
 }
 

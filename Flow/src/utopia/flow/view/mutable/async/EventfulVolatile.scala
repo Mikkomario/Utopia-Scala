@@ -3,8 +3,8 @@ package utopia.flow.view.mutable.async
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.LoggingPointerFactory
@@ -62,16 +62,15 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 	// ATTRIBUTES   -------------------
 	
 	/**
-	  * Stores all after-effects until they've been actuated.
-	  * Used for assuring that all after-effects get completed in order,
-	  * even when generated from multiple different threads.
-	  */
-	private val effectQueue = Volatile.seq[() => Unit]()
+	 * Queues the prepared change events, so that they may be fired outside of this volatile's synchronization,
+	 * but still in a synchronous manner.
+	 */
+	private val eventQueue = Volatile.emptySeq[ChangeEvent[A]]
 	/**
-	  * A flag that's set to true while after-effects are being processed.
-	  * Used for preventing duplicate processes.
-	  */
-	private val processingAfterEffectsFlag = Volatile.switch
+	 * A flag that is set to true while processing change events.
+	 * Prevents duplicate processes from being initiated.
+	 */
+	private val processingEventsFlag = Volatile.switch
 	
 	
 	// ABSTRACT -----------------------
@@ -89,52 +88,33 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 	
 	// IMPLEMENTED  -------------------
 	
-	override protected def assign(newValue: A): Seq[() => Unit] = {
-		val oldValue = value
+	override protected def assign(oldValue: A, newValue: A): Seq[() => Unit] = {
 		// Case: Value doesn't change => No-op
 		if (newValue == oldValue)
 			Empty
 		// Case: Value changes => Updates the value and prepares to fire a change event
 		else {
 			assignWithoutEvents(newValue)
-			Single(() => {
-				// Fires the change event
-				val effects = fireEventIfNecessary(oldValue, newValue)
-				// Queues and resolves the after-effects, if necessary
-				if (effects.nonEmpty) {
-					effectQueue ++= effects
-					resolveQueuedEffects()
-				}
-			})
+			eventQueue :+= ChangeEvent(oldValue, newValue)
+			Single[() => Unit](fireQueuedEvents)
 		}
 	}
 	
-	override def once[U](condition: A => Boolean)(f: A => U) = {
-		// Locks this pointer while testing for immediate trigger
-		val immediateTrigger = lockWhile { value =>
-			if (condition(value))
-				Some(value)
-			else {
-				onNextChangeWhere { e => condition(e.newValue) } { e => f(e.newValue) }
-				None
-			}
-		}
-		// The triggered function is called, if appropriate, outside of this lock
-		immediateTrigger.foreach(f)
-	}
-	
-	// Locks this pointer during future formation
-	// in order to ensure that the wrapped value doesn't change during this process (possibly causing a deadlock)
-	override protected def _findMapFuture[B](condition: A => Option[B], disableImmediateTrigger: Boolean) =
-		lockWhile { _ => super._findMapFuture(condition, disableImmediateTrigger) }
-		
 	
 	// OTHER    ---------------------
 	
-	private def resolveQueuedEffects(): Unit = {
-		if (processingAfterEffectsFlag.set()) {
-			OptionsIterator.continually { effectQueue.pop() }.foreach { effect => Try { effect() }.log }
-			processingAfterEffectsFlag.reset()
-		}
+	private def fireQueuedEvents() = {
+		// Won't allow multiple parallel processes
+		if (processingEventsFlag.set())
+			try {
+				// Processes the pending events one by one.
+				// Each event is fully resolved (including the after-effects) before the next event is fired
+				OptionsIterator.continually { eventQueue.pop() }.foreach { event =>
+					fireEvent(event).foreach { effect =>
+						Try { effect() }.logWithMessage("Failure during a change effect")
+					}
+				}
+			}
+			finally { processingEventsFlag.reset() }
 	}
 }

@@ -81,4 +81,14 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 		}
 		Future.successful(())
 	}
+	
+	override def viewLocked[B](operation: R => B): B = {
+		// Case: Already stopped => No need for locking
+		if (stopped)
+			operation(value)
+		// Case: Not yet stopped => Locks the viewed pointer
+		else
+			origin.lockWhile { operation(value) }
+	}
+	override def lockWhile[B](operation: => B): B = if (stopped) operation else origin.lockWhile(operation)
 }

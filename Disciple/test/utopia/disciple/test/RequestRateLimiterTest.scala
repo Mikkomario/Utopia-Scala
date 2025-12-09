@@ -1,8 +1,10 @@
 package utopia.disciple.test
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.disciple.controller.RequestRateLimiter
 import utopia.flow.async.process.Wait
 import utopia.flow.test.TestContext._
+import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.Volatile
 
@@ -41,6 +43,24 @@ object RequestRateLimiterTest extends App
 	limiter.push { Future { counter.update { _ + 1 } } }
 	Wait(0.02.seconds, waitLock)
 	assert(counter.value == 8)
+	
+	println("Adding a lot of requests at once")
+	val start = Now.toInstant
+	val futures = (1 to 100).map { _ =>
+		Wait(0.1.seconds)
+		limiter.push { Future { counter.update { _ + 1 } } }
+	}
+	Wait(4.seconds)
+	assert(counter.value >= 18)
+	
+	futures.iterator.zipWithIndex.foreach { case (future, i) =>
+		future.waitFor().get
+		println(s"$i completed")
+	}
+	val time = Now - start
+	println(time.description)
+	assert(time > 30.seconds, time.description)
+	assert(time < 55.seconds, time.description)
 	
 	println("Success...")
 }

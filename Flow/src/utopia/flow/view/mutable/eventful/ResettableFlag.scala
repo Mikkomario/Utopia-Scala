@@ -7,8 +7,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.Switch
-import utopia.flow.view.template.eventful.Flag.FlagWrapper
-import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, Flag}
+import utopia.flow.view.template.eventful.{AbstractChanging, ChangingWrapper, Flag}
 
 import scala.util.Try
 
@@ -68,15 +67,14 @@ object ResettableFlag
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	}
 	
-	private class ResettableFlagWrapper(p: EventfulPointer[Boolean])
+	private class ResettableFlagWrapper(override protected val wrapped: EventfulPointer[Boolean])
 		extends ResettableFlag with ChangingWrapper[Boolean]
 	{
 		override lazy val view: Flag = new FlagView(this)
 		
-		override implicit def listenerLogger: Logger = p.listenerLogger
-		override protected def wrapped: Changing[Boolean] = p
+		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		
-		override def value_=(newValue: Boolean): Unit = p.value = newValue
+		override def value_=(newValue: Boolean): Unit = wrapped.value = newValue
 	}
 }
 

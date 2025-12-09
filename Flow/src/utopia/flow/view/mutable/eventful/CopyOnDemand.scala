@@ -1,13 +1,13 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
+import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny
-import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
-import utopia.flow.operator.enumeration.End
+import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal}
 import utopia.flow.util.TryExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 
 import scala.util.Try
@@ -133,23 +133,9 @@ object CopyOnDemand
 	}
 	
 	// Implementation for fixed values
-	private class FixedOnDemand[+A](override val value: A) extends CopyOnDemand[A]
+	private class FixedOnDemand[+A](override val value: A) extends Fixed[A] with CopyOnDemand[A]
 	{
-		override implicit def listenerLogger: Logger = SysErrLogger
-		
-		override def destiny: Destiny = Sealed
-		override def readOnly: Changing[A] = this
-		
-		override def hasListeners: Boolean = false
-		override def numberOfListeners: Int = 0
-		
-		override def toString = s"Always($value)"
-		
 		override def update(): Unit = ()
-		
-		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = ()
-		override def removeListener(changeListener: Any): Unit = ()
-		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	}
 }
 

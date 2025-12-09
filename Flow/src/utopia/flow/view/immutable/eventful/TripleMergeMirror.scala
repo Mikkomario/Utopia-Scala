@@ -145,4 +145,11 @@ class TripleMergeMirror[+O1, +O2, +O3, R](source1: Changing[O1], source2: Changi
 			val suffix = if (condition.isAlwaysTrue) "" else s".while($condition)"
 			s"Merging($source1).and($source2).and($source3)$suffix"
 	}
+	
+	override def lockWhile[B](operation: => B) = {
+		if (condition.isAlwaysFalse)
+			operation
+		else
+			source1.lockWhile { source2.lockWhile { source3.lockWhile { condition.lockWhile(operation) } } }
+	}
 }

@@ -383,7 +383,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250, va
 		def offer(task: Runnable, eventful: Boolean = true) = {
 			// Only accepts new tasks if not busy already
 			if (finishedFlag.isNotSet) {
-				waitingTask.lockWhile { waiter =>
+				waitingTask.viewLocked { waiter =>
 					// Proposes the task to a waiting promise,
 					// if there is one and if that promise hasn't been completed already
 					waiter.filter { _._1.trySuccess(task -> eventful) } match {

@@ -1,13 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.operator.enumeration.End
 import utopia.flow.util.TryExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.eventful.FlagView
+import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.{Fixed, FlagView}
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, Flag}
 
@@ -58,22 +55,12 @@ object SettableFlag
 	
 	// NESTED   ------------------------
 	
-	private object AlreadySetFlag extends SettableFlag
+	private object AlreadySetFlag extends Fixed[Boolean] with SettableFlag
 	{
-		override implicit val listenerLogger: Logger = SysErrLogger
 		override val value: Boolean = true
-		override val destiny: Destiny = Sealed
-		
-		override val hasListeners: Boolean = false
-		override val numberOfListeners: Int = 0
 		
 		override def view: Flag = this
 		override def toString = "Flag.always.set"
-		
-		override def removeListener(changeListener: Any): Unit = ()
-		
-		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Boolean]]): Unit = ()
-		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 		
 		override def set(): Boolean = false
 	}

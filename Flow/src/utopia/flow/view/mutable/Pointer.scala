@@ -277,6 +277,17 @@ object Pointer extends PointerFactory[Pointer]
 		  * @return Value before this method call
 		  */
 		def popAll() = p.getAndSet(Empty)
+		/**
+		 * Removes n items from the beginning of this collection
+		 * @param count Number of items to take from the beginning of this collection, at maximum.
+		 * @return Up to 'count' items from the beginning of this collection.
+		 */
+		def pop(count: Int) = {
+			if (count <= 0)
+				Empty
+			else
+				p.mutate { _.splitAt(count) }
+		}
 		
 		/**
 		  * Finds and removes an item from this pointer's contents

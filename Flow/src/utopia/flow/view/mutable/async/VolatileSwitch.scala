@@ -27,7 +27,7 @@ object VolatileSwitch
 		
 		override def value: Boolean = _value
 		
-		override protected def assign(newValue: Boolean): Seq[() => Unit] = {
+		override protected def assign(oldValue: Boolean, newValue: Boolean): Seq[() => Unit] = {
 			_value = newValue
 			Empty
 		}

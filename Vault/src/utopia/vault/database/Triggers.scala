@@ -31,7 +31,7 @@ object Triggers
 	  * @param exc Execution context to use in event handling
 	  */
 	def specifyExecutionContext(exc: ExecutionContext)(implicit log: Logger) =
-		queue = Some(new ActionQueue()(exc, log))
+		queue = Some(ActionQueue()(log, exc))
 	
 	/**
 	  * Delivers an event to be distributed to all interested listeners. The operation is performed asynchronously if

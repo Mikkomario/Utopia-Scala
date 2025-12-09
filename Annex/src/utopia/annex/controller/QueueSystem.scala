@@ -40,7 +40,7 @@ class QueueSystem(api: ApiClient, offlineModeWaitThreshold: Duration = 30.second
 	// ATTRIBUTES   ------------------------------
 	
 	private val _onlineFlag = new VolatileFlag(true)
-	private val offlineQueue = new ActionQueue()
+	private val offlineQueue = ActionQueue()
 	
 	// Contains an infinite iterator that returns (offline) request delays
 	private val requestDelayIteratorPointer = _onlineFlag.strongMap { online =>

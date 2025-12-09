@@ -510,7 +510,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 					// Appends as many items as possible to the buffer
 					val (nextAppend, remaining) = items.splitAt(availableCapacity)
 					buffer.update { _ ++ nextAppend }
-					remainingInputSizeP.update { n => (n - nextAppend.size).nonNegative }
+					remainingInputSizeP.tryUpdate { n => (n - nextAppend.size).nonNegative }
 					
 					// If there are items which couldn't fit in the buffer, handles them recursively
 					// (i.e. completes another wait iteration)

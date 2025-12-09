@@ -5,7 +5,7 @@ import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.async.context.{ActionQueue, ThreadPool}
 import utopia.flow.async.process.Wait
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.logging.{Logger, SysErrLogger, TimeLogger}
 
 import scala.collection.immutable.VectorBuilder
 import scala.concurrent.ExecutionContext
@@ -22,7 +22,7 @@ object ActionQueueTest extends App
 	implicit val logger: Logger = SysErrLogger
 	implicit val context: ExecutionContext = new ThreadPool("Test", 2, 4)
 	
-	val queue = new ActionQueue(5)
+	val queue = ActionQueue(5)
 	
 	val genLock = new AnyRef()
 	var generatedItems = 0
@@ -30,9 +30,11 @@ object ActionQueueTest extends App
 	val random = new Random()
 	val completionsBuffer = new VectorBuilder[QueuedAction[Any]]()
 	
+	private val log = new TimeLogger(autoflush = true)
+	
 	def task() = Wait(100.millis)
 	
-	println("Starting tasks")
+	log.checkPoint(s"Starting tasks. Should take about ${ (5.millis * maxGenItems).description }.")
 	
 	// Starts generating actions
 	while (generatedItems < maxGenItems) {
@@ -45,10 +47,12 @@ object ActionQueueTest extends App
 	val completions = completionsBuffer.result()
 	assert(completions.size == maxGenItems)
 	
-	println("All completions created")
-	println(s"${completions.count { _.isCompleted }} / $maxGenItems items completed")
+	log.checkPoint("All completions created")
+	private val earlyCompletionCount = completions.count { _.isCompleted }
+	println(s"$earlyCompletionCount / $maxGenItems items completed. Should be about ${ maxGenItems / 4 }.")
 	
 	val successes = completions.flatMap { _.future.waitFor().toOption }
 	assert(successes.size == maxGenItems)
-	println("All completed!")
+	log.checkPoint(s"All completed! The whole process should have taken around ${
+		((maxGenItems * 100 / 5).millis + (maxGenItems * 5).millis).description }")
 }

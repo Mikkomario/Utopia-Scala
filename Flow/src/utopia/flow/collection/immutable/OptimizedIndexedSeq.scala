@@ -172,8 +172,15 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 		
 		// IMPLEMENTED  -------------------
 		
-		// Tracks size until 3
-		override def knownSize = if (overflown) -1 else nextIndex
+		override def knownSize = {
+			if (overflown)
+				lazyBuilder.current match {
+					case Some(builder) => builder.knownSize
+					case None => -1
+				}
+			else
+				nextIndex
+		}
 		
 		override def addOne(elem: A) = {
 			nextIndex match {

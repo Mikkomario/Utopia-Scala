@@ -72,6 +72,12 @@ class LockableBridge[A](origin: Changing[A]) extends OptimizedChanging[A] with L
 		}
 	}
 	
+	override def lockWhile[B](operation: => B): B = if (locked) operation else origin.lockWhile(operation)
+	override def viewLocked[B](operation: A => B) = lockedValue match {
+		case Some(value) => operation(value)
+		case None => origin.viewLocked(operation)
+	}
+	
 	override protected def declareChangingStopped() = {
 		super.declareChangingStopped()
 		origin.removeListener(relayEventsListener)

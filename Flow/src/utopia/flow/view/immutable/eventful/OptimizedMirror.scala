@@ -135,4 +135,11 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 				case None => s"Mirroring($origin).while($condition)"
 			}
 	}
+	
+	override def lockWhile[B](operation: => B): B =
+		if (placeholder.isDefined) condition.lockWhile(operation) else origin.lockWhile(operation)
+	override def viewLocked[B](operation: R => B) = placeholder match {
+		case Some(value) => condition.lockWhile { operation(value) }
+		case None => origin.lockWhile { operation(value) }
+	}
 }

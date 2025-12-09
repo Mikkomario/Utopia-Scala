@@ -255,5 +255,8 @@ trait Flag extends Changing[Boolean] with MaybeSet
 			case listener: ChangeListener[Boolean] => listenerCache.cached(listener).foreach(target.removeListener)
 			case _ => ()
 		}
+		
+		override def viewLocked[B](operation: Boolean => B): B = Flag.this.viewLocked { v => operation(!v) }
+		override def lockWhile[B](operation: => B): B = Flag.this.lockWhile(operation)
 	}
 }

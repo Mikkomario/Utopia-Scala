@@ -1,5 +1,6 @@
 package utopia.flow.event.listener
 
+import utopia.flow.event.listener.ChangeListener.MappedInputChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 
@@ -94,6 +95,11 @@ object ChangeListener
 	{
 		override def onChangeEvent(event: ChangeEvent[Any]): ChangeResponse = response
 	}
+	
+	private class MappedInputChangeListener[-I, +A](wrapped: ChangeListener[A], f: I => A) extends ChangeListener[I]
+	{
+		override def onChangeEvent(event: ChangeEvent[I]): ChangeResponse = wrapped.onChangeEvent(event.map(f))
+	}
 }
 
 /**
@@ -104,6 +110,8 @@ object ChangeListener
   */
 trait ChangeListener[-A]
 {
+	// ABSTRACT ----------------------------
+	
 	/**
 	  * This method is called when a value changes
 	  * @param event The change event
@@ -111,4 +119,15 @@ trait ChangeListener[-A]
 	  *         in the future, and whether any additional actions should be performed afterwards.
 	  */
 	def onChangeEvent(event: ChangeEvent[A]): ChangeResponse
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	 * @param f A mapping function applied to change input before passing it to this listener
+	 * @tparam I Type of the accepted input
+	 * @return A change listener which performs the specified mapping function
+	 *         and then passes the events to this listener.
+	 */
+	def mapInput[I](f: I => A): ChangeListener[I] = new MappedInputChangeListener[I, A](this, f)
 }

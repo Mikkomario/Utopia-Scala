@@ -3,6 +3,7 @@ package utopia.genesis.handling.event.keyboard
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.Use
 import utopia.flow.util.logging.{DelegatingLogger, Logger, SysErrLogger}
 import utopia.flow.view.mutable.Pointer
 import utopia.genesis.handling.action.ActorHandler
@@ -103,7 +104,8 @@ object KeyboardEvents extends mutable.Growable[Handleable]
 	  * Sets up the execution context that is used for distributing keyboard events
 	  * @param context An execution context used when distributing keyboard events
 	  */
-	def specifyExecutionContext(context: ExecutionContext) = eventQueue = Some(new ActionQueue()(context, log))
+	def specifyExecutionContext(context: ExecutionContext) =
+		Use(context) { implicit exc => eventQueue = Some(ActionQueue()) }
 	
 	/**
 	 * Sets up the key-down event generation, unless it has been set up already.

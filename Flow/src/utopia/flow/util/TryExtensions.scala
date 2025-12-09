@@ -1,10 +1,10 @@
 package utopia.flow.util
 
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
+import utopia.flow.collection.mutable.builder.TryCatchBuilder
 import utopia.flow.util.logging.Logger
 
-import scala.collection.immutable.VectorBuilder
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -232,18 +232,9 @@ object TryExtensions
 		  *         caught errors, as well as successes
 		  */
 		def toTryCatch: TryCatch[IndexedSeq[A]] = {
-			val (failures, successes) = tries.divided
-			if (successes.isEmpty) {
-				failures.headOption match {
-					// Case: All attempts failed => fails with the first encountered error
-					case Some(firstError) => TryCatch.Failure(firstError)
-					// Case: No attempts were made => empty success
-					case None => TryCatch.Success(successes, failures)
-				}
-			}
-			// Case: One or more attempts succeeded => success
-			else
-				TryCatch.Success(successes, failures)
+			val builder = TryCatchBuilder[A]()
+			builder ++= tries
+			builder.result()
 		}
 		
 		/**
@@ -296,27 +287,9 @@ object TryExtensions
 		  *         Failure otherwise.
 		  */
 		def toTryCatch: TryCatch[IndexedSeq[A]] = {
-			// Collects all success and failure values, including partial failures
-			val successesBuilder = new VectorBuilder[A]()
-			val failuresBuilder = new VectorBuilder[Throwable]()
-			tries.iterator.foreach {
-				case TryCatch.Success(v, failures) =>
-					successesBuilder += v
-					failuresBuilder ++= failures
-				case TryCatch.Failure(error) => failuresBuilder += error
-			}
-			val failures = failuresBuilder.result()
-			successesBuilder.result().notEmpty match {
-				// Case: There was at least one success => Succeeds
-				case Some(successes) => TryCatch.Success(successes, failures)
-				case None =>
-					failures.headOption match {
-						// Case: No successes => Fails
-						case Some(error) => TryCatch.Failure(error)
-						// Case: Empty collection => Succeeds
-						case None => TryCatch.Success(Empty)
-					}
-			}
+			val builder = TryCatchBuilder[A]()
+			builder.catching ++= tries
+			builder.result()
 		}
 	}
 	

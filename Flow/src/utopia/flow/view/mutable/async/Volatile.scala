@@ -1,8 +1,10 @@
 package utopia.flow.view.mutable.async
 
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.{Pointer, PointerFactory}
+import utopia.flow.view.template.SynchronizedView
 
 object Volatile extends PointerFactory[Volatile]
 {
@@ -52,7 +54,7 @@ object Volatile extends PointerFactory[Volatile]
         
         override def value: A = _value
         
-        override protected def assign(newValue: A): Seq[() => Unit] = {
+        override protected def assign(oldValue: A, newValue: A): Seq[() => Unit] = {
             _value = newValue
             Empty
         }
@@ -65,17 +67,18 @@ object Volatile extends PointerFactory[Volatile]
   * @author Mikko Hilpinen
 * @since 27.3.2019
 **/
-trait Volatile[A] extends Pointer[A]
+trait Volatile[A] extends Pointer[A] with SynchronizedView[A]
 {
     // ABSTRACT --------------------
     
     /**
       * Changes the current value of this container.
       * This method will only be called from a synchronized block (i.e. this.synchronized { ... })
-      * @param newValue New value to assign to this container
+      * @param oldValue The old/current value of this item
+     * @param newValue New value to assign to this container
       * @return Returns the after-effects to fire once outside the synchronized block
       */
-    protected def assign(newValue: A): Seq[() => Unit]
+    protected def assign(oldValue: A, newValue: A): Seq[() => Unit]
     
     
     // COMPUTED    -----------------
@@ -87,21 +90,25 @@ trait Volatile[A] extends Pointer[A]
       *
       *         For non-synchronized access, which is perhaps faster but might be less accurate, call [[value]]
       */
-    def synchronizedValue = this.synchronized { value }
+    @deprecated("Deprecated for removal. If you need synchronized access to this pointer's value, use .lockWhile(...) instead", "v2.8")
+    def synchronizedValue = lockWhile(Identity)
     
     
     // IMPLEMENTED  ----------------
     
     override def value_=(newValue: A) = mutate { _ => () -> newValue }
-    
-    override def update(f: A => A): Unit = mutate { v => () -> f(v) }
+	
+	override def viewLocked[B](operation: A => B) = this.synchronized { operation(value) }
+	override def lockWhile[B](operation: => B): B = this.synchronized(operation)
+	
+	override def update(f: A => A): Unit = mutate { v => () -> f(v) }
     override def mutate[B](mutate: A => (B, A)) = {
         // Locks during operation & value change
-        val (result, effects) = this.synchronized {
+        val (result, effects) = viewLocked { value =>
             // Performs the operation, acquires new value and final result
             val (result, newValue) = mutate(value)
             // Updates the wrapped value
-            val afterEffects = assign(newValue)
+            val afterEffects = assign(value, newValue)
             
             result -> afterEffects
         }
@@ -119,14 +126,6 @@ trait Volatile[A] extends Pointer[A]
     
     
     // OTHER    --------------------
-    
-    /**
-     * Locks the value in this container from outside sources during the operation.
-      * Use with caution, as careless synchronization may lead to deadlocks.
-      * @tparam U The result type of the operation
-      * @return the result of the operation
-     */
-    def lockWhile[U](operation: A => U) = this.synchronized { operation(value) }
     
     /**
       * Updates a value in this container. Returns the state before the update.

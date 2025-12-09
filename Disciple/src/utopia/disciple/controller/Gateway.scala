@@ -160,7 +160,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 {
     // ATTRIBUTES    -------------------------
 	
-    private lazy val connectionManager = {
+    private val connectionManager = {
 	    val manager = {
 		    if (disableTrustStoreVerification) {
 			    // From https://www.baeldung.com/httpclient-ssl
@@ -182,11 +182,24 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
     }
 	
 	// TODO: Add customizable timeouts (see https://www.baeldung.com/httpclient-timeout)
-    private lazy val client = customizeClient(
+	// TODO: Shouldn't this be closed at some point?
+    private val client = customizeClient(
 	    HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)).build()
+	
+	
+	// COMPUTED ----------------------
+	
+	/**
+	 * @return Number of http connections currently in use
+	 */
+	def usedConnections = connectionManager.getTotalStats.getLeased
+	/**
+	 * @return Number of http connections still available
+	 */
+	def availableConnections = connectionManager.getTotalStats.getAvailable
     
 	
-    // OTHER METHODS    ----------------------
+    // OTHER    ----------------------
     
     // TODO: Add support for multipart body:
     // https://stackoverflow.com/questions/2304663/apache-httpclient-making-multipart-form-post

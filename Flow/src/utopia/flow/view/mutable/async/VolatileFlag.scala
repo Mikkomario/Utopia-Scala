@@ -48,15 +48,17 @@ class VolatileFlag(initialState: Boolean = false)(implicit listenerLogger: Logge
 	// OTHER    ---------------
 	
 	/**
-	  * Unless this flag is currently set, performs the specified operation.
-	  * Locks this container during this operation.
-	  *
-	  * Use with caution, as careless locking / synchronization may lead to deadlocks.
-	  *
-	  * @param operation Function called (synchronously), if this flag is currently not set
-	  * @tparam U Arbitrary function result type
-	  */
-	def lockWhileIfNotSet[U](operation: => U): Unit = lockWhile { v => if (!v) operation }
+	 * Unless this flag is currently set, performs the specified operation.
+	 * Locks this container during this operation.
+	 *
+	 * Use with caution, as careless locking / synchronization may lead to deadlocks.
+	 *
+	 * @param operation Function called (synchronously), if this flag is currently not set
+	 * @tparam U Arbitrary function result type
+	 */
+	def viewLockedIfNotSet[U](operation: => U): Unit = viewLocked { v => if (!v) operation }
+	@deprecated("Renamed to .viewLockedIfNotSet(...)", "v2.8")
+	def lockWhileIfNotSet[U](operation: => U): Unit = viewLocked { v => if (!v) operation }
 	
 	/**
 	  * If this flag is not currently set, runs the specified function and then sets this switch
@@ -72,8 +74,8 @@ class VolatileFlag(initialState: Boolean = false)(implicit listenerLogger: Logge
 	/**
 	  * If this flag is not set, performs the operation. Locks this flag while the operation runs.
 	  */
-	@deprecated("Renamed to lockWhileIfNotSet", "v2.5")
-	def doIfNotSet[U](action: => U) = lockWhileIfNotSet(action)
+	@deprecated("Renamed to viewLockedIfNotSet", "v2.5")
+	def doIfNotSet[U](action: => U) = viewLockedIfNotSet(action)
 	/**
 	  * If this flag is not set, performs the operation and then sets this flag.
 	  * Locks this flag during the operation.

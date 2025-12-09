@@ -6,13 +6,17 @@ import utopia.flow.collection.mutable.iterator.{LazyInitIterator, PollableOnce}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
-import utopia.flow.view.mutable.caching.DeprecatingLazy
+import utopia.flow.view.mutable.caching.{DeprecatingLazy, ResettableLazy}
 import utopia.flow.view.mutable.eventful.GeneratesOnce
 
 object Lazy
 {
 	// COMPUTED ------------------------
 	
+	/**
+	 * @return Access to constructors of resettable lazy containers
+	 */
+	def resettable = ResettableLazy
 	/**
 	 * @return Access to constructing lazy containers that fire change events
 	 */
@@ -29,6 +33,12 @@ object Lazy
 	  */
 	def apply[A](make: => A): Lazy[A] = new _Lazy[A](make)
 	
+	/**
+	 * @param make A function that generates the value once called
+	 * @tparam A Type of the generated value
+	 * @return A volatile (i.e. thread-safe) lazy container initiliazed with the specified function
+	 */
+	def volatile[A](make: => A): VolatileLazy[A] = VolatileLazy(make)
 	/**
 	  * Creates a new lazy container that fires an event when it is first initialized
 	  * @param make A function for generating the stored value when it is first requested

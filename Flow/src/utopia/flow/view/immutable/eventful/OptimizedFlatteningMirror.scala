@@ -147,6 +147,8 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 			}
 	}
 	
+	override def lockWhile[B](operation: => B): B = source.lockWhile(operation)
+	
 	
 	// OTHER    -----------------------------
 	

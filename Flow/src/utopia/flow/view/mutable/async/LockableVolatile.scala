@@ -69,18 +69,18 @@ abstract class LockableVolatile[A](implicit listenerLogger: Logger)
 		changingStoppedListenersP.update { _ :+ listener }
 	
 	override protected def assignToUnlocked(newValue: A): Unit =
-		super.assign(newValue).foreach { effect => Try { effect() }.log }
+		super.assign(value, newValue).foreach { effect => Try { effect() }.log }
 	
-	override protected def assign(newValue: A): Seq[() => Unit] = {
+	override protected def assign(oldValue: A, newValue: A): Seq[() => Unit] = {
 		// Case: Locked => Won't allow further mutations
 		if (lockFlag.isSet) {
-			if (newValue == value)
+			if (newValue == oldValue)
 				Empty
 			else
 				throw new IllegalStateException("This pointer has already been locked")
 		}
 		// Case: Not locked => Continues with the default behavior
 		else
-			super.assign(newValue)
+			super.assign(oldValue, newValue)
 	}
 }

@@ -1,6 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
@@ -10,6 +10,7 @@ import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Switch
+import utopia.flow.view.template.SynchronizedView
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
 
 import scala.util.Try
@@ -186,6 +187,8 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 			s"$base$suffix"
 	}
 	
+	override def lockWhile[B](operation: => B): B = lockSources(sources.iterator ++ Single(condition))(operation)
+	
 	
 	// OTHER    --------------------------------
 	
@@ -207,4 +210,11 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 	
 	private def detachLazyListener() =
 		lazyLazyListener.current.foreach { l => sources.foreach { _.removeListener(l) } }
+		
+	private def lockSources[A](sourcesIter: Iterator[SynchronizedView[_]])(f: => A): A = {
+		sourcesIter.nextOption() match {
+			case Some(source) => source.lockWhile { lockSources(sourcesIter)(f) }
+			case None => f
+		}
+	}
 }

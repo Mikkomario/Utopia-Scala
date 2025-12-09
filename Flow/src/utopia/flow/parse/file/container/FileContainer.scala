@@ -126,7 +126,7 @@ abstract class FileContainer[A](fileLocation: Path)(implicit jsonParser: JsonPar
 		}
 		if (listen)
 			_current.addListenerAndSimulateEvent(empty) { _ =>
-				saveProcess.lockWhile { _.foreach { _.runAsync(loopIfRunning = true) } }
+				saveProcess.viewLocked { _.foreach { _.runAsync(loopIfRunning = true) } }
 				Continue
 			}
 	}

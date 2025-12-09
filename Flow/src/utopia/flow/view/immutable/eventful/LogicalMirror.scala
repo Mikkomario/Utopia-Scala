@@ -150,6 +150,13 @@ sealed class LogicalMirror(sources: Pair[Changing[Boolean]], stopValue: Boolean,
 		case None => s"Mirroring.logically(${ sources.first }).and(${ sources.second })"
 	}
 	
+	override def lockWhile[B](operation: => B): B =
+		if (finalValueP.isDefined) operation else sources.first.lockWhile { sources.second.lockWhile(operation) }
+	override def viewLocked[B](operation: Boolean => B) = finalValueP.value match {
+		case Some(value) => operation(value)
+		case None => lockWhile { operation(value) }
+	}
+	
 	
 	// OTHER    ----------------------------
 	

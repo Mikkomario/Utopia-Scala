@@ -10,7 +10,7 @@ import scala.collection.immutable.VectorBuilder
   * @author Mikko Hilpinen
   * @since 12.8.2020, v1.2
   */
-class TimeLogger
+class TimeLogger(autoflush: Boolean = false)
 {
 	// ATTRIBUTES	-------------------------
 	
@@ -28,6 +28,9 @@ class TimeLogger
 		val time = Now.toInstant
 		linesBuilder += s"$description (${(time - startTime).description})"
 		startTime = time
+		
+		if (autoflush)
+			print()
 	}
 	
 	def print() = {
