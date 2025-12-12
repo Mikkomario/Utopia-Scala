@@ -117,12 +117,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	  * including information on whether that final result is still pending.
 	  */
 	override lazy val lastResultCompletionPointer = {
-		val initialResult = lastResult.flatMap { message =>
-			message.future.currentResult match {
-				case Some(current) => current.flatten
-				case None => Success(emptyBufferedReply)
-			}
-		}
+		val initialResult = lastResult.flatMap { _.future.currentResult.getOrElse { Success(emptyBufferedReply) } }
 		_lastResultPointer.mapToFuture(initialResult) {
 			case Success(reply) => reply.future
 			case Failure(error) => TryFuture.failure(error)
@@ -321,7 +316,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 							if (reply.isStreaming)
 								replyIncoming(reply)
 							// Handles the reply completion asynchronously
-							reply.future.foreachResult {
+							reply.future.forResult {
 								// Case: Reply fully parsed
 								//       => Updates message history & finishes state (unless tools are called)
 								case Success(reply) =>

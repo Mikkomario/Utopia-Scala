@@ -155,12 +155,14 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 					// Pushes the item back into the queue when / if the next run time is known
 					taskCompletion.current match {
 						// Case: Time is immediately known (task blocked)
-						case Some(newTimePointer) => _addTask(newTimePointer, nextTask)
+						case Some(Success(newTimePointer)) => _addTask(newTimePointer, nextTask)
+						// Case: Task failed => Won't repeat it
+						case Some(Failure(error)) => logger(error, "Task failed to complete; It won't be repeated.")
 						// Case: Time is known later (async task)
 						case None =>
 							taskCompletion.onComplete {
 								case Success(newTimePointer) => _addTask(newTimePointer, nextTask)
-								case Failure(error) => logger(error, "Task failed to complete")
+								case Failure(error) => logger(error, "Task failed to complete; It won't be repeated.")
 							}
 					}
 				}

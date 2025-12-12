@@ -1,13 +1,12 @@
 package utopia.flow.collection
 
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.MapCollectionParallel
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.collection.immutable.Pair.PairIsIterable
 import utopia.flow.collection.immutable._
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
-import utopia.flow.collection.mutable.builder.ParallelBuilder.ParallelBuilderFactory
-import utopia.flow.collection.mutable.builder.{ParallelBuilder, TryCatchBuilder}
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
@@ -317,6 +316,12 @@ object CollectionExtensions
 			else
 				total
 		}
+		
+		/**
+		 * @param exc Implicit execution context
+		 * @return Access to parallel mapping functions
+		 */
+		def parallel(implicit exc: ExecutionContext) = MapCollectionParallel(i)
 		
 		
 		// OTHER    --------------------------
@@ -789,190 +794,6 @@ object CollectionExtensions
 		  * @return An iterator that reduces the items in this collection and returns every iteration result
 		  */
 		def reduceLeftIterator(f: (A, A) => A) = FoldingIterator.reduce(i.iterator)(f)
-		
-		/**
-		 * Maps all items in this collection in parallel with each other, utilizing multiple threads.
-		 * This function is more appropriate for small-size collection. For larger collections,
-		 * consider using [[mapParallelTo]] instead.
-		 * @param f A mapping function. Called asynchronously. Expected to block.
-		 * @param exc Implicit execution context
-		 * @tparam B Type of mapping results
-		 * @return A future that resolves once all mapping operations have completed.
-		 *         Yields a TryCatch, which contains failures in situations
-		 *         where 'f' threw or some other exception occurred.
-		 */
-		def mapAllParallelToSeqs[B](f: A => B)(implicit exc: ExecutionContext) =
-			mapAllParallelTo(OptimizedIndexedSeq.newBuilder[B])(f)
-		/**
-		 * Maps all items in this collection in parallel with each other, utilizing multiple threads.
-		 * This function is more appropriate for small-size collection. For larger collections,
-		 * consider using [[mapParallelTo]] instead.
-		 * @param builder Builder for building the resulting collection
-		 * @param f A mapping function. Called asynchronously. Expected to block.
-		 * @param exc Implicit execution context
-		 * @tparam B Type of mapping results
-		 * @tparam To Type of the resulting collection
-		 * @return A future that resolves once all mapping operations have completed.
-		 *         Yields a TryCatch, which contains failures in situations
-		 *         where 'f' threw or some other exception occurred.
-		 */
-		def mapAllParallelTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => B)
-		                                          (implicit exc: ExecutionContext) =
-			ParallelBuilder.collectResultsUsing(i.iterator.map { a => Future { f(a) } }.toOptimizedSeq,
-				builder)
-		/**
-		 * Maps all items in this collection in parallel with each other, utilizing multiple threads.
-		 * This function is more appropriate for small-size collection. For larger collections,
-		 * consider using [[mapParallelAsyncTo]] instead.
-		 * @param f A mapping function that performs the mapping asynchronously and yields a [[Future]]
-		 * @param exc Implicit execution context
-		 * @tparam B Type of mapping results
-		 * @return A future that resolves once all mapping operations have completed.
-		 *         Yields a TryCatch, which contains failures in situations
-		 *         where 'f' threw or some other exception occurred.
-		 */
-		def mapAllParallelAsyncToSeqs[B](f: A => Future[B])(implicit exc: ExecutionContext) =
-			mapAllParallelAsyncTo(OptimizedIndexedSeq.newBuilder[B])(f)
-		/**
-		 * Maps all items in this collection in parallel with each other, utilizing multiple threads.
-		 * This function is more appropriate for small-size collection. For larger collections,
-		 * consider using [[mapParallelAsyncTo]] instead.
-		 * @param builder Builder used for building the resulting collection
-		 * @param f A mapping function that performs the mapping asynchronously and yields a [[Future]]
-		 * @param exc Implicit execution context
-		 * @tparam B Type of mapping results
-		 * @tparam To Type of the resulting collection
-		 * @return A future that resolves once all mapping operations have completed.
-		 *         Yields a TryCatch, which contains failures in situations
-		 *         where 'f' threw or some other exception occurred.
-		 */
-		def mapAllParallelAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[B])
-		                                               (implicit exc: ExecutionContext) =
-			ParallelBuilder.collectResultsUsing(i.iterator.map(f).toOptimizedSeq, builder)
-		
-		/**
-		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
-		 * @param maxWidth Maximum number of parallel mapping operations at any time
-		 * @param bufferSize Maximum number of buffered (but not started) mapping operations.
-		 *                   Default = 8. Will always be set at least to 'maxWidth'.
-		 * @param f A mapping function to apply. Expected to block.
-		 * @param exc Implicit execution context
-		 * @param log Implicit logging implementation
-		 * @tparam B Type of mapping results
-		 * @return A future which will resolve into mapped items.
-		 *         Yields a TryCatch, where failures are entries where 'f'
-		 *         threw or where some other (thread-related) problem was encountered.
-		 *         Yields a failure if all mapping operations failed.
-		 */
-		def mapParallelToSeqs[B](maxWidth: Int, bufferSize: => Int = 8)(f: A => B)
-		                        (implicit exc: ExecutionContext, log: Logger) =
-			mapParallelTo(OptimizedIndexedSeq.newBuilder[B], maxWidth, bufferSize)(f)
-		/**
-		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
-		 * @param maxWidth Maximum number of parallel mapping operations at any time
-		 * @param bufferSize Maximum number of buffered (but not started) mapping operations.
-		 *                   Default = 8. Will always be set at least to 'maxWidth'.
-		 * @param builder Builder used for building the resulting collection
-		 * @param f A mapping function to apply. Expected to block.
-		 * @param exc Implicit execution context
-		 * @param log Implicit logging implementation
-		 * @tparam B Type of mapping results
-		 * @tparam To Type of the resulting collection
-		 * @return A future which will resolve into mapped items.
-		 *         Yields a TryCatch, where failures are entries where 'f'
-		 *         threw or where some other (thread-related) problem was encountered.
-		 *         Yields a failure if all mapping operations failed.
-		 */
-		def mapParallelTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To], maxWidth: Int, bufferSize: => Int = 8)
-		                                       (f: A => B)
-		                                       (implicit exc: ExecutionContext, log: Logger) =
-			_mapParallelTo[B, To](maxWidth, bufferSize, builder) { _.map(f) } {
-				builder =>
-					Future {
-						val resultBuilder = TryCatchBuilder.wrap(builder)
-						i.iterator.foreach { item => resultBuilder += Try { f(item) } }
-						resultBuilder.result()
-				} } { a => Future { f(a) } } { mapAllParallelTo(_)(f) }
-		/**
-		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
-		 * @param maxWidth Maximum number of parallel mapping operations at any time
-		 * @param bufferSize Maximum number of buffered (but not started) mapping operations.
-		 *                   Default = 8. Will always be set at least to 'maxWidth'.
-		 * @param f A mapping function to apply. Yields a future. Not expected to block.
-		 * @param exc Implicit execution context
-		 * @param log Implicit logging implementation
-		 * @tparam B Type of mapping results
-		 * @return A future which will resolve into mapped items.
-		 *         Yields a TryCatch, where failures are entries where 'f'
-		 *         threw or where some other (thread-related) problem was encountered.
-		 *         Yields a failure if all mapping operations failed.
-		 */
-		def mapParallelAsyncToSeqs[B](maxWidth: Int, bufferSize: => Int = 8)(f: A => Future[B])
-		                             (implicit exc: ExecutionContext, log: Logger) =
-			mapParallelAsyncTo(OptimizedIndexedSeq.newBuilder[B], maxWidth, bufferSize)(f)
-		/**
-		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
-		 * @param maxWidth Maximum number of parallel mapping operations at any time
-		 * @param bufferSize Maximum number of buffered (but not started) mapping operations.
-		 *                   Default = 8. Will always be set at least to 'maxWidth'.
-		 * @param builder Builder used for building the resulting collection
-		 * @param f A mapping function to apply. Yields a future. Not expected to block.
-		 * @param exc Implicit execution context
-		 * @param log Implicit logging implementation
-		 * @tparam B Type of mapping results
-		 * @tparam To Type of the resulting collection
-		 * @return A future which will resolve into mapped items.
-		 *         Yields a TryCatch, where failures are entries where 'f'
-		 *         threw or where some other (thread-related) problem was encountered.
-		 *         Yields a failure if all mapping operations failed.
-		 */
-		def mapParallelAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To], maxWidth: Int,
-		                                             bufferSize: => Int = 8)
-		                                            (f: A => Future[B])
-		                                            (implicit exc: ExecutionContext, log: Logger) =
-			_mapParallelTo[B, To](maxWidth, bufferSize, builder) { _.mapAsync(f) } {
-				ParallelBuilder.collectResultsUsing(i.iterator.map(f), _) }(f) {
-				mapAllParallelAsyncTo(_)(f) }
-		
-		private def _mapParallelTo[B, To <: Iterable[_]](maxWidth: Int, bufferSize: => Int,
-		                                                 builder: mutable.Builder[B, To])
-		                                                (finalizeBuilder: ParallelBuilderFactory => ParallelBuilder[A, B, _])
-		                                                (mapSync: mutable.Builder[B, To] => Future[TryCatch[To]])
-		                                                (mapSingle: A => Future[B])
-		                                                (mapAll: mutable.Builder[B, To] => Future[TryCatch[To]])
-		                                              (implicit exc: ExecutionContext, log: Logger): Future[TryCatch[To]] =
-		{
-			// Case: Only a single thread allowed => Maps the items in a single Future
-			if (maxWidth <= 1)
-				mapSync(builder)
-			else {
-				// Also, if the original collection is small enough, simplifies the process by not limiting thread use
-				val knownSize = i.knownSize
-				// Case: This collection is empty => No mapping is required
-				if (knownSize == 0)
-					Future.successful(TryCatch.Success(builder.result()))
-				// Case: This collection contains exactly one item => Applies a single item mapping function
-				else if (knownSize == 1)
-					mapSingle(i.iterator.next())
-						.map { mapped =>
-							builder += mapped
-							TryCatch.Success(builder.result())
-						}
-						.recover { case failure => TryCatch.Failure(failure) }
-				// Case: Maximum width fits this whole collection
-				//       => Maps all items in parallel without limiting thread-usage
-				else if (knownSize > 0 && knownSize <= maxWidth)
-					mapAll(builder)
-				// Case: Thread-usage limiting may be necessary => Maps the items using a ParallelBuilder
-				else
-					Future.delegate {
-						val parallelBuilder = finalizeBuilder(ParallelBuilder(maxWidth, bufferSize max maxWidth))
-							.withResultBuilder(builder)
-						parallelBuilder ++= i
-						parallelBuilder.result()
-					}
-			}
-		}
 	}
 	
 	implicit class IntsIterableOnce(val i: IterableOnce[Int]) extends AnyVal
@@ -1716,26 +1537,10 @@ object CollectionExtensions
 		 *         Yields a TryCatch, which contains failures in situations
 		 *         where 'f' threw or some other exception occurred.
 		  */
+		@deprecated("Deprecated for removal. Please use .parallel functions", "v2.8")
 		def mapAllParallel[B, To <: Iterable[_]](f: iter.A => B)
 		                                        (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext) =
-			ops.mapAllParallelTo(bf.newBuilder(coll))(f)
-		/**
-		 * Maps all items in this collection in parallel with each other, utilizing multiple threads.
-		 * This function is more appropriate for small-size collection. For larger collections,
-		 * consider using [[mapParallelAsync]] instead.
-		 * @param f A mapping function that performs the mapping asynchronously and yields a [[Future]]
-		 * @param bf Implicit build-from for the resulting collection
-		 * @param exc Implicit execution context
-		 * @tparam B Type of mapping results
-		 * @tparam To Type of the resulting collection
-		 * @return A future that resolves once all mapping operations have completed.
-		 *         Yields a TryCatch, which contains failures in situations
-		 *         where 'f' threw or some other exception occurred.
-		 */
-		def mapAllParallelAsync[B, To <: Iterable[_]](f: iter.A => Future[B])
-		                                             (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext) =
-			ops.mapAllParallelAsyncTo(bf.newBuilder(coll))(f)
-		
+			ops.parallel.map(f).to(bf.newBuilder(coll)).all
 		/**
 		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
 		 * @param maxWidth Maximum number of parallel mapping operations at any time
@@ -1752,28 +1557,10 @@ object CollectionExtensions
 		 *         threw or where some other (thread-related) problem was encountered.
 		 *         Yields a failure if all mapping operations failed.
 		 */
+		@deprecated("Deprecated for removal. Please use .parallel functions", "v2.8")
 		def mapParallel[B, To <: Iterable[_]](maxWidth: Int, bufferSize: => Int = 8)(f: iter.A => B)
 		                                     (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext, log: Logger) =
-			ops.mapParallelTo(bf.newBuilder(coll), maxWidth, bufferSize)(f)
-		/**
-		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
-		 * @param maxWidth Maximum number of parallel mapping operations at any time
-		 * @param bufferSize Maximum number of buffered (but not started) mapping operations.
-		 *                   Default = 8. Will always be set at least to 'maxWidth'.
-		 * @param f A mapping function to apply. Yields a future. Not expected to block.
-		 * @param bf Implicit build-from for the resulting collection
-		 * @param exc Implicit execution context
-		 * @param log Implicit logging implementation
-		 * @tparam B Type of mapping results
-		 * @tparam To Type of the resulting collection
-		 * @return A future which will resolve into mapped items.
-		 *         Yields a TryCatch, where failures are entries where 'f'
-		 *         threw or where some other (thread-related) problem was encountered.
-		 *         Yields a failure if all mapping operations failed.
-		 */
-		def mapParallelAsync[B, To <: Iterable[_]](maxWidth: Int, bufferSize: => Int = 8)(f: iter.A => Future[B])
-		                                          (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext, log: Logger) =
-			ops.mapParallelAsyncTo(bf.newBuilder(coll), maxWidth, bufferSize)(f)
+			ops.parallel.map(f).to(bf.newBuilder(coll))(maxWidth, bufferSize)
 	}
 	
 	implicit def iterableOperations[Repr](coll: Repr)

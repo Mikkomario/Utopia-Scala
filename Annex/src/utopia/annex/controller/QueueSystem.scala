@@ -233,13 +233,13 @@ class QueueSystem(api: ApiClient, offlineModeWaitThreshold: Duration = 30.second
 					// the conversion is completed asynchronously and request processing may be delayed
 					val requestFuture = seed.toRequest
 					// Case: Sequential processing mode (offline or resolving offline queue)
-					// => Mustn't block during request conversion because that could cause deadlocks.
-					// Instead, converts the request asynchronously and pushes it to the queue once it's ready
+					//       => Mustn't block during request conversion because that could cause deadlocks.
+					//          Instead, converts the request asynchronously and pushes it to the queue once it's ready
 					val immediateResult = {
 						if (offlineMode)
 							requestFuture.currentResult match {
 								// Case: Request conversion completed immediately => Continues processing
-								case Some(resolvedRequest) => Right(resolvedRequest.flatten)
+								case Some(resolvedRequest) => Right(resolvedRequest)
 								// Case: Request conversion will still take some time => Continues asynchronously
 								case None => Left(requestFuture)
 							}

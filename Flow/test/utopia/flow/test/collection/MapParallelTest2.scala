@@ -21,11 +21,12 @@ object MapParallelTest2 extends App
 	val completionFlag = SettableFlag()
 	
 	(1 to 30)
-		.mapParallelTo(BuildNothing.empty, 3) { i =>
+		.parallel.map { i =>
 			Wait(Random.nextDouble().seconds)
 			println(s"$i")
 		}
-		.foreachResult { result: TryCatch[_] =>
+		.to(BuildNothing.empty)(3)
+		.forResult { result: TryCatch[_] =>
 			result match {
 				case TryCatch.Success(_, failures) =>
 					println(s"Successful completion with ${ failures.size } failures")

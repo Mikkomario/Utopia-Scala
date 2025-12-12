@@ -1,13 +1,17 @@
 package utopia.flow.async
 
 import utopia.flow.async.process.{Wait, WaitUtils}
-import utopia.flow.util.TryCatch
+import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Single}
+import utopia.flow.collection.mutable.builder.{BuildNothing, TryCatchBuilder}
+import utopia.flow.operator.MaybeEmpty
+import utopia.flow.time.Duration
+import utopia.flow.util.MayHaveFailed.{AlwaysSuccess, WrapTry, WrapTryCatch}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.SysErrLogger
+import utopia.flow.util.{MayHaveFailed, TryCatch}
 import utopia.flow.view.mutable.async.Volatile
 
-import scala.collection.immutable.VectorBuilder
-import utopia.flow.time.Duration
+import scala.collection.mutable
 import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -19,37 +23,547 @@ import scala.util.{Failure, Success, Try}
 **/
 object AsyncExtensions
 {
+	// OTHER    ----------------------------
+	
 	/**
 	  * @param reason Reason for this failure
 	  * @tparam A Type of success option
 	  * @return A failure in asynchronous context
 	  */
+	@deprecated("Please use TryFuture.failed(Throwable) instead", "v2.8")
 	def asyncFailure[A](reason: Throwable) = Future.successful(Failure[A](reason))
 	
-    /**
-     * This implicit class provides extra features to Future
-     */
-	implicit class RichFuture[A](val f: Future[A]) extends AnyVal
+	/**
+	 * Collects the results of 0-n futures into a single collection
+	 * @param futuresIter An iterator that yields the futures remaining to be collected
+	 * @param builder A builder for constructing the resulting collection (and for capturing failures)
+	 * @param append A function which appends an item into a result-builder, performing the necessary flattening, etc.
+	 * @param exc Implicit execution context
+	 * @tparam A Type of asynchronous results
+	 * @tparam S Type of collected success values
+	 * @tparam To Type of the built collection
+	 * @return A future that resolves once all futures from 'futuresIter' have resolved,
+	 *         containing their results built into a single collection.
+	 *
+	 *         Yields a partial failure if some of the futures failed.
+	 *         Yields a full failure if all the futures failed (provided there was at least one future, originally).
+	 */
+	private def _collectResults[A, S, To](futuresIter: Iterator[Future[A]], builder: TryCatchBuilder[S, To])
+	                                     (append: (TryCatchBuilder[S, To], Try[A]) => Unit)
+	                                     (implicit exc: ExecutionContext): Future[TryCatch[To]] =
 	{
+		// Collects items until a pending item is encountered
+		futuresIter.find { future =>
+			// Case: This process was already completed => Adds the result to the appropriate buffer and moves on
+			if (future.isCompleted) {
+				append(builder, future.waitFor())
+				false
+			}
+			// Case: This process is still pending => Moves to the next phase
+			else
+				true
+		} match {
+			// Case: A pending process found => Prepares a result future based on its result, using recursion
+			case Some(pendingFuture) =>
+				pendingFuture.toTryFuture.flatMap { result =>
+					// Adds the resolved result to the appropriate buffer
+					append(builder, result)
+					// Continues using recursion
+					_collectResults[A, S, To](futuresIter, builder)(append)
+				}
+			// Case: All items were processed => Builder the resulting collection
+			case None => Future.successful(builder.result())
+		}
+	}
+	
+	
+	// EXTENSIONS   ------------------------
+	
+	/**
+	 * Common trait for futures that may fail (i.e. all futures).
+	 * Extended directly by futures that yield Try or TryCatch.
+	 * Extended indirectly by other futures, so that the Try & TryCatch versions receive priority.
+	 * @tparam A Type of the successfully acquired values
+	 * @tparam T Type of the asynchronously acquired results (e.g. Try[A])
+	 * @tparam R Generic type of the result-wrappers (e.g. Try)
+	 */
+	trait PossiblyFailingFuture[A, T, +R[_]] extends Any
+	{
+		// ABSTRACT ---------------------------
+		
+		/**
+		 * @return The wrapped/extended future
+		 */
+		protected def wrapped: Future[T]
+		
+		/**
+		 * Wraps a result as a [[MayHaveFailed]]
+		 * @param result Result to wrap
+		 * @return A wrapped result
+		 */
+		protected def wrap(result: T): MayHaveFailed[A]
+		/**
+		 * Unwraps a [[MayHaveFailed]] back into the primary result type
+		 * @param result A wrapped result
+		 * @tparam B Type of the value on success
+		 * @return The unwrapped result
+		 */
+		protected def unwrap[B](result: MayHaveFailed[B]): R[B]
+		
+		/**
+		 * Creates a new failure result
+		 * @param cause Cause of this failure
+		 * @tparam B Type of the value that would have been yielded on success
+		 * @return A failure result
+		 */
+		protected def failure[B](cause: Throwable): R[B]
+		
+		/**
+		 * Flattens a result
+		 * @param result A Try containing an asynchronously acquired result
+		 * @return A flattened result
+		 */
+		protected def flatten(result: Try[T]): R[A]
+		/**
+		 * Merges two results (e.g. used for preserving/forwarding partial failures)
+		 * @param result1 The first result (e.g. before mapping)
+		 * @param result2 The second result (e.g. after mapping)
+		 * @tparam B Type of the (mapped) value on success
+		 * @return 'result2', including information from 'result1', if important and applicable
+		 */
+		protected def merge[B](result1: T, result2: Try[B]): R[B]
+		
+		/**
+		 * Converts a possibly failed attempt to create a future, into a future result
+		 * @param result Result to map
+		 * @param exc Implicit execution context
+		 * @tparam B Type of the future results
+		 * @return A future that yields either a success or a failure.
+		 *         Failed immediately, if 'result' is a failure.
+		 */
+		protected def resultToFuture[B](result: MayHaveFailed[Future[B]])(implicit exc: ExecutionContext): Future[R[B]]
+		
+		
+		// COMPUTED ---------------------------
+		
+		/**
+		 * @return The current result of this future. None if not completed yet.
+		 *         Yields a failure if this future had already failed.
+		 */
+		def currentResult = if (wrapped.isCompleted) Some(waitForResult()) else None
+		
+		/**
+		 * @return Whether this future already contains a success result
+		 */
+		def hasSucceeded = wrapped.current.exists { _.toOption.exists { wrap(_).isSuccess } }
+		/**
+		 * @return Whether this future already contains a failure result
+		 */
+		def hasFailed = wrapped.current.exists { _.toOption.forall { wrap(_).isFailure } }
+		
+		/**
+		 * @return A copy of this future that fails if it contains a failure
+		 */
+		def unwrapped(implicit exc: ExecutionContext) = wrapped.map { result => wrap(result).get }
 		/**
 		 * @param exc Implicit execution context
 		 * @return A future that will contain a Success if this future succeeded, and a Failure if this future failed.
 		 */
 		def toTryFuture(implicit exc: ExecutionContext) =
-			f.map(Success.apply).recover { case e => Failure(e) }
+			wrapped.map { wrap(_).toTry }.recover { case e => Failure(e) }
+		/**
+		 * @param exc Implicit execution context
+		 * @return A copy of this future where the underlying Try is converted into a TryCatch
+		 */
+		def toFutureTryCatch(implicit exc: ExecutionContext) =
+			wrapped.map { result => wrap(result).toTryCatch }.recover { case e => TryCatch.Failure(e) }
 		
+		
+		// OTHER    -------------------------
+		
+		/**
+		 * Waits until the result of this future has resolved.
+		 *
+		 * Note: This may block for an extensive period of time.
+		 *       It is recommended, that you use other functions, such as map, flatMap or forEachResult instead.
+		 *
+		 * @param timeout Maximum wait time. Default = Infinite.
+		 * @return The result of this future. Failure if timeout was reached.
+		 */
+		def waitForResult(timeout: Duration = Duration.infinite) = flatten(wrapped.waitFor(timeout))
+		
+		/**
+		 * Performs a mapping operation on a successful asynchronous result
+		 * @param f A mapping function
+		 * @param exc Implicit execution context
+		 * @tparam B Type of map result
+		 * @return A mapped version of this future
+		 */
+		def mapSuccess[B](f: A => B)(implicit exc: ExecutionContext) =
+			wrapped.map { r => unwrap(wrap(r).map(f)) }
+		/**
+		 * If this future yields a successful result, maps it with an asynchronous mapping function.
+		 * @param f An asynchronous mapping function for successful result.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of eventual mapping result
+		 * @return A mapped version of this future
+		 */
+		def flatMapSuccess[B](f: A => Future[B])(implicit exc: ExecutionContext) =
+			wrapped.flatMap { r => resultToFuture(wrap(r).map(f)) }
+		
+		/**
+		 * If this future yields a successful result, maps that with a mapping function that may fail
+		 * @param f A mapping function for successful result. May fail.
+		 * @param exc Implicit execution context.
+		 * @tparam B Type of mapping result.
+		 * @return A mapped version of this future.
+		 */
+		def tryMapSuccess[B](f: A => Try[B])(implicit exc: ExecutionContext) =
+			wrapped.map { r => unwrap(wrap(r).tryMap(f)) }
+		/**
+		 * If this future yields a successful result, maps it with an asynchronous mapping function that may fail
+		 * @param f An asynchronous mapping function for successful result. May yield a failure.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of eventual mapping result when successful
+		 * @return A mapped version of this future
+		 */
+		def tryFlatMapSuccess[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
+			wrapped.flatMap { r1 =>
+				wrap(r1).toTry match {
+					case Success(value) => f(value).map { r2 => merge(r1, r2) }
+					case Failure(error) => Future.successful(failure[B](error))
+				}
+			}
+		
+		/**
+		 * If this future yields a successful result,
+		 * maps that with a mapping function that may fail (fully or partially)
+		 * @param f A mapping function for successful result. May fail.
+		 * @param exc Implicit execution context.
+		 * @tparam B Type of mapping result.
+		 * @return A mapped version of this future.
+		 */
+		def tryMapSuccessCatching[B](f: A => TryCatch[B])(implicit exc: ExecutionContext) =
+			wrapped.map { r => wrap(r).toTryCatch.flatMap(f) }
+		/**
+		 * If this future yields a successful result,
+		 * maps it with an asynchronous mapping function that may fail (fully or partially)
+		 * @param f An asynchronous mapping function for successful result. May yield a failure.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of eventual mapping result when successful
+		 * @return A mapped version of this future
+		 */
+		def tryFlatMapSuccessCatching[B](f: A => Future[TryCatch[B]])(implicit exc: ExecutionContext) =
+			wrapped.flatMap { r =>
+				wrap(r).toTryCatch match {
+					case TryCatch.Success(value, partialFailures) =>
+						val resultFuture = f(value)
+						if (partialFailures.isEmpty)
+							resultFuture
+						else
+							resultFuture.map { _.withAdditionalFailures(partialFailures) }
+					
+					case TryCatch.Failure(error) => Future.successful(TryCatch.Failure(error))
+				}
+			}
+		
+		/**
+		 * Calls the specified function if this future completes with a failure
+		 * @param f A function called for a failure result (throwable)
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 */
+		def forFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) = wrapped.onComplete {
+			case Success(result) => wrap(result).failure.foreach(f)
+			case Failure(error) => f(error)
+		}
+		/**
+		 * Calls the specified function when this future completes. Same as calling .onComplete and then .flatten
+		 * @param f A function that handles both success and failure cases
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 */
+		def forResult[U](f: R[A] => U)(implicit exc: ExecutionContext) = wrapped.onComplete { r => f(flatten(r)) }
+		
+		/**
+		 * Creates a copy of this future that will either succeed or fail before the specified timeout duration
+		 * has passed
+		 * @param timeout Maximum wait duration
+		 * @param exc Implicit execution context
+		 * @return A future that contains the result of this original future, or a failure if timeout was passed
+		 *         before receiving a result.
+		 */
+		def withTimeout(timeout: Duration)(implicit exc: ExecutionContext) = currentResult match {
+			case Some(result) => Future.successful(result)
+			case None => Future { waitForResult(timeout) }
+		}
+		
+			/*
+		def toEither[B](other: => Future[B])
+		               (implicit exc: ExecutionContext, detectFailure: B => MayHaveFailed[_]) =
+		{
+			lazy val _other = other
+			wrapped.current match {
+				case Some(Success(currentResult)) =>
+					val r = wrap(currentResult)
+					if (r.isSuccess)
+						Some(Right(r)) -> 1
+					else
+					
+					???
+				case None =>
+					other.current match {
+						case Some(Success(result)) =>
+							val r = detectFailure(result)
+							if (r.isSuccess)
+								Some(Left(r)) -> 1
+							else
+								None -> 1
+						case Some(Failure(_)) => None -> 1
+						case None => None -> 0
+					}
+			}
+			
+			if (hasSucceeded)
+				Future.successful(Right(wrapped))
+			else {
+				if (_other.hasSucceeded)
+					Future.successful(Left(_other))
+				else if (wrapped.isCompleted)
+					Future.successful(Right(wrapped))
+				else {
+					val promise = Promise[Either[B, R[A]]]()
+					val failureCounter = Volatile(0)
+					
+					wrapped.onComplete {
+						case Success(result) =>
+							val r = wrap(result)
+							if (r.isSuccess || failureCounter.updateAndGet { _ + 1 } == 2)
+								promise.trySuccess(Right(unwrap(r)))
+						
+						case Failure(error) =>
+							if (failureCounter.updateAndGet { _ + 1 } == 2)
+								promise.success(Right(failure(error)))
+					}
+					_other.onComplete {
+						case Success(result) =>
+							val r = detectFailure(result)
+							if (r.isSuccess)
+								promise.trySuccess(Left(result))
+							else if (failureCounter.updateAndGet { _ + 1 } == 2)
+								promise.success(Left(result))
+						
+						case Failure(error) =>
+							if (failureCounter.updateAndGet { _ + 1 } == 2)
+								promise.success(Right(failure(error)))
+					}
+					
+					promise.future
+				}
+			}
+		}*/
+	}
+	
+	/**
+	 * Common trait for collections that contain futures, which may yield failures.
+	 * Extended directly by collections that contains Try- or TryCatch-futures.
+	 * Extended indirectly by collections containing regular futures, in order to prioritize Try & TryCatch -use-cases.
+	 * @tparam A Type of the values acquired on success
+	 * @tparam T Type of the asynchronously acquired results (e.g. Try[A])
+	 */
+	trait PossiblyFailingFutures[+A, T] extends Any
+	{
+		// ABSTRACT ---------------------------
+		
+		/**
+		 * @return The wrapped/extended collection
+		 */
+		protected def wrapped: IterableOnce[Future[T]]
+		
+		/**
+		 * Asynchronously collects the results of these futures into a single collection
+		 * @param builder A builder for forming the resulting collection from successful results
+		 * @param isEmpty A function used for determining whether the built collection is empty.
+		 *                May be used for determining whether the result should be a failure or a success.
+		 * @param exc Implicit execution context
+		 * @tparam To Type of the resulting collection
+		 * @return A future that resolves into the collected items once all these futures have resolved.
+		 *         Will yield a failure if all these futures failed.
+		 *         Will yield a partial failure if some, but not all, of these futures failed.
+		 */
+		def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
+		                   (implicit exc: ExecutionContext): Future[TryCatch[To]]
+		
+		/**
+		 * Wraps a result into a more generic form
+		 * @param result Result to wrap
+		 * @return A [[MayHaveFailed]] wrapper for that result
+		 */
+		protected def wrap(result: T): MayHaveFailed[A]
+		
+		
+		// COMPUTED ---------------------------
+		
+		/**
+		 * Asynchronously collects the results of these futures into a single collection
+		 * @param exc Implicit execution context
+		 * @return A future that resolves into the collected items once all these futures have resolved.
+		 *         Will yield a failure if all these futures failed.
+		 *         Will yield a partial failure if some, but not all, of these futures failed.
+		 */
+		def future(implicit exc: ExecutionContext): Future[TryCatch[IndexedSeq[A]]] =
+			futureUsing(OptimizedIndexedSeq.newBuilder[A])
+		/**
+		 * @param context Execution context
+		 * @return A future that resolves once all these futures have resolved into either:
+		 *              - Success(true): If one or more of these futures succeeded.
+		 *                Contains partial failures for every future that failed.
+		 *              - Success(false): If this collection was empty
+		 *              - Failure: If all these futures failed
+		 */
+		def completionFuture(implicit context: ExecutionContext) =
+			customFutureUsing(BuildNothing.nonEmptyFlag) { !_ }
+		
+		
+		// OTHER    ------------------------
+		
+		// TODO: Add versions that support timeouts
+		/**
+		 * Waits until all the futures inside this Iterable item have completed
+		 * @return The results of the waiting (each item as a try)
+		 */
+		def waitFor() = {
+			val buffer = OptimizedIndexedSeq.newBuilder[Try[T]]
+			buffer ++= wrapped.iterator.map { _.waitFor() }
+			buffer.result()
+		}
+		/**
+		 * Waits until all the futures inside this Iterable item have completed
+		 * @return The successful results of the waiting (no failures will be included)
+		 */
+		def waitForResults() = {
+			val builder = TryCatchBuilder[A]()
+			wrapped.iterator.foreach { future =>
+				future.waitFor() match {
+					case Success(result) => builder.generic += wrap(result)
+					case Failure(error) => builder += error
+				}
+			}
+			builder.result()
+		}
+		
+		/**
+		 * Asynchronously collects the results of these futures into a single collection
+		 * @param builder A builder for forming the resulting collection from successful results
+		 * @param exc Implicit execution context
+		 * @tparam To Type of the resulting collection
+		 * @return A future that resolves into the collected items once all these futures have resolved.
+		 *         Will yield a failure if all these futures failed.
+		 *         Will yield a partial failure if some, but not all, of these futures failed.
+		 */
+		def futureUsing[To <: Iterable[_]](builder: mutable.Builder[A, To])
+		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			customFutureUsing[To](builder) { _.isEmpty }
+	}
+	
+	/**
+	 * Used for providing [[PossiblyFailingFuture]] functions for all futures,
+	 * without conflicting with the methods defined for Try & TryCatch -use-cases.
+	 * @tparam A Type of the successfully acquired values
+	 */
+	trait FutureSuccess[A] extends Any with PossiblyFailingFuture[A, A, Try]
+	{
+		override protected def wrap(result: A): MayHaveFailed[A] = AlwaysSuccess(result)
+		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
+		
+		override protected def failure[B](cause: Throwable): Try[B] = Failure(cause)
+		
+		override protected def flatten(result: Try[A]): Try[A] = result
+		override protected def merge[B](result1: A, result2: Try[B]): Try[B] = result2
+		
+		override protected def resultToFuture[B](result: MayHaveFailed[Future[B]])
+		                                        (implicit exc: ExecutionContext): Future[Try[B]] =
+			result.toTry match {
+				case Success(future) => future.map(Success.apply)
+				case Failure(error) => TryFuture.failure(error)
+			}
+	}
+	/**
+	 * Used for providing [[PossiblyFailingFutures]] functions for all futures,
+	 * without conflicting with the Try & TryCatch -use-cases.
+	 * @tparam A Type of the values acquired on success
+	 */
+	trait FutureSuccesses[A] extends Any with PossiblyFailingFutures[A, A]
+	{
+		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
+		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			_collectResults[A, A, To](wrapped.iterator, new TryCatchBuilder(builder)(isEmpty)) { _ += _ }
+		
+		override protected def wrap(result: A): MayHaveFailed[A] = AlwaysSuccess(result)
+	}
+	
+	implicit class RichFuture[A](override val wrapped: Future[A])
+		extends AnyVal with MaybeEmpty[Future[A]] with FutureSuccess[A]
+	{
+		// COMPUTED -----------------------
+		
+		/**
+		 * @return This future, if completed. None otherwise.
+		 */
+		def ifCompleted = if (wrapped.isCompleted) Some(wrapped) else None
+		
+		/**
+		 * @return Returns either:
+		 *              - None, if this future hasn't resolved yet
+		 *              - Failure, if this future had failed
+		 *              - Success, if this future had already resolved successfully
+		 * @see [[currentResult]]
+		 */
+		def current = if (wrapped.isCompleted) Some(waitFor()) else None
+		
+		/**
+		 * @return Whether this future was already completed successfully
+		 */
+		@deprecated("Deprecated for removal.", "v2.8")
+		def isSuccess = wrapped.isCompleted && wrapped.waitFor().isSuccess
+		/**
+		 * @return Whether this future has already failed
+		 */
+		@deprecated("Deprecated for removal.", "v2.8")
+		def isFailure = wrapped.isCompleted && wrapped.waitFor().isFailure
+			
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def self: Future[A] = wrapped
+		
+		/**
+		 * @return Whether this future is still "empty" (i.e. not completed)
+		 */
+		override def isEmpty = !wrapped.isCompleted
+		
+		
+		// OTHER    --------------------------
+		
+		/**
+		 * Waits for this future to complete
+		 * @param timeout Maximum wait time
+		 * @return Whether this future resolved before 'timeout' was reached
+		 */
+		def waitUntil(timeout: Duration = Duration.infinite) =
+			if (wrapped.isCompleted) true else waitFor(timeout).isSuccess
 	    /**
 	     * Waits for the result of this future (blocks) and returns it once it's ready
 	     * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
 	     * @return The result of the future. A failure if this future failed or if timeout was reached
 	     */
-	    def waitFor(timeout: Duration = Duration.infinite) = Try { Await.result(f, timeout.toScala) }
+	    def waitFor(timeout: Duration = Duration.infinite) = Try { Await.result(wrapped, timeout.toScala) }
 		/**
 		  * Blocks and waits for the result of this future.
 		  * Terminates on one of 3 conditions, whichever occurs first:
-		  * 1) Future resolves
-		  * 2) The specified timeout is reached (if specified)
-		  * 3) The specified wait lock is notified
+		  *     1. Future resolves
+		  *     1. The specified timeout is reached (if specified)
+		  *     1. The specified wait lock is notified
 		  * @param waitLock Wait lock that is listened upon
 		  * @param timeout Maximum wait time (default = infinite)
 		  * @param exc Implicit execution context
@@ -58,10 +572,10 @@ object AsyncExtensions
 		  */
 		def waitWith(waitLock: AnyRef, timeout: Duration = Duration.infinite)(implicit exc: ExecutionContext) = {
 			// If already completed, returns with completion value
-			f.value.getOrElse {
+			wrapped.value.getOrElse {
 				// If not, diverges into two paths:
-				// 1) Natural completion
-				// 2) Timeout completion, which may be triggered earlier if the waitLock is notified
+				//      1) Natural completion
+				//      2) Timeout completion, which may be triggered earlier if the waitLock is notified
 				val promise = Promise[A]()
 				Future {
 					// If completes naturally, also terminates the timeout wait
@@ -78,39 +592,6 @@ object AsyncExtensions
 		}
 		
 		/**
-		  * Creates a copy of this future that will either succeed or fail before the specified timeout duration
-		  * has passed
-		  * @param timeout Maximum wait duration
-		  * @param exc Implicit execution context
-		  * @return A future that contains the result of the original future or a failure if timeout was passed
-		  *         before receiving a result.
-		  */
-		def withTimeout(timeout: Duration)(implicit exc: ExecutionContext) =
-			Future { waitFor(timeout) }
-		
-		/**
-		 * @return Whether this future is still "empty" (not completed)
-		 */
-		def isEmpty = !f.isCompleted
-		/**
-		  * @return Whether this future was already completed successfully
-		  */
-		def isSuccess = f.isCompleted && f.waitFor().isSuccess
-		/**
-		  * @return Whether this future has already failed
-		  */
-		def isFailure = f.isCompleted && f.waitFor().isFailure
-		
-		/**
-		  * @return The current result of this future. None if not completed yet
-		  */
-		def currentResult = if (f.isCompleted) Some(waitFor()) else None
-		/**
-		  * @return Current result of this future, if completed and successful. None otherwise.
-		  */
-		def current = currentResult.flatMap { _.toOption }
-		
-		/**
 		  * @param other Another future
 		  * @param exc Implicit execution context
 		  * @tparam B Type of the result in the other future
@@ -118,13 +599,14 @@ object AsyncExtensions
 		  *         If the result is acquired from this future, it is Left, otherwise it is Right.
 		  *         If both futures fail, this resulting future yields a failure, also.
 		  */
+		// TODO: We probably need to either remove or refactor this
 		def or[B](other: => Future[B])(implicit exc: ExecutionContext) = {
 			lazy val o = other
 			// Case: Left future already completed => Returns it
-			if (f.isSuccess)
-				f.map { Left(_) }
+			if (wrapped.hasSucceeded)
+				wrapped.map { Left(_) }
 			// Case: Right future already completed => Returns it
-			else if (o.isSuccess)
+			else if (o.hasSucceeded)
 				o.map { Right(_) }
 			// Case: Neither future completed yet => Waits
 			else
@@ -163,10 +645,10 @@ object AsyncExtensions
 		def raceWith[B >: A](other: => Future[B])(implicit exc: ExecutionContext): Future[B] = {
 			lazy val o = other
 			// Case: This already completed => Returns this
-			if (f.isSuccess)
-				f
+			if (wrapped.hasSucceeded)
+				wrapped
 			// Case: Other already completed => Returns the other
-			else if (o.isSuccess)
+			else if (o.hasSucceeded)
 				o
 			// Case: Neither completed => Waits
 			else {
@@ -204,9 +686,9 @@ object AsyncExtensions
 		def notCompletingBefore[U](another: Future[U])(implicit exc: ExecutionContext) = {
 			// If the other future is already completed, doesn't need to wait for it
 			if (another.isCompleted)
-				f
+				wrapped
 			else
-				f.zipWith(another) { (result, _) => result }
+				wrapped.zipWith(another) { (result, _) => result }
 		}
 		
 		// Assumes that neither of these futures has completed yet (handle those cases separately)
@@ -217,7 +699,7 @@ object AsyncExtensions
 			// Pointer that collects the results of both futures, once they arrive
 			val resultsPointer = Volatile.eventful[(Option[Try[A]], Option[Try[B]])](None -> None)(SysErrLogger)
 			// Completes the pointer asynchronously
-			f.onComplete { result1 =>
+			wrapped.onComplete { result1 =>
 				resultsPointer.update { case (_, otherResult) => Some(result1) -> otherResult }
 			}
 			other.onComplete { result2 =>
@@ -229,42 +711,75 @@ object AsyncExtensions
 		}
 	}
 	
-	implicit class FutureTry[A](val f: Future[Try[A]]) extends AnyVal
+	implicit class FutureTry[A](override val wrapped: Future[Try[A]])
+		extends AnyVal with PossiblyFailingFuture[A, Try[A], Try]
 	{
+		// COMPUTED -------------------------
+		
 		/**
 		  * @return The current result of this future, but only if successful.
 		  *         I.e. Only returns a value if:
 		  *         a) This future is completed successfully AND
 		  *         b) This future contains a success
 		  */
-		def currentSuccess = f.current.flatMap { _.toOption }
+		@deprecated("Deprecated for removal", "v2.8")
+		def currentSuccess = wrapped.current.flatMap { _.toOption.flatMap { _.toOption } }
 		/**
 		  * @return The current result of this future, but only if failure.
 		  *         Returns a failure if:
 		  *         a) This future is completed AND
 		  *         b) This future failed or contains a failure
 		  */
-		def currentFailure = f.currentResult.flatMap {
+		@deprecated("Deprecated for removal", "v2.8")
+		def currentFailure = wrapped.current.flatMap {
 			case Success(result) => result.failure
 			case Failure(error) => Some(error)
 		}
 		
 		/**
-		 * @return A copy of this future that fails if it contains a failure
+		 * @return Whether this future already contains a success result
 		 */
-		def unwrap(implicit exc: ExecutionContext) = f.map { _.get }
+		@deprecated("Renamed to .hasSucceeded", "v2.8")
+		def containsSuccess = wrapped.isCompleted && waitForResult().isSuccess
 		/**
-		 * @param exc Implicit execution context
-		 * @return A copy of this future where the underlying Try is converted into a TryCatch
+		 * @return Whether this future already contains a failure result
 		 */
-		def toFutureTryCatch(implicit exc: ExecutionContext) = f.map { _.toTryCatch }
+		@deprecated("Renamed to .hasFailed", "v2.8")
+		def containsFailure = wrapped.isCompleted && waitForResult().isFailure
+		
+		
+		// IMPLEMENTED  -------------------------
+		
+		override protected def wrap(result: Try[A]): MayHaveFailed[A] = WrapTry(result)
+		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
+		
+		override protected def failure[B](cause: Throwable): Try[B] = Failure(cause)
+		override protected def flatten(result: Try[Try[A]]): Try[A] = result.flatten
+		override protected def merge[B](result1: Try[A], result2: Try[B]): Try[B] = result2
+		
+		override protected def resultToFuture[B](result: MayHaveFailed[Future[B]])
+		                                        (implicit exc: ExecutionContext): Future[Try[B]] =
+			result.toTry match {
+				case Success(future) => future.map(Success.apply)
+				case Failure(error) => TryFuture.failure(error)
+			}
+		
+		override def mapSuccess[B](f: A => B)(implicit exc: ExecutionContext): Future[Try[B]] = wrapped.map { _.map(f) }
+		override def tryMapSuccess[B](f: A => Try[B])(implicit exc: ExecutionContext): Future[Try[B]] =
+			wrapped.map { _.flatMap(f) }
+		
+		
+		// OTHER    -----------------------------
 		
 		/**
-		  * Waits for the result of this future (blocks) and returns it once it's ready
-		  * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
-		  * @return The result of the future. A failure if this future failed, if timeout was reached or if result was a failure
-		  */
-		def waitForResult(timeout: Duration = Duration.infinite): Try[A] = f.waitFor(timeout).flatten
+		 * Calls the specified function if this future completes with a success
+		 * @param f A function called for a successful result
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 */
+		def forSuccess[U](f: A => U)(implicit exc: ExecutionContext) = this.wrapped.foreach { _.foreach(f) }
+		@deprecated("Renamed to .forSuccess(...)", "v2.8")
+		def foreachSuccess[U](f: A => U)(implicit exc: ExecutionContext) = forSuccess(f)
 		
 		/**
 		  * Creates a copy of this future with specified timeout. The resulting future will contain a failure if result
@@ -274,17 +789,9 @@ object AsyncExtensions
 		  * @return A future that will contain a failure if result is not received within timeout duration (the future will also
 		  *         contain a failure if this future received a failure result)
 		  */
+		@deprecated("Deprecated for removal. Replaced with withTimeout(Duration).", "v2.8")
 		def resultWithTimeout(timeout: Duration)(implicit exc: ExecutionContext) =
-			if (f.isCompleted) Future.successful(waitForResult()) else Future { waitForResult(timeout) }
-		
-		/**
-		  * @return Whether this future already contains a success result
-		  */
-		def containsSuccess = f.isCompleted && waitForResult().isSuccess
-		/**
-		  * @return Whether this future already contains a failure result
-		  */
-		def containsFailure = f.isCompleted && waitForResult().isFailure
+			if (wrapped.isCompleted) Future.successful(waitForResult()) else Future { waitForResult(timeout) }
 		
 		/**
 		  * Performs a mapping operation on a successful asynchronous result
@@ -293,7 +800,8 @@ object AsyncExtensions
 		  * @tparam B Type of map result
 		  * @return A mapped version of this future
 		  */
-		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = f.map { r => r.map(map) }
+		@deprecated("Renamed to mapSuccess(...)", "v2.8")
+		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = wrapped.map { r => r.map(map) }
 		/**
 		  * If this future yields a successful result, maps that with a mapping function that may fail
 		  * @param map A mapping function for successful result. May fail.
@@ -301,8 +809,9 @@ object AsyncExtensions
 		  * @tparam B Type of mapping result.
 		  * @return A mapped version of this future.
 		  */
+		@deprecated("Renamed to tryMapSuccess(...)", "v2.8")
 		def tryMapIfSuccess[B](map: A => Try[B])(implicit exc: ExecutionContext) =
-			f.map { r => r.flatMap(map) }
+			wrapped.map { r => r.flatMap(map) }
 		/**
 		  * If this future yields a successful result, maps it with an asynchronous mapping function.
 		  * @param map An asynchronous mapping function for successful result.
@@ -310,7 +819,8 @@ object AsyncExtensions
 		  * @tparam B Type of eventual mapping result
 		  * @return A mapped version of this future
 		  */
-		def flatMapIfSuccess[B](map: A => Future[B])(implicit exc: ExecutionContext) = f.flatMap {
+		@deprecated("Renamed to flatMapSuccess(...)", "v2.8")
+		def flatMapIfSuccess[B](map: A => Future[B])(implicit exc: ExecutionContext) = wrapped.flatMap {
 			case Success(v) => map(v).map { Success(_) }
 			case Failure(e) => Future.successful(Failure(e))
 		}
@@ -321,45 +831,89 @@ object AsyncExtensions
 		  * @tparam B Type of eventual mapping result when successful
 		  * @return A mapped version of this future
 		  */
-		def tryFlatMapIfSuccess[B](map: A => Future[Try[B]])(implicit exc: ExecutionContext) = f.flatMap {
+		@deprecated("Renamed to tryFlatMapSuccess(...)", "v2.8")
+		def tryFlatMapIfSuccess[B](map: A => Future[Try[B]])(implicit exc: ExecutionContext) = wrapped.flatMap {
 			case Success(v) => map(v)
 			case Failure(e) => Future.successful(Failure(e))
 		}
 		
-		/**
-		  * Calls the specified function if this future completes with a success
-		  * @param f A function called for a successful result
-		  * @param exc Implicit execution context
-		  * @tparam U Arbitrary result type
-		  */
-		def foreachSuccess[U](f: A => U)(implicit exc: ExecutionContext) = this.f.foreach { _.foreach(f) }
 		/**
 		  * Calls the specified function if this future completes with a failure
 		  * @param f A function called for a failure result (throwable)
 		  * @param exc Implicit execution context
 		  * @tparam U Arbitrary result type
 		  */
+		@deprecated("Renamed to .forFailure(...)", "v2.8")
 		def foreachFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) =
-			this.f.onComplete { _.flatten.failure.foreach(f) }
+			this.wrapped.onComplete { _.flatten.failure.foreach(f) }
 		/**
 		 * Calls the specified function when this future completes. Same as calling .onComplete and then .flatten
 		 * @param f A function that handles both success and failure cases
 		 * @param exc Implicit execution context
 		 * @tparam U Arbitrary result type
 		 */
+		@deprecated("Renamed to .forResult(...)", "v2.8")
 		def foreachResult[U](f: Try[A] => U)(implicit exc: ExecutionContext) =
-			this.f.onComplete { r => f(r.flatten) }
+			this.wrapped.onComplete { r => f(r.flatten) }
 	}
 	
-	implicit class FutureTryCatch[A](val f: Future[TryCatch[A]]) extends AnyVal
+	implicit class FutureTryCatch[A](override val wrapped: Future[TryCatch[A]])
+		extends AnyVal with PossiblyFailingFuture[A, TryCatch[A], TryCatch]
 	{
+		// IMPLEMENTED  -----------------------
+		
+		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = WrapTryCatch(result)
+		override protected def unwrap[B](result: MayHaveFailed[B]): TryCatch[B] = result.toTryCatch
+		
+		override protected def failure[B](cause: Throwable): TryCatch[B] = TryCatch.Failure[B](cause)
+		
+		override protected def flatten(result: Try[TryCatch[A]]): TryCatch[A] = result.flattenCatching
+		
+		override protected def merge[B](result1: TryCatch[A], result2: Try[B]): TryCatch[B] = result2 match {
+			case Success(value) => TryCatch.Success(value, result1.failures)
+			case Failure(error) => TryCatch.Failure(error)
+		}
+		
+		override protected def resultToFuture[B](result: MayHaveFailed[Future[B]])
+		                                        (implicit exc: ExecutionContext): Future[TryCatch[B]] =
+			result.toTryCatch match {
+				case TryCatch.Success(future, partialFailures) => future.map { TryCatch.Success(_, partialFailures) }
+				case TryCatch.Failure(error) => Future.successful(TryCatch.Failure(error))
+			}
+		
+		override def mapSuccess[B](f: A => B)(implicit exc: ExecutionContext): Future[TryCatch[B]] =
+			wrapped.map { _.map(f) }
+		override def tryMapSuccessCatching[B](f: A => TryCatch[B])(implicit exc: ExecutionContext): Future[TryCatch[B]] =
+			wrapped.map { _.flatMap(f) }
+		
+		
+		// OTHER    ---------------------------
+		
 		/**
-		 * Waits for the result of this future (blocks) and returns it once it's ready
-		 * @param timeout the maximum wait duration. If timeout is reached, a failure will be returned
-		 * @return The result of the future. A failure if this future failed,
-		 *         if timeout was reached or if result was a failure
+		 * @param f A function to call if this future succeeds.
+		 *          Receives the successful value, as well as any partial errors that were encountered.
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary 'f' result type
 		 */
-		def waitForResult(timeout: Duration = Duration.infinite): TryCatch[A] = f.waitFor(timeout).flattenCatching
+		def forSuccess[U](f: (A, Seq[Throwable]) => U)(implicit exc: ExecutionContext) =
+			wrapped.foreach {
+				case TryCatch.Success(value, failures) => f(value, failures)
+				case _ => ()
+			}
+		/**
+		 * @param f A function to call for any failures encountered during this process.
+		 *          Not called if no failures were encountered.
+		 *          Receives the encountered failures, and a boolean flag set to true if these are partial failures.
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary 'f' result type
+		 */
+		def forFailures[U](f: (Seq[Throwable], Boolean) => U)(implicit exc: ExecutionContext) =
+			wrapped.forResult {
+				case TryCatch.Success(_, failures) =>
+					if (failures.nonEmpty)
+						f(failures, true)
+				case TryCatch.Failure(error) => f(Single(error), false)
+			}
 		
 		/**
 		 * @param map A mapping function applied if this future resolves successfully
@@ -367,15 +921,17 @@ object AsyncExtensions
 		 * @tparam B Type of mapping results
 		 * @return A mapped copy of this future
 		 */
-		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = f.map { _.map(map) }
+		@deprecated("Renamed to .mapSuccess(...)", "v2.8")
+		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = wrapped.map { _.map(map) }
 		/**
 		 * @param map Mapping function to apply to a success result
 		 * @param exc Implicit execution context
 		 * @tparam B Type of mapping results, when successful
 		 * @return A copy of this future with the specified function applied to the results before resolving
 		 */
+		@deprecated("Renamed to .tryMapSuccessCatching(...)", "v2.8")
 		def tryMapIfSuccess[B](map: A => TryCatch[B])(implicit exc: ExecutionContext) =
-			f.map { _.flatMap(map) }
+			wrapped.map { _.flatMap(map) }
 		/**
 		 * If this future resolves successfully, maps it asynchronously
 		 * @param map The mapping function to apply. May yield a failure.
@@ -383,8 +939,9 @@ object AsyncExtensions
 		 * @tparam B Type of mapping results, when successful
 		 * @return A future that resolves once the mapping, also, has completed
 		 */
+		@deprecated("Renamed to .tryFlatMapSuccessCatching(...)", "v2.8")
 		def tryFlatMapIfSuccess[B](map: A => Future[TryCatch[B]])(implicit exc: ExecutionContext) =
-			f.flatMap {
+			wrapped.flatMap {
 				case TryCatch.Success(value, failures) =>
 					val resultFuture = map(value)
 					if (failures.nonEmpty)
@@ -401,8 +958,9 @@ object AsyncExtensions
 		 * @param exc Implicit execution context
 		 * @tparam U Arbitrary result type
 		 */
+		@deprecated("Renamed to .forResult(...)", "v2.8")
 		def foreachResult[U](f: TryCatch[A] => U)(implicit exc: ExecutionContext) =
-			this.f.onComplete { r => f(r.flattenCatching) }
+			this.wrapped.onComplete { r => f(r.flattenCatching) }
 	}
 	
 	implicit class TryFutureTry[A](val t: Try[Future[Try[A]]]) extends AnyVal
@@ -412,7 +970,6 @@ object AsyncExtensions
 		 */
 		def flattenToFuture = t.getOrMap { error => Future.successful(Failure(error)) }
 	}
-	
 	implicit class TryFutureTryCatch[A](val t: Try[Future[TryCatch[A]]]) extends AnyVal
 	{
 		/**
@@ -421,63 +978,93 @@ object AsyncExtensions
 		def flattenToFuture = t.getOrMap { error => Future.successful(TryCatch.Failure(error)) }
 	}
 	
-	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal
+	implicit class ManyFutures[A](val futures: IterableOnce[Future[A]]) extends AnyVal with FutureSuccesses[A]
 	{
-		/**
-		  * Waits until all of the futures inside this Iterable item have completed
-		  * @return The results of the waiting (each item as a try)
-		  */
-		def waitFor() =
-		{
-			val buffer = new VectorBuilder[Try[A]]
-			buffer ++= futures.iterator.map { _.waitFor() }
-			buffer.result()
-		}
-		
-		/**
-		  * Waits until all of the futures inside this Iterable item have completed
-		  * @return The successful results of the waiting (no failures will be included)
-		  */
-		def waitForSuccesses() =
-		{
-			val buffer = new VectorBuilder[A]
-			buffer ++= futures.iterator.flatMap { _.waitFor().toOption }
-			buffer.result()
-		}
-		
-		/**
-		  * @param context Execution context
-		  * @return A future of the completion of all of these items. Resulting collection contains all results wrapped in try
-		  */
-		def future(implicit context: ExecutionContext): Future[Vector[Try[A]]] = Future { waitFor() }
-		
-		/**
-		  * @param context Execution context
-		  * @tparam C result collection type
-		  * @return A future of the completion of all of these items. Resulting collection contains only successful completions
-		  */
-		def futureSuccesses[C](implicit context: ExecutionContext): Future[Vector[A]] = Future { waitForSuccesses() }
+		// COMPUTED ---------------------------
 		
 		/**
 		 * @param context Execution context
-		 * @return A future of the completion of all of these items. Will not check or return the results of those operations.
+		 * @return A future of the completion of all of these items. Resulting collection contains only successful completions
 		 */
+		@deprecated("Deprecated for removal. Please use .future instead", "v2.8")
+		def futureSuccesses(implicit context: ExecutionContext): Future[Seq[A]] = Future { waitForSuccesses() }
+		@deprecated("Deprecated for removal. Please use .completionFuture instead", "v2.8")
 		def futureCompletion(implicit context: ExecutionContext) = Future { futures.iterator.foreach { _.waitFor() } }
-	}
-	
-	implicit class ManyTryFutures[A](val futures: IterableOnce[Future[Try[A]]]) extends AnyVal
-	{
-		/**
-		  * Blocks until all the futures in this collection have completed. Collects results.
-		  * @return Results of each future in this collection
-		  */
-		def waitForResult() = Vector.from(futures.iterator.map { _.waitForResult() })
+		
+		
+		// IMPLEMENTED  --------------------
+		
+		override protected def wrapped: IterableOnce[Future[A]] = futures
+		
+		
+		// OTHER    ------------------------
 		
 		/**
-		  * @param exc Implicit execution context
-		  * @return Results of all futures in this collection once they arrive
+		  * Waits until all the futures inside this Iterable item have completed
+		  * @return The successful results of the waiting (no failures will be included)
 		  */
-		def futureResult(implicit exc: ExecutionContext) = Future { waitForResult() }
+		@deprecated("Please use waitForResults() instead", "v2.8")
+		def waitForSuccesses() = {
+			val buffer = OptimizedIndexedSeq.newBuilder[A]
+			buffer ++= futures.iterator.flatMap { _.waitFor().toOption }
+			buffer.result()
+		}
+	}
+	
+	implicit class ManyTryFutures[A](val futures: IterableOnce[Future[Try[A]]])
+		extends AnyVal with PossiblyFailingFutures[A, Try[A]]
+	{
+		// IMPLEMENTED  ----------------------
+		
+		override protected def wrapped: IterableOnce[Future[Try[A]]] = futures
+		
+		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
+		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			_collectResults[Try[A], A, To](futures.iterator, new TryCatchBuilder(builder)(isEmpty)) { _ += _.flatten }
+		
+		override protected def wrap(result: Try[A]): MayHaveFailed[A] = WrapTry(result)
+		
+		
+		// OTHER    --------------------------
+		
+		/**
+		  * Blocks until all the futures in this collection have completed. Collects the results.
+		  * @return Results of each future in this collection, as a [[TryCatch]].
+		 *         Yields a failure if all these futures failed.
+		  */
+		@deprecated("Replaced with waitForResults()", "v2.8")
+		def waitForResult() = futures.iterator.map { _.waitForResult() }.toTryCatch
+	}
+	
+	implicit class ManyTryCatchFutures[A](val futures: IterableOnce[Future[TryCatch[A]]])
+		extends AnyVal with PossiblyFailingFutures[A, TryCatch[A]]
+	{
+		// IMPLEMENTED  ------------------------
+		
+		override protected def wrapped: IterableOnce[Future[TryCatch[A]]] = futures
+		
+		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
+		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			_collectResults[TryCatch[A], A, To](futures.iterator, new TryCatchBuilder(builder)(isEmpty)) {
+				_ += _.flattenCatching }
+		
+		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = WrapTryCatch(result)
+	}
+	
+	implicit class ManyPossiblyFailingFutures[A](override val wrapped: IterableOnce[Future[MayHaveFailed[A]]])
+		extends AnyVal with PossiblyFailingFutures[A, MayHaveFailed[A]]
+	{
+		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
+		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			_collectResults[MayHaveFailed[A], A, To](wrapped.iterator, new TryCatchBuilder(builder)(isEmpty)) {
+				(builder, result) =>
+					result match {
+						case Success(result) => builder += result
+						case Failure(error) => builder += error
+					}
+			}
+		
+		override protected def wrap(result: MayHaveFailed[A]): MayHaveFailed[A] = result
 	}
 	
 	implicit class CompletedAttempt[A](val t: Try[A]) extends AnyVal

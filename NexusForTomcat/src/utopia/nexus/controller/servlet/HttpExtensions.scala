@@ -83,7 +83,7 @@ object HttpExtensions
 					Try { r.body.writeTo(stream) } match {
 						// Case: Writing successfully initiated => Checks whether it has already completed
 						case Success(writeCompletionFuture) =>
-							writeCompletionFuture.current match {
+							writeCompletionFuture.currentResult match {
 								// Case: Writing already completed => Flushes & closes the stream
 								case Some(immediateResult) =>
 									val flushResult = Try { stream.flush() }

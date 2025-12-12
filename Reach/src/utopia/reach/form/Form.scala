@@ -11,6 +11,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.{PairType, VectorType}
 import utopia.flow.operator.combine.Combinable
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -232,7 +233,13 @@ case class Form(fields: Iterable[FormField])
 			case Delayed(lazyResult) =>
 				lazyResult.current.flatMap { _.current } match {
 					// Case: Result immediately available => Handles it recursively
-					case Some(immediate) => handleOutput(field, immediate, successBuilder, pendingBuilder, canceledFlag)
+					case Some(immediate) =>
+						// Converts a thrown error into a failed output
+						val result = immediate.getOrMap { error =>
+							log(error, s"Failure while processing delayed output of form field \"${ field.name }\"")
+							FormFieldOut.Failure(error.getMessage.noLanguage.skipLocalization)
+						}
+						handleOutput(field, result, successBuilder, pendingBuilder, canceledFlag)
 					// Case: Result is still pending => Remembers it for later
 					case None => pendingBuilder += (field -> lazyResult)
 				}

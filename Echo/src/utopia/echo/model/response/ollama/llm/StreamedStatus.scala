@@ -81,7 +81,7 @@ object StreamedStatus
 		
 		// INITIAL CODE ---------------------
 		
-		completionFuture.foreachResult { result =>
+		completionFuture.forResult { result =>
 			_completionFlag.set()
 			result.log
 		}

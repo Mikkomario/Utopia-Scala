@@ -16,14 +16,14 @@ import scala.util.Random
   */
 object MapAllParallelTest extends App
 {
-	println("Starting parallel processing. Estimated completion in 3 seconds")
+	println("Starting parallel processing. Estimated completion in ~6 seconds")
 	private val startTime = Now.toInstant
-	private val result = (0 until 30).toVector
-		.mapAllParallel { i =>
+	private val result = (0 until 30).toVector.parallel
+		.map { i =>
 			Wait((Random.nextDouble() * 6).seconds)
 			i
 		}
-		.waitForResult().get
+		.all.waitForResult().get
 	
 	private val duration = Now - startTime
 	println(s"Complete. Took ${ duration.description }")

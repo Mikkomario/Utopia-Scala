@@ -86,12 +86,7 @@ case class DatabaseActionQueue()(implicit exc: ExecutionContext, cPool: Connecti
 						}
 					}).foreach { _() }
 				}
-			}.foreachFailure { error =>
-				// TODO: Remove test prints
-				println("Encountered an error in DB action queue")
-				error.printStackTrace()
-				log(error)
-			}
+			}.forFailure(log.apply)
 		// Returns completion future
 		action.future
 	}

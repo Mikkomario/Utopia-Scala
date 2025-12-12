@@ -355,7 +355,11 @@ trait TimedTask
 			val nextTimeFuture = run()
 			nextTimeFuture.current match {
 				// Case: Blocked
-				case Some(nextTimePointer) => waitPointerPointer.value = nextTimePointer
+				case Some(Success(nextTimePointer)) => waitPointerPointer.value = nextTimePointer
+				// Case: Failed => Terminates
+				case Some(Failure(error)) =>
+					logger(error, "Unexpected failure during task execution. Stops repeating this task.")
+					waitPointerPointer.value = Fixed(None)
 				// Case: Async
 				case None =>
 					// If has to hurry at any point, terminates the wait

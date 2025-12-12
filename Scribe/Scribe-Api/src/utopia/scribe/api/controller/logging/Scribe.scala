@@ -148,18 +148,20 @@ object Scribe
 		}
 		
 		if (shouldLog || limitReachEvent.isDefined)
-			loggingQueue.push { implicit c =>
-				limitReachEvent match {
-					// Case: Maximum reached => Logs the warning
-					case Some(event) =>
-						IssueDb.store("Scribe.maximumReached", None,
-							"Maximum number of logging entries was reached. Logging will not be performed anymore.",
-							Critical, Model.empty,
-							Model.from("limit" -> event.limit, "since" -> event.timeSpan.start))
-					// Case: Allowed to log => Logs
-					case None => f(c)
+			loggingQueue
+				.push { implicit c =>
+					limitReachEvent match {
+						// Case: Maximum reached => Logs the warning
+						case Some(event) =>
+							IssueDb.store("Scribe.maximumReached", None,
+								"Maximum number of logging entries was reached. Logging will not be performed anymore.",
+								Critical, Model.empty,
+								Model.from("limit" -> event.limit, "since" -> event.timeSpan.start))
+						// Case: Allowed to log => Logs
+						case None => f(c)
+					}
 				}
-			}.foreachFailure(handleFailure)
+				.forFailure(handleFailure)
 		
 		// Informs assigned listeners about the limit reach, when appropriate
 		limitReachEvent.foreach { event => limitListeners.foreach { _.onLogLimitReached(event) } }

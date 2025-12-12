@@ -1,6 +1,7 @@
 package utopia.flow.util
 
 import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.mutable.builder.TryCatchBuilder
 import utopia.flow.util.logging.Logger
 
 import scala.language.implicitConversions
@@ -158,6 +159,14 @@ sealed trait TryCatch[+A]
 
 object TryCatch
 {
+	// COMPUTED -------------------------
+	
+	/**
+	 * @return Access to constructing new TryCatch-builders
+	 */
+	def builder = TryCatchBuilder
+	
+	
 	// IMPLICIT -------------------------
 	
 	implicit def fromTry[A](t: Try[(A, IndexedSeq[Throwable])]): TryCatch[A] = t match {

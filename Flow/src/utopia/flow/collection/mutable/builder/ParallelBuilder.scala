@@ -1,240 +1,96 @@
 package utopia.flow.collection.mutable.builder
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.context.ActionQueue
+import utopia.flow.async.MapParallel
 import utopia.flow.async.context.ActionQueue.QueuedAction
+import utopia.flow.async.context.{AccessQueue, ActionQueue}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.collection.mutable.builder.ParallelBuilder.collectResultsUsing
+import utopia.flow.collection.mutable.builder.BuilderExtensions._
 import utopia.flow.util.TryCatch
-import utopia.flow.util.TryExtensions._
-import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.async.Volatile
 
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
-
-object ParallelBuilder
-{
-	// OTHER    ----------------------------
-	
-	/**
-	 * Creates a new builder which maps items in parallel. Applies the default buffer size.
-	 * @param width Maximum number of parallel processes at any time
-	 * @param exc   Implicit execution context
-	 * @param log   Implicit logging implementation
-	 * @return A new parallel builder
-	 */
-	def apply(width: Int)(implicit exc: ExecutionContext, log: Logger): ParallelBuilderFactory =
-		apply(width, width max 8)
-	/**
-	 * Creates a new builder which maps items in parallel
-	 * @param width Maximum number of parallel processes at any time
-	 * @param bufferSize Maximum number of buffered items.
-	 *                   If this buffer becomes full, this builder will start blocking the calling thread.
-	 *                   Default = 'width' or 8, whichever is larger.
-	 * @param exc Implicit execution context
-	 * @param log Implicit logging implementation
-	 * @return A new parallel builder
-	 */
-	def apply(width: Int, bufferSize: Int)(implicit exc: ExecutionContext, log: Logger) =
-		new ParallelBuilderFactory(width, bufferSize)
-	
-	/**
-	 * Collects asynchronously acquired results into a single collection
-	 * @param futures Futures from which the results are collected
-	 * @param exc Implicit execution context
-	 * @tparam A Type of successful results
-	 * @return A future that resolves into the collected items.
-	 *         Will yield a failure if all futures failed.
-	 *         Will yield a partial failure if only some of the futures failed.
-	 */
-	def collectResults[A](futures: IterableOnce[Future[A]])(implicit exc: ExecutionContext): Future[TryCatch[IndexedSeq[A]]] =
-		collectResultsUsing(futures, OptimizedIndexedSeq.newBuilder[A])
-	/**
-	 * Collects asynchronously acquired results into a single collection
-	 * @param futures Futures from which the results are collected
-	 * @param builder A builder which collects successful results
-	 * @param exc Implicit execution context
-	 * @tparam A Type of successful results
-	 * @tparam To Type of the resulting collection
-	 * @return A future that resolves into the collected items.
-	 *         Will yield a failure if all futures failed.
-	 *         Will yield a partial failure if only some of the futures failed.
-	 */
-	def collectResultsUsing[A, To <: Iterable[_]](futures: IterableOnce[Future[A]], builder: mutable.Builder[A, To])
-	                                             (implicit exc: ExecutionContext) =
-		collectResults(futures.iterator, TryCatchBuilder.wrap(builder))
-	
-	private def collectResults[A, To](resultsIter: Iterator[Future[A]], builder: TryCatchBuilder[A, To])
-	                                 (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-	{
-		// Collects items until a pending item is encountered
-		resultsIter.find { future =>
-			// Case: This process was already completed => Adds the result to the appropriate buffer and moves on
-			if (future.isCompleted) {
-				builder += future.waitFor()
-				false
-			}
-			// Case: This process is still pending => Moves to the next phase
-			else
-				true
-		} match {
-			// Case: A pending process found => Prepares a result future based on its result, using recursion
-			case Some(pendingFuture) =>
-				pendingFuture.toTryFuture.flatMap { result =>
-					// Adds the resolved result to the appropriate buffer
-					builder += result
-					// Continues using recursion
-					collectResults(resultsIter, builder)
-				}
-			// Case: All items were processed => Builder the resulting collection
-			case None => Future.successful(builder.result())
-		}
-	}
-	
-	
-	// NESTED   ----------------------------
-	
-	class ParallelBuilderFactory(width: Int, bufferSize: Int)(implicit exc: ExecutionContext, log: Logger)
-	{
-		// INITIAL CODE --------------------
-		
-		if (bufferSize <= 0)
-			throw new IllegalArgumentException("Buffer size must be positive")
-		
-		
-		// OTHER    ------------------------
-		
-		/**
-		 * @param bufferSize Number of items that may be buffered into the queue at once
-		 *                   (NB: The processes are not necessarily started immediately, just queued).
-		 * @return A copy of this factory using the specified buffer size
-		 */
-		def withBufferSize(bufferSize: Int) = new ParallelBuilderFactory(width, bufferSize)
-		
-		/**
-		 * Prepares a new builder which maps items in parallel
-		 * @param f A synchronous mapping function
-		 * @tparam A Type of the accepted items
-		 * @tparam B Type of mapping output
-		 * @return A new builder
-		 */
-		def map[A, B](f: A => B) =
-			_apply[A, B] { (q, i) => q.push { f(i) } } { (q, items) => q.pushAll(items.map { i => View { f(i) } }) }
-		/**
-		 * Prepares a new builder which maps items in parallel
-		 * @param f A synchronous mapping function. May yield a failure.
-		 * @tparam A Type of the accepted items
-		 * @tparam B Type of mapping output
-		 * @return A new builder
-		 */
-		def tryMap[A, B](f: A => Try[B]) =
-			_apply[A, B] { (q, i) => q.pushTry { f(i) } } {
-				(q, items) => q.pushAllTries(items.map { i => View { f(i) } }) }
-		/**
-		 * Prepares a new builder which maps items in parallel
-		 * @param f A mapping function which yields asynchronously resolving [[Future]]s.
-		 *          Not expected to block.
-		 * @tparam A Type of the accepted items
-		 * @tparam B Type of mapping output
-		 * @return A new builder
-		 */
-		def mapAsync[A, B](f: A => Future[B]) =
-			_apply[A, B] { (q, i) => q.pushAsync { f(i) } } {
-				(q, items) => q.pushAllAsync(items.map { i => View { f(i) } }) }
-		
-		private def _apply[I, A](push: (ActionQueue, I) => QueuedAction[A])
-		                        (pushAll: (ActionQueue, Seq[I]) => Seq[QueuedAction[A]]) =
-			new ParallelBuilder[I, A, IndexedSeq[A]](width, bufferSize)(push)(pushAll)(OptimizedIndexedSeq.newBuilder)
-	}
-}
 
 /**
- * Used for building collections using multiple parallel threads
+ * Used for building collections using multiple parallel threads.
+ * @param accessQueue [[AccessQueue]], which provides controlled access to the [[ActionQueue]] utilized
+ * @param map Parallel mapping logic applied
+ * @param bufferSize Maximum number of pending mapping operations within this queue. Must be positive.
+ *                   The default append functions block if the buffer is full.
+ *                   Using a larger value may use more memory, but may be (much) more effective otherwise.
+ *
  * @tparam I Type of accepted items
  * @tparam A Type of mapped / processed items
  * @tparam To Type of built collections
  * @author Mikko Hilpinen
  * @since 07.12.2025, v2.8
+ * @see [[MapParallel]], which are used for constructing these builders
  */
-class ParallelBuilder[-I, A, +To <: Iterable[_]](width: Int, bufferSize: Int)
-                                                (push: (ActionQueue, I) => QueuedAction[A])
-                                                (pushAll: (ActionQueue, Seq[I]) => Seq[QueuedAction[A]])
-                                                (newResultBuilder: => mutable.Builder[A, To])
-                                                (implicit exc: ExecutionContext, log: Logger)
+class ParallelBuilder[-I, A, +To](accessQueue: AccessQueue[ActionQueue], map: MapParallel[I, _, A, To], bufferSize: Int)
+                                 (implicit exc: ExecutionContext)
 	extends mutable.Builder[I, Future[TryCatch[To]]]
 {
+	// Throws if buffer size is negative
+	if (bufferSize <= 0)
+		throw new IllegalArgumentException("Buffer size must be positive")
+	
 	// ATTRIBUTES   --------------------------
 	
-	private val lazyQueue = Lazy.resettable { ActionQueue(width) }
-	private val lazyBuilder = Lazy.resettable { new VectorBuilder[Future[A]] }
+	/**
+	 * Contains a completion future for the last 'addOne' / 'addAll' call.
+	 *
+	 * The wrapped future resolves once all mapping actions have been queued (i.e. converted to QueuedActions),
+	 * but not necessarily started.
+	 */
+	private val lastAppendFuture = Volatile(Future.successful[Any](()))
+	
+	/**
+	 * A lazily initialized result-builder. Reset whenever this builder is cleared.
+	 */
+	private val lazyBuilder =
+		Lazy.resettable { new VectorBuilder[Future[A]].mapInput { a: QueuedAction[A] => a.future } }
+	
+	
+	// COMPUTED -----------------------
+	
+	/**
+	 * @return Access to append functions which don't block
+	 */
+	def async: mutable.Builder[I, Future[TryCatch[To]]] = WithoutBlocking
+	
+	private def _builder = lazyBuilder.value
 	
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def knownSize = lazyBuilder.value.knownSize
-	
-	override def clear() = {
-		lazyQueue.reset()
+	override def clear(): Unit = {
 		lazyBuilder.reset()
+		lastAppendFuture.value = Future.successful(())
 	}
-	override def result() = {
-		val builder = lazyBuilder.value
-		// Waits for the action queue to clear, in order to make sure that all results get added to the builder
-		lazyQueue.value.emptyFuture.flatMap { _ =>
-			// Once the queue is clear, processes the collected futures
-			collectResultsUsing(builder.result(), newResultBuilder)
+	override def result(): Future[TryCatch[To]] = {
+		val builder = _builder
+		// Waits for past append calls to complete.
+		// After this, all mapping operations should be present in 'builder' as result-futures.
+		lastAppendFuture.value.flatMap { _ =>
+			// Builds the resulting collection from the collected mapping result -futures
+			val futures = builder.result()
+			builder.clear()
+			map.flatten(futures)
 		}
 	}
 	
 	override def addOne(elem: I) = {
-		val queue = lazyQueue.value
-		val builder = lazyBuilder.value
-		if (queue.queueSize < bufferSize)
-			builder += push(queue, elem).future
-		else {
-			waitUntilBufferIsEmpty(queue)
-			builder += push(queue, elem).future
-		}
+		// Adds the item and blocks until the append-operation has completed
+		addOneAsync(elem).waitUntil()
 		this
 	}
 	override def addAll(elems: IterableOnce[I]) = {
-		// Prepares the builder and buffers the proposed items
-		val queue = lazyQueue.value
-		val builder = lazyBuilder.value
-		val bufferedInput = OptimizedIndexedSeq.from(elems)
-		
-		if (bufferedInput.nonEmpty) {
-			// Checks how many items may be appended without blocking
-			val immediateCapacity = bufferSize - queue.queueSize
-			// Case: No blocking required => Adds the items to the queue
-			if (immediateCapacity >= bufferedInput.size)
-				appendAll(queue, builder, bufferedInput)
-			// Case: Blocking will be necessary => Appends the items in chunks
-			else {
-				var remainder = {
-					// Case: May append some of the items now => Takes only the remainder
-					if (immediateCapacity > 0) {
-						val (pushNow, pushLater) = bufferedInput.splitAt(immediateCapacity)
-						appendAll(queue, builder, pushNow)
-						pushLater
-					}
-					// Case: No items may be appended => Queues them all
-					else
-						bufferedInput
-				}
-				// Waits and fills the buffer as long as more items remain
-				while (remainder.nonEmpty) {
-					waitUntilBufferIsEmpty(queue)
-					val (pushNow, pushLater) = remainder.splitAt(bufferSize)
-					appendAll(queue, builder, pushNow)
-					remainder = pushLater
-				}
-			}
-		}
+		// Adds all items from the specified collection. Blocks until the whole append process has completed.
+		addAllAsync(elems.iterator, BuildNothing.unit).waitUntil()
 		this
 	}
 	
@@ -242,16 +98,129 @@ class ParallelBuilder[-I, A, +To <: Iterable[_]](width: Int, bufferSize: Int)
 	// OTHER    --------------------------
 	
 	/**
-	 * @param newBuilder A function for constructing new result-builders
-	 * @tparam To2 Type of the collections built
-	 * @return A new parallel builder which builds collections using the specified builder-constructor
+	 * Performs mapping on a single item, asynchronously
+	 * @param elem Item to map
+	 * @return A future that resolves into the mapping result
+	 * @see [[addOne]] or [[async]] if you don't need access to the mapping result
 	 */
-	def withResultBuilder[To2 <: Iterable[_]](newBuilder: => mutable.Builder[A, To2]) =
-		new ParallelBuilder[I, A, To2](width, bufferSize)(push)(pushAll)(newBuilder)
+	def push(elem: I) = addOneAsync(elem).flatMap { _.future }
+	/**
+	 * Performs mapping on n items, asynchronously
+	 * @param elems Items to map
+	 * @return A future that resolves into the mapping results, once all mapping operations have completed
+	 * @see [[addOne]] or [[async]] if you don't need access to the mapping results
+	 */
+	def pushAll(elems: IterableOnce[I]) =
+		addAllAsync(elems.iterator, OptimizedIndexedSeq.newBuilder).flatMap { _.iterator.map { _.future }.future }
 	
-	private def appendAll(queue: ActionQueue, builder: mutable.Growable[Future[A]], items: Seq[I]) =
-		builder ++= pushAll(queue, items).view.map { _.future }
+	/**
+	 * Queues the mapping of a single item
+	 * @param elem Item to map
+	 * @return A future that resolves once the mapping has been queued (although not necessarily started).
+	 *         Yields an action that resolves once the mapping has completed (also tracking the mapping started -state)
+	 */
+	private def addOneAsync(elem: I) = {
+		val builder = _builder
+		// Won't start before the previous append operation finishes,
+		// but updates the append completion -pointer immediately, so that the next call will de correctly delayed
+		lastAppendFuture.mutate { appendFuture =>
+			val newAppendFuture = appendFuture.flatMap { _ =>
+				// Waits until the action queue is accessible
+				accessQueue { queue =>
+					// Case: This item may be appended without overfilling the buffer
+					//       => queues the mapping immediately
+					if (queue.queueSize < bufferSize) {
+						val queuedAction = map.push(queue, elem)
+						builder += queuedAction
+						Future.successful(queuedAction)
+					}
+					// Case: The queue is currently full
+					//       => Waits for the buffer to clear and then queues the mapping operation
+					else
+						queue.notPendingFuture.map { _ =>
+							val queuedAction = map.push(queue, elem)
+							builder += queuedAction
+							queuedAction
+						}
+				}
+			}
+			// Yields the future of this mapping-queueing
+			newAppendFuture -> newAppendFuture
+		}
+	}
+	/**
+	 * Queues the mapping of 0-n items
+	 * @param elemsIter An iterator that yields the items to map
+	 * @param resultBuilder A builder for collecting the mapping results
+	 * @tparam R Type of the built mapping results
+	 * @return A future that resolves once all mapping operations have been queued (although not necessarily started)
+	 */
+	private def addAllAsync[R](elemsIter: Iterator[I], resultBuilder: mutable.Builder[QueuedAction[A], R]) = {
+		if (elemsIter.hasNext) {
+			// Waits for the previous append process to finish.
+			// Updates the pointer, so that the next call will wait for this operation to finish instead.
+			val builder = _builder
+			lastAppendFuture.mutate { appendFuture =>
+				val newAppendFuture = appendFuture.flatMap { _ =>
+					// Waits until the queue may be accessed, then adds the items to the queue in chunks
+					accessQueue { queue => _addAllAsync(builder, queue, elemsIter, resultBuilder) }
+				}
+				newAppendFuture -> newAppendFuture
+			}
+		}
+		// Case: No items to map => Resolves immediately
+		else
+			Future.successful(resultBuilder.result())
+	}
 	
-	private def waitUntilBufferIsEmpty(queue: ActionQueue) =
-		queue.notPendingFlag.future.waitFor().logWithMessage("Failure while waiting for the action queue to clear")
+	/**
+	 * Queues the mapping of 1 or more items
+	 * @param builder Builder for collecting the asynchronous mapping results
+	 * @param queue Queue to which the mapping operations are placed in order to limit thread-usage
+	 * @param elemsIter An iterator that yields the items that are yet to be mapped
+	 * @param resultBuilder A builder for the collection built based on this operation
+	 * @tparam R Type of the results built
+	 * @return A future that resolves once all items from 'elemsIter' have been queued for mapping.
+	 */
+	private def _addAllAsync[R](builder: mutable.Growable[QueuedAction[A]], queue: ActionQueue, elemsIter: Iterator[I],
+	                           resultBuilder: mutable.Builder[QueuedAction[A], R]): Future[R] =
+	{
+		// Checks how many items may be appended without waiting
+		val immediateCapacity = bufferSize - queue.queueSize
+		
+		// Case: Items may be appended => Adds as many as possible
+		if (immediateCapacity > 0) {
+			val added = map.pushAll(queue, elemsIter.takeNext(immediateCapacity))
+			builder ++= added
+			resultBuilder ++= added
+		}
+		
+		// Case: More items remain => Waits until the queue has capacity and continues recursively
+		if (elemsIter.hasNext)
+			queue.notPendingFuture.flatMap { _ => _addAllAsync(builder, queue, elemsIter, resultBuilder) }
+		// Case: All items have now been appended => Resolves
+		else
+			Future.successful(resultBuilder.result())
+	}
+	
+	
+	// NESTED   ---------------------
+	
+	/**
+	 * An interface that implements append operations without blocking
+	 */
+	private object WithoutBlocking extends mutable.Builder[I, Future[TryCatch[To]]]
+	{
+		override def addOne(elem: I): WithoutBlocking.this.type = {
+			addOneAsync(elem)
+			this
+		}
+		override def addAll(elems: IterableOnce[I]): WithoutBlocking.this.type = {
+			addAllAsync(elems.iterator, BuildNothing.unit)
+			this
+		}
+		
+		override def result(): Future[TryCatch[To]] = ParallelBuilder.this.result()
+		override def clear(): Unit = ParallelBuilder.this.clear()
+	}
 }

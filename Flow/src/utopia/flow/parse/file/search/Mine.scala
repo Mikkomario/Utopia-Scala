@@ -48,11 +48,10 @@ class Mine[R](val directory: Path)
 	 * @return A future for the eventual results of this mine, including the results of the subsequent pathways. The
 	 *         results are returned in a tree-like format.
 	 */
-	def futureResults(implicit exc: ExecutionContext): Future[Tree[R]] =
-	{
+	def futureResults(implicit exc: ExecutionContext): Future[Tree[R]] = {
 		// Gets own results and includes results from all pathways as well
 		futureLocalResults.map { local =>
-			val childResults: Vector[Tree[R]] = pathWays.map { _.futureResults }.waitForSuccesses()
+			val childResults: Seq[Tree[R]] = pathWays.map { _.futureResults }.waitForSuccesses()
 			Tree(local, childResults)
 		}
 	}

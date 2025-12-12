@@ -10,6 +10,10 @@
     Reflecting this change, the function parameters are also different.
   - **ChangingWithListeners** now requires the implementation of `removeListener(End, ChangeListener)`, 
     instead of `removeListeners(End, Iterable)`
+- Rewrote large sections of **AsyncExtensions**
+  - `.current` now yields a **Failure** instead of **None** on failure
+  - `.currentResult` now yields a flattened result
+  - `.withTimeout(...)` now yields a flattened result
 - **Volatile**'s required function `assign(...)` now receives two parameters instead of one.
 - Rewrote the `mapParallel` function variants in **CollectionExtensions**; 
   The new versions yield **Future**s instead of synchronously built collections. 
@@ -24,8 +28,18 @@
 - `OptimizedIndexedSeq.newBuilder` now yields **OptimizedSeqBuilder** instead of **Builder**
   - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
+- Multiple deprecations in **AsyncExtensions**:
+  - Deprecated `.asyncFailure(Throwable)`
+  - Deprecated `.currentSuccess`, `.currentFailure`, `.containsSuccess` and `.containsFailure`
+  - Deprecated `.isSuccess` and `.isFailure` in favor of `.hasSucceeded` and `.hasFailed`
+  - Deprecated `.resultWithTimeout(Duration)`
+  - Deprecated various `.mapIfSuccess(...)` etc. functions in favor of new `.mapSuccess(...)` etc. versions
+  - Deprecated various `.forEachResult(...)` etc. functions in favor of new `.forResult(...)` etc. versions
+  - Deprecated `.futureSuccesses` and `.futureCompletion`
+  - Deprecated `.waitForSuccesses()`
 - Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
-- Deprecated `.foreachParallel(...)` in **CollectionExtensions**
+- Deprecated `.foreachParallel(...)`, `.mapParallel(...)` and `.mapAllParallel(...)` in **CollectionExtensions**; 
+  The new implementations are accessible via `.parallel`
 - Deprecated **Volatile**'s `synchronizedValue`
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
@@ -57,9 +71,7 @@
 - **Extreme**
   - Added `.compare(...)`
 - **Future** (via **AsyncExtensions**)
-  - Added `.toTryFuture`
-  - Added `.unwrap` to **Future**s containing **Try**s
-  - Added `.foreachResult(...)` to **Future**s containing **TryCatch**es
+  - Added a large number of new functions
 - **IntSet** (object)
   - Added `.fromOrdered(IterableOnce)`
 - **Iterable**

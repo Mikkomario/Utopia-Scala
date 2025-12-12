@@ -1,7 +1,8 @@
 package utopia.flow.collection.mutable.builder
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.util.TryCatch
+import utopia.flow.util.MayHaveFailed.{AlwaysSuccess, WrapTry, WrapTryCatch}
+import utopia.flow.util.{MayHaveFailed, TryCatch}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
@@ -56,9 +57,17 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	// COMPUTED ---------------------------
 	
 	/**
+	 * @return An interface to this builder which accepts successful results
+	 */
+	def fromSuccesses: mutable.Builder[A, TryCatch[Coll]] = Successes
+	/**
 	 * @return An interface to this builder which accepts instances of [[TryCatch]] instead of [[Try]]
 	 */
 	def catching: mutable.Builder[TryCatch[A], TryCatch[Coll]] = Catching
+	/**
+	 * @return An interface to this builder that accepts any instances that may have failed
+	 */
+	def generic: mutable.Builder[MayHaveFailed[A], TryCatch[Coll]] = Generic
 	
 	
 	// IMPLEMENTED  -----------------------
@@ -91,6 +100,43 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	// OTHER    -----------------------
 	
 	/**
+	 * Adds an item to this builder
+	 * @param item A success or a failure, or a partial failure
+	 * @return This builder
+	 */
+	def +=(item: TryCatch[A]) = {
+		item match {
+			case TryCatch.Success(item, partialFailures) =>
+				wrapped += item
+				failuresBuilder ++= partialFailures
+			
+			case TryCatch.Failure(error) => failuresBuilder += error
+		}
+		this
+	}
+	/**
+	 * Adds an item to this builder
+	 * @param item A success or a failure, or a partial failure
+	 * @return This builder
+	 */
+	def +=(item: MayHaveFailed[A]): TryCatchBuilder[A, Coll] = item match {
+		case WrapTry(wrapped) => this += wrapped
+		case WrapTryCatch(wrapped) => this += wrapped
+		case AlwaysSuccess(value) =>
+			wrapped += value
+			this
+	}
+	/**
+	 * Adds a failure to this builder
+	 * @param failure Failure to add
+	 * @return This builder
+	 */
+	def +=(failure: Throwable) = {
+		failuresBuilder += failure
+		this
+	}
+	
+	/**
 	 * Adds n items or a failure into this builder
 	 * @param items Items to add to this builder, or a failure
 	 * @return This builder
@@ -121,6 +167,19 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 		}
 		this
 	}
+	/**
+	 * Adds n items or a failure into this builder
+	 * @param items Items to add to this builder, or a failure
+	 * @return This builder
+	 */
+	def ++=(items: MayHaveFailed[IterableOnce[A]]): TryCatchBuilder[A, Coll] = items match {
+		case WrapTry(wrapped) => this ++= wrapped
+		case WrapTryCatch(wrapped) => this ++= wrapped
+		case AlwaysSuccess(items) =>
+			succeedFlag = true
+			wrapped ++= items
+			this
+	}
 	
 	
 	// NESTED   -----------------------
@@ -128,13 +187,29 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	private object Catching extends mutable.Builder[TryCatch[A], TryCatch[Coll]]
 	{
 		override def addOne(elem: TryCatch[A]) = {
-			elem match {
-				case TryCatch.Success(item, partialFailures) =>
-					wrapped += item
-					failuresBuilder ++= partialFailures
-					
-				case TryCatch.Failure(error) => failuresBuilder += error
-			}
+			TryCatchBuilder.this += elem
+			this
+		}
+		
+		override def result() = TryCatchBuilder.this.result()
+		override def clear() = TryCatchBuilder.this.clear()
+	}
+	
+	private object Successes extends mutable.Builder[A, TryCatch[Coll]]
+	{
+		override def result(): TryCatch[Coll] = TryCatchBuilder.this.result()
+		override def clear(): Unit = TryCatchBuilder.this.clear()
+		
+		override def addOne(elem: A): Successes.this.type = {
+			wrapped += elem
+			this
+		}
+	}
+	
+	private object Generic extends mutable.Builder[MayHaveFailed[A], TryCatch[Coll]]
+	{
+		override def addOne(elem: MayHaveFailed[A]): Generic.this.type = {
+			TryCatchBuilder.this += elem
 			this
 		}
 		

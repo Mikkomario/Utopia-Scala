@@ -59,7 +59,7 @@ object OllamaReply
 	 * @return A message that will contain contents of the specified reply once (if) it is received
 	 */
 	def async(replyFuture: Future[Try[OllamaReply]])(implicit exc: ExecutionContext) = {
-		replyFuture.currentResult.map { _.flatten } match {
+		replyFuture.currentResult match {
 			// Case: Already resolved => Returns or wraps the available reply
 			case Some(Success(immediateReply)) => immediateReply
 			// Case: Already failed => Returns a failure reply
@@ -113,13 +113,13 @@ object OllamaReply
 		// ATTRIBUTES   --------------------------
 		
 		override lazy val future: Future[Try[BufferedOllamaReply]] = _future.rightOrMap { statisticsFuture =>
-			statisticsFuture.mapIfSuccess { statistics =>
+			statisticsFuture.mapSuccess { statistics =>
 				val (textWithoutThink, thoughts) = ReplyParseUtils.separateThinkFrom(text)
 				BufferedOllamaReply(textWithoutThink, thoughts, statistics, lastUpdated)
 			}
 		}
 		override lazy val statisticsFuture: Future[Try[OllamaResponseStatistics]] = _future.leftOrMap { replyFuture =>
-			replyFuture.mapIfSuccess { _.statistics }
+			replyFuture.mapSuccess { _.statistics }
 		}
 		
 		
@@ -131,7 +131,7 @@ object OllamaReply
 		override def lastUpdated: Instant = lastUpdatedPointer.value
 		
 		override def state: SchrodingerState = statisticsFuture.currentResult match {
-			case Some(result) => Final(result.flatten.isSuccess)
+			case Some(result) => Final(result.isSuccess)
 			case None => PositiveFlux
 		}
 	}

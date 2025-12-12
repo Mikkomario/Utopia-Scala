@@ -361,7 +361,7 @@ class LogReviewCommands(implicit log: Logger)
 			case Some((variant, hasMore)) =>
 				// Groups similar consecutive variant issues together (based on messages and details)
 				val occurrences = variant.occurrences.reverseSorted.iterator
-					.groupBy { o => o.errorMessages -> o.details }
+					.groupConsecutiveBy { o => o.errorMessages -> o.details }
 					.map { case ((_, _), group) =>
 						if (group.hasSize > 1) {
 							val lastItem = group.head
@@ -467,9 +467,9 @@ class LogReviewCommands(implicit log: Logger)
 						val prefix = if (index == 0) "" else "Caused by: "
 						println(s"$prefix${error.exceptionType}")
 						// Groups by file, class and method
-						error.stackAccess.topToBottomIterator.groupBy { _.fileName }
+						error.stackAccess.topToBottomIterator.groupConsecutiveBy { _.fileName }
 							.foreach { case (fileName, stack) =>
-								stack.iterator.groupBy { _.className }.toVector.oneOrMany match {
+								stack.iterator.groupConsecutiveBy { _.className }.toVector.oneOrMany match {
 									// Case: Only one class in this file
 									case Left((_, classLines)) =>
 										printClassStack(classLines, stack.head.fileAndClassName)
@@ -726,7 +726,7 @@ class LogReviewCommands(implicit log: Logger)
 	{
 		val indentStr = "\t" * indents
 		// Groups by method names
-		classLines.iterator.groupBy { _.methodName }.toVector.oneOrMany match {
+		classLines.iterator.groupConsecutiveBy { _.methodName }.toVector.oneOrMany match {
 			// Case: Only one method involved => Prints class and method on one line
 			case Left((methodName, lines)) =>
 				println(s"$indentStr$className.$methodName${ lineNumberString(lines) }")

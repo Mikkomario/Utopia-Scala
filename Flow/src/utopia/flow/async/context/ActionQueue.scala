@@ -789,6 +789,12 @@ trait ActionQueue extends MaybeEmpty[ActionQueue]
 	 *         i.e. once all the queued actions have fully resolved.
 	 */
 	def emptyFuture: Future[Any] = emptyFlag.future
+	/**
+	 * @return A future that resolves once no action in this queue is waiting to be started.
+	 *         Note: This doesn't mean that all actions have completed yet.
+	 * @see [[emptyFuture]]
+	 */
+	def notPendingFuture = notPendingFlag.future
 	
 	/**
 	  * @return An execution context that uses this action queue

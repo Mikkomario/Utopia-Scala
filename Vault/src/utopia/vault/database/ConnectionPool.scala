@@ -5,8 +5,8 @@ import utopia.flow.async.process.{Breakable, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.Settable
@@ -101,10 +101,9 @@ class ConnectionPool(maxConnections: Int = 100, maxClientsPerConnection: Int = 6
 	
 	// IMPLEMENTED	-----------------------
 	
-	override def stop() = {
-		// Closes all current connections (may have to wait for clients to exit)
-		(connections.map { c: ReusableConnection => c.stop() } ++ closeFutures).futureCompletion
-	}
+	// Closes all current connections (may have to wait for clients to exit)
+	override def stop() =
+		(connections.value.map { c: ReusableConnection => c.stop() } ++ closeFutures).completionFuture
 	
 	
 	// OPERATORS	-----------------------
