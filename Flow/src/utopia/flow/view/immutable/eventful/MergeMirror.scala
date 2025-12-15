@@ -112,7 +112,7 @@ class MergeMirror[+O1, +O2, R](firstSource: Changing[O1], secondSource: Changing
 		case Some(value) => s"Reflecting.always($value)"
 		case None =>
 			val suffix = if (condition.isFixed) "" else s".while($condition)"
-			s"Merging($firstSource).and($secondSource)$condition"
+			s"Merging($firstSource).and($secondSource)$suffix"
 	}
 	
 	override def lockWhile[B](operation: => B) = firstSource.lockWhile {

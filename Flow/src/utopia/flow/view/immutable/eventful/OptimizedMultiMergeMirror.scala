@@ -1,19 +1,18 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Switch
 import utopia.flow.view.template.SynchronizedView
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
-
-import scala.util.Try
 
 object OptimizedMultiMergeMirror
 {
@@ -57,7 +56,7 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 {
 	// ATTRIBUTES   -----------------------------
 	
-	override implicit lazy val listenerLogger: Logger = sources.headOption match {
+	override implicit val listenerLogger: Logger = sources.headOption match {
 		case Some(source1) => source1.listenerLogger
 		case None => SysErrLogger
 	}
@@ -88,13 +87,7 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 			val newValue = formResult
 			if (newValue != oldValue) {
 				_value = newValue
-				// NB: If these events are fired in the Continue.and(...) -code,
-				//     won't always work in the correct order / way
-				val afterEffects = fireEvent(Lazy { Some(ChangeEvent(oldValue, newValue)) })
-				if (afterEffects.isEmpty)
-					Continue
-				else
-					Continue.and { afterEffects.foreach { effect => Try { effect() }.log } }
+				Continue ++ fireEventEffects(ChangeEvent(oldValue, newValue))
 			}
 			else
 				Continue
@@ -104,19 +97,12 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 	private lazy val modeChangeListener = ChangeListener[Boolean] { e =>
 		// Case: First listener attached to this mirror => Starts actively tracking the source pointers
 		if (e.newValue) {
-			sources.foreach { source =>
-				source.addListener(lazyActiveListener.value)
-				lazyLazyListener.current.foreach(source.removeListener)
-			}
+			swapListeners(add = lazyActiveListener, remove = lazyLazyListener)
 			updateValue()
 		}
 		// Case: All listeners detached => Enters lazy mode
-		else {
-			sources.foreach { source =>
-				source.addListener(lazyLazyListener.value)
-				lazyActiveListener.current.foreach(source.removeListener)
-			}
-		}
+		else
+			swapListeners(add = lazyLazyListener, remove = lazyActiveListener)
 	}
 	
 	
@@ -127,18 +113,22 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 		if (conditionEvent.newValue) {
 			val oldValue = _value
 			hasListenersFlag.addListener(modeChangeListener)
-			// Case: Being listened to => Fires a change event, if necessary
-			if (hasListeners) {
-				_value = formResult
-				outOfDateFlag.reset()
-				modeChangeListener.onChangeEvent(ChangeEvent(false, true))
-				fireEventIfNecessary(oldValue).foreach { effect => Try { effect() }.log }
+			val effects = {
+				// Case: Being listened to => Fires a change event, if necessary
+				if (hasListeners) {
+					_value = formResult
+					outOfDateFlag.reset()
+					modeChangeListener.onChangeEvent(ChangeEvent(false, true))
+					fireEventEffects(ChangeEvent(oldValue, _value))
+				}
+				// Case: Not being listened to at the moment => Just marks the current value as deprecated
+				else {
+					modeChangeListener.onChangeEvent(ChangeEvent(true, false))
+					outOfDateFlag.set()
+					Empty
+				}
 			}
-			// Case: Not being listened to at the moment => Just marks the current value as deprecated
-			else {
-				modeChangeListener.onChangeEvent(ChangeEvent(true, false))
-				outOfDateFlag.set()
-			}
+			Continue ++ effects
 		}
 		// Case: This mirror was deactivated => Stops tracking mode and stops listening to the source pointers
 		else {
@@ -146,12 +136,12 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 			updateValue()
 			lazy val activeListeners = Pair(lazyLazyListener, lazyActiveListener).flatMap { _.current }
 			sources.foreach { source => activeListeners.foreach(source.removeListener) }
+			Continue
 		}
-		Continue
 	}
 	// If active, sets up the initial state (lazy mode)
 	if (condition.value)
-		hasListenersFlag.addListenerAndSimulateEvent(true)(modeChangeListener)
+		hasListenersFlag.addListenerAndSimulateEvent(true, High)(modeChangeListener)
 	
 	// Stops once all sources stop changing, or if the condition gets fixed to false
 	stopOnceAllSourcesStop(sources)
@@ -207,6 +197,12 @@ class OptimizedMultiMergeMirror[R](sources: Iterable[Changing[_]], condition: Fl
 		if (wasUpdated && hasNoListeners && condition.value)
 			sources.foreach { _.addListener(lazyLazyListener.value) }
 	}
+	
+	private def swapListeners(add: View[ChangeListener[Any]], remove: Lazy[ChangeListener[_]]) =
+		sources.foreach { source =>
+			source.addListener(add.value)
+			remove.current.foreach(source.removeListener)
+		}
 	
 	private def detachLazyListener() =
 		lazyLazyListener.current.foreach { l => sources.foreach { _.removeListener(l) } }

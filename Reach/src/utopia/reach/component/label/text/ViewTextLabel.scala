@@ -11,7 +11,7 @@ import utopia.firmament.model.TextDrawContext
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.view.immutable.eventful.{Always, AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.Priority
@@ -266,20 +266,13 @@ class ViewTextLabel[+A](override val hierarchy: ComponentHierarchy, override val
 	// INITIAL CODE	-------------------------------------
 	
 	// Revalidates and/or repaints this component on all text changes
-	textPointer.addListener { event =>
-		if (event.equalsBy { _.size })
-			Continue.and { repaint() }
-		else
-			Continue.and { revalidate() }
-	}
+	textPointer.addLowPriorityListener { event => if (event.equalsBy { _.size }) repaint() else revalidate() }
 	// Style changes (color & alignment) also trigger a revalidation / repaint
-	stylePointer.addListenerWhile(hierarchy.linkedFlag) { event =>
+	stylePointer.addListenerWhile(hierarchy.linkedFlag, After) { event =>
 		if (event.equalsBy { _.color } || event.equalsBy { _.alignment })
-			Continue.and { repaint(Priority.Low) }
-		else
-			Continue
+			repaint(Priority.Low)
 	}
-	allowTextShrinkFlag.addListenerWhile(hierarchy.linkedFlag)(ChangeListener.triggerAfterEffect { revalidate() })
+	allowTextShrinkFlag.addListenerWhile(hierarchy.linkedFlag, After)(ChangeListener.onAnyChange { revalidate() })
 	
 	
 	// IMPLEMENTED	-------------------------------------

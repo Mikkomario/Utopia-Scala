@@ -2,15 +2,12 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
-
-import scala.util.Try
 
 object CopyOnDemand
 {
@@ -51,7 +48,7 @@ object CopyOnDemand
 		case None =>
 			// Case: The source may stop changing at some point => Uses the more advanced implementation
 			if (source.destiny.isPossibleToSeal)
-				new _CopyOnDemand[A](source)
+				new _CopyChangingOnDemand[A](source)
 			// Case: The source is unlikely to ever stop changing => Uses the more simple, view-based approach
 			else
 				new ViewOnDemand[A](source)(source.listenerLogger)
@@ -68,17 +65,50 @@ object CopyOnDemand
 	
 	// NESTED   -------------------------------
 	
-	// Implementation for Changing items
-	private class _CopyOnDemand[A](source: Changing[A])
-		extends AbstractChanging[A]()(source.listenerLogger) with CopyOnDemand[A]
+	private abstract class AbstractCopyOnDemand[A](source: View[A])(implicit log: Logger)
+		extends AbstractChanging[A] with CopyOnDemand[A]
 	{
 		// ATTRIBUTES   -----------------------
 		
 		// Stores the last look-up value
 		private var cachedValue = source.value
-		private var changingStoppedListeners: Seq[ChangingStoppedListener] = Empty
 		
 		override lazy val readOnly: Changing[A] = ChangingWrapper(this)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def value: A = cachedValue
+		
+		override def toString = s"Copy($source).onDemand"
+		
+		override def update(): Unit = _update { _.foreach(fireEvent) }
+		override def updateAndQueueEvent(): IterableOnce[AfterEffect] = _update {
+			case Some(event) => fireEventEffects(event)
+			case None => Empty
+		}
+		
+		
+		// OTHER    ---------------------
+		
+		private def _update[B](fireEvent: Option[ChangeEvent[A]] => B) = {
+			val oldValue = cachedValue
+			val newValue = source.value
+			cachedValue = newValue
+			if (oldValue == newValue)
+				fireEvent(None)
+			else
+				fireEvent(Some(ChangeEvent(oldValue, newValue)))
+		}
+	}
+	
+	// Implementation for Changing items
+	private class _CopyChangingOnDemand[A](source: Changing[A])
+		extends AbstractCopyOnDemand[A](source)(source.listenerLogger)
+	{
+		// ATTRIBUTES   -----------------------
+		
+		private var changingStoppedListeners: Seq[ChangingStoppedListener] = Empty
 		
 		
 		// INITIAL CODE -----------------------
@@ -90,44 +120,21 @@ object CopyOnDemand
 		
 		// IMPLEMENTED  -----------------------
 		
-		override def value: A = cachedValue
 		override def destiny: Destiny = source.destiny
-		
-		override def toString = s"Copy($source).onDemand"
-		
-		override def update() = {
-			val oldValue = cachedValue
-			cachedValue = source.value
-			fireEventIfNecessary(oldValue).foreach { effect => Try { effect() }.log }
-		}
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
 			changingStoppedListeners :+= listener
 	}
 	
 	// Implementation for general Views
-	private class ViewOnDemand[A](source: View[A])(implicit log: Logger)
-		extends AbstractChanging[A] with CopyOnDemand[A]
+	private class ViewOnDemand[A](source: View[A])(implicit log: Logger) extends AbstractCopyOnDemand[A](source)
 	{
 		// ATTRIBUTES   --------------------
 		
-		private var cachedValue = source.value
-		
-		override lazy val readOnly: Changing[A] = ChangingWrapper(this)
+		override val destiny: Destiny = ForeverFlux
 		
 		
 		// IMPLEMENTED  --------------------
-		
-		override def value: A = cachedValue
-		override def destiny: Destiny = ForeverFlux
-		
-		override def toString = s"View($cachedValue).onDemand"
-		
-		override def update(): Unit = {
-			val oldValue = cachedValue
-			cachedValue = source.value
-			fireEventIfNecessary(oldValue).foreach { _() }
-		}
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 	}
@@ -136,6 +143,7 @@ object CopyOnDemand
 	private class FixedOnDemand[+A](override val value: A) extends Fixed[A] with CopyOnDemand[A]
 	{
 		override def update(): Unit = ()
+		override def updateAndQueueEvent(): IterableOnce[AfterEffect] = Empty
 	}
 }
 
@@ -152,4 +160,10 @@ trait CopyOnDemand[+A] extends Changing[A]
 	  * Updates the value in this pointer to match that of the tracked pointer.
 	  */
 	def update(): Unit
+	/**
+	 * Updates the value of this pointer and prepares a change event, if appropriate
+	 * @return After-effects that fire the generated change event, if applicable.
+	 *         The caller of this function *must* trigger these effects.
+	 */
+	def updateAndQueueEvent(): IterableOnce[AfterEffect]
 }

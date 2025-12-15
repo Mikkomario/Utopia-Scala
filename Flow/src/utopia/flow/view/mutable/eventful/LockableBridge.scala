@@ -1,10 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse.{ContinueAnd, DetachAnd}
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.operator.enumeration.End.First
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{Changing, ChangingView, OptimizedChanging}
 
@@ -34,8 +34,7 @@ class LockableBridge[A](origin: Changing[A]) extends OptimizedChanging[A] with L
 	
 	private var lockedValue: Option[A] = None
 	private val relayEventsListener = ChangeListener { e: ChangeEvent[A] =>
-		val afterEffects = fireEvent(e)
-		if (locked) DetachAnd(afterEffects) else ContinueAnd(afterEffects)
+		Continue.unless(locked) ++ fireEventEffects(e)
 	}
 	
 	/**
@@ -46,7 +45,7 @@ class LockableBridge[A](origin: Changing[A]) extends OptimizedChanging[A] with L
 	
 	// INITIAL CODE --------------------------
 	
-	origin.addListenerWhile(hasListenersFlag, priority = First)(relayEventsListener)
+	origin.addListenerWhile(hasListenersFlag, priority = High)(relayEventsListener)
 	stopOnceSourceStops(origin)
 	
 	
@@ -79,7 +78,7 @@ class LockableBridge[A](origin: Changing[A]) extends OptimizedChanging[A] with L
 	}
 	
 	override protected def declareChangingStopped() = {
-		super.declareChangingStopped()
 		origin.removeListener(relayEventsListener)
+		super.declareChangingStopped()
 	}
 }

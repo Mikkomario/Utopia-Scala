@@ -1,17 +1,15 @@
 package utopia.flow.view.mutable.async
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.LoggingPointerFactory
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
-
-import scala.util.Try
 
 object EventfulVolatile extends LoggingPointerFactory[EventfulVolatile]
 {
@@ -99,9 +97,27 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 			Single[() => Unit](fireQueuedEvents)
 		}
 	}
+	override def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect] = viewLocked { value =>
+		if (value == newValue)
+			Empty
+		else {
+			assignWithoutEvents(newValue)
+			Single(queueEvent(ChangeEvent(value, newValue)))
+		}
+	}
 	
 	
 	// OTHER    ---------------------
+	
+	/**
+	 * Queues a change event, so that it may be fired as an after-effect
+	 * @param event Event to queue
+	 * @return An after effect which fires the queued event
+	 */
+	protected def queueEvent(event: ChangeEvent[A]) = {
+		eventQueue :+= event
+		AfterEffect.asap.chaining { processQueuedEventsAsAfterEffects() }
+	}
 	
 	private def fireQueuedEvents() = {
 		// Won't allow multiple parallel processes
@@ -109,12 +125,21 @@ abstract class EventfulVolatile[A](implicit listenerLogger: Logger)
 			try {
 				// Processes the pending events one by one.
 				// Each event is fully resolved (including the after-effects) before the next event is fired
-				OptionsIterator.continually { eventQueue.pop() }.foreach { event =>
-					fireEvent(event).foreach { effect =>
-						Try { effect() }.logWithMessage("Failure during a change effect")
-					}
-				}
+				OptionsIterator.continually { popQueuedEvents() }.foreach(fireEvent)
 			}
 			finally { processingEventsFlag.reset() }
+	}
+	
+	private def processQueuedEventsAsAfterEffects(): IterableOnce[AfterEffect] = popQueuedEvents() match {
+		case Some(event) => fireEventEffects(event)
+		case None => Empty
+	}
+	
+	// If there were multiple events queued, collapses them into one
+	private def popQueuedEvents() = eventQueue.popAll().emptyOneOrMany.flatMap {
+		case Left(event) => Some(event)
+		case Right(events) =>
+			Some(ChangeEvent(events.head.oldValue, events.last.newValue))
+				.filter { _.values.isAsymmetric }
 	}
 }

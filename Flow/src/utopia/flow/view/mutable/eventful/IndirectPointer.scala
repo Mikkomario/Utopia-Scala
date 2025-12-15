@@ -1,5 +1,7 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.model.AfterEffect
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
@@ -15,7 +17,12 @@ object IndirectPointer
 	  * @tparam A Type of viewed and accepted values
 	  * @return A new indirect pointer
 	  */
-	def apply[A](view: Changing[A])(mutate: A => Unit): IndirectPointer[A] = new _IndirectPointer[A](view, mutate)
+	// TODO: Possibly add support for queued change events. The current version fires them immediately.
+	def apply[A](view: Changing[A])(mutate: A => Unit): IndirectPointer[A] =
+		new _IndirectPointer[A](view, mutate, v => {
+			mutate(v)
+			Empty
+		})
 	
 	/**
 	  * Creates an indirect pointer that provides mutability to a map-result pointer
@@ -27,15 +34,23 @@ object IndirectPointer
 	  * @return A new indirect pointer
 	  */
 	def reverseMapped[A, B](origin: Pointer[A], mapped: Changing[B])(reverseMap: B => A) =
-		apply(mapped) { a => origin.value = reverseMap(a) }
+		origin match {
+			case o: EventfulPointer[A] =>
+				new _IndirectPointer[B](mapped, a => o.value = reverseMap(a), a => o.setAndQueueEvent(reverseMap(a)))
+			case o => apply(mapped) { a => o.value = reverseMap(a) }
+		}
 	
 	
 	// NESTED   -------------------------
 	
-	private class _IndirectPointer[A](override val wrapped: Changing[A], set: A => Unit) extends IndirectPointer[A]
+	private class _IndirectPointer[A](override val wrapped: Changing[A], set: A => Unit,
+	                                  setAndQueue: A => IterableOnce[AfterEffect])
+		extends IndirectPointer[A]
 	{
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
+		
 		override def value_=(newValue: A): Unit = set(newValue)
+		override def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect] = setAndQueue(newValue)
 		
 		override def toString = s"$wrapped.indirect"
 	}

@@ -1,14 +1,13 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.model.Destiny
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 import scala.concurrent.{Future, Promise}
-import scala.util.Try
 
 object MayBeAssignedOnce
 {
@@ -101,9 +100,11 @@ object MayBeAssignedOnce
 		
 		override protected def _set(value: A): Unit = {
 			_value = Some(value)
-			fireEventIfNecessary(None, _value).foreach { effect =>
-				Try { effect() }.logWithMessage("Failure during change event -processing")
-			}
+			fireEvent(ChangeEvent(None, Some(value)))
+		}
+		override protected def _setAndQueueEvent(value: A): IterableOnce[AfterEffect] = {
+			_value = Some(value)
+			fireEventEffects(ChangeEvent(None, Some(value)))
 		}
 		
 		override def lock(): Unit = {
@@ -137,6 +138,7 @@ object MayBeAssignedOnce
 		override def future: Future[A] = Future.successful(_value)
 		
 		override protected def _set(value: A): Unit = ()
+		override protected def _setAndQueueEvent(value: A): IterableOnce[AfterEffect] = Empty
 		
 		override def lock(): Unit = _locked = true
 		
@@ -162,6 +164,7 @@ object MayBeAssignedOnce
 			Future.failed(new UnsupportedOperationException("This pointer may never be set"))
 		
 		override protected def _set(value: A): Unit = ()
+		override protected def _setAndQueueEvent(value: A): IterableOnce[AfterEffect] = Empty
 		
 		override def lock(): Unit = ()
 		
@@ -190,22 +193,10 @@ trait MayBeAssignedOnce[A] extends AssignableOnce[A] with Lockable[Option[A]]
 	
 	override def destiny: Destiny = if (locked || isSet) Sealed else MaySeal
 	
-	override def value_=(newValue: Option[A]): Unit = {
-		if (locked) {
-			if (value != newValue)
-				throw new IllegalStateException("This pointer has already been locked")
-		}
-		else
-			super.value_=(newValue)
-	}
-	override def set(value: A): Unit = {
-		if (locked) {
-			if (!this.value.contains(value))
-				throw new IllegalStateException("This pointer has already been locked")
-		}
-		else
-			super.set(value)
-	}
+	override def value_=(newValue: Option[A]): Unit = failIfLocked { super.value_=(newValue) }
+	override def set(value: A): Unit = failIfLocked { super.set(value) }
+	override def setAndQueueEvent(newValue: Option[A]): IterableOnce[AfterEffect] =
+		failIfLocked { super.setAndQueueEvent(newValue) }
 	override def trySet(value: => A): Boolean = if (locked) false else super.trySet(value)
 	
 	

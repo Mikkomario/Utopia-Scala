@@ -3,7 +3,7 @@ package utopia.reach.component.label.image
 import utopia.firmament.drawing.view.ViewImageDrawer
 import utopia.firmament.model.stack.StackInsets
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image
 import utopia.paradigm.enumeration.Alignment
@@ -72,7 +72,7 @@ class MutableImageLabel(override val hierarchy: ComponentHierarchy, initialImage
 		}
 	}
 	
-	private val revalidateListener = ChangeListener.triggerAfterEffect { revalidate() }
+	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 	
 	
 	// INITIAL CODE	--------------------------
@@ -83,14 +83,11 @@ class MutableImageLabel(override val hierarchy: ComponentHierarchy, initialImage
 		.apply(imagePointer))
 	
 	// Updates and repaints this label when values change
-	imagePointer.addContinuousListener { change =>
-		if (change.equalsBy { _.size } && change.equalsBy { _.maxScaling })
-			Continue.and { repaint() }
-		else
-			Continue.and { revalidate() }
+	imagePointer.addListenerOfPriority(After) { change =>
+		if (change.equalsBy { _.size } && change.equalsBy { _.maxScaling }) repaint() else revalidate()
 	}
-	transformationPointer.addListener(revalidateListener)
-	insetsPointer.addListener(revalidateListener)
+	transformationPointer.addListenerOfPriority(After)(revalidateListener)
+	insetsPointer.addListenerOfPriority(After)(revalidateListener)
 	alignmentPointer.addContinuousListener { _ => repaint() }
 	
 	

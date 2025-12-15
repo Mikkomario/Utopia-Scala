@@ -5,6 +5,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.model.enumeration.StackLayout
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.enumeration.Axis2D
@@ -122,14 +123,14 @@ private class ViewCollection(override val hierarchy: ComponentHierarchy, content
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
+	private val revalidateAfterChange = ChangeListener.onAnyChange { revalidate() }
 	
 	
 	// INITIAL CODE ----------------------------
 	
 	setupMarginListeners()
-	splitThresholdPointer.addListenerWhile(linkedFlag)(revalidateAfterChange)
-	contentP.addListenerWhile(linkedFlag)(revalidateAfterChange)
+	splitThresholdPointer.addListenerWhile(linkedFlag, After)(revalidateAfterChange)
+	contentP.addListenerWhile(linkedFlag, After)(revalidateAfterChange)
 	
 	
 	// IMPLEMENTED  ----------------------------

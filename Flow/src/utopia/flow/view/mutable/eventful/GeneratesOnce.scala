@@ -3,13 +3,10 @@ package utopia.flow.view.mutable.eventful
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, Flag, MayStopChanging}
-
-import scala.util.Try
 
 object GeneratesOnce
 {
@@ -80,7 +77,6 @@ object GeneratesOnce
 			// Fires the change event (if necessary), as well as the changing stopped -event
 			if (hasListeners)
 				fireEvent(ChangeEvent(simulateOldValue.getOrElse(value), value))
-					.foreach { effect => Try { effect() }.logWithMessage("Failure during change-event processing") }
 			declareChangingStopped()
 			
 			value

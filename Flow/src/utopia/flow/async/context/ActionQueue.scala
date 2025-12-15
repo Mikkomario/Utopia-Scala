@@ -7,6 +7,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.Duration
 import utopia.flow.util.EitherExtensions._
@@ -96,6 +97,11 @@ object ActionQueue
 		 * @return The current state of this action
 		 */
 		def state = statePointer.value
+		
+		
+		// IMPLEMENTED  -------------------
+		
+		override def toString: String = s"Action[$state]"
 		
 		
 		// OTHER    -----------------------
@@ -428,8 +434,9 @@ object ActionQueue
 		 * A change listener used for updating the processor(s), once a process completes
 		 */
 		protected val updateProcessorsListener = ChangeListener[BasicProcessState] { e =>
+			// TODO: Review, which priority would be appropriate here
 			if (e.newValue.isFinal)
-				Detach.and { _emptyFlag.value = !updateProcessors() }
+				Detach.and(High) { _emptyFlag.value = !updateProcessors() }
 			else
 				Continue
 		}

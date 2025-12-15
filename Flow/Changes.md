@@ -3,13 +3,27 @@
 ## v2.8 (in development)
 ### Breaking changes
 - Multiple breaking changes to **Changing**:
+  - Rewrote the change event -processing logic completely
+    - Now events are primarily processed in the pointer that originated the chain of events; 
+      Dependent pointers relay their change events to the original pointer using after-effects.
+    - After-effects are now represented using **AfterEffect** instead of `() => Unit`
+    - Listener priorities are now represented using **ChangeResponsePriority** instead of **End**
+    - Change listeners are now detached one-by-one, instead of in bulk
+    - `.fireEvent(ChangeEvent)` now triggers the generated after-effects; 
+      For relayed effects, use `.fireEventEffects(ChangeEvent)` instead.
   - **Changing** now extends the new **SynchronizedView**, requiring the implementation of `lockWhile(...)`
     - This is implemented in **AbstractChanging**, **ChangingWrapper** and **Fixed**, but not in **OptimizedChanging**
     - **Volatile**'s existing `.lockWhile(...)` function was renamed to `.viewLocked(...) `
-  - `fireEvent(...)`, `fireEventIfNecessary(...)` and `fireEventFor(...)` now detach the listeners earlier, one by one. 
     Reflecting this change, the function parameters are also different.
-  - **ChangingWithListeners** now requires the implementation of `removeListener(End, ChangeListener)`, 
+  - **ChangingWithListeners** now requires the implementation of `removeListener(ChangeResponsePriority, ChangeListener)`, 
     instead of `removeListeners(End, Iterable)`
+  - **EventfulPointer** now requires a new function: `.setAndQueueEvent(...)`
+  - **LockablePointer** now requires a new function: `.setUnlockedAndQueueEvent(...)`
+  - **CopyOnDemand** now requires an additional function: `.updateAndQueueEvent()`
+  - **OptimizedBrige**'s onUpdate parameter now receives either a prepared change event, if actively tracking, 
+    or lazy change values.
+  - **ChangeResponse**'s `.and(...)` now accepts **AfterEffect** instead of a function
+  - **ChangeResponse** trait is now sealed
 - Rewrote large sections of **AsyncExtensions**
   - `.current` now yields a **Failure** instead of **None** on failure
   - `.currentResult` now yields a flattened result
@@ -37,6 +51,12 @@
   - Deprecated various `.forEachResult(...)` etc. functions in favor of new `.forResult(...)` etc. versions
   - Deprecated `.futureSuccesses` and `.futureCompletion`
   - Deprecated `.waitForSuccesses()`
+- Multiple deprecations relating to **Changing**:
+  - Deprecated **Changing**'s earlier fireEvent -function variations
+  - Deprecated **ChangeListener**'s `.triggerAfterEffect(...)` and `.triggerAfterEffectOnce(...)`; 
+    The recommended approach is to use low-priority change listeners instead.
+  - Deprecated `ChangeResponse.continueIf(Boolean)` and `.continueUnless(Boolean)`
+  - Deprecated **ChangingWithListeners**'s `.highPriorityListeners`, `.standardListeners` and `.allListeners`
 - Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
 - Deprecated `.foreachParallel(...)`, `.mapParallel(...)` and `.mapAllParallel(...)` in **CollectionExtensions**; 
   The new implementations are accessible via `.parallel`
@@ -52,6 +72,9 @@
 - Bugfix to **OptimizedBridge**, which would sometimes not auto-detach from the origin pointer correctly
 - Bugfix to **TwoThreadBuffer.Output**'s `.push(Iterable)`, which threw under some rare circumstances
 ### New features
+- New features relating to **Changing**:
+  - There are now 3 supported listener priorities: **Normal**, **High** and **After**
+    - After level is treated as after-effects, basically
 - Added **ParallelBuilder** for building collections from multiple threads
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added **EmptyInputStream**
@@ -64,8 +87,15 @@
 ### New methods
 - **Builder** (via **BuilderExtensions**)
   - Added `.mapInput(...)`
+- **ChangeEvent**
+  - Added `.ifActuallyChanged`
 - **ChangeListener**
   - Added `.mapInput(...)`
+- **ChangeResponse**
+  - Added `.opposite`, `.onlyIf(...)` and `.unless(...)`
+  - Added `++`
+- **Changing**
+  - Added `.addLowPriorityListener(...)`
 - **Constant** (object)
   - Added `.lazily(...)`
 - **Extreme**
@@ -84,10 +114,14 @@
   - Added various `.mapParallelTo(...)` functions
 - **Lazy** (object)
   - Added `.resettable` and `.volatile(...)` for constructing different **Lazy** types
+- **Lockable**
+  - Added `.failIfLocked(...)` and `.ifUnlocked(...)`
 - **Map** (via **CollectionExtensions**)
   - Added `.mapInputView(...)` and `.flatMapInputView(...)`
 - **MapView** (via **CollectionExtensions**)
   - Added `.mapInput(...)` and `.flatMapInput(...)`
+- **MayBeSet**
+  - Added `.failIfSet(...)` and `.ifNotSet(...)`
 - **ModelLike**
   - Added various mapping functions that target individual properties
 - **OutputStream** (via **StreamExtensions**)
@@ -108,6 +142,7 @@
 - Various changes to **Changing**:
   - `.once(...)` and `findMapFuture` variants now lock the changing item from changes during method execution, 
     similarly as was previously only the case in **EventfulVolatile**.
+  - **EventfulVolatile** now processes (root level) change events in synchronized manner, one-by-one.
   - After-effects generated in `addListenerAndSimulateEvent(...)` are now wrapped in **Try**; 
     Errors are logged.
 - **OptimizedSeqBuilder**'s `.knownSize` now functions past size 2

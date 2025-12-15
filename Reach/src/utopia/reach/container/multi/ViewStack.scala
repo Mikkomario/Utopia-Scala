@@ -8,14 +8,16 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.AfterEffect
 import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
 import utopia.flow.view.template.eventful.Flag.wrap
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.enumeration.{Axis, Axis2D}
-import utopia.reach.component.factory.{ComponentFactories, GenericContainerFactories, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, FromGenericContextFactory, GenericContainerFactories}
 import utopia.reach.component.hierarchy.{ComponentHierarchy, SeedHierarchyBlock}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.ContainerCreation.{MultiContainerCreation, ViewContainerCreation}
@@ -532,7 +534,8 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 {
 	// ATTRIBUTES	-------------------------------
 	
-	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
+	private val revalidateEffect = AfterEffect.after { revalidate() }
+	private val revalidateAfterChange = ChangeListener.onAnyChange { revalidate() }
 	
 	/**
 	 * A pointer that contains this stack's displayed components
@@ -551,14 +554,14 @@ class ViewStack(override val hierarchy: ComponentHierarchy, componentsP: Changin
 	componentsP.addListener { change =>
 		// Also resets the stack sizes of added components
 		change.added.foreach { _.resetEveryCachedStackSize() }
-		Continue.and { revalidate() }
+		Continue.and(revalidateEffect)
 	}
 	
 	// Revalidates this component on other layout changes
-	settings.axisPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
-	settings.layoutPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
-	marginPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
-	settings.capPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateAfterChange)
+	settings.axisPointer.addListenerWhile(hierarchy.linkedFlag, After)(revalidateAfterChange)
+	settings.layoutPointer.addListenerWhile(hierarchy.linkedFlag, After)(revalidateAfterChange)
+	marginPointer.addListenerWhile(hierarchy.linkedFlag, After)(revalidateAfterChange)
+	settings.capPointer.addListenerWhile(hierarchy.linkedFlag, After)(revalidateAfterChange)
 	
 	
 	// IMPLEMENTED	-------------------------------

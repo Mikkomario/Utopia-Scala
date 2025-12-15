@@ -1,6 +1,7 @@
 package utopia.flow.event.model
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.equality.EqualsFunction
 
 import scala.collection.BuildFrom
 import scala.collection.generic.IsIterableOnce
@@ -77,6 +78,13 @@ case class ChangeEvent[+A](values: Pair[A])
 	  */
 	@deprecated("Please use .values instead", "v2.2")
 	def toPair = values
+	
+	/**
+	 * @param eq An implicit equality function to apply (default = use ==)
+	 * @return If this event contains two different values, yields this; Otherwise yields None.
+	 */
+	def ifActuallyChanged(implicit eq: EqualsFunction[A] = EqualsFunction.default) =
+		if (values.isSymmetric) None else Some(this)
 	
 	
 	// IMPLEMENTED	-----------------------------

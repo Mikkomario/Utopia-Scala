@@ -7,9 +7,9 @@ import utopia.firmament.component.stack.Stackable
 import utopia.firmament.model.CoordinateTransform
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.context.SingleThreadExecutionContext
-import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.operator.filter.{AcceptAll, Filter}
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.TimeExtensions._
@@ -46,7 +46,7 @@ import utopia.reach.dnd.DragAndDropManager
 import utopia.reach.drawing.RealTimeReachPaintManager
 import utopia.reach.focus.ReachFocusManager
 
-import java.awt.{AWTKeyStroke, Container, Graphics, Graphics2D, KeyboardFocusManager}
+import java.awt._
 import java.util
 import javax.swing.event.{AncestorEvent, AncestorListener}
 import javax.swing.{JComponent, JPanel}
@@ -407,7 +407,7 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 		// When attached to the stack hierarchy,
 		// makes sure to update immediate content layout and repaint this component
 		if (event.newValue)
-			Continue.and {
+			Continue.and(After) {
 				currentPainter.foreach { _.resetBuffer() }
 				currentContent.foreach { _.resetEveryCachedStackSize() }
 				layoutUpdateQueue.clear()

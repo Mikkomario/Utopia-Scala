@@ -5,7 +5,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.operator.enumeration.End.First
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.{CopyOnDemand, EventfulPointer, LockablePointer}
@@ -181,9 +182,9 @@ trait ViewContainerFactory[+Container <: ReachComponent, -Top]
 				}
 			}
 			// Updates this pointer whenever one of the component visibility pointers changes
-			val updateListener = ChangeListener.onAnyChange { visibleContentP.update() }
+			val updateListener = ChangeListener.onAnyChange { Continue ++ visibleContentP.updateAndQueueEvent() }
 			dynamicComponents.foreach { case (component, _) =>
-				component.result.addListenerWhile(hierarchy.linkedFlag, First)(updateListener)
+				component.result.addListenerWhile(hierarchy.linkedFlag, High)(updateListener)
 			}
 			
 			// Creates the container and attaches the components to it

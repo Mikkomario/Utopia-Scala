@@ -11,7 +11,7 @@ import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.{WeakKeysCache, WeakValuesCache}
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.operator.Identity
 import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.util.EitherExtensions._
@@ -618,8 +618,8 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imageP: Changin
 		ViewImageDrawer.copy(transformationView = settings.transformationPointer, insetsPointer = settings.insetsPointer,
 			alignmentView = settings.alignmentPointer, upscales = allowUpscaling).apply(localImageP)
 	// Repainting is delayed until all change listeners have been informed
-	private val repaintListener = ChangeListener.triggerAfterEffect { repaint(settings.repaintPriority) }
-	private val revalidateListener = ChangeListener.triggerAfterEffect { revalidate() }
+	private val repaintListener = ChangeListener.onAnyChange { repaint(settings.repaintPriority) }
+	private val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 	
 	
 	// INITIAL CODE	---------------------------------
@@ -628,14 +628,14 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imageP: Changin
 	// Applies either a revalidation or a repaint when image, transformation and/or size changes
 	// Case: Using a custom size pointer => Image & transformation -pointers only trigger repaints
 	if (settings.customSizePointer.isDefined) {
-		localImageP.addListener(repaintListener)
-		localTransformationP.addListener(repaintListener)
-		visualImageSizeP.addListener(revalidateListener)
+		localImageP.addLowPriorityListener(repaintListener)
+		localTransformationP.addLowPriorityListener(repaintListener)
+		visualImageSizeP.addLowPriorityListener(revalidateListener)
 	}
 	// Case: Not using a custom size -pointer
 	//       => Image & transform changes may trigger a repaint or a revalidation
 	else {
-		localImageP.addListener { change =>
+		localImageP.addListenerOfPriority(After) { change =>
 			// Checks whether the image's size is changed, taking the "no shrinking" constraint into account
 			val hasSameSize = {
 				if (settings.allowsShrinking)
@@ -651,10 +651,10 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imageP: Changin
 			}
 			// Case: Size stayed the same => Only repaints
 			if (hasSameSize)
-				Continue.and { repaint(settings.repaintPriority) }
+				repaint(settings.repaintPriority)
 			// Case: Size changed => Revalidates the component hierarchy
 			else
-				Continue.and { revalidate() }
+				revalidate()
 		}
 		// Case: Shrinking allowed => Transformation changes are assumed to always trigger size changes
 		if (settings.allowsShrinking)
@@ -664,13 +664,13 @@ class ViewImageLabel(override val hierarchy: ComponentHierarchy, imageP: Changin
 		//          when the size is confirmed to change
 		//          (Has the possible side effect of repainting twice)
 		else {
-			localTransformationP.addListener(repaintListener)
-			visualImageSizeP.addListener(revalidateListener)
+			localTransformationP.addLowPriorityListener(repaintListener)
+			visualImageSizeP.addLowPriorityListener(revalidateListener)
 		}
 	}
-	settings.insetsPointer.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
-	settings.alignmentPointer.addListenerWhile(hierarchy.linkedFlag)(repaintListener)
-	allowUpscalingFlag.addListenerWhile(hierarchy.linkedFlag)(revalidateListener)
+	settings.insetsPointer.addListenerWhile(hierarchy.linkedFlag, After)(revalidateListener)
+	settings.alignmentPointer.addListenerWhile(hierarchy.linkedFlag, After)(repaintListener)
+	allowUpscalingFlag.addListenerWhile(hierarchy.linkedFlag, After)(revalidateListener)
 	
 	
 	// COMPUTED	-------------------------------------

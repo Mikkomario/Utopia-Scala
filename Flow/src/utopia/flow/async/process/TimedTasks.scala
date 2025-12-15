@@ -6,7 +6,7 @@ import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{DailyTime, UntilNotified, WeeklyTime}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now, Today, WeekDay}
@@ -65,7 +65,7 @@ class TimedTasks(waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReacti
 		if (state == Completed)
 			runAsync()
 		
-		ChangeResponse.continueIf(state.isNotBroken)
+		Continue.unless { state.isBroken }
 	}
 	
 	

@@ -2,10 +2,10 @@ package utopia.paradigm.motion.template
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.time.{Duration, Now}
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
 import utopia.paradigm.shape.template.vector.DoubleVectorLike
@@ -24,6 +24,8 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	extends AbstractChanging[H]()(SysErrLogger) with MovementHistoryLike[X, V, A, S]
 {
 	// ATTRIBUTES	-----------------------
+	
+	override val destiny: Destiny = ForeverFlux
 	
 	private var _positionHistory: Seq[(X, Instant)] = Empty
 	private var _velocityHistory: Seq[(V, Instant)] = Empty
@@ -54,8 +56,8 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 	
 	// IMPLEMENTED	------------------------
 	
-	override def value = cachedValue.getOrElse(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
-	override def destiny: Destiny = ForeverFlux
+	override def value =
+		cachedValue.getOrElse(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
 	
 	override def positionHistory = _positionHistory
 	override def velocityHistory = _velocityHistory
@@ -121,8 +123,9 @@ abstract class VelocityTracker[X <: DoubleVectorLike[X], V <: VelocityLike[X, V]
 			}
 			
 			// Fires a change event and updates cached status
-			cachedValue = Some(combineHistory(_positionHistory, _velocityHistory, _accelerationHistory))
-			fireEventIfNecessary(previousStatus).foreach { _() }
+			val newValue = combineHistory(_positionHistory, _velocityHistory, _accelerationHistory)
+			cachedValue = Some(newValue)
+			fireEvent(ChangeEvent(previousStatus, newValue))
 		}
 	}
 }

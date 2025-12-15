@@ -1,12 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.Destiny.Sealed
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{Fixed, FlagView}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Flag}
-
-import scala.util.Try
 
 object LockableFlag
 {
@@ -60,29 +58,21 @@ object LockableFlag
 				"Flag.settable.lockable"
 		}
 		
-		override def set(): Boolean = {
-			if (locked) {
-				if (isSet)
-					false
-				else
-					throw new IllegalStateException("This flag has already been locked")
-			}
-			else if (isSet)
+		override def set(): Boolean = failIfLocked {
+			if (isSet)
 				false
 			else {
 				_value = true
-				fireEventIfNecessary(false, true).foreach { a => Try { a() }.log }
+				fireEvent(ChangeEvent(false, true))
 				declareChangingStopped()
 				true
 			}
 		}
 		
-		override def lock(): Unit = {
-			if (!locked) {
-				_locked = true
-				if (isNotSet)
-					declareChangingStopped()
-			}
+		override def lock(): Unit = ifUnlocked {
+			_locked = true
+			if (isNotSet)
+				declareChangingStopped()
 		}
 	}
 	

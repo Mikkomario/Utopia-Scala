@@ -6,7 +6,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.event.model.ChangeResponse
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -22,8 +22,8 @@ import utopia.genesis.handling.event.keyboard.{Key, KeyStateEvent, KeyStateListe
 import utopia.genesis.handling.event.mouse.{CommonMouseEvents, MouseButtonStateEvent, MouseButtonStateListener}
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.enumeration.Alignment
-import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.factory.ContextualComponentFactories.CCF
+import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.CanDisplayPopup
@@ -32,6 +32,7 @@ import utopia.reach.component.label.image.ViewImageLabelSettings
 import utopia.reach.component.template.focus.{Focusable, FocusableWithStateWrapper}
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponent, ReachComponentWrapper}
 import utopia.reach.component.wrapper.Open
+import utopia.reach.component.wrapper.WindowCreationResult.accessParent
 import utopia.reach.context.{ReachWindowContext, VariableReachContentWindowContext}
 
 import scala.concurrent.ExecutionContext
@@ -776,7 +777,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 			popup.focusFlag.addListener { e =>
 				if (!e.newValue)
 					popup.visible = false
-				ChangeResponse.continueUnless(popup.hasClosed)
+				Continue.unless(popup.closedFlag)
 			}
 		// Returns the pop-up window
 		popup.window

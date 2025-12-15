@@ -1,11 +1,13 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.{AfterEffect, ChangeEvent}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Changing
 
 object OptimizedBridge
@@ -15,11 +17,14 @@ object OptimizedBridge
 	  * @param origin            A pointer to follow, when appropriate
 	  * @param trackActivelyFlag A flag that contains true while the origin pointer should be continuously tracked
 	  * @param f                 A function for transforming the origin pointer value
-	  * @param onUpdate          A function called whenever the origin pointer value changes during tracking or cache-reset.
-	  *                          The specified change event is lazily generated, and will contain None in case there was no
-	  *                          actual change in the transformed value.
-	  *                          Returns after-effects to trigger once the origin pointer has resolved informing its listeners about
-	  *                          the change.
+	  * @param onUpdate A function called whenever the origin pointer value changes during tracking or cache-reset.
+	 *                  Receives either:
+	 *                      - Right: A generated change event, if 'trackActivelyFlag' is set to true.
+	 *                      - Left: Lazily initialized old & new mapped values,
+	 *                              if 'trackActivelyFlag' is set false and only a cache-clearing was performed.
+	 *
+	 *                  Returns after-effects to trigger, which should include the informing of possible listeners
+	 *                  (in case of Right input).
 	  * @param disableCaching   Whether mapped values should not be cached (unless strictly necessary)
 	  *                          but calculated whenever a value is requested.
 	  *
@@ -34,23 +39,26 @@ object OptimizedBridge
 	  * @return A new bridge
 	  */
 	def map[O, R](origin: Changing[O], trackActivelyFlag: Changing[Boolean], disableCaching: Boolean = false)
-	             (f: O => R)(onUpdate: Lazy[Option[ChangeEvent[R]]] => Seq[() => Unit]) =
+	             (f: O => R)(onUpdate: Either[Pair[Lazy[R]], ChangeEvent[R]] => IterableOnce[AfterEffect]) =
 		new OptimizedBridge[O, R](origin, trackActivelyFlag, f, onUpdate, disableCaching)
 	
 	/**
 	  * Creates a new bridge that relays origin pointer values as they appear
 	  * @param origin            A pointer to follow, when appropriate
 	  * @param trackActivelyFlag A flag that contains true while the origin pointer should be continuously tracked
-	  * @param onUpdate          A function called whenever the origin pointer value changes during tracking or cache-reset.
-	  *                          The specified change event is lazily generated, and will contain None in case there was no
-	  *                          actual change in the transformed value (which is never the case in this approach).
-	  *                          Returns after-effects to trigger once the origin pointer has resolved informing its listeners about
-	  *                          the change.
+	  * @param onUpdate A function called whenever the origin pointer value changes during tracking or cache-reset.
+	 *                  Receives either:
+	 *                      - Right: A generated change event, if 'trackActivelyFlag' is set to true.
+	 *                      - Left: Lazily initialized old & new values,
+	 *                              if 'trackActivelyFlag' is set false and only a cache-clearing was performed.
+	 *
+	 *                  Returns after-effects to trigger, which should include the informing of possible listeners
+	 *                  (in case of Right input).
 	  * @tparam A Type of origin pointer values
 	  * @return A new bridge
 	  */
 	def apply[A](origin: Changing[A], trackActivelyFlag: Changing[Boolean])
-	            (onUpdate: Lazy[Option[ChangeEvent[A]]] => Seq[() => Unit]) =
+	            (onUpdate: Either[Pair[Lazy[A]], ChangeEvent[A]] => IterableOnce[AfterEffect]) =
 		map[A, A](origin, trackActivelyFlag, disableCaching = true)(Identity)(onUpdate)
 }
 
@@ -72,14 +80,18 @@ object OptimizedBridge
   * @param trackActivelyFlag A flag that contains true while the origin pointer should be continuously tracked
   * @param f A function for transforming the origin pointer value
   * @param onUpdate A function called whenever the origin pointer value changes during tracking or cache-reset.
-  *                 The specified change event is lazily generated, and will contain None in case there was no
-  *                 actual change in the transformed value.
-  *                 Returns after-effects to trigger once the origin pointer has resolved informing its listeners about
-  *                 the change.
-  * @param cachingDisabled Whether mapped values should not be cached (unless strictly necessary)
+  *                 Receives either:
+ *                      - Right: A generated change event, if 'trackActivelyFlag' is set to true.
+ *                      - Left: Lazily initialized old & new mapped values,
+ *                              if 'trackActivelyFlag' is set false and only a cache-clearing was performed.
+  *
+ *                 Returns after-effects to trigger, which should include the informing of possible listeners
+ *                 (in case of Right input).
+  *
+ * @param cachingDisabled Whether mapped values should not be cached (unless strictly necessary)
   *                        but calculated whenever a value is requested.
   *
-  *                        The benefits of disabling caching is that less listeners will be attached to the
+  *                        The benefits of disabling caching is that fewer listeners will be attached to the
   *                        origin pointer, which may reduce resource use for optimized pointers.
   *                        The disadvantage is that 'f' will likely be called more frequently.
   *
@@ -87,7 +99,8 @@ object OptimizedBridge
   *                        (e.g. retrieving a value from a map or something).
   */
 class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Boolean], f: O => R,
-                             onUpdate: Lazy[Option[ChangeEvent[R]]] => Seq[() => Unit], cachingDisabled: Boolean)
+                             onUpdate: Either[Pair[Lazy[R]], ChangeEvent[R]] => IterableOnce[AfterEffect],
+                             cachingDisabled: Boolean)
 	extends View[R]
 {
 	// ATTRIBUTES   -------------------------
@@ -97,46 +110,44 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 	  */
 	private var terminated = false
 	/**
-	  * Caches pre-calculated values on demand
-	  */
-	private var cachedValue: Option[R] = None
+	 * Caches a calculated result
+	 */
+	private val cache = Volatile.empty[R]
+	/**
+	 * An after-effect for clearing the cache, if necessary
+	 */
+	private val clearCacheLast = AfterEffect {
+		if (!trackActivelyFlag.value)
+			cache.clear()
+		()
+	}
 	
 	private val originListener = ChangeListener[O] { event =>
-		// Prepares the change event
-		val oldCachedValue = cachedValue
-		lazy val newValue = f(event.newValue)
-		val secondaryEvent = Lazy {
-			val oldValue = oldCachedValue.getOrElse { f(event.oldValue) }
-			if (oldValue != newValue)
-				Some(ChangeEvent(oldValue, newValue))
-			else
-				None
-		}
-		val afterEffects = {
-			// Case: This pointer contains listeners =>
-			// Keeps the cache up-to-date and keeps this listener attached.
+		// Prepares to call onUpdate(...) with either a change event (Right), or just a status update (Left)
+		val updateResult = {
+			// Case: Tracking actively => Updates the cache & prepares a change event
 			if (trackActivelyFlag.value) {
-				// Updates the cache
-				cachedValue = Some(newValue)
-				// Informs the listener about this update
-				val afterEffects = onUpdate(secondaryEvent)
+				val newValue = f(event.newValue)
+				val oldValue = cache.getAndSet(Some(newValue)).getOrElse { f(event.oldValue) }
 				
-				// Triggers the after-effects only after all other listeners have been informed as well
-				// Case: Caching is disabled and all listeners detached themselves =>
-				//       Clears the cache and detaches this listener immediately
-				if (cachingDisabled && !trackActivelyFlag.value)
-					cachedValue = None
-					
-				afterEffects
+				if (newValue == oldValue)
+					Empty
+				else
+					onUpdate(Right(ChangeEvent(oldValue, newValue)))
 			}
-			// Case: This pointer doesn't contain listeners
-			//       => Clears the previously cached value and detaches immediately
+			// Case: Not actively tracking => Resets the cache and informs the onUpdate
 			else {
-				cachedValue = None
-				onUpdate(secondaryEvent)
+				// The old and the new value are calculated lazily
+				val lazyOldValue = cache.pop() match {
+					case Some(oldValue) => Lazy.initialized(oldValue)
+					case None => Lazy { f(event.oldValue) }
+				}
+				onUpdate(Left(Pair(lazyOldValue, Lazy { f(event.newValue) })))
 			}
 		}
-		DetachIfAppropriate(afterEffects)
+		// Informs the listener about this update
+		// Also, clears the cache after the other effects have resolved, unless still tracking the origin
+		Continue.andAll(updateResult.iterator ++ Single(clearCacheLast)).onlyIf(trackActivelyFlag)
 	}
 	private val activeTrackingListener = ChangeListener { e: ChangeEvent[Boolean] =>
 		// Case: Should start tracking actively => Attaches itself to origin
@@ -144,16 +155,23 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 			origin.addHighPriorityListener(originListener)
 		// Case: Should stop tracking actively => Clears the cache and/or detaches from origin
 		else {
-			// May forcibly clear the cache
-			if (cachingDisabled)
-				cachedValue = None
-			// If no cache-reset is required, detaches from origin
-			if (cachedValue.isEmpty)
+			val shouldRemoveOriginListener = {
+				// Case: Further caching is not allowed => Clears cache & detaches the origin listener immediately
+				if (cachingDisabled) {
+					cache.clear()
+					true
+				}
+				// Case: Caching may be continued until invalidated
+				//       => Continues listening to the origin, if the cache still needs to be cleared
+				else
+					cache.nonEmpty
+			}
+			if (shouldRemoveOriginListener)
 				origin.removeListener(originListener)
 		}
 		
 		// If the origin stops changing, won't need to track the listening status anymore
-		ChangeResponse.continueIf(origin.mayChange)
+		Continue.onlyIf(origin.mayChange)
 	}
 	
 	
@@ -163,37 +181,29 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 	trackActivelyFlag.addHighPriorityListener(activeTrackingListener)
 	
 	
-	// COMPUTED ----------------------------
-	
-	/**
-	  * @return True while this bridge should remain attached to the origin pointer.
-	  *         This is true when cache needs to be cleared and/or when actively tracking the origin
-	  */
-	private def shouldListen = cachedValue.isDefined || trackActivelyFlag.value
-	
-	
 	// IMPLEMENTED  ------------------------
 	
 	/**
 	  * @return The current (transformed) value of the origin pointer.
 	  */
 	// Returns the cached value, if one is available
-	override def value: R = cachedValue.getOrElse {
-		// Case: Needs to calculate a new value
-		val currentValue = f(origin.value)
-		
-		// Case: Mapping has terminated => Caches the value and won't schedule more updates
-		if (terminated)
-			cachedValue = Some(currentValue)
-		// Case: Caching is enabled => Keeps the value cached
-		// and assigns a listener in order to invalidate the cache once the origin pointer changes
-		else if (!cachingDisabled) {
-			cachedValue = Some(currentValue)
-			// TODO: It may be better to check whether the origin already contains this listener
-			origin.addHighPriorityListener(originListener)
-		}
-		
-		currentValue
+	override def value: R = cache.mutate {
+		// Case: A value has been cached => Yields the cached value
+		case cache @ Some(cached) => cached -> cache
+		// Case: No value has been cached => Calculates a new value
+		case None =>
+			val value = f(origin.value)
+			// Case: Already stopped, or already tracking the origin pointer => Caches the generated value
+			if (terminated || trackActivelyFlag.value)
+				value -> Some(value)
+			// Case: Caching is not allowed => Won't cache the new value
+			else if (cachingDisabled)
+				value -> None
+			// Case: Caching is allowed => Caches the value and registers the origin listener for cache-reset
+			else {
+				origin.addHighPriorityListener(originListener)
+				value -> Some(value)
+			}
 	}
 	
 	
@@ -207,40 +217,8 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 		if (!terminated) {
 			trackActivelyFlag.removeListener(activeTrackingListener)
 			origin.removeListener(originListener)
-			if (cachedValue.isEmpty)
-				cachedValue = Some(f(origin.value))
+			cache.setOneIfEmpty { f(origin.value) }
 			terminated = true
 		}
-	}
-	
-	
-	// NESTED   ----------------------------
-	
-	private object DetachIfAppropriate extends ChangeResponse
-	{
-		// ATTRIBUTES   --------------------
-		
-		override val afterEffects: Iterable[() => Unit] = Empty
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override def shouldContinueListening: Boolean = shouldListen
-		
-		override def and[U](afterEffect: => U): ChangeResponse = new DetachIfAppropriate(Single(() => afterEffect))
-		
-		
-		// OTHER    ------------------------
-		
-		def apply(afterEffects: Seq[() => Unit]) =
-			if (afterEffects.isEmpty) this else new DetachIfAppropriate(afterEffects)
-	}
-	
-	private class DetachIfAppropriate(override val afterEffects: Seq[() => Unit]) extends ChangeResponse
-	{
-		override def shouldContinueListening: Boolean = shouldListen
-		
-		override def and[U](afterEffect: => U): ChangeResponse =
-			new DetachIfAppropriate(afterEffects :+ { () => afterEffect })
 	}
 }

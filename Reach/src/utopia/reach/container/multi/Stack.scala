@@ -9,6 +9,7 @@ import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.operator.sign.Sign.Negative
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
@@ -18,8 +19,8 @@ import utopia.paradigm.enumeration.Direction2D.{Down, Up}
 import utopia.paradigm.enumeration.{Alignment, Axis, Axis2D}
 import utopia.reach.component.factory.ComponentFactories.CF
 import utopia.reach.component.factory.ContextualComponentFactories.CCF
-import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, ReachComponent}
 import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
@@ -571,13 +572,13 @@ private class _Stack(override val hierarchy: ComponentHierarchy,
 	
 	override lazy val visibleFlag: Flag = if (components.isEmpty) AlwaysFalse else AlwaysTrue
 	override lazy val componentsPointer: Changing[Seq[ReachComponent]] = Fixed(components)
-	private val revalidateAfterChange = ChangeListener.triggerAfterEffect { revalidate() }
+	private val revalidateAfterChange = ChangeListener.onAnyChange { revalidate() }
 	
 	
 	// INITIAL CODE ---------------------------
 	
-	marginPointer.addListenerWhile(linkedFlag)(revalidateAfterChange)
-	capPointer.addListenerWhile(linkedFlag)(revalidateAfterChange)
+	marginPointer.addListenerWhile(linkedFlag, After)(revalidateAfterChange)
+	capPointer.addListenerWhile(linkedFlag, After)(revalidateAfterChange)
 	
 	
 	// IMPLEMENTED  ---------------------------

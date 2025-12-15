@@ -3,9 +3,8 @@ package utopia.flow.view.template.eventful
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.event.model.Destiny
+import utopia.flow.event.model.{ChangeResponsePriority, Destiny}
 import utopia.flow.operator.Identity
-import utopia.flow.operator.enumeration.End
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -246,7 +245,8 @@ trait Flag extends Changing[Boolean] with MaybeSet
 		
 		override def toString = s"$target.reversed"
 		
-		override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[Boolean]]): Unit =
+		override protected def _addListenerOfPriority(priority: ChangeResponsePriority,
+		                                              lazyListener: View[ChangeListener[Boolean]]): Unit =
 			target.addListenerOfPriority(priority) { listenerCache(lazyListener.value) }
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
 			target.addChangingStoppedListener(listener)

@@ -2,16 +2,14 @@ package utopia.flow.view.mutable.caching
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangingStoppedListener, LazyListener, LazyResetListener, ResettableLazyListener}
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.util.TryExtensions._
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.ListenableLazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ResetListenable}
 
 import scala.concurrent.{Future, Promise}
-import scala.util.Try
 
 object ListenableResettableLazy
 {
@@ -118,10 +116,14 @@ object ListenableResettableLazy
 		
 		private object StateView extends AbstractChanging[Option[A]]()(log)
 		{
+			// ATTRIBUTES   ----------------------
+			
+			override val destiny: Destiny = ForeverFlux
+			
+			
 			// IMPLEMENTED  ----------------------
 			
 			override def value = current
-			override def destiny: Destiny = ForeverFlux
 			
 			override def readOnly: Changing[Option[A]] = this
 			
@@ -130,9 +132,8 @@ object ListenableResettableLazy
 			
 			// OTHER    --------------------------
 			
-			def onValueGenerated() = fireEventIfNecessary(None).foreach { effect => Try { effect() }.log }
-			def onValueReset(oldValue: A) =
-				fireEventIfNecessary(Some(oldValue)).foreach { effect => Try { effect }.log }
+			def onValueGenerated() = current.foreach { v => fireEvent(ChangeEvent(None, Some(v))) }
+			def onValueReset(oldValue: A) = fireEvent(ChangeEvent(Some(oldValue), None))
 		}
 	}
 }

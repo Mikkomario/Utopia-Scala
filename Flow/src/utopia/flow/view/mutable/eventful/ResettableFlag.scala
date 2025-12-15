@@ -1,15 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.Destiny
-import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.util.TryExtensions._
+import utopia.flow.event.model.AfterEffect
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.mutable.Switch
-import utopia.flow.view.template.eventful.{AbstractChanging, ChangingWrapper, Flag}
-
-import scala.util.Try
+import utopia.flow.view.template.eventful.{ChangingWrapper, Flag}
 
 object ResettableFlag
 {
@@ -27,7 +22,8 @@ object ResettableFlag
 	 * @param initialValue The initial value of this flag
 	  * @return A new resettable flag
 	  */
-	def apply(initialValue: Boolean = false)(implicit log: Logger): ResettableFlag = new _ResettableFlag(initialValue)
+	def apply(initialValue: Boolean = false)(implicit log: Logger): ResettableFlag =
+		new ResettableFlagWrapper(EventfulPointer(initialValue))
 	
 	/**
 	 * Wraps a mutable boolean pointer
@@ -42,39 +38,20 @@ object ResettableFlag
 	
 	// NESTED   -----------------------
 	
-	private class _ResettableFlag(initialValue: Boolean = false)(implicit log: Logger)
-		extends AbstractChanging[Boolean] with ResettableFlag
-	{
-		// ATTRIBUTES   -----------------------
-		
-		private var _value = initialValue
-		override val destiny: Destiny = ForeverFlux
-		
-		override lazy val view = new FlagView(this)
-		
-		
-		// IMPLEMENTED  -----------------------
-		
-		override def value = _value
-		override def value_=(newValue: Boolean) = {
-			val oldValue = _value
-			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
-		}
-		
-		override def toString = s"Flag(${ _value }).resettable"
-		
-		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
-	}
-	
 	private class ResettableFlagWrapper(override protected val wrapped: EventfulPointer[Boolean])
 		extends ResettableFlag with ChangingWrapper[Boolean]
 	{
+		// ATTRIBUTES   ---------------------
+		
 		override lazy val view: Flag = new FlagView(this)
+		
+		
+		// IMPLEMENTED  ---------------------
 		
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		
 		override def value_=(newValue: Boolean): Unit = wrapped.value = newValue
+		override def setAndQueueEvent(newValue: Boolean): IterableOnce[AfterEffect] = wrapped.setAndQueueEvent(newValue)
 	}
 }
 

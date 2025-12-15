@@ -1,5 +1,6 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.util.logging.Logger
@@ -69,16 +70,13 @@ object DividingMirror
 				}
 				
 				// Updates the managed pointers when the origin changes
-				source.addContinuousListener { change =>
-					divide(change.newValue) match {
-						case Left(l) =>
-							lp.value = l
-							sideP.value = First
-						
-						case Right(r) =>
-							rp.value = r
-							sideP.value = Last
+				// Lets the origin handle event-firing
+				source.addListener { change =>
+					val effects = divide(change.newValue) match {
+						case Left(l) => lp.setAndQueueEvent(l).iterator ++ sideP.setAndQueueEvent(First)
+						case Right(r) => rp.setAndQueueEvent(r).iterator ++ sideP.setAndQueueEvent(Last)
 					}
+					Continue ++ effects
 				}
 				
 				(lp, rp, sideP)

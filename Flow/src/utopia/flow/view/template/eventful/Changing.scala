@@ -2,13 +2,13 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResponsePriority.{After, High, Normal}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
-import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult, Destiny}
+import utopia.flow.event.model._
 import utopia.flow.operator.enumeration.End
-import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.time.Duration
 import utopia.flow.util.TryExtensions._
@@ -19,6 +19,8 @@ import utopia.flow.view.immutable.eventful._
 import utopia.flow.view.template.SynchronizedView
 import utopia.flow.view.template.eventful.Flag.wrap
 
+import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -94,6 +96,247 @@ object Changing
 			AlwaysTrue
 		else
 			ChangeFuture.merging[Boolean, Any](false, future) { (_, _) => true }
+	}
+	
+	/**
+	 * Fires a root level change event.
+	 * A root level event is one that doesn't directly follow any other change event.
+	 *
+	 * For change events that are generated in response to other change events,
+	 * please use [[prepareFireEventEffects]] instead.
+	 *
+	 * @param eventView A view into the event to fire. May be a lazy wrapper.
+	 *                  Called (possibly multiple times), if there are change listeners.
+	 * @param getListeners A function for acquiring the change listeners for a specific priority level.
+	 * @param detachListener A function for detaching a change listener in response to a Detach ChangeResponse.
+	 * @param log Implicit logging implementation used for recording failures
+	 *            thrown by the listeners and the after-effects
+	 * @tparam A Type of the delivered event & listeners
+	 */
+	def fireRootEvent[A](eventView: View[ChangeEvent[A]])
+	                    (getListeners: ChangeResponsePriority => IterableOnce[ChangeListener[A]])
+	                    (detachListener: (ChangeResponsePriority, ChangeListener[A]) => Unit)
+	                    (implicit log: Logger) =
+	{
+		// Queues after effects into groups by their priority level, in order to trigger them in the correct order
+		val effectBuilders = ChangeResponsePriority.descending.iterator
+			.map { _ -> OptimizedIndexedSeq.newBuilder[AfterEffect] }.toMap
+		
+		// Processes the listeners, starting from the highest priority level
+		ChangeResponsePriority.descending.foreach { priority =>
+			getListeners(priority).iterator.foreach { listener =>
+				// Delivers the original change event
+				Try { listener.onChangeEvent(eventView.value) }
+					.logWithMessage(s"Failure while processing change event: ${ eventView.value }")
+					.foreach { response =>
+						// Detaches the listener, if appropriate
+						if (response.shouldDetach)
+							detachListener(priority, listener)
+						
+						// Either queues or triggers the after-effects
+						// Effects with a priority higher than that of the current listeners are triggered immediately
+						// (possibly including chained effects);
+						// Other effects are queued for later
+						response.afterEffects.nonEmptyIterator.foreach { effectsIter =>
+							handleEffects(priority, effectsIter.groupToSeqsBy { _.priority }, effectBuilders,
+								noListenersRemain = false)
+						}
+					}
+			}
+			
+			// Prepares to process the effects of this priority level, now that all the listeners have been informed
+			val effectsBuilder = effectBuilders(priority)
+			val effects = effectsBuilder.result()
+			effectsBuilder.clear()
+			// Case: There are effects to process => Triggers them and handles the chained effects
+			if (effects.nonEmpty)
+				handleEffects(priority, Map(priority -> effects), effectBuilders, noListenersRemain = true)
+		}
+	}
+	/**
+	 * Handles the after-effects generated from informing an *individual listener* at a root level.
+	 * Assumes that there are no other listeners to inform.
+	 *
+	 * For use-cases other than the one described above, please use [[fireRootEvent]]
+	 * or [[prepareFireEventEffects]] instead.
+	 *
+	 * @param effects The effects to trigger
+	 * @param log Implicit logging implementation used for handling the errors thrown by these effects
+	 */
+	def handleEffects(effects: IterableOnce[AfterEffect])(implicit log: Logger): Unit =
+		effects.nonEmptyIterator.foreach { effectsIter =>
+			handleEffects(After, effectsIter.groupToSeqsBy { _.priority },
+				ChangeResponsePriority.descending.iterator
+					.map { _ -> OptimizedIndexedSeq.newBuilder[AfterEffect] }.toMap,
+				noListenersRemain = true)
+		}
+	/**
+	 * Triggers or queues after-effects in the order of their priority, also handling chained effects.
+	 * @param listenerPriority Priority of the currently processed listener-group.
+	 *                         Effects with equal or lower priority are not triggered, but queued instead.
+	 * @param effectsByPriority Prepared after-effects, grouped by their priority
+	 * @param queuedEffectsBuilders Builders for queueing (lower priority) after-effects.
+	 * @param log Implicit logging implementation used for recording failures
+	 *            thrown by the listeners and the after-effects
+	 */
+	@tailrec
+	private def handleEffects(listenerPriority: ChangeResponsePriority,
+	                          effectsByPriority: Map[ChangeResponsePriority, Seq[AfterEffect]],
+	                          queuedEffectsBuilders: Map[ChangeResponsePriority, mutable.Builder[AfterEffect, IterableOnce[AfterEffect]]],
+	                          noListenersRemain: Boolean)
+	                         (implicit log: Logger): Unit =
+	{
+		// Set to true if a higher priority effect is encountered, triggering recursion
+		var interrupted = false
+		var remainingEffects: IterableOnce[(ChangeResponsePriority, Seq[AfterEffect])] = Empty
+		
+		// Processes the effects in descending priority order
+		val effectPrioritiesIter = ChangeResponsePriority.descending.iterator
+		while (!interrupted && effectPrioritiesIter.hasNext) {
+			val effectPriority = effectPrioritiesIter.next()
+			// Case: These effects should be triggered immediately => Starts processing them
+			if (effectPriority > listenerPriority || (noListenersRemain && effectPriority == listenerPriority)) {
+				// TODO: Simplify case where priority == High
+				// Prepares the effects to process, also taking the queued effects
+				val queuedEffectsBuilder = queuedEffectsBuilders(effectPriority)
+				var effectsIter = effectsByPriority.get(effectPriority) match {
+					case Some(effects) => effects.iterator ++ queuedEffectsBuilder.result()
+					case None => queuedEffectsBuilder.result().iterator
+				}
+				queuedEffectsBuilder.clear()
+				
+				// Processes the effects one-by-one, until completed or interrupted
+				while (!interrupted && effectsIter.hasNext) {
+					// Triggers the effect and handles the chained after-effects
+					val chainedEffectIter = Try { effectsIter.next().trigger() } match {
+						case Success(effects) => effects.nonEmptyIterator
+						case Failure(error) =>
+							log(error, "Failure during a triggered after-effect")
+							None
+					}
+					chainedEffectIter.foreach { chainedEffectsIter =>
+						val chainedEffectsByPriority = chainedEffectsIter.groupToSeqsBy { _.priority }
+						
+						// Appends the effects of the currently processed priority, if applicable
+						chainedEffectsByPriority.get(effectPriority).foreach { effectsIter ++= _ }
+						// Queues the effects of lower priorities, if applicable
+						chainedEffectsByPriority.view.filterKeys { _ < effectPriority }
+							.foreach { case (prio, effects) => queuedEffectsBuilders(prio) ++= effects }
+						
+						// Case: Higher priority effects were issued
+						//       => Interrupts the processing of these (lower priority) effects
+						//          and continues recursively
+						if (chainedEffectsByPriority.keysIterator.exists { _ > effectPriority }) {
+							// Calculates the new remaining events
+							interrupted = true
+							remainingEffects = chainedEffectsByPriority.iterator.filter { _._1 > effectPriority } ++
+								effectsIter.notEmpty.map { effectPriority -> _.toOptimizedSeq } ++
+								effectsByPriority.view.filterKeys { _ < effectPriority }
+						}
+					}
+				}
+			}
+			// Case: These effects should not be triggered yet => Queues them
+			else
+				effectsByPriority.get(effectPriority).foreach { queuedEffectsBuilders(effectPriority) ++= _ }
+		}
+		
+		// Case: Processing was interrupted => Applies recursion
+		if (interrupted) {
+			val nextEffects = Map.from(remainingEffects)
+			handleEffects(listenerPriority, nextEffects, queuedEffectsBuilders, noListenersRemain)
+		}
+	}
+	/**
+	 * Prepares 3 after-effects for informing change listeners of a change event
+	 * @param eventView A view that yields the change event in question.
+	 *                  May be initialized lazily. Only called if there are listeners to inform.
+	 * @param getListeners A function for acquiring the listeners of a single priority level.
+	 *                     Will be called 3 times, once for each priority level.
+	 * @param detachListener A function for detaching a change listener in response to a Detach ChangeResponse.
+	 * @param log Implicit logging implementation used for recording failures
+	 *            thrown by the listeners and the after-effects
+	 * @tparam A Type of the listeners & event in question
+	 * @return An iterator that yields 0-3 after-effects: One for informing each level / priority group of listeners.
+	 *         Won't include effects for priority levels
+	 *         which don't *currently* have any listeners associated with them.
+	 */
+	def prepareFireEventEffects[A](eventView: View[ChangeEvent[A]])
+	                              (getListeners: ChangeResponsePriority => IterableOnce[ChangeListener[A]])
+	                              (detachListener: (ChangeResponsePriority, ChangeListener[A]) => Unit)
+	                              (implicit log: Logger) =
+		ChangeResponsePriority.descending.iterator.filter { getListeners(_).iterator.hasNext }.map { priority =>
+			AfterEffect(priority).chaining {
+				val listenersIter = getListeners(priority).iterator
+				if (listenersIter.hasNext)
+					fireEventFor(priority, listenersIter, eventView.value)(detachListener)
+				else
+					Empty
+			}
+		}
+	/**
+	 * Informs listeners of a single response-priority level about a change event.
+	 * This process is interrupted and continued as an after-effect, if one of the listeners issues a higher priority
+	 * after-effect.
+	 * @param priority The priority of these listeners
+	 * @param listenersIter An iterator that yields the listeners to inform about the change event. Should not be empty.
+	 * @param event A change event that occurred
+	 * @param detachListener A function for detaching a change listener in response to a Detach ChangeResponse.
+	 * @param log Implicit logging implementation used for recording failures
+	 *            thrown by the listeners and the after-effects
+	 * @tparam A Type of the listeners & event in question
+	 * @return After-effects that should be triggered after this function.
+	 *         May include a recursive call to this function, if some issued effects took priority.
+	 */
+	// TODO: Simplify case where priority == High
+	protected def fireEventFor[A](priority: ChangeResponsePriority, listenersIter: Iterator[ChangeListener[A]],
+	                              event: ChangeEvent[A])
+	                             (detachListener: (ChangeResponsePriority, ChangeListener[A]) => Unit)
+	                             (implicit log: Logger): Seq[AfterEffect] =
+	{
+		// Set to true if a higher priority after-effect interrupted the informing of the remaining listeners
+		var interrupted = false
+		// Will contain the after-effects that took priority, if applicable
+		var interruptingEffects: Seq[AfterEffect] = Empty
+		// Collects after-effects that should be triggered after this event has been delivered
+		val laterEffectsBuilder = OptimizedIndexedSeq.newBuilder[AfterEffect]
+		
+		// Informs the listeners in a loop, until completed or interrupted
+		while (!interrupted && listenersIter.hasNext) {
+			val listener = listenersIter.next()
+			// Informs the listener of this event
+			Try { listener.onChangeEvent(event) }.logWithMessage(s"Failure while processing $event")
+				.foreach { response =>
+					// Case: The listener wants to detach => Applies the detachment immediately
+					if (response.shouldDetach)
+						detachListener(priority, listener)
+					
+					// Analyzes the after-effects prepared by the listener
+					// TODO: Optimize the case where afterEffects is empty
+					val effectsByPriority = response.afterEffects.groupToSeqsBy { _.priority }
+					val higherPriorityEffectsIter = effectsByPriority.iterator.filter { _._1 > priority }
+					
+					// Case: Higher priority effects were issued
+					//       => Interrupts listener-informing in order to trigger the effects as quickly as possible
+					if (higherPriorityEffectsIter.hasNext) {
+						interrupted = true
+						interruptingEffects = higherPriorityEffectsIter.toOptimizedSeq
+							.reverseSortBy { _._1 }.flatMap { _._2 }
+					}
+					
+					// Prepares the other after-effects to be triggered later
+					laterEffectsBuilder ++= effectsByPriority.view.filterKeys { _ >= priority }.valuesIterator.flatten
+				}
+		}
+		
+		// Case: Some listeners were not yet informed of the event
+		//       => Queues the informing of those listeners as an after-effect
+		if (listenersIter.hasNext)
+			AfterEffect(priority).chaining { fireEventFor(priority, listenersIter, event)(detachListener) } +:
+				laterEffectsBuilder.result()
+		// Case: All listeners were informed => Yields the prepared after-effects
+		else
+			laterEffectsBuilder.result()
 	}
 	
 	
@@ -307,7 +550,7 @@ trait Changing[+A] extends SynchronizedView[A]
 	  *                     if appropriate (i.e. if this item doesn't contain that listener already)
 	  *                     (specified as a lazily initialized view)
 	  */
-	protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit
+	protected def _addListenerOfPriority(priority: ChangeResponsePriority, lazyListener: View[ChangeListener[A]]): Unit
 	/**
 	  * Makes sure the specified change listener won't be informed of possible future change events
 	  * @param changeListener A listener to no longer be informed
@@ -409,7 +652,7 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @param listener A listener to assign to this item,
 	  *                 if appropriate (i.e. this item will still change) (call-by-name)
 	  */
-	def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]): Unit = {
+	def addListenerOfPriority(priority: ChangeResponsePriority)(listener: => ChangeListener[A]): Unit = {
 		if (mayChange)
 			_addListenerOfPriority(priority, Lazy(listener))
 	}
@@ -418,36 +661,43 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * Registers a new listener to be informed whenever this item's value changes
 	  * @param changeListener A listener that should be informed (call by name)
 	  */
-	def addListener(changeListener: => ChangeListener[A]): Unit = addListenerOfPriority(Last)(changeListener)
+	def addListener(changeListener: => ChangeListener[A]): Unit = addListenerOfPriority(Normal)(changeListener)
 	/**
 	  * Register a new listener to be informed whenever this item's value changes.
-	  * This listener should be considered high priority, and called before the normal priority listeners are
+	  * This listener will be considered high priority, and called before the normal priority listeners are
 	  * called.
 	  * @param listener A listener to inform of future change events (call-by-name)
 	  */
-	def addHighPriorityListener(listener: => ChangeListener[A]): Unit = addListenerOfPriority(First)(listener)
+	def addHighPriorityListener(listener: => ChangeListener[A]): Unit = addListenerOfPriority(High)(listener)
+	/**
+	 * Register a new listener to be informed whenever this item's value changes.
+	 * This listener will be considered low priority,
+	 * and called after all the normal priority listeners have been called and their normal change-responses resolved.
+	 * @param listener A listener to inform of future change events (call-by-name)
+	 */
+	def addLowPriorityListener(listener: => ChangeListener[A]): Unit = addListenerOfPriority(After)(listener)
 	/**
 	  * Registers a new listener to be informed whenever this item's value changes
 	  * @param simulatedOldValue A simulated 'old' value for this changing item to inform the listener of
 	  *                          the initial state of this item. Won't inform the listener
 	  *                          if equal to this item's current value.
-	  * @param isHighPriority    Whether the specified listener should be considered to be
-	  *                          of a high priority, meaning that it should be called before the standard
-	  *                          priority listeners are.
-	  *                          Default = false.
+	  * @param priority Priority assigned for this listener.
+	 *                 Listeners and their generated effects are triggered in order of their priority.
+	 *                 Default = Normal.
 	  * @param changeListener    A listener that should be informed (call by name)
 	  */
-	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean = false)
+	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, priority: ChangeResponsePriority = Normal)
 	                                       (changeListener: => ChangeListener[B]): Unit =
 	{
 		val lazyNewListener = Lazy(changeListener)
 		// Performs the simulation
 		val simulationResult = simulateChangeEventFor(lazyNewListener.value, simulatedOldValue)
-		// Adds the listener, if appropriate (i.e. listener didn't detach itself during the simulation)
+		// Adds the listener, if appropriate (i.e. if the listener didn't detach itself during the simulation)
 		if (simulationResult.shouldContinueListening)
-			addListenerOfPriority(if (isHighPriority) First else Last)(lazyNewListener.value)
+			addListenerOfPriority(priority)(lazyNewListener.value)
+		
 		// Triggers the caused after-effects
-		simulationResult.afterEffects.foreach { e => Try { e() }.logWithMessage("Failure during a simulated effect") }
+		Changing.handleEffects(simulationResult.afterEffects)
 	}
 	
 	/**
@@ -564,24 +814,25 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * Causes the specified function to be fired as an after-effect for each change in this pointer
 	  * @param onChange A function called after each time this pointer changes
 	  */
-	def afterEachChange(onChange: => Unit) = addListener(ChangeListener.triggerAfterEffect(onChange))
+	def afterEachChange(onChange: => Unit) = addListenerOfPriority(After)(ChangeListener.onAnyChange(onChange))
 	/**
 	  * @param condition Condition that must be met for the after-effect to be scheduled.
 	  *                  Call-by-name. Not called if this item won't change anymore.
 	  * @param onChange A function called after each change in this item, provided that the specified condition is met.
 	  */
-	def afterEachChangeWhile(condition: => Flag)(onChange: => Unit) =
-		addListenerWhile(condition)(ChangeListener.triggerAfterEffect(onChange))
+	def afterEachChangeWhile(condition: Changing[Boolean])(onChange: => Unit) =
+		addListenerWhile(condition, After)(ChangeListener.onAnyChange(onChange))
 	
 	/**
 	  * Assigns a listener to this changing item, which is active only while the specified
 	  * external condition is met
 	  * @param condition A pointer that contains true while listening should occur
-	  * @param priority The priority given to this listener/reaction in the origin pointer.
-	  *                 Default = Last = standard priority.
+	  * @param priority The priority given to this listener/reaction in the origin pointer. Default = Normal.
 	  * @param listener A change listener that should be assigned
 	  */
-	def addListenerWhile(condition: Changing[Boolean], priority: End = Last)(listener: => ChangeListener[A]) = {
+	def addListenerWhile(condition: Changing[Boolean], priority: ChangeResponsePriority = Normal)
+	                    (listener: => ChangeListener[A]) =
+	{
 		// Only assigns listeners to changing items, as they are useless in other situations
 		if (mayChange) {
 			// Case: Variable condition => Utilizes a conditional change reaction
@@ -602,13 +853,12 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @param simulatedOldValue Value used as the "old value" of this pointer for change event simulation.
 	  *                          If this is equal to the current/new value of this pointer,
 	  *                          no change event is simulated.
-	  * @param priority The priority given to this listener/reaction in the origin pointer.
-	  *                 Default = Last = standard priority.
+	  * @param priority The priority given to this listener/reaction in the origin pointer. Default = Normal.
 	  * @param listener A listener to assign
 	  * @tparam B Type of the listener and the simulated value
 	  */
 	def addListenerWhileAndSimulateEvent[B >: A](condition: Changing[Boolean], simulatedOldValue: => B,
-	                                             priority: End = Last)
+	                                             priority: ChangeResponsePriority = Normal)
 	                                            (listener: => ChangeListener[B]): Unit =
 	{
 		// Case: Variable condition
@@ -628,7 +878,7 @@ trait Changing[+A] extends SynchronizedView[A]
 		}
 		// Case: Always listening => Assigns a normal, continuous, listener
 		else if (condition.value)
-			addListenerAndSimulateEvent(simulatedOldValue, isHighPriority = priority == First)(listener)
+			addListenerAndSimulateEvent(simulatedOldValue, priority)(listener)
 		
 		// In cases where the condition never allows listening, no action is required
 	}
@@ -1508,6 +1758,7 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @tparam B Type of events and listeners applied here
 	  * @return The effects to trigger afterwards
 	  */
+	@deprecated("Deprecated for removal. Please use Changing.fireRootEvent(...) or .prepareFireEventEffects(...) instead", "v2.8")
 	protected def fireEventIfNecessary[B >: A](oldValue: => B, currentValue: => B)
 	                                          (acquireListeners: End => Iterable[ChangeListener[B]])
 	                                          (detachListener: (End, ChangeListener[B]) => Unit) =
@@ -1538,6 +1789,7 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @tparam B Type of events and listeners applied here
 	  * @return The effects to trigger afterwards
 	  */
+	@deprecated("Deprecated for removal. Please use Changing.fireRootEvent(...) or .prepareFireEventEffects(...) instead", "v2.8")
 	protected def fireEvent[B >: A](lazyEvent: View[Option[ChangeEvent[B]]])
 	                               (acquireListeners: End => Iterable[ChangeListener[B]])
 	                               (detachListener: (End, ChangeListener[B]) => Unit) =
@@ -1557,6 +1809,7 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @tparam B Type of change events and listeners applied
 	  * @return After-effects that should be triggered once change-handling completes.
 	  */
+	@deprecated("Deprecated for removal. Please use Changing.fireRootEvent(...) or .prepareFireEventEffects(...) instead", "v2.8")
 	protected def fireEventFor[B >: A](listeners: Iterable[ChangeListener[B]], event: => Option[ChangeEvent[B]])
 	                                  (detachListener: ChangeListener[B] => Unit) =
 	{

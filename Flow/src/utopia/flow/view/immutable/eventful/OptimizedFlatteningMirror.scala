@@ -1,13 +1,14 @@
 package utopia.flow.view.immutable.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 import utopia.flow.operator.Identity
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.Pointer
@@ -15,7 +16,6 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
 
 import scala.annotation.unchecked.uncheckedVariance
-import scala.util.Try
 
 object OptimizedFlatteningMirror
 {
@@ -183,14 +183,14 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 			}
 			
 			// Updates the simulated value immediately and fires the change events afterwards
-			assign(newMidPointer.value)
+			Continue ++ assign(newMidPointer.value)
 		}
 		
 		
 		// INITIAL CODE -----------------------
 		
 		// Starts tracking changes in the pointer-pointer
-		pointerPointer.addListenerAndSimulateEvent(initialMidPointer, isHighPriority = true)(moveValueUpdatorListener)
+		pointerPointer.addListenerAndSimulateEvent(initialMidPointer, High)(moveValueUpdatorListener)
 		
 		
 		// IMPLEMENTED  -----------------------
@@ -219,11 +219,10 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 		  */
 		private def assign(newValue: R) = {
 			val oldValue = valueP.getAndSet(newValue)
-			val afterEffects = fireEventIfNecessary(oldValue, newValue)
-			if (afterEffects.isEmpty)
-				Continue
+			if (oldValue == newValue)
+				Empty
 			else
-				Continue.and { afterEffects.foreach { effect => Try { effect() }.log } }
+				fireEventEffects(ChangeEvent(oldValue, newValue))
 		}
 		
 		
@@ -254,7 +253,7 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 			
 			override def onChangeEvent(event: ChangeEvent[R]): ChangeResponse = {
 				if (currentMidPointer == trackedPointer)
-					assign(event.newValue)
+					Continue ++ assign(event.newValue)
 				else
 					Detach
 			}

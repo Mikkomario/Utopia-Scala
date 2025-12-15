@@ -8,14 +8,12 @@ import utopia.flow.view.template.eventful.{ChangingWrapper, Flag}
   * @author Mikko Hilpinen
   * @since 18.9.2022, v1.17
   */
-class FlagView(flag: Flag) extends Flag with ChangingWrapper[Boolean]
+class FlagView(protected val wrapped: Flag) extends Flag with ChangingWrapper[Boolean]
 {
 	// IMPLEMENTED  -------------------
 	
-	override implicit def listenerLogger: Logger = flag.listenerLogger
-	override protected def wrapped = flag
+	override implicit def listenerLogger: Logger = wrapped.listenerLogger
 	
 	override def readOnly = this
-	
 	override def toString = wrapped.toString
 }

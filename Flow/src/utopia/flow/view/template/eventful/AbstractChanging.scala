@@ -1,17 +1,14 @@
 package utopia.flow.view.template.eventful
 
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.operator.enumeration.End
-import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.event.model.ChangeResponsePriority.{High, Normal}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponsePriority}
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysTrue
-
-import scala.util.Try
+import utopia.flow.view.mutable.async.Volatile
 
 /**
   * An abstract implementation of the [[Changing]] trait. Handles [[ChangeListener]] handling.
@@ -23,8 +20,8 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 {
 	// ATTRIBUTES   -----------------
 	
-	// First value contains high priority listeners, second contains standard priority listeners
-	private var _listeners = Pair.twice[Seq[ChangeListener[A]]](Empty)
+	private val listenerPointers = ChangeResponsePriority.descending.iterator
+		.map { _ -> Volatile.emptySeq[ChangeListener[A]] }.toMap
 	
 	
 	// COMPUTED --------------------
@@ -33,29 +30,36 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 	  * Replaces the high-priority listeners assigned to this changing item
 	  * @param newListeners New set of high-priority listeners
 	  */
+	@deprecated("Deprecated for removal", "v2.8")
 	protected def highPriorityListeners_=(newListeners: Seq[ChangeListener[A]]) =
-		_listeners = _listeners.withFirst(newListeners)
+		listenerPointers(High).value = newListeners
 	/**
 	  * Replaces the standard-priority listeners assigned to this changing item
 	  * @param newListeners New set of standard-priority listeners
 	  */
+	@deprecated("Deprecated for removal", "v2.8")
 	protected def standardListeners_=(newListeners: Seq[ChangeListener[A]]) =
-		_listeners = _listeners.withSecond(newListeners)
+		listenerPointers(Normal).value = newListeners
 	
 	
 	// IMPLEMENTED	----------------
 	
-	override protected def listenersByPriority: Pair[Iterable[ChangeListener[A]]] = _listeners
+	override protected def listenersOfPriority(priority: ChangeResponsePriority): IterableOnce[ChangeListener[A]] =
+		listenerPointers(priority).value
 	
-	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = {
-		// Only adds more listeners if the listener is unique
-		val newListener = lazyListener.value
-		_listeners = _listeners.mapSide(priority) { q => if (q.contains(newListener)) q else q :+ newListener }
-	}
+	override protected def removeListener(priority: ChangeResponsePriority, listenerToRemove: ChangeListener[A]): Unit =
+		listenerPointers(priority).update { _.filterNot { _ == listenerToRemove } }
+	override def removeListener(changeListener: Any): Unit =
+		ChangeResponsePriority.ascendingIterator.find { prio =>
+			listenerPointers(prio).mutate { _.findAndPop { _ == changeListener } }.isDefined
+		}
 	
-	override def removeListener(listener: Any) = _listeners = _listeners.map { _.filterNot { _ == listener } }
-	override protected def removeListener(priority: End, listenerToRemove: ChangeListener[A]): Unit =
-		_listeners = _listeners.mapSide(priority) { _.filterNot { _ == listenerToRemove } }
+	override protected def _addListenerOfPriority(priority: ChangeResponsePriority, lazyListener: View[ChangeListener[A]]): Unit =
+		listenerPointers(priority).update { listeners =>
+			// Only adds more listeners if the listener is unique
+			val listener = lazyListener.value
+			if (listeners.contains(listener)) listeners else listeners :+ listener
+		}
 	
 	override def lockWhile[B](operation: => B): B = this.synchronized(operation)
 	
@@ -65,7 +69,8 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 	/**
 	  * Removes all change listeners from this item
 	  */
-	def clearListeners() = _listeners = Pair.twice(Empty)
+	// TODO: Should this really be public?
+	def clearListeners() = listenerPointers.valuesIterator.foreach { _.clear() }
 	
 	/**
 	  * Starts mirroring another pointer
@@ -83,7 +88,7 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 	                               (set: A => Unit) =
 	{
 		// Registers as a dependency for the origin pointer
-		origin.addListenerWhile(condition, priority = First) { e1: ChangeEvent[O] =>
+		origin.addListenerWhile(condition, priority = High) { e1: ChangeEvent[O] =>
 			// Whenever the origin's value changes, calculates a new value
 			val oldValue = value
 			val newValue = map(oldValue, e1)
@@ -91,22 +96,11 @@ abstract class AbstractChanging[A](implicit override val listenerLogger: Logger)
 			// If the new value is different from the previous state, updates the value and generates a new change event
 			if (newValue != oldValue) {
 				set(newValue)
-				// The dependencies are informed immediately, other listeners and after-effects only afterwards
-				// TODO: Consider informing these listeners only after the event
-				val event2 = ChangeEvent(oldValue, newValue)
-				val firstEffects = _fireEvent(Some(event2), First)
-				Continue.and {
-					val moreEffects = _fireEvent(Some(event2), Last)
-					(firstEffects.iterator ++ moreEffects)
-						.foreach { e => Try { e() }.logWithMessage("Failure during a change effect") }
-				}
+				Continue ++ fireEventEffects(ChangeEvent(oldValue, newValue))
 			}
 			// Case: Projected value didn't change => No change event takes place
 			else
 				Continue
 		}
 	}
-	
-	private def _fireEvent(event: => Option[ChangeEvent[A]], targetedPriority: End) =
-		fireEventFor(_listeners(targetedPriority), event) { removeListener(targetedPriority, _) }
 }

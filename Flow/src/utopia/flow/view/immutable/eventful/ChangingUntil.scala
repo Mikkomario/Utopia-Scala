@@ -1,8 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.process.Breakable
-import utopia.flow.event.model.Destiny
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.event.model.Destiny.Sealed
+import utopia.flow.event.model.{AfterEffect, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
@@ -45,12 +46,25 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	
 	private var stopped = false
 	
-	private val bridge: OptimizedBridge[O, R] = OptimizedBridge.map(origin, hasListenersFlag)(f) { eventView =>
-		val effects = fireEvent(eventView)
-		// May stop viewing
-		if (eventView.value.exists { e => stopCondition(e.newValue) })
-			stop()
-		effects
+	private val bridge: OptimizedBridge[O, R] = OptimizedBridge.map(origin, hasListenersFlag)(f) {
+		// Case A change event was generated => Fires the change event as after-effects;
+		//                                      May also stop tracking the origin
+		case Right(event) =>
+			// Prepares the effects
+			val eventEffects = fireEventEffects(event)
+			// Case: Should stop mirroring
+			//       => Detaches immediately & declares the stop once the last events have been processed
+			if (stopCondition(event.newValue) && _stop())
+				eventEffects ++ Single(AfterEffect { declareChangingStopped() })
+			// Case: Should continue => Forwards the event-firing
+			else
+				eventEffects
+		
+		// Case: Just a cache-clear => Stops changing, if appropriate
+		case Left(lazyValues) =>
+			if (stopCondition(lazyValues.second.value))
+				stop()
+			Empty
 	}
 	
 	
@@ -74,11 +88,8 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	}
 	
 	override def stop(): Future[Any] = {
-		if (!stopped) {
-			stopped = true
+		if (_stop())
 			declareChangingStopped()
-			bridge.detach()
-		}
 		Future.successful(())
 	}
 	
@@ -91,4 +102,21 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 			origin.lockWhile { operation(value) }
 	}
 	override def lockWhile[B](operation: => B): B = if (stopped) operation else origin.lockWhile(operation)
+	
+	
+	// OTHER    --------------------
+	
+	/**
+	 * Stops tracking the origin
+	 * @return Whether a changing-stopped event should also be declared
+	 */
+	private def _stop() = {
+		if (!stopped) {
+			stopped = true
+			bridge.detach()
+			true
+		}
+		else
+			false
+	}
 }

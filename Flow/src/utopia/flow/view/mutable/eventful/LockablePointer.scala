@@ -1,12 +1,11 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.model.{AfterEffect, ChangeEvent}
 import utopia.flow.util.Mutate
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.{LoggingPointerFactory, MaybeAssignable}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
-
-import scala.util.Try
 
 object LockablePointer extends LoggingPointerFactory[LockablePointer]
 {
@@ -50,7 +49,16 @@ object LockablePointer extends LoggingPointerFactory[LockablePointer]
 		override protected def assignToUnlocked(newValue: A): Unit = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
+			if (oldValue != newValue)
+				fireEvent(ChangeEvent(oldValue, newValue))
+		}
+		override protected def setUnlockedAndQueueEvent(newValue: A): IterableOnce[AfterEffect] = {
+			val oldValue = _value
+			_value = newValue
+			if (oldValue == newValue)
+				Empty
+			else
+				fireEventEffects(ChangeEvent(oldValue, newValue))
 		}
 	}
 }
@@ -71,18 +79,22 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeA
 	 * @param newValue New value to assign to this pointer
 	 */
 	protected def assignToUnlocked(newValue: A): Unit
+	/**
+	 * Assigns a new value to this pointer. Prepares, but doesn't fire the change events.
+	 * This method is only called for non-locked pointers.
+	 * @param newValue New value to assign to this pointer
+	 * @return The firing of the change-event, if appropriate, as after-effects
+	 */
+	protected def setUnlockedAndQueueEvent(newValue: A): IterableOnce[AfterEffect]
 	
 	
 	// IMPLEMENTED  -------------------------
 	
 	@throws[IllegalStateException]("If this pointer has been locked")
-	override def value_=(newValue: A): Unit = {
-		if (locked)
-			throw new IllegalStateException("This pointer has been locked")
-		else
-			assignToUnlocked(newValue)
-	}
+	override def value_=(newValue: A): Unit = failIfLocked { assignToUnlocked(newValue) }
 	override def set(value: A): Unit = this.value = value
+	override def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect] =
+		failIfLocked { setUnlockedAndQueueEvent(newValue) }
 	
 	/**
 	  * Attempts to modify the value of this pointer.
@@ -90,14 +102,7 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeA
 	  * @param value A value that should be set to this pointer, if possible
 	  * @return Whether the value of this pointer was modified
 	  */
-	override def trySet(value: => A) = {
-		if (locked)
-			false
-		else {
-			assignToUnlocked(value)
-			true
-		}
-	}
+	override def trySet(value: => A) = ifUnlocked { assignToUnlocked(value) }
 	
 	
 	// OTHER    ----------------------------
@@ -108,12 +113,5 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeA
 	  * @param f A function that modifies the held value of this pointer
 	  * @return Whether this pointer was still unlocked and 'f' was called.
 	  */
-	def tryUpdate(f: Mutate[A]) = {
-		if (locked)
-			false
-		else {
-			update(f)
-			true
-		}
-	}
+	def tryUpdate(f: Mutate[A]) = ifUnlocked { update(f) }
 }

@@ -1,8 +1,7 @@
 package utopia.flow.view.template.eventful
 
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
-import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.operator.enumeration.End
+import utopia.flow.event.model.{ChangeEvent, ChangeResponsePriority, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 
@@ -55,14 +54,14 @@ trait ChangingWrapper[+A] extends Changing[A]
 	override def lockWhile[B](operation: => B): B = wrapped.lockWhile(operation)
 	override def viewLocked[B](operation: A => B): B = wrapped.viewLocked(operation)
 	
-	override def addListenerOfPriority(priority: End)(listener: => ChangeListener[A]) =
-		wrapped.addListenerOfPriority(priority)(listener)
-	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
+	override protected def _addListenerOfPriority(priority: ChangeResponsePriority,
+	                                              lazyListener: View[ChangeListener[A]]): Unit =
 		wrapped.addListenerOfPriority(priority)(lazyListener.value)
-	
-	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, isHighPriority: Boolean)
-	                                                (changeListener: => ChangeListener[B]) =
-		wrapped.addListenerAndSimulateEvent(simulatedOldValue, isHighPriority)(changeListener)
+	override def addListenerOfPriority(priority: ChangeResponsePriority)(listener: => ChangeListener[A]): Unit =
+		wrapped.addListenerOfPriority(priority)(listener)
+	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, priority: ChangeResponsePriority)
+	                                                (changeListener: => ChangeListener[B]): Unit =
+		wrapped.addListenerAndSimulateEvent(simulatedOldValue, priority)(changeListener)
 	
 	override def removeListener(changeListener: Any) = wrapped.removeListener(changeListener)
 	

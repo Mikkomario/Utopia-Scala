@@ -1,6 +1,7 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.event.model.{ChangeEvent, ChangeResult, Destiny}
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, ChangeResult, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
@@ -79,21 +80,35 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 	private val bridge: OptimizedBridge[O, ChangeResult[R]] = OptimizedBridge
 		.map(origin, hasListenersFlag, cachingDisabled) { value =>
 			if (origin.isFixed) f(ChangeResult.finalValue(value)) else f(value)
-		} { eventView =>
-			val effects = fireEvent(eventView)
-			// If the mapping caused the value to get fixed, ends mapping & declares changing as stopped
-			if (mayStopMapping && eventView.value.exists { _.newValue.isFinal })
-				stopChanging()
-			effects
+		} {
+			// Case: A change event => Forwards it and checks whether changing should stop
+			case Right(event) =>
+				val effects = fireEventEffects(event)
+				if (mayStopMapping && event.newValue.isFinal) {
+					detach()
+					effects ++ Single(AfterEffect { declareChangingStopped() })
+				}
+				else
+					effects
+					
+			// Case: Cache update => Checks whether changing should stop
+			case Left(values) =>
+				if (mayStopMapping && values.second.value.isFinal) {
+					detach()
+					declareChangingStopped()
+				}
+				Empty
 		}
 	
+	// Stops changing once the source stops changing
 	origin.onceChangingStops {
 		// May update the final value
 		val rawValue = bridge.value
+		detach()
+		// May generate one final change event
 		if (rawValue.isTemporal)
-			fireEvent(Lazy { Some(ChangeEvent(rawValue, rawValue.asFinal)) }).foreach { _() }
-		// Stops changing once the source stops changing
-		stopChanging()
+			fireEvent(Lazy { ChangeEvent(rawValue, rawValue.asFinal) })
+		declareChangingStopped()
 	}
 	
 	
@@ -122,8 +137,5 @@ class StatefulValueView[-O, R](origin: Changing[O], f: ChangeResult[O] => Change
 	
 	// OTHER    ------------------------
 	
-	private def stopChanging(): Unit = {
-		bridge.detach()
-		declareChangingStopped()
-	}
+	private def detach(): Unit = bridge.detach()
 }

@@ -1369,7 +1369,7 @@ object CollectionExtensions
 		 * This function works like foldLeft, except that it stores each step (including the start) into a seq
 		 * @param start     The starting step
 		 * @param map       A function for calculating the next step, takes the previous result + the next item in this seq
-		 * @param buildFrom A buildfrom for final collection (implicit)
+		 * @param buildFrom A build-from for final collection (implicit)
 		 * @tparam B    The type of steps
 		 * @tparam That The type of final collection
 		 * @return All the steps mapped into a collection

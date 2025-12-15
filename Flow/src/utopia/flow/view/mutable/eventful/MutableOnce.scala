@@ -1,14 +1,14 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.event.model.{AfterEffect, ChangeEvent}
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.{MaybeAssignable, Switch}
 import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 import scala.concurrent.Future
-import scala.util.Try
 
 object MutableOnce
 {
@@ -67,16 +67,13 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger)
 	override def locked: Boolean = isSet
 	
 	override def value = _value
-	override def value_=(newValue: A) = {
-		if (isSet)
-			throw new IllegalStateException("This pointer has already been set")
-		else {
-			val oldValue = _value
-			_value = newValue
-			setFlag.set()
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
-			declareChangingStopped()
-		}
+	override def value_=(newValue: A) = failIfSet {
+		val oldValue = _value
+		_value = newValue
+		setFlag.set()
+		if (oldValue != newValue)
+			fireEvent(ChangeEvent(oldValue, newValue))
+		declareChangingStopped()
 	}
 	
 	override def toString = if (isSet) s"Mutated.to($value)" else s"Mutable.once.from($value)"
@@ -88,20 +85,24 @@ class MutableOnce[A](initialValue: A)(implicit log: Logger)
 	  */
 	@throws[IllegalStateException]("This pointer has already been set once")
 	override def set(newValue: A) = value = newValue
+	override def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect] = failIfSet {
+		val oldValue = _value
+		_value = newValue
+		setFlag.set()
+		if (oldValue == newValue) {
+			declareChangingStopped()
+			Empty
+		}
+		else
+			fireEventEffects(ChangeEvent(oldValue, newValue)) ++ Single(AfterEffect { declareChangingStopped() })
+	}
 	/**
 	  * Attempts to assign a new value to this item.
 	  * Will not assign the value if this pointer has already been set before.
 	  * @param newValue A new value to assign
 	  * @return Whether that value was assigned
 	  */
-	override def trySet(newValue: => A) = {
-		if (isNotSet) {
-			value = newValue
-			true
-		}
-		else
-			false
-	}
+	override def trySet(newValue: => A) = ifNotSet { value = newValue }
 	
 	override def lock(): Unit = {
 		if (setFlag.set())

@@ -7,6 +7,7 @@ import utopia.flow.async.process.WaitTarget.{Until, UntilNotified}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse, ChangeResult}
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.TimeExtensions._
@@ -383,10 +384,12 @@ trait TimedTask
 		
 		// If the latest wait target pointer gets fixed to None, cancels / stops this process
 		waitPointerPointer.flatMap { _.withState }
-			.addListenerAndSimulateEvent(ChangeResult.temporal(None)) { event =>
+			.addListenerAndSimulateEvent(ChangeResult.temporal(None), After) { event =>
 				// Case: Fixed to None => Stops
-				if (event.newValue.containsFinal(None))
-					Detach.and { process.stop() }
+				if (event.newValue.containsFinal(None)) {
+					process.stop()
+					Detach
+				}
 				// Case: Other state => Continues tracking
 				else
 					Continue

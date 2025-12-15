@@ -6,6 +6,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.SettableFlag
@@ -255,7 +256,7 @@ class Swapper[A](override val hierarchy: ComponentHierarchy, override val valueP
 	// INITIAL CODE	-------------------------------
 	
 	// Revalidates this container whenever content is swapped
-	contentPointer.addListenerWhile(hierarchy.linkedFlag)(ChangeListener.triggerAfterEffect { revalidate() })
+	contentPointer.addListenerWhile(hierarchy.linkedFlag, After)(ChangeListener.onAnyChange { revalidate() })
 	
 	
 	// COMPUTED	-----------------------------------

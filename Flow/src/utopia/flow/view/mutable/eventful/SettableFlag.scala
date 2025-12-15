@@ -2,14 +2,12 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{Fixed, FlagView}
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, Flag}
 
 import scala.concurrent.Future
-import scala.util.Try
 
 object SettableFlag
 {
@@ -94,7 +92,7 @@ object SettableFlag
 		override def set() = {
 			if (isNotSet) {
 				_value = true
-				fireEvent(ChangeEvent(false, true)).foreach { effect => Try { effect() }.log }
+				fireEvent(ChangeEvent(false, true))
 				// Forgets all the listeners at this point, because no more change events will be fired
 				declareChangingStopped()
 				true

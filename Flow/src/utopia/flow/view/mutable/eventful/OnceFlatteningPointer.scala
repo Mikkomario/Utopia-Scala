@@ -2,13 +2,14 @@ package utopia.flow.view.mutable.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.Destiny.MaySeal
-import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.operator.enumeration.End
+import utopia.flow.event.model.{ChangeEvent, ChangeResponsePriority, Destiny}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
+import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -64,7 +65,9 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	// ATTRIBUTES   ------------------------
 	
 	// The listeners are stored until the pointer is appropriated
-	private var queuedListeners = Pair.twice[Seq[ChangeListener[A]]](Empty)
+	private val queuedListenersP = ResettableLazy {
+		ChangeResponsePriority.descending.iterator.map { _ -> Pointer.emptySeq[ChangeListener[A]] }.toMap
+	}
 	private var queuedStopListeners: Seq[ChangingStoppedListener] = Empty
 	
 	private var pointer: Option[Changing[A]] = None
@@ -87,11 +90,15 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	
 	override def hasListeners: Boolean = pointer match {
 		case Some(p) => p.hasListeners
-		case None => queuedListeners.exists { _.nonEmpty }
+		case None => queuedListenersP.current.exists { _.valuesIterator.exists { _.nonEmpty } }
 	}
 	override def numberOfListeners: Int = pointer match {
 		case Some(p) => p.numberOfListeners
-		case None => queuedListeners.map { _.size }.sum
+		case None =>
+			queuedListenersP.current match {
+				case Some(listeners) => listeners.valuesIterator.map { _.value.size }.sum
+				case None => 0
+			}
 	}
 	
 	override def toString = pointer match {
@@ -99,20 +106,22 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 		case None => s"Flattening.once.from($placeholderValue)"
 	}
 	
-	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit =
+	override protected def _addListenerOfPriority(priority: ChangeResponsePriority,
+	                                              lazyListener: View[ChangeListener[A]]): Unit =
 		pointer match {
 			// Case: Pointer already defined => Assigns listeners directly to it
 			case Some(p) => p.addListenerOfPriority(priority)(lazyListener.value)
 			// Case: No pointer yet available => Queues the listeners
 			case None =>
-				queuedListeners = queuedListeners.mapSide(priority) { q =>
-					if (q.contains(lazyListener.value)) q else q :+ lazyListener.value
+				val listener = lazyListener.value
+				queuedListenersP.value(priority).update { listeners =>
+					if (listeners.contains(listener)) listeners else listeners :+ listener
 				}
 		}
 	
 	override def removeListener(changeListener: Any): Unit = pointer match {
 		case Some(p) => p.removeListener(changeListener)
-		case None => queuedListeners = queuedListeners.map { _.filterNot { _ == changeListener } }
+		case None => queuedListenersP.current.foreach { _.valuesIterator.foreach { _ -= changeListener } }
 	}
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = pointer match {
@@ -145,15 +154,15 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 			this.pointer = Some(pointer)
 			// Moves the queued listeners over
 			val newValue = pointer.value
-			if (queuedListeners.exists { _.nonEmpty }) {
+			queuedListenersP.popCurrent().foreach { listeners =>
 				// Case: "Simulated" value changes => Fires a simulated change event for all the listeners
 				if (newValue != placeholderValue) {
 					val event = ChangeEvent(placeholderValue, newValue)
-					val afterEffects = End.values.flatMap { prio =>
+					val afterEffects = ChangeResponsePriority.descending.flatMap { prio =>
 						// Listener response to this event dictates
 						// whether it shall be transferred over or simply discarded
 						// The after-effects are bundled for later
-						val (listenersToTransfer, afterEffects) = queuedListeners(prio).splitFlatMap { listener =>
+						val (listenersToTransfer, afterEffects) = listeners(prio).popAll().splitFlatMap { listener =>
 							// Catches possible failures thrown by listeners
 							Try { listener.onChangeEvent(event) } match {
 								case Success(response) =>
@@ -172,16 +181,13 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 						afterEffects
 					}
 					// Triggers the after-effects once all listeners have been called and transferred over
-					afterEffects.foreach { _() }
+					Changing.handleEffects(afterEffects)
 				}
 				// Case: No simulated value change required, simply transfers the listeners
 				else
-					queuedListeners.foreachSide { (listeners, prio) =>
+					listeners.foreach { case (prio, listeners) =>
 						listeners.foreach { pointer.addListenerOfPriority(prio)(_) }
 					}
-				
-				// Discards the listeners from this instance afterwards
-				queuedListeners = Pair.twice(Empty)
 			}
 			
 			// Moves the stop listeners over as well

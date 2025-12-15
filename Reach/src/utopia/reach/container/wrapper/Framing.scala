@@ -11,14 +11,15 @@ import utopia.firmament.model.enumeration.SizeCategory.Medium
 import utopia.firmament.model.stack.{StackInsets, StackInsetsConvertible}
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.Color
 import utopia.reach.component.factory.ComponentFactories.CF
-import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.FromGenericContextFactory
+import utopia.reach.component.factory.GenericContainerFactories.GCF
 import utopia.reach.component.factory.contextual.ContextualFramedFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
@@ -165,7 +166,7 @@ class Framing(override val hierarchy: ComponentHierarchy, override val content: 
 	// INITIAL CODE -----------------------------
 	
 	// Revalidates this component when applied insets change
-	insetsPointer.addListenerWhile(linkedFlag)(ChangeListener.triggerAfterEffect { revalidate() })
+	insetsPointer.addListenerWhile(linkedFlag, After)(ChangeListener.onAnyChange { revalidate() })
 	
 	
 	// IMPLEMENTED  -----------------------------

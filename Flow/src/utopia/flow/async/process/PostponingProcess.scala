@@ -11,6 +11,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -164,7 +165,7 @@ abstract class PostponingProcess(waitTargetPointer: Changing[WaitTarget], waitLo
 					runAsync()
 				
 				// If reaches a final state (not being restartable), stops listening to wait time changes
-				ChangeResponse.continueIf(isRestartable || st.hasNotStarted)
+				Continue.onlyIf(View.fixed(isRestartable || st.hasNotStarted))
 			}
 		}
 	}

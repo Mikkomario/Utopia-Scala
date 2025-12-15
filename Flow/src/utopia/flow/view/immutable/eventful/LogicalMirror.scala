@@ -1,16 +1,13 @@
 package utopia.flow.view.immutable.eventful
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
 import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.event.model.Destiny.Sealed
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
-
-import scala.util.Try
 
 object LogicalMirror
 {
@@ -181,24 +178,30 @@ sealed class LogicalMirror(sources: Pair[Changing[Boolean]], stopValue: Boolean,
 		/**
 		  * Reacts to the secondary pointer, recalculating the output value
 		  */
-		private lazy val listener2 = ChangeListener[Boolean] { e => value = e.newValue }
+		private lazy val listener2 = ChangeListener[Boolean] { e =>
+			val effects = value = e.newValue
+			Continue ++ effects
+		}
 		/**
 		  * Reacts to the primary pointer, starting or stopping listening on the secondary pointer
 		  */
 		private val listener1 = ChangeListener[Boolean] { e =>
 			val source2 = sources.second
-			// Case: This pointer acquired a value that renders the other pointer insignificant
-			//       => Stops listening to the other pointer and sets the result value immediately
-			if (e.newValue == stopValue) {
-				source2.removeListener(listener2)
-				value = stopValue
+			val effects = {
+				// Case: This pointer acquired a value that renders the other pointer insignificant
+				//       => Stops listening to the other pointer and sets the result value immediately
+				if (e.newValue == stopValue) {
+					source2.removeListener(listener2)
+					value = stopValue
+				}
+				// Case: This pointer acquired a value that makes the other pointer significant (again)
+				//       => Attaches the secondary pointer's listener in order to update the state
+				else {
+					source2.addListener(listener2)
+					value = source2.value
+				}
 			}
-			// Case: This pointer acquired a value that makes the other pointer significant (again)
-			//       => Attaches the secondary pointer's listener in order to update the state
-			else {
-				source2.addListener(listener2)
-				value = source2.value
-			}
+			Continue ++ effects
 		}
 		
 		
@@ -212,10 +215,12 @@ sealed class LogicalMirror(sources: Pair[Changing[Boolean]], stopValue: Boolean,
 		
 		def value = _value
 		private def value_=(newValue: Boolean) = {
-			// Fires change events, if necessary
-			if (newValue != _value) {
+			// Prepares change events, if necessary
+			if (newValue == _value)
+				Empty
+			else {
 				_value = newValue
-				fireEvent(ChangeEvent(!newValue, newValue)).foreach { effect => Try { effect() }.log }
+				fireEventEffects(ChangeEvent(!newValue, newValue))
 			}
 		}
 		

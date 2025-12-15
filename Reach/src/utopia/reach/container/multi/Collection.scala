@@ -12,6 +12,7 @@ import utopia.firmament.model.stack.{StackLength, StackSize}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
@@ -21,7 +22,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.factory.contextual.GenericContextualFactory
-import utopia.reach.component.factory.{ComponentFactories, GenericContainerFactories, FromGenericContextFactory}
+import utopia.reach.component.factory.{ComponentFactories, FromGenericContextFactory, GenericContainerFactories}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.template.{ConcreteCustomDrawReachComponent, PartOfComponentHierarchy, ReachComponent}
 import utopia.reach.component.wrapper.ContainerCreation.MultiContainerCreation
@@ -610,10 +611,10 @@ trait Collection extends ReachComponent with MultiContainer[ReachComponent] with
 	protected def setupMarginListeners() = {
 		val pointers = Pair(innerMarginPointer, outerMarginPointer)
 		if (pointers.exists { _.mayChange }) {
-			lazy val revalidateListener = ChangeListener.triggerAfterEffect { revalidate() }
+			val revalidateListener = ChangeListener.onAnyChange { revalidate() }
 			linkedFlag.addListener { e =>
 				if (e.newValue)
-					pointers.foreach { _.addListener(revalidateListener) }
+					pointers.foreach { _.addLowPriorityListener(revalidateListener) }
 				else
 					pointers.foreach { _.removeListener(revalidateListener) }
 			}
@@ -697,7 +698,7 @@ private class _Collection(override val hierarchy: ComponentHierarchy,
 	// INITIAL CODE ----------------------------
 	
 	setupMarginListeners()
-	splitThresholdPointer.addListenerWhile(linkedFlag)(ChangeListener.triggerAfterEffect { revalidate() })
+	splitThresholdPointer.addListenerWhile(linkedFlag, After)(ChangeListener.onAnyChange { revalidate() })
 	
 	
 	// IMPLEMENTED  ----------------------------

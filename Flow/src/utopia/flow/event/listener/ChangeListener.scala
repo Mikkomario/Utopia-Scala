@@ -2,6 +2,7 @@ package utopia.flow.event.listener
 
 import utopia.flow.event.listener.ChangeListener.MappedInputChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
 
 import scala.language.implicitConversions
@@ -73,12 +74,14 @@ object ChangeListener
 	  * @param f A function called after each change (as an after-effect)
 	  * @return A listener that always requests the specified after-effect
 	  */
-	def triggerAfterEffect(f: => Unit): ChangeListener[Any] = alwaysRespondWith(Continue.and(f))
+	@deprecated("Please rather use a regular change listener with low priority", "v2.8")
+	def triggerAfterEffect(f: => Unit): ChangeListener[Any] = alwaysRespondWith(Continue.and(After)(f))
 	/**
 	  * @param f A function called (as an after-effect) after the first change
 	  * @return A listener that requests the specified function to be called as an after effect and then detaches itself.
 	  */
-	def triggerAfterEffectOnce(f: => Unit) = alwaysRespondWith(Detach.and(f))
+	@deprecated("Please rather use a regular change listener with low priority", "v2.8")
+	def triggerAfterEffectOnce(f: => Unit) = alwaysRespondWith(Detach.and(After)(f))
 	
 	
 	// NESTED	-----------------------------------

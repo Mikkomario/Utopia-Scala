@@ -2,9 +2,8 @@ package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.immutable.Single
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener}
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.Sealed
-import utopia.flow.operator.enumeration.End
+import utopia.flow.event.model.{ChangeResponsePriority, Destiny}
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
@@ -62,7 +61,8 @@ abstract class Fixed[+A] extends Changing[A] with EqualsBy
 	
 	override def toString = s"Always($value)"
 	
-	override protected def _addListenerOfPriority(priority: End, lazyListener: View[ChangeListener[A]]): Unit = ()
+	override protected def _addListenerOfPriority(priority: ChangeResponsePriority,
+	                                              lazyListener: View[ChangeListener[A]]): Unit = ()
 	override def removeListener(changeListener: Any) = ()
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()

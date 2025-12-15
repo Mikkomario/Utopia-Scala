@@ -2,13 +2,11 @@ package utopia.flow.view.mutable.async
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
+import utopia.flow.event.model.AfterEffect
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.TryExtensions._
 import utopia.flow.view.mutable.LoggingPointerFactory
 import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.{Changing, ChangingWrapper}
-
-import scala.util.Try
 
 object LockableVolatile extends LoggingPointerFactory[LockableVolatile]
 {
@@ -69,7 +67,12 @@ abstract class LockableVolatile[A](implicit listenerLogger: Logger)
 		changingStoppedListenersP.update { _ :+ listener }
 	
 	override protected def assignToUnlocked(newValue: A): Unit =
-		super.assign(value, newValue).foreach { effect => Try { effect() }.log }
+		viewLocked { super.assign(_, newValue) }.foreach { _() }
+	
+	override def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect] =
+		failIfLocked { super.setAndQueueEvent(newValue) }
+	override protected def setUnlockedAndQueueEvent(newValue: A): IterableOnce[AfterEffect] =
+		super.setAndQueueEvent(newValue)
 	
 	override protected def assign(oldValue: A, newValue: A): Seq[() => Unit] = {
 		// Case: Locked => Won't allow further mutations

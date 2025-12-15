@@ -15,8 +15,8 @@ import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, Wa
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
-import utopia.flow.event.model.ChangeResponse
-import utopia.flow.time.Now
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
@@ -42,7 +42,6 @@ import utopia.reach.context.{ReachWindowContext, ReachWindowContextWrapper, Stat
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 import scala.language.implicitConversions
 
 /**
@@ -273,7 +272,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 				val repositionListener = ChangeListener.onAnyChange {
 					window.position = positionWindow(window.size)
 					// Stops reacting to events once the window has closed
-					ChangeResponse.continueUnless(window.hasClosed)
+					Continue.unless(window.closedFlag)
 				}
 				component.boundsPointer.addListenerWhile(windowAndComponentVisibleFlag)(repositionListener)
 				component.hierarchy.parentsIterator

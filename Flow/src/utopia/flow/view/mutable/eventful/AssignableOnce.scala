@@ -1,10 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.operator.Identity
-import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.MaybeAssignable
@@ -12,7 +12,6 @@ import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, MayStopChanging}
 
 import scala.concurrent.Future
-import scala.util.Try
 
 object AssignableOnce
 {
@@ -68,7 +67,11 @@ object AssignableOnce
 		
 		override protected def _set(value: A): Unit = {
 			_value = Some(value)
-			fireEventIfNecessary(None, _value).foreach { effect => Try { effect() }.log }
+			fireEvent(ChangeEvent(None, Some(value)))
+		}
+		override protected def _setAndQueueEvent(value: A): IterableOnce[AfterEffect] = {
+			_value = Some(value)
+			fireEventEffects(ChangeEvent(None, Some(value)))
 		}
 	}
 	
@@ -94,6 +97,8 @@ object AssignableOnce
 		override def toString = s"Assigned.always($v)"
 		
 		override protected def _set(value: A): Unit = ()
+		override protected def _setAndQueueEvent(value: A): IterableOnce[AfterEffect] = Empty
+		
 		override protected def declareChangingStopped(): Unit = ()
 		
 		override def onceSet[U](f: A => U): Unit = f(v)
@@ -122,6 +127,13 @@ trait AssignableOnce[A]
 	  * @param value New value to assign to this pointer
 	  */
 	protected def _set(value: A): Unit
+	/**
+	 * Changes the value of this pointer and prepares change events.
+	 * This function is only called once, while [[value]] remains None.
+	 * @param value New value to assign to this pointer
+	 * @return After effects which fire change events, if appropriate
+	 */
+	protected def _setAndQueueEvent(value: A): IterableOnce[AfterEffect]
 	
 	
 	// COMPUTED -----------------------------
@@ -153,7 +165,18 @@ trait AssignableOnce[A]
 		case Some(newValue) => set(newValue)
 		case None =>
 			if (isSet)
-				throw new IllegalStateException("SettableOnce cannot be reset")
+				throw new IllegalStateException("AssignableOnce cannot be reset")
+	}
+	override def setAndQueueEvent(newValue: Option[A]): IterableOnce[AfterEffect] = newValue match {
+		case Some(newValue) =>
+			testValue[IterableOnce[AfterEffect]](newValue) {
+				_setAndQueueEvent(newValue).iterator ++ Single(AfterEffect { declareChangingStopped() })
+			} { Empty }
+		case None =>
+			if (isSet)
+				throw new IllegalStateException("AssignableOnce can't be reset")
+			else
+				Empty
 	}
 	
 	/**
@@ -162,14 +185,10 @@ trait AssignableOnce[A]
 	  * @throws IllegalStateException If this pointer has already been set
 	  */
 	@throws[IllegalStateException]("If this pointer has already been set")
-	override def set(value: A) = {
-		if (this.value.exists { _ != value })
-			throw new IllegalStateException("SettableOnce.value may only be defined once")
-		else {
-			_set(value)
-			declareChangingStopped()
-		}
-	}
+	override def set(value: A) = testValue(value) {
+		_set(value)
+		declareChangingStopped()
+	} { () }
 	/**
 	  * Specifies the value in this pointer, unless specified already
 	  * @param value Value for this pointer to hold (call-by-name, only called if this pointer is empty)
@@ -205,5 +224,14 @@ trait AssignableOnce[A]
 			// Case: Reset event (not applicable)
 			case None => Continue
 		}
+	}
+	
+	private def testValue[R](newValue: A)(set: => R)(noOp: => R) = value match {
+		case Some(value) =>
+			if (value == newValue)
+				noOp
+			else
+				throw new IllegalStateException("AssignableOnce may only be set once")
+		case None => set
 	}
 }

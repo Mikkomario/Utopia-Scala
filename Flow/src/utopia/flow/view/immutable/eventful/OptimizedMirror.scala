@@ -1,14 +1,13 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.model.ChangeResponse.Continue
+import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
-import utopia.flow.event.model.{ChangeResponse, Destiny}
+import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.TryExtensions._
 import utopia.flow.view.template.eventful.{Changing, Flag, OptimizedChanging}
-
-import scala.util.Try
 
 object OptimizedMirror
 {
@@ -65,12 +64,14 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 {
 	// ATTRIBUTES   -------------------------
 	
-	private val bridge = OptimizedBridge.map(origin, hasListenersFlag && condition, cachingDisabled)(f) { event =>
-		// Only fires change events while allowed to mirror
-		if (condition.value)
-			fireEvent(event)
-		else
-			Empty
+	// Only fires change events while allowed to mirror
+	private val bridge = OptimizedBridge.map(origin, hasListenersFlag && condition, cachingDisabled)(f) {
+		case Right(event) =>
+			if (condition.value)
+				fireEventEffects(event)
+			else
+				Empty
+		case _ => Empty
 	}
 	// A placeholder value returned while mirroring is not allowed
 	private var placeholder: Option[R] = None
@@ -80,19 +81,32 @@ class OptimizedMirror[O, R](origin: Changing[O], f: O => R, condition: Flag = Al
 	
 	// Whenever stops listening to the origin pointer,
 	// stores the last known value, so that it may be used as a placeholder
-	condition.addListenerAndSimulateEvent(true) { event =>
-		// Case: Mirroring continues => Clears the placeholder value and fires a change event, if necessary
-		if (event.newValue) {
-			val oldPlaceholder = placeholder
-			placeholder = None
-			oldPlaceholder.foreach { p => fireEventIfNecessary(oldValue = p).foreach { a => Try { a() }.log } }
+	condition.addListenerAndSimulateEvent(true, High) { event =>
+		val effects = {
+			// Case: Mirroring continues => Clears the placeholder value and fires a change event, if necessary
+			if (event.newValue) {
+				val oldPlaceholder = placeholder
+				placeholder = None
+				oldPlaceholder match {
+					case Some(oldPlaceholder) =>
+						val value = bridge.value
+						if (oldPlaceholder == value)
+							Empty
+						else
+							fireEventEffects(ChangeEvent(oldPlaceholder, value))
+						
+					case None => Empty
+				}
+			}
+			// Case: Mirroring stops => Prepares to return the last value until mirroring is enabled again
+			else {
+				placeholder = Some(bridge.value)
+				Empty
+			}
 		}
-		// Case: Mirroring stops => Prepares to return the last value until mirroring is enabled again
-		else
-			placeholder = Some(bridge.value)
 			
 		// If the origin doesn't change anymore, it is not needful to track the listening condition
-		ChangeResponse.continueIf(origin.mayChange)
+		Continue.onlyIf(origin.mayChange) ++ effects
 	}
 	
 	onceSourceStops(origin) {

@@ -1,9 +1,9 @@
 package utopia.flow.view.immutable.eventful
 
 import utopia.flow.async.process.Breakable
-import utopia.flow.collection.immutable.{Empty, Pair}
-import utopia.flow.event.model.Destiny
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.event.model.Destiny.Sealed
+import utopia.flow.event.model.{AfterEffect, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.{Changing, OptimizedChanging}
@@ -106,37 +106,72 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	}
 	
 	override def stop(): Future[Any] = {
-		if (!stopped) {
-			stopped = true
+		if (_stop())
 			declareChangingStopped()
-			inputs.foreach { _.bridge.detach() }
-		}
 		Future.successful(())
 	}
 	
 	override def lockWhile[B](operation: => B): B =
 		if (stopped) operation else origin1.lockWhile { origin2.lockWhile(operation) }
+		
+	
+	// OTHER    ----------------------
+	
+	private def _stop(): Boolean = {
+		if (stopped)
+			false
+		else {
+			stopped = true
+			inputs.foreach { _.bridge.detach() }
+			true
+		}
+	}
 	
 	
 	// NESTED   ----------------------
 	
 	private class Input[O](val origin: Changing[O], transform: O => R) extends View[O]
 	{
-		val bridge = OptimizedBridge(origin, hasListenersFlag) { e =>
-			e.value match {
-				// Case: Update (expected) => Updates the merge result and fires a change event, if appropriate
-				case Some(event) =>
-					val newMergeResult = transform(event.newValue)
-					val afterEffects = fireEventIfNecessary(transform(event.oldValue), newMergeResult)
-					// Tests whether should stop changing
-					if (stopCondition.exists { _(input1.value, input2.value, newMergeResult) })
-						stop()
-					afterEffects
+		// ATTRIBUTES   --------------
+		
+		val bridge = OptimizedBridge(origin, hasListenersFlag) {
+			// Case: A change event to forward
+			case Right(event) =>
+				// Maps the event and checks for the stop condition
+				val mapped = event.map(transform)
+				val shouldStop = shouldStopAt(mapped.newValue)
 				
-				// Case: No update (unexpected) => No-op
-				case None => Empty
-			}
+				// Case: No change in the merge result => Only stops if appropriate
+				if (mapped.values.isSymmetric) {
+					if (shouldStop)
+						stop()
+					Empty
+				}
+				// Case: Change also in the merge result => Prepares event-firing and possible stopping
+				else {
+					val effects = fireEventEffects(mapped)
+					if (shouldStop && _stop())
+						effects.iterator ++ Single(AfterEffect { declareChangingStopped() })
+					else
+						effects
+				}
+				
+			// Case: Only a cache-reset => Applies the stop, if appropriate
+			case Left(values) =>
+				if (shouldStopAt(transform(values.second.value)))
+					stop()
+				Empty
 		}
+		
+		
+		// IMPLEMENTED  -------------------
+		
 		override def value: O = bridge.value
+		
+		
+		// OTHER    -----------------------
+		
+		private def shouldStopAt(mergeResult: => R) =
+			stopCondition.exists { _(input1.value, input2.value, mergeResult) }
 	}
 }

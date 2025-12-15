@@ -1,11 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.model.{AfterEffect, ChangeEvent}
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.TryExtensions._
 import utopia.flow.view.immutable.eventful.FlagView
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Flag}
-
-import scala.util.Try
 
 object ResettableLockableFlag
 {
@@ -59,7 +58,16 @@ object ResettableLockableFlag
 		override protected def assignToUnlocked(newValue: Boolean): Unit = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
+			if (oldValue != newValue)
+				fireEvent(ChangeEvent(oldValue, newValue))
+		}
+		override protected def setUnlockedAndQueueEvent(newValue: Boolean): IterableOnce[AfterEffect] = {
+			val oldValue = _value
+			_value = newValue
+			if (oldValue == newValue)
+				Empty
+			else
+				fireEventEffects(ChangeEvent(oldValue, newValue))
 		}
 	}
 }

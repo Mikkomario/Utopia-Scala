@@ -1,14 +1,12 @@
 package utopia.flow.view.mutable.eventful
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.Destiny
 import utopia.flow.event.model.Destiny.ForeverFlux
-import utopia.flow.util.TryExtensions._
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.{LoggingPointerFactory, Pointer}
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper}
-
-import scala.util.Try
 
 object EventfulPointer extends LoggingPointerFactory[EventfulPointer]
 {
@@ -38,30 +36,24 @@ object EventfulPointer extends LoggingPointerFactory[EventfulPointer]
 		override lazy val readOnly = ChangingWrapper(this)
 		
 		
-		// COMPUTED --------------------
-		
-		/**
-		  * A read-only view into this pointer
-		  */
-		@deprecated("Please switch to using .readOnly instead", "v2.3")
-		def view: Changing[A] = readOnly
-		
-		
 		// IMPLEMENTED	----------------
 		
 		override def destiny: Destiny = ForeverFlux
 		
-		/**
-		  * @return The current value in this mutable
-		  */
 		override def value = _value
-		/**
-		  * @param newValue The new value in this mutable
-		  */
 		def value_=(newValue: A) = {
 			val oldValue = _value
 			_value = newValue
-			fireEventIfNecessary(oldValue, newValue).foreach { effect => Try { effect() }.log }
+			if (oldValue != newValue)
+				fireEvent(ChangeEvent(oldValue, newValue))
+		}
+		override def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect] = {
+			val oldValue = _value
+			_value = newValue
+			if (oldValue == newValue)
+				Empty
+			else
+				fireEventEffects(ChangeEvent(oldValue, newValue))
 		}
 		
 		override def toString = s"Pointer(${_value}).eventful"
@@ -78,3 +70,17 @@ object EventfulPointer extends LoggingPointerFactory[EventfulPointer]
   * @since 25.5.2019, v1.4.1
   */
 trait EventfulPointer[A] extends Pointer[A] with Changing[A]
+{
+	/**
+	 * Assigns a new value to this pointer.
+	 * Doesn't immediately fire change events, but prepares them as after-effects instead.
+	 *
+	 * This method may be used in situations where this change originates from another pointer,
+	 * when the event-processing should be handled by that pointer instead.
+	 *
+	 * @param newValue New value to assign to this pointer
+	 * @return After-effects to trigger for delivering change events.
+	 *         These *must* be triggered by the caller.
+	 */
+	def setAndQueueEvent(newValue: A): IterableOnce[AfterEffect]
+}
