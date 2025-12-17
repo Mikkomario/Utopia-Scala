@@ -1,7 +1,6 @@
 package utopia.echo.controller.client
 
 import utopia.access.model.Headers
-import utopia.access.model.enumeration.Status
 import utopia.annex.controller.{ApiClient, PreparingResponseParser, QueueSystem, RequestQueue}
 import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.{RequestResult, Response}
@@ -10,15 +9,14 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.Gateway
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.{Body, StringBody}
-import utopia.echo.controller.EchoContext
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 /**
   * A base class for client-side interfaces for interacting with an LLM server
@@ -70,9 +68,7 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		override protected def gateway = LlmServiceClient.this.gateway
 		
 		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
-			ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { v =>
-				v("error", "message").stringOr(v.getString)
-			}
+			ResponseParser.value.unwrapToResponse { v => v("error", "message").stringOr(v.getString) }
 		override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
 			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
 		
@@ -84,8 +80,6 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		override protected implicit def exc: ExecutionContext = LlmServiceClient.this.exc
 		
 		override protected def rootPath: String = serverAddress
-		
-		override protected def responseParseFailureStatus: Status = EchoContext.parseFailureStatus
 		
 		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
 		// Adds an API-key automatically, if specified

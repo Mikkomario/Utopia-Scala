@@ -1,7 +1,22 @@
 # Utopia Annex - List of Changes
 
-## v1.11.1 (in development)
-Supports **Flow v2.8**
+## v1.12 (in development)
+### Breaking changes
+- Various **RequestResultExtensions** functions now yield **RequestResult** instead of **Try**
+- The following **ResponseParser** constructors no longer support custom parsing failure -statuses, 
+  but use `Response.parseFailureStatus` instead:
+  - `.mapOrFail(...)`, `.tryMap(...)` in **PreparingResponseParser**
+  - `.mapToResponseOrFail(...)`, `.tryMapToResponse(...)`, `.unwrapToResponse(...)`, `.unwrapToResponseLogging(...)`, 
+    `.tryFlatMapToResponse(...)`, `.rightToResponse(...)` and `.tryMapSuccess(...)` in **ResponseParseExtensions**
+- Removed the parse failure -status parameters in extended functions for **RequestResult** of type **Value**
+- **ApiClient** no longer defines `.responseParseFailureStatus`
+### Deprecations
+- Deprecated `.flatMapSuccessToTry(...)` `.waitForTry(Duration)` and `.foreachResult(...)` 
+  in **RequestResultExtensions**
+- Renamed parse function variants in **RequestResult** of type **Value**, and deprecated the try function variants
+### New features
+- **RequestResult** now extends **MayHaveFailed**, and contains a number of new functions
+- **Response** (object) now contains variable: `parseFailureStatus`
 
 ## v1.11 - 01.11.2025
 A small update introducing support for path parameters in API requests.

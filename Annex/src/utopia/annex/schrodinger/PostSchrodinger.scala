@@ -106,7 +106,7 @@ object PostSchrodinger
 	  */
 	def postAndParse[S, A](spirit: S, resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
 	                      (spiritualize: A => S)(implicit exc: ExecutionContext, log: Logger) =
-		apply[S, A](spirit, resultFuture.map { _.parsingOneWith(parser) })(spiritualize)
+		apply[S, A](spirit, resultFuture.map { _.parseOne(parser) })(spiritualize)
 	
 	@deprecated("Please use .postAndParse(...) instead", "v1.8")
 	def apply[S, A](spirit: S, resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])

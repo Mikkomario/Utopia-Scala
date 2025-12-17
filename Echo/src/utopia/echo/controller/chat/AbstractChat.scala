@@ -306,7 +306,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 					.future
 				
 				// Updates the pointers once a response is received
-				replyFuture.foreachResult { result =>
+				replyFuture.forResult { result =>
 					_lastResultPointer.value = result.toTry
 					updateQueueSize { _ - 1 }
 					

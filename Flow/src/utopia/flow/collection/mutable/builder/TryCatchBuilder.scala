@@ -1,7 +1,8 @@
 package utopia.flow.collection.mutable.builder
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.util.MayHaveFailed.{AlwaysSuccess, WrapTry, WrapTryCatch}
+import utopia.flow.util.MayHaveFailed.AlwaysSuccess
+import utopia.flow.util.TryExtensions.RichTry
 import utopia.flow.util.{MayHaveFailed, TryCatch}
 
 import scala.collection.mutable
@@ -120,11 +121,13 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	 * @return This builder
 	 */
 	def +=(item: MayHaveFailed[A]): TryCatchBuilder[A, Coll] = item match {
-		case WrapTry(wrapped) => this += wrapped
-		case WrapTryCatch(wrapped) => this += wrapped
+		case t: RichTry[A] => this += t.t
+		case r: TryCatch[A] => this += r
 		case AlwaysSuccess(value) =>
 			wrapped += value
 			this
+		case failure: MayHaveFailed.Failure => this += failure.cause
+		case r => this += r.toTryCatch
 	}
 	/**
 	 * Adds a failure to this builder
@@ -173,12 +176,14 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	 * @return This builder
 	 */
 	def ++=(items: MayHaveFailed[IterableOnce[A]]): TryCatchBuilder[A, Coll] = items match {
-		case WrapTry(wrapped) => this ++= wrapped
-		case WrapTryCatch(wrapped) => this ++= wrapped
+		case t: RichTry[IterableOnce[A]] => this ++= t.t
+		case r: TryCatch[IterableOnce[A]] => this ++= r
 		case AlwaysSuccess(items) =>
 			succeedFlag = true
 			wrapped ++= items
 			this
+		case failure: MayHaveFailed.Failure => this += failure.cause
+		case r => this ++= r.toTryCatch
 	}
 	
 	

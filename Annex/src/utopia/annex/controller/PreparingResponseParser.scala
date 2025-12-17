@@ -67,8 +67,12 @@ object PreparingResponseParser
 	  * @param mapSuccess A function called for successful responses,
 	  *                   which maps the response body into either:
 	  *                         - Right: Another data type for a successful response
-	  *                         - Left: A new response status + an error message,
-	  *                         in case the response needs to be converted into a failure response instead
+	  *                         - Left: An error message,
+	 *                                  in case the response needs to be converted into a failure response instead
+	 *
+	 *                    Note: If this function yields Left,
+	 *                          the response will have status: [[Response.parseFailureStatus]].
+	 *
 	  * @param extractFailureMessage A function called for failure responses (4XX-5XX),
 	  *                              which extracts an error message from the response body
 	  * @tparam M Type of the preliminary parse results
@@ -76,7 +80,7 @@ object PreparingResponseParser
 	  * @return A response parser which categorizes the responses based on their status and applies either
 	  *         the specified mapping function, or extracts an error message using the specified extraction function.
 	  */
-	def mapOrFail[M, A](primary: ResponseParser[M])(mapSuccess: ResponseParseResult[M] => Either[(Status, String), A])
+	def mapOrFail[M, A](primary: ResponseParser[M])(mapSuccess: ResponseParseResult[M] => Either[String, A])
 	                   (extractFailureMessage: M => String) =
 		apply(primary) { (body, status, headers) =>
 			if (status.isFailure)
@@ -84,7 +88,7 @@ object PreparingResponseParser
 			else
 				mapSuccess(body) match {
 					case Right(success) => Response.Success(success, status, headers)
-					case Left((newStatus, failureMessage)) => Response.Failure(newStatus, failureMessage, headers)
+					case Left(failureMessage) => Response.Failure(Response.parseFailureStatus, failureMessage, headers)
 				}
 		}
 	/**
@@ -95,10 +99,9 @@ object PreparingResponseParser
 	  * The success case may be converted into a failure by the specified mapping function.
 	  *
 	  * @param primary Response parser which pre-processes the response body
-	  * @param parseFailureStatus Status assigned in case a successful response is converted to a failure response
-	  *                           because of a parsing failure.
 	  * @param mapSuccess A mapping function called for successful responses.
-	  *                   May yield a failure, which converts the response into a failure response.
+	  *                   May yield a failure, which converts the response into a failure response
+	 *                   (of status [[Response.parseFailureStatus]]).
 	  * @param extractFailureMessage A function called for failure responses (4XX-5XX),
 	  *                              which extracts an error message from the response body
 	  * @tparam M Type of the preliminary parse results
@@ -106,12 +109,11 @@ object PreparingResponseParser
 	  * @return A response parser which categorizes the responses based on their status and applies either
 	  *         the specified mapping function, or extracts an error message using the specified extraction function.
 	  */
-	def tryMap[M, A](primary: ResponseParser[M], parseFailureStatus: => Status)
-	                (mapSuccess: ResponseParseResult[M] => Try[A])
+	def tryMap[M, A](primary: ResponseParser[M])(mapSuccess: ResponseParseResult[M] => Try[A])
 	                (extractFailureMessage: M => String): PreparingResponseParser[M, A] =
 		mapOrFail[M, A](primary) { mapSuccess(_) match {
 			case Success(v) => Right(v)
-			case Failure(error) => Left(parseFailureStatus -> error.getMessage)
+			case Failure(error) => Left(error.getMessage)
 		} }(extractFailureMessage)
 	
 	/**

@@ -1,51 +1,31 @@
 package utopia.annex.model.response
 
 import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.access.model.enumeration.Status.{InternalServerError, OK}
 import utopia.access.model.enumeration.StatusGroup.ServerError
-import utopia.access.model.enumeration.Status
 import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.model.response
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.NotEmpty
+import utopia.flow.util.MayHaveFailed.FailureLike
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util._
 
 import scala.util.{Failure, Try}
 
 /**
-  * Represents a result of a sent request
+  * Represents a result of an outgoing request
   * @tparam A Type of the expected successful response value / body contents
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
 sealed trait RequestResult[+A]
+	extends MayHaveFailed[A] with MayHaveFailedLike[A, RequestResult, RequestResult, TryCatch]
 {
 	// ABSTRACT --------------------------
 	
-	/**
-	  * @return Whether result should be considered a success
-	  */
-	def isSuccess: Boolean
-	/**
-	  * @return Whether this result should be considered a failure
-	  */
-	def isFailure = !isSuccess
-	
-	/**
-	  * @return Parsed response body if successful.
-	  *         Failure if this is not a successful response.
-	  */
-	def toTry: Try[A]
-	
-	/**
-	  * Maps the contents of this result, if successful
-	  * @param f A mapping function applied to response contents
-	  * @tparam B Type of the mapping results
-	  * @return Copy of this response with mapped contents.
-	  *         If this response is a failure. Returns this response.
-	  */
-	def map[B](f: A => B): RequestResult[B]
 	/**
 	  * If this is a successful response, applies the specified mapping function.
 	  * If mapping fails (i.e. yields Left), converts this response into a failure response instead.
@@ -55,7 +35,16 @@ sealed trait RequestResult[+A]
 	  * @tparam B Type of successful map result
 	  * @return Mapped copy of this response
 	  */
-	def tryMap[B](f: A => Either[(Status, String), B]): RequestResult[B]
+	def flatMap[B](f: A => Either[String, B]): RequestResult[B]
+	/**
+	 * If this is a successful response, applies the specified mapping function.
+	 * If mapping fails, converts this response into a failure response instead.
+	 * @param parseFailureStatus Status assigned to a failure response in case 'f' yields a failure.
+	 * @param f Mapping function to apply. May yield a failure.
+	 * @tparam B Type of successful map result
+	 * @return Mapped copy of this response
+	 */
+	def tryMap[B](parseFailureStatus: => Status)(f: A => Try[B]): RequestResult[B]
 	
 	
 	// COMPUTED --------------------------
@@ -64,22 +53,9 @@ sealed trait RequestResult[+A]
 	def toEmptyTry = toTry.map { _ => () }
 	
 	
-	// OTHER    --------------------------
+	// IMPLEMENTED  ----------------------
 	
-	/**
-	  * If this is a successful response, applies the specified mapping function.
-	  * If mapping fails, converts this response into a failure response instead.
-	  * @param parseFailureStatus Status assigned to a failure response in case 'f' yields a failure.
-	  * @param f Mapping function to apply. May yield a failure.
-	  * @tparam B Type of successful map result
-	  * @return Mapped copy of this response
-	  */
-	def tryMap[B](parseFailureStatus: => Status)(f: A => Try[B]): RequestResult[B] = tryMap { value =>
-		f(value) match {
-			case scala.util.Success(parsed) => Right(parsed)
-			case scala.util.Failure(error) => Left(parseFailureStatus -> error.getMessage)
-		}
-	}
+	override def isFailure = !isSuccess
 }
 
 object RequestResult
@@ -92,45 +68,44 @@ object RequestResult
 		  * Assumes that successful responses contain a single [[utopia.flow.generic.model.immutable.Model]] value.
 		  * Parsing failures will be converted into failure responses.
 		  * @param parser A parser to use for transforming the response contents
-		  * @param parseFailureStatus Status assigned for this response in case parsing fails.
-		  *                           Default = 500 = Internal Server Error
 		  * @tparam A Type of successful parse results
 		  * @return Copy of this result with the specified parser / processing applied to it
 		  */
-		def parsingOneWith[A](parser: FromModelFactory[A], parseFailureStatus: => Status = InternalServerError) =
-			r.tryMap(parseFailureStatus) { _.tryModel.flatMap(parser.apply) }
+		def parseOne[A](parser: FromModelFactory[A]) = r.tryMap { _.tryModel.flatMap(parser.apply) }
+		@deprecated("Renamed to .parseOne(FromModelFactory)", "v1.12")
+		def parsingOneWith[A](parser: FromModelFactory[A]) = parseOne(parser)
 		/**
 		  * Applies a from-model-parser to this result, transforming response contents, if this is a success.
 		  * Assumes that successful responses contain 0-n [[utopia.flow.generic.model.immutable.Model]] values
 		  * as a vector / array.
 		  * Parsing failures will be converted into failure responses.
 		  * @param parser A parser to use for transforming the response contents
-		  * @param parseFailureStatus Status assigned for this response in case parsing fails.
-		  *                           Default = 500 = Internal Server Error
 		  * @tparam A Type of successful parse results
 		  * @return Copy of this result with the specified parser / processing applied to it
 		  */
-		def parsingManyWith[A](parser: FromModelFactory[A], parseFailureStatus: => Status = InternalServerError) =
-			r.tryMap(parseFailureStatus) { _.tryVectorWith { _.tryModel.flatMap(parser.apply) } }
+		def parseMany[A](parser: FromModelFactory[A]) =
+			r.tryMap { _.tryVectorWith { _.tryModel.flatMap(parser.apply) } }
+		@deprecated("Renamed to .parseMany(FromModelFactory)", "v1.12")
+		def parsingManyWith[A](parser: FromModelFactory[A]) = parseMany(parser)
 		/**
 		  * Applies a from-model-parser to this result, transforming response contents, if this is a non-empty success.
 		  * Assumes that successful responses contain a single [[utopia.flow.generic.model.immutable.Model]] value
 		  * or are empty.
 		  * Parsing failures will be converted into failure responses.
 		  * @param parser A parser to use for transforming the response contents
-		  * @param parseFailureStatus Status assigned for this response in case parsing fails.
-		  *                           Default = 500 = Internal Server Error
 		  * @tparam A Type of successful parse results
 		  * @return Copy of this result with the specified parser / processing applied to it.
 		  *         Will contain None in case this is a successful empty response.
 		  */
-		def parsingOptionWith[A](parser: FromModelFactory[A], parseFailureStatus: => Status = InternalServerError) =
-			r.tryMap[Option[A]](parseFailureStatus) { value =>
+		def parseOption[A](parser: FromModelFactory[A]) =
+			r.tryMap[Option[A]] { value: Value =>
 				if (value.isEmpty)
 					scala.util.Success(None)
 				else
 					value.tryModel.flatMap(parser.apply).map { Some(_) }
 			}
+		@deprecated("Renamed to .parseOption(FromModelFactory)", "v1.12")
+		def parsingOptionWith[A](parser: FromModelFactory[A]) = parseOption(parser)
 		
 		/**
 		  * If this is a successful response, attempts to parse its contents into a single entity
@@ -139,6 +114,7 @@ object RequestResult
 		  * @return Parsed response content on success.
 		  *         Failure if this response was not a success, or if the parsing failed.
 		  */
+		@deprecated("Please use .parseOne(FromModelFactory).toTry instead", "v1.12")
 		def tryParseOne[A](parser: FromModelFactory[A]): Try[A] = r.toTry.flatMap { _.tryModel.flatMap(parser.apply) }
 		/**
 		  * If this is a successful response, attempts to parse its contents into a vector of entities
@@ -146,6 +122,7 @@ object RequestResult
 		  * @tparam A Type of parse result
 		  * @return Parsed response content on success. Failure if this response was not a success or if parsing failed.
 		  */
+		@deprecated("Please use .parseMany(FromModelFactory).toTry instead", "v1.12")
 		def tryParseMany[A](parser: FromModelFactory[A]): Try[Seq[A]] =
 			r.toTry.flatMap { _.tryVectorWith { _.tryModel.flatMap(parser.apply) } }
 		/**
@@ -156,13 +133,8 @@ object RequestResult
 		  *         Failure if this response was not a success, or if the parsing failed.
 		  *         If this response was empty (and successful), yields None.
 		  */
-		def tryParseOption[A](parser: FromModelFactory[A]) =
-			r.toTry.flatMap { value =>
-				if (value.isEmpty)
-					scala.util.Success(None)
-				else
-					value.tryModel.flatMap(parser.apply).map { Some(_) }
-			}
+		@deprecated("Please use .parseOption(FromModelFactory).toTry instead", "v1.12")
+		def tryParseOption[A](parser: FromModelFactory[A]) = parseOption(parser).toTry
 		
 		// These two functions are added for backwards-compatibility
 		/**
@@ -185,16 +157,8 @@ object RequestResult
 	}
 }
 
-sealed trait RequestFailure extends RequestResult[Nothing]
+sealed trait RequestFailure extends FailureLike[RequestFailure] with MayHaveFailed.Failure with RequestResult[Nothing]
 {
-	// ABSTRACT --------------------------
-	
-	/**
-	  * @return Cause for this request failure
-	  */
-	def cause: Throwable
-	
-	
 	// COMPUTED ----------------------
 	
 	/**
@@ -205,12 +169,16 @@ sealed trait RequestFailure extends RequestResult[Nothing]
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def isSuccess = false
-	
-	override def toTry = toFailure
+	override def self: RequestFailure = this
 	
 	override def map[B](f: Nothing => B) = this
-	override def tryMap[B](f: Nothing => Either[(Status, String), B]) = this
+	override def flatMap[B](f: Nothing => Either[String, B]) = this
+	override def tryMap[B](f: Nothing => Try[B]) = this
+	override def tryMapCatching[B](f: Nothing => TryCatch[B]): TryCatch[B] = toTryCatch
+	override def tryMap[B](parseFailureStatus: => Status)(f: Nothing => Try[B]) = this
+	
+	override def catching[B >: Nothing](partialFailures: => IterableOnce[Throwable]): TryCatch[B] =
+		TryCatch.Failure(cause)
 }
 
 /**
@@ -253,24 +221,84 @@ object RequestNotSent
 }
 
 /**
+ * Common trait for copyable response representation implementations
+ * @tparam A Type of the expected successful response value / body contents
+ * @tparam Repr (Implementing) type of this response
+ * @tparam R Type of mapping result wrappers, which may represent either a success or a failure
+ */
+sealed trait ResponseLike[+A, +Repr, +R[X] <: RequestResult[X]]
+	extends RequestResult[A] with response.Response with MayHaveFailedLike[A, R, Response, TryCatch]
+{
+	// ABSTRACT -------------------------------
+	
+	/**
+	 * @param newValue New success value to assign to this response
+	 * @tparam B Type of the new success value
+	 * @return A copy of this response as a success, containing the specified value
+	 */
+	def toSuccessWithValue[B](newValue: B): Response.Success[B]
+	
+	/**
+	 * @param status New status to assign to this response
+	 * @return A copy of this response with the specified status.
+	 *         Note: This response reserves its original success/failure state, regardless of the new status
+	 */
+	def withStatus(status: Status): Repr
+	/**
+	 * @param headers New headers to assign to this response
+	 * @return A copy of this response with the specified headers
+	 */
+	def withHeaders(headers: Headers): Repr
+	
+	override def flatMap[B](f: A => Either[String, B]): R[B]
+	
+	
+	// IMPLEMENTED  ---------------------------
+	
+	override def isFailure = !isSuccess
+	
+	override def tryMap[B](parseFailureStatus: => Status)(f: A => Try[B]): R[B] = flatMap { value =>
+		f(value) match {
+			case scala.util.Success(parsed) => Right(parsed)
+			case scala.util.Failure(error) => Left(error.getMessage)
+		}
+	}
+	
+	
+	// OTHER    -----------------------------
+	
+	/**
+	 * @param f A mapping function to apply to this response's status
+	 * @return A copy of this response with a mapped status.
+	 *         Note: This response reserves its original success/failure state, regardless of the new status.
+	 */
+	def mapStatus(f: Mutate[Status]) = withStatus(f(status))
+	/**
+	 * @param f A mapping function to apply to this response's headers
+	 * @return A copy of this response with mapped headers.
+	 */
+	def mapHeaders(f: Mutate[Headers]) = withHeaders(f(headers))
+}
+
+/**
   * A common trait for both success and failure responses
   * @tparam A Response content / parsed body type expected in successful responses
   * @author Mikko Hilpinen
   * @since 14.6.2020, v1
   */
-sealed trait Response[+A] extends RequestResult[A] with response.Response
-{
-	// IMPLEMENTED  ---------------------------
-	
-	override def isFailure = !isSuccess
-	
-	override def map[B](f: A => B): Response[B]
-	override def tryMap[B](f: A => Either[(Status, String), B]): Response[B]
-}
+sealed trait Response[+A] extends ResponseLike[A, Response[A], Response]
 
 object Response
 {
-	// NESTED   -------------------------------
+	// ATTRIBUTES   ---------------------------
+	
+	/**
+	 * Status yielded on response-parsing failures
+	 */
+	var parseFailureStatus: Status = InternalServerError
+	
+	
+	// VALUES   -------------------------------
 	
 	/**
 	  * Success responses are used when the server successfully appropriates the request
@@ -278,20 +306,61 @@ object Response
 	  * @param status Status returned by the server
 	  * @param headers Response headers
 	  */
-	case class Success[+A](value: A, status: Status = OK, headers: Headers = Headers.empty) extends Response[A]
+	case class Success[+A](value: A, status: Status = OK, headers: Headers = Headers.empty)
+		extends Response[A] with ResponseLike[A, Success[A], Response]
 	{
+		// ATTRIBUTES   ---------------------
+		
+		override val isSuccess = true
+		
+		
 		// IMPLEMENTED  ---------------------
 		
-		override def isSuccess = true
+		override def success: Option[A] = Some(value)
+		override def failure: Option[Throwable] = None
+		
+		override def get: A = value
 		
 		override def toTry = scala.util.Success(value)
+		override def toTryCatch: TryCatch[A] = TryCatch.Success(value)
 		override def toString = s"$status: $value"
 		
+		override def withStatus(status: Status): Success[A] = copy(status = status)
+		override def withHeaders(headers: Headers): Success[A] = copy(headers = headers)
+		override def toSuccessWithValue[B](newValue: B): Success[B] = withValue(newValue)
+		
 		override def map[B](f: A => B) = copy(value = f(value))
-		override def tryMap[B](f: A => Either[(Status, String), B]): Response[B] = f(value) match {
+		override def flatMap[B](f: A => Either[String, B]): Response[B] = f(value) match {
 			case Right(newValue) => copy(value = newValue)
-			case Left((status, message)) => Failure(status, message, headers)
+			case Left(message) => Failure(parseFailureStatus, message, headers)
 		}
+		override def mapOrFail[B](f: A => MayHaveFailed[B]): Response[B] = f(value) match {
+			case r: Response[B] => r
+			case failure: MayHaveFailed.Failure =>
+				Response.Failure(parseFailureStatus, Option(failure.cause.getMessage).getOrElse(""), headers)
+			case result =>
+				result.toTry match {
+					case scala.util.Success(newValue) => withValue(newValue)
+					case scala.util.Failure(error) =>
+						Response.Failure(parseFailureStatus, Option(error.getMessage).getOrElse(""), headers)
+				}
+		}
+		
+		override def tryMap[B](f: A => Try[B]): Response[B] = tryMap(parseFailureStatus)(f)
+		override def tryMapCatching[B](f: A => TryCatch[B]): TryCatch[B] = f(value)
+		
+		override def catching[B >: A](partialFailures: => IterableOnce[Throwable]): TryCatch[B] =
+			TryCatch.Success(value, OptimizedIndexedSeq.from(partialFailures))
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		 * @param newValue New value to assign to this success
+		 * @tparam B Type of the new value
+		 * @return A copy of this success containing the specified value
+		 */
+		def withValue[B](newValue: B) = copy(value = newValue)
 	}
 	
 	/**
@@ -303,7 +372,7 @@ object Response
 	  * @param headers Headers sent along with this response
 	  */
 	case class Failure(status: Status, message: String = "", headers: Headers = Headers.empty)
-		extends Response[Nothing] with RequestFailure
+		extends Response[Nothing] with RequestFailure with ResponseLike[Nothing, Failure, Response]
 	{
 		// COMPUTED --------------------------
 		
@@ -334,17 +403,14 @@ object Response
 		override def toString = s"$status${message.mapIfNotEmpty { message => s": $message" }}"
 		
 		override def map[B](f: Nothing => B) = this
-		override def tryMap[B](f: Nothing => Either[(Status, String), B]) = this
-	}
-	
-	
-	// EXTENSIONS   -------------------------
-	
-	// Adds implicit backwards-compatibility to the previous RequestResult / Response.Success version
-	// which was always of type Value and used the ResponseBody interface
-	implicit class ValueSuccess(val s: Success[Value]) extends AnyVal
-	{
-		@deprecated("Deprecated for removal. Please use .value or apply additional parsers, etc.", "v1.8")
-		def body = ResponseBody(s.value)
+		override def flatMap[B](f: Nothing => Either[String, B]) = this
+		override def tryMap[B](f: Nothing => Try[B]) = this
+		override def tryMap[B](parseFailureStatus: => Status)(f: Nothing => Try[B]) = this
+		override def mapOrFail[B](f: Nothing => MayHaveFailed[B]) = this
+		
+		override def toSuccessWithValue[B](newValue: B): Success[B] = Response.Success(newValue, status, headers)
+		
+		override def withStatus(status: Status): Failure = copy(status = status)
+		override def withHeaders(headers: Headers): Failure = copy(headers = headers)
 	}
 }

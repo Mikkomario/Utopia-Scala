@@ -1,8 +1,8 @@
 package utopia.annex.controller
 
 import utopia.access.model.Headers
+import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.{Get, Post}
-import utopia.access.model.enumeration.{Method, Status}
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
@@ -199,8 +199,7 @@ object ApiClient
 		  * @return Future which eventually resolves into a parsed response or a request failure
 		  */
 		def tryParseSuccess[A, B](parser: ResponseParser[A])(parse: A => Try[B])(extractErrorMessage: A => String) =
-			send(PreparingResponseParser.tryMap(parser, api.responseParseFailureStatus) {
-				parse(_) }(extractErrorMessage))
+			send(PreparingResponseParser.tryMap(parser) { parse(_) }(extractErrorMessage))
 		
 		/**
 		  * Sends this request to the server and acquires a response
@@ -242,7 +241,7 @@ trait ApiClient
 	  */
 	protected implicit def log: Logger
 	/**
-	  * @return Json parsing implementation used when parsing response contents
+	  * @return JSON parsing implementation used when parsing response contents
 	  */
 	protected implicit def jsonParser: JsonParser
 	
@@ -255,11 +254,6 @@ trait ApiClient
 	  * @return Domain address + the initial path common to all requests
 	  */
 	protected def rootPath: String
-	
-	/**
-	  * @return Status assigned to responses where response body-parsing fails
-	  */
-	protected def responseParseFailureStatus: Status
 	
 	/**
 	  * @return A response parser used for converting response contents into generic values
@@ -434,7 +428,7 @@ trait ApiClient
 						}
 						log(error,
 							s"Failed to parse the response contents into the desired data type; Status = $status$contentTypeStr")
-						Response.Failure(responseParseFailureStatus, error.getMessage, headers)
+						Response.Failure(Response.parseFailureStatus, error.getMessage, headers)
 				}
 			
 			// Case: Failure response => Won't attempt parsing

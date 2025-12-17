@@ -73,7 +73,7 @@ object PutSchrodinger
 	def putAndParse[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[Value]],
 	                   parser: FromModelFactory[A])
 	                  (implicit exc: ExecutionContext, log: Logger) =
-		apply(original, modifiedLocal, resultFuture.map { _.parsingOneWith(parser) })
+		apply(original, modifiedLocal, resultFuture.map { _.parseOne(parser) })
 	
 	@deprecated("Deprecated for removal. Please use .putAndParse(...) instead", "v1.8")
 	def apply[A](original: => A, modifiedLocal: A, resultFuture: Future[RequestResult[Value]],

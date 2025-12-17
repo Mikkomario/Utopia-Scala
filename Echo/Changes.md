@@ -2,6 +2,8 @@
 
 ## v1.4.1 (in development)
 Supports **Flow v2.8**
+### Deprecations
+- Deprecated **EchoContext**; Parsing failure **Status** is now defined in `Response.parseFailureStatus` instead.
 
 ## v1.4 - 01.11.2025
 This update introduces two new integrations:

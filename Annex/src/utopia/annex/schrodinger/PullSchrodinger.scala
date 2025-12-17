@@ -142,7 +142,7 @@ object PullSchrodinger
 	def pullAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R],
 	                       expectancy: Flux = PositiveFlux, localOnFailure: Boolean = false)
 	                      (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
-		apply(local, resultFuture.map { _.parsingOneWith(parser) }, expectancy, localOnFailure)(localize)
+		apply(local, resultFuture.map { _.parseOne(parser) }, expectancy, localOnFailure)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
 	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
@@ -190,7 +190,7 @@ object PullSchrodinger
 	def parseAny[A](local: Option[A], parser: => FromModelFactory[A], expectancy: => Flux = PositiveFlux)
 	               (makeRequest: => Future[RequestResult[Value]])
 	               (implicit exc: ExecutionContext, log: Logger) =
-		any(local, expectancy) { makeRequest.map { _.parsingOneWith(parser) } }
+		any(local, expectancy) { makeRequest.map { _.parseOne(parser) } }
 	
 	@deprecated("Deprecated for removal. Please use .parseAny(...) instead", "v1.8")
 	def any[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
@@ -229,7 +229,7 @@ object PullSchrodinger
 	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
 	                   expectancy: Flux = PositiveFlux)
 	                  (implicit exc: ExecutionContext, log: Logger) =
-		remote(resultFuture.map { _.parsingOneWith(parser) }, expectancy)
+		remote(resultFuture.map { _.parseOne(parser) }, expectancy)
 	
 	@deprecated("Deprecated for removal. Please use .parseRemote(...) instead", "v1.8")
 	def remote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])

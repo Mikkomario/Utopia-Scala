@@ -4,7 +4,6 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
-import utopia.echo.controller.EchoContext
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -45,6 +44,5 @@ class TextToAudioFileRequest(override val text: String, override val params: Tts
 	override def deprecated: Boolean = deprecationView.value
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Path]] =
-		prepared.send(ResponseParser.write.to(path).unwrapToResponse(EchoContext.parseFailureStatus) { _.toJson }
-			.withResponseBodyAsFailureMessage)
+		prepared.send(ResponseParser.write.to(path).unwrapToResponse { _.toJson }.withResponseBodyAsFailureMessage)
 }

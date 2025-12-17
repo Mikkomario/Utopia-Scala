@@ -4,7 +4,6 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
-import utopia.echo.controller.EchoContext
 import utopia.echo.controller.parser.StreamedOllamaResponseParser
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ollama.OllamaRequest
@@ -75,7 +74,7 @@ object GenerateRequest
 				StreamedOllamaResponseParser.generate.toResponse
 			// Case: Expecting a buffered response => Parses the reply from a response model
 			else
-				ResponseParser.value.tryFlatMapToResponse(EchoContext.parseFailureStatus) {
+				ResponseParser.value.tryFlatMapToResponse {
 					_.tryModel.map { model => BufferedOllamaReply.fromOllamaGenerateResponse(model) } } {
 					_.getString }
 		}

@@ -14,36 +14,144 @@ import scala.util.{Failure, Success, Try}
   */
 object TryExtensions
 {
-	implicit class RichTry[A](val t: Try[A]) extends AnyVal
+	implicit class RichTry[A](val t: Try[A])
+		extends AnyVal with MayHaveFailed[A] with MayHaveFailedLike[A, RichTry, RichTry, TryCatch]
 	{
-		/**
-		  * The success value of this try. None if this try was a failure
-		  */
-		def success = t.toOption
-		/**
-		  * The failure (throwable) value of this try. None if this try was a success.
-		  */
-		def failure = t.failed.toOption
+		// COMPUTED --------------------------
 		
 		/**
-		  * @return A TryCatch instance based on this Try
-		  */
-		def toTryCatch: TryCatch[A] = t match {
-			case Success(a) => TryCatch.Success(a)
-			case Failure(e) => TryCatch.Failure(e)
-		}
-		
-		/**
-		  * Converts this try into an option. Logs possible failure state.
-		  * @param log Implicit logger to use to log the potential failure.
-		  * @return Some if success, None otherwise
-		  */
+		 * Converts this try into an option. Logs possible failure state.
+		 * @param log Implicit logger to use to log the potential failure.
+		 * @return Some if success, None otherwise
+		 */
 		def log(implicit log: Logger) = t match {
 			case Success(a) => Some(a)
 			case Failure(error) =>
 				log(error)
 				None
 		}
+		/**
+		 * Converts this try into an option. Logs possible failure state.
+		 * @param log Implicit logger to use to log the potential failure.
+		 * @return Some if success, None otherwise
+		 */
+		@deprecated("Renamed to .log", "v2.5")
+		def logToOption(implicit log: Logger) = this.log
+		
+		/**
+		 * Logs the captured failure, if applicable
+		 * @param log Logging implementation to use
+		 */
+		@deprecated("Deprecated for removal. Please use .log instead", "v2.5")
+		def logFailure(implicit log: Logger) = failure.foreach { log(_) }
+		
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def isSuccess: Boolean = t.isSuccess
+		override def isFailure: Boolean = t.isFailure
+		
+		override def success = t.toOption
+		override def failure = t match {
+			case Failure(error) => Some(error)
+			case _ => None
+		}
+		override def get: A = t.get
+		
+		override def toTry: Try[A] = t
+		override def toTryCatch: TryCatch[A] = t match {
+			case Success(a) => TryCatch.Success(a)
+			case Failure(e) => TryCatch.Failure(e)
+		}
+		
+		override def catching[B >: A](partialFailures: => IterableOnce[Throwable]): TryCatch[B] = t match {
+			case Success(v) => TryCatch.Success(v, OptimizedIndexedSeq.from(partialFailures))
+			case Failure(error) => TryCatch.Failure(error)
+		}
+		
+		override def map[B](f: A => B): RichTry[B] = t.map(f)
+		override def tryMap[B](f: A => Try[B]): RichTry[B] = t.flatMap(f)
+		override def mapOrFail[B](f: A => MayHaveFailed[B]): RichTry[B] = t match {
+			case Success(value) => f(value).toTry
+			case Failure(error) => Failure(error)
+		}
+		override def tryMapCatching[B](f: A => TryCatch[B]): TryCatch[B] = flatMapCatching(f)
+		
+		
+		// OTHER    --------------------------
+		
+		/**
+		 * @param f A mapping function for possible failure
+		 * @tparam B Result type
+		 * @return Contents of this try on success, mapped error on failure
+		 */
+		def getOrMap[B >: A](f: Throwable => B): B = t match {
+			case Success(item) => item
+			case Failure(error) => f(error)
+		}
+		
+		/**
+		 * @param f A mapping function applied if this is a failure
+		 * @return If this is a success, returns self. Otherwise, returns a mapped failure.
+		 */
+		def mapFailure(f: Mutate[Throwable]) = t match {
+			case s: Success[A] => s
+			case Failure(error) => Failure(f(error))
+		}
+		
+		/**
+		 * @param f A function called on a failure
+		 * @tparam U Arbitrary 'f' result type
+		 * @return Some if this was a success, None if failure.
+		 */
+		def forFailure[U](f: Throwable => U) = t match {
+			case Success(v) => Some(v)
+			case Failure(error) =>
+				f(error)
+				None
+		}
+		
+		/**
+		 * Maps the value of this Try, if successful.
+		 * @param f A mapping function that accepts a successfully acquired value and returns a
+		 *          TryCatch instance.
+		 * @tparam B Type of the success value in the map function result
+		 * @return Success containing the mapping result and the possible non-critical failures,
+		 *         or a failure.
+		 */
+		def flatMapCatching[B](f: A => TryCatch[B]) = t match {
+			case Success(v) => f(v)
+			case Failure(e) => TryCatch.Failure(e)
+		}
+		
+		/**
+		 * @param error A (secondary) error (call-by-name)
+		 * @tparam B Type of failure to yield
+		 * @return This if failure, otherwise a failure based on the specified error
+		 */
+		def failWith[B](error: => Throwable) = t match {
+			case Success(_) => Failure[B](error)
+			case Failure(e) => Failure[B](e)
+		}
+		/**
+		 * @param error A potential error (call-by-name, not called if this is a failure already)
+		 * @return Success only if this is a success and the specified error is None.
+		 *         Failure otherwise, preferring an existing failure in this Try, if applicable.
+		 */
+		def failIf(error: => Option[Throwable]) = {
+			t match {
+				case Success(v) =>
+					error match {
+						// Case: This was a success but the specified function failed => Fails
+						case Some(e) => Failure(e)
+						// Case: This was a success and the specified function didn't fail => Success
+						case None => Success(v)
+					}
+				// Case: This was already a failure => Fails
+				case Failure(e) => Failure(e)
+			}
+		}
+		
 		/**
 		  * Converts this try into an option. Logs possible failure state.
 		  * @param message Message to log in case of a failure (call-by-name)
@@ -56,13 +164,6 @@ object TryExtensions
 				log(error, message)
 				None
 		}
-		
-		/**
-		  * Logs the captured failure, if applicable
-		  * @param log Logging implementation to use
-		  */
-		@deprecated("Deprecated for removal. Please use .log instead", "v2.5")
-		def logFailure(implicit log: Logger) = failure.foreach { log(_) }
 		/**
 		  * Logs the captured failure, if applicable
 		  * @param message Message to record with the failure (call-by-name)
@@ -70,14 +171,6 @@ object TryExtensions
 		  */
 		@deprecated("Deprecated for removal. Please use .logWithMessage instead", "v2.5")
 		def logFailureWithMessage(message: => String)(implicit log: Logger) = failure.foreach { log(_, message) }
-		
-		/**
-		  * Converts this try into an option. Logs possible failure state.
-		  * @param log Implicit logger to use to log the potential failure.
-		  * @return Some if success, None otherwise
-		  */
-		@deprecated("Renamed to .log", "v2.5")
-		def logToOption(implicit log: Logger) = this.log
 		/**
 		  * Converts this try into an option. Logs possible failure state.
 		  * @param message Message to log in case of a failure (call-by-name)
@@ -87,15 +180,6 @@ object TryExtensions
 		@deprecated("Renamed to .logWithMessage(...)", "v2.5")
 		def logToOptionWithMessage(message: => String)(implicit log: Logger) = logWithMessage(message)
 		
-		/**
-		  * @param f A mapping function for possible failure
-		  * @tparam B Result type
-		  * @return Contents of this try on success, mapped error on failure
-		  */
-		def getOrMap[B >: A](f: Throwable => B): B = t match {
-			case Success(item) => item
-			case Failure(error) => f(error)
-		}
 		/**
 		  * Returns the success value or logs the error and returns a placeholder value
 		  * @param f A function for generating the returned value in case of a failure
@@ -108,7 +192,6 @@ object TryExtensions
 			log(error)
 			f
 		}
-		
 		/**
 		  * @param f A function called if this is a success
 		  * @param log Implicit logger to record a possible failure with
@@ -127,71 +210,11 @@ object TryExtensions
 		  * @tparam U Arbitrary function result type
 		  * @return Some if this was a success, None of failure.
 		  */
-		def handleFailure[U](f: Throwable => U) = t match {
-			case Success(v) => Some(v)
-			case Failure(error) => f(error); None
-		}
-		
-		/**
-		 * @param failures Additional failures to attach to this Try.
-		 *                 Call-by-name, only called if this is a success.
-		 * @return Copy of this try catching the specified failures
-		 */
-		def catching(failures: => Seq[Throwable]): TryCatch[A] = t match {
-			case Success(v) => TryCatch.Success(v, failures)
-			case Failure(error) => TryCatch.Failure(error)
-		}
-		/**
-		  * Maps the value of this Try, if successful.
-		  * @param f A mapping function that accepts a successfully acquired value and returns a
-		  *          TryCatch instance.
-		  * @tparam B Type of the success value in the map function result
-		  * @return Success containing the mapping result and the possible non-critical failures,
-		  *         or a failure.
-		  */
-		def flatMapCatching[B](f: A => TryCatch[B]) = t match {
-			case Success(v) => f(v)
-			case Failure(e) => TryCatch.Failure(e)
-		}
-		
-		/**
-		  * @param f A mapping function applied if this is a failure
-		  * @return If this is a success, returns self. Otherwise, returns a mapped failure.
-		  */
-		def mapFailure(f: Mutate[Throwable]) = t match {
-			case s: Success[A] => s
-			case Failure(error) => Failure(f(error))
-		}
-		
-		/**
-		  * @param error A (secondary) error (call-by-name)
-		  * @tparam B Type of failure to yield
-		  * @return This if failure, otherwise a failure based on the specified error
-		  */
-		def failWith[B](error: => Throwable) = t match {
-			case Success(_) => Failure[B](error)
-			case Failure(e) => Failure[B](e)
-		}
-		/**
-		  * @param error A potential error (call-by-name, not called if this is a failure already)
-		  * @return Success only if this is a success and the specified error is None.
-		  *         Failure otherwise, preferring an existing failure in this Try, if applicable.
-		  */
-		def failIf(error: => Option[Throwable]) = {
-			t match {
-				case Success(v) =>
-					error match {
-						// Case: This was a success but the specified function failed => Fails
-						case Some(e) => Failure(e)
-						// Case: This was a success and the specified function didn't fail => Success
-						case None => Success(v)
-					}
-				// Case: This was already a failure => Fails
-				case Failure(e) => Failure(e)
-			}
-		}
+		@deprecated("Renamed to .forFailure(...)", "v2.8")
+		def handleFailure[U](f: Throwable => U) = forFailure(f)
 	}
 	
+	/*
 	implicit class RichTryTryCatch[A](val t: Try[TryCatch[A]]) extends AnyVal
 	{
 		/**
@@ -199,7 +222,9 @@ object TryExtensions
 		  */
 		def flattenCatching: TryCatch[A] = t.getOrMap { TryCatch.Failure(_) }
 	}
+	*/
 	
+	// TODO: Refactor these to support any IterableOnce[MayHaveFailed[A]]
 	implicit class TriesIterableOnce[A](val tries: IterableOnce[Try[A]]) extends AnyVal
 	{
 		/**

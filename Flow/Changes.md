@@ -24,6 +24,7 @@
     or lazy change values.
   - **ChangeResponse**'s `.and(...)` now accepts **AfterEffect** instead of a function
   - **ChangeResponse** trait is now sealed
+- **TryCatch.Failure** no longer has a generic type parameter
 - Rewrote large sections of **AsyncExtensions**
   - `.current` now yields a **Failure** instead of **None** on failure
   - `.currentResult` now yields a flattened result
@@ -47,7 +48,8 @@
   - Deprecated `.currentSuccess`, `.currentFailure`, `.containsSuccess` and `.containsFailure`
   - Deprecated `.isSuccess` and `.isFailure` in favor of `.hasSucceeded` and `.hasFailed`
   - Deprecated `.resultWithTimeout(Duration)`
-  - Deprecated various `.mapIfSuccess(...)` etc. functions in favor of new `.mapSuccess(...)` etc. versions
+  - Deprecated `.mapIfSuccess(...)` in favor of `.mapSuccess(...)`
+  - Deprecated `.tryMapIfSuccess(...)` etc. in favor of `.tryMap(...)` etc.
   - Deprecated various `.forEachResult(...)` etc. functions in favor of new `.forResult(...)` etc. versions
   - Deprecated `.futureSuccesses` and `.futureCompletion`
   - Deprecated `.waitForSuccesses()`
@@ -67,6 +69,7 @@
 - Renamed **Uncertain**'s `.isCertainlyExactly(...)` to `.isCertainly(...)`
 - Renamed **VolatileFlag**'s `.lockWhileIfNotSet(...)` to `.viewLockedIfNotSet(...)`
 - Renamed **ActionQueue**'s `.queueSize` to `.pendingCount` and `.queueSizePointer` to `.pendingCountPointer`
+- Renamed **Try**'s `.handleFailure(...)` to `.forFailure(...)` (in **TryExtensions**)
 ### Bugfixes
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
 - Events fired from **EventfulVolatile** are now always ordered, and can no longer occur in parallel.
@@ -78,6 +81,8 @@
     - After level is treated as after-effects, basically
 - Added **ParallelBuilder** for building collections from multiple threads
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
+- Added a new **MayHaveFailed** trait
+  - Immediate support is added for **Try** (via **TryExtensions**) and **TryCatch**
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
 - Added **BuildNothing**
@@ -102,7 +107,7 @@
 - **Extreme**
   - Added `.compare(...)`
 - **Future** (via **AsyncExtensions**)
-  - Added a large number of new functions
+  - Added a large number of new functions relating to successes & failures
 - **IntSet** (object)
   - Added `.fromOrdered(IterableOnce)`
 - **Iterable**

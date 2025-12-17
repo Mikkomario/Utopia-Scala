@@ -4,7 +4,6 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
-import utopia.echo.controller.EchoContext
 import utopia.echo.controller.parser.StreamedOllamaResponseParser
 import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
 import utopia.echo.model.request.ChatParams
@@ -74,7 +73,7 @@ object ChatRequest
 			if (stream)
 				StreamedOllamaResponseParser.chat.toResponse
 			else
-				ResponseParser.value.tryFlatMapToResponse(EchoContext.parseFailureStatus) {
+				ResponseParser.value.tryFlatMapToResponse {
 					_.tryModel.map[OllamaReply](BufferedOllamaReply.fromOllamaChatResponse) } {
 					_.getString }
 		}

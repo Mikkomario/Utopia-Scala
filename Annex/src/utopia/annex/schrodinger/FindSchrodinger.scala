@@ -109,7 +109,7 @@ object FindSchrodinger
 	def findAndParse[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]],
 	                       parser: FromModelFactory[R], emptyIsDead: Boolean = false)
 	                      (localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
-		apply[L, R](local, resultFuture.map { _.parsingOptionWith(parser) }, emptyIsDead)(localize)
+		apply[L, R](local, resultFuture.map { _.parseOption(parser) }, emptyIsDead)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .findAndParse(...) instead", "v1.8")
 	def apply[L, R](local: Option[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
@@ -163,7 +163,7 @@ object FindSchrodinger
 	def findAndParseAny[A](local: Option[A], parser: FromModelFactory[A], emptyIsDead: Boolean = false)
 	                      (makeRequest: => Future[RequestResult[Value]])
 	                      (implicit exc: ExecutionContext, log: Logger) =
-		findAny[A](local, emptyIsDead) { makeRequest.map { _.parsingOptionWith(parser) } }
+		findAny[A](local, emptyIsDead) { makeRequest.map { _.parseOption(parser) } }
 	
 	@deprecated("Deprecated for removal. Please use .findAndParseAny(...) instead", "v1.8")
 	def findAny[A](local: Option[A], parser: FromModelFactory[A])(makeRequest: => Future[RequestResult[Value]])
@@ -205,7 +205,7 @@ object FindSchrodinger
 	def findAndParseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
 	                          emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	                         (implicit exc: ExecutionContext, log: Logger) =
-		findRemote[A](resultFuture.map { _.parsingOptionWith(parser) }, emptyIsDead, expectFailure)
+		findRemote[A](resultFuture.map { _.parseOption(parser) }, emptyIsDead, expectFailure)
 	
 	@deprecated("Deprecated for removal. Please use .findAndParseRemote(...) instead", "v1.8")
 	def findRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])

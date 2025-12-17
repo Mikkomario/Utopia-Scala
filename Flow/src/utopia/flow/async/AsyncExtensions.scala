@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.{BuildNothing, TryCatchBuilder}
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.Duration
-import utopia.flow.util.MayHaveFailed.{AlwaysSuccess, WrapTry, WrapTryCatch}
+import utopia.flow.util.MayHaveFailed.AlwaysSuccess
 import utopia.flow.util.TryExtensions._
 import utopia.flow.util.logging.SysErrLogger
 import utopia.flow.util.{MayHaveFailed, TryCatch}
@@ -131,7 +131,7 @@ object AsyncExtensions
 		 * @tparam B Type of the (mapped) value on success
 		 * @return 'result2', including information from 'result1', if important and applicable
 		 */
-		protected def merge[B](result1: T, result2: Try[B]): R[B]
+		protected def merge[B](result1: T, value: A, result2: MayHaveFailed[B]): R[B]
 		
 		/**
 		 * Converts a possibly failed attempt to create a future, into a future result
@@ -212,13 +212,44 @@ object AsyncExtensions
 			wrapped.flatMap { r => resultToFuture(wrap(r).map(f)) }
 		
 		/**
+		 * Maps the result of this future, if successful.
+		 * @param f A mapping function to apply, may yield a failure.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of the mapping results, if successful
+		 * @return A mapped copy of this future
+		 */
+		def mapOrFail[B](f: A => MayHaveFailed[B])(implicit exc: ExecutionContext) =
+			wrapped.map { result1 =>
+				wrap(result1).toTry match {
+					case Success(v1) => merge(result1, v1, f(v1))
+					case Failure(error) => failure[B](error)
+				}
+			}
+		/**
+		 * Asynchronously maps the result of this future, if successful.
+		 * @param f A mapping function to apply. Yields a future which may yield a failure.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of the mapping results, if successful
+		 * @return A future that resolves once either:
+		 *              1. This future yields a failure
+		 *              1. The result of 'f' resolves
+		 */
+		def flatMapOrFail[B](f: A => Future[MayHaveFailed[B]])(implicit exc: ExecutionContext) =
+			wrapped.flatMap { result1 =>
+				wrap(result1).toTry match {
+					case Success(v1) => f(v1).map { merge(result1, v1, _) }
+					case Failure(error) => Future.successful(failure[B](error))
+				}
+			}
+		
+		/**
 		 * If this future yields a successful result, maps that with a mapping function that may fail
 		 * @param f A mapping function for successful result. May fail.
 		 * @param exc Implicit execution context.
 		 * @tparam B Type of mapping result.
 		 * @return A mapped version of this future.
 		 */
-		def tryMapSuccess[B](f: A => Try[B])(implicit exc: ExecutionContext) =
+		def tryMap[B](f: A => Try[B])(implicit exc: ExecutionContext) =
 			wrapped.map { r => unwrap(wrap(r).tryMap(f)) }
 		/**
 		 * If this future yields a successful result, maps it with an asynchronous mapping function that may fail
@@ -227,10 +258,10 @@ object AsyncExtensions
 		 * @tparam B Type of eventual mapping result when successful
 		 * @return A mapped version of this future
 		 */
-		def tryFlatMapSuccess[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
+		def tryFlatMap[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
 			wrapped.flatMap { r1 =>
 				wrap(r1).toTry match {
-					case Success(value) => f(value).map { r2 => merge(r1, r2) }
+					case Success(value) => f(value).map { r2 => merge(r1, value, r2) }
 					case Failure(error) => Future.successful(failure[B](error))
 				}
 			}
@@ -243,7 +274,7 @@ object AsyncExtensions
 		 * @tparam B Type of mapping result.
 		 * @return A mapped version of this future.
 		 */
-		def tryMapSuccessCatching[B](f: A => TryCatch[B])(implicit exc: ExecutionContext) =
+		def tryMapCatching[B](f: A => TryCatch[B])(implicit exc: ExecutionContext) =
 			wrapped.map { r => wrap(r).toTryCatch.flatMap(f) }
 		/**
 		 * If this future yields a successful result,
@@ -253,7 +284,7 @@ object AsyncExtensions
 		 * @tparam B Type of eventual mapping result when successful
 		 * @return A mapped version of this future
 		 */
-		def tryFlatMapSuccessCatching[B](f: A => Future[TryCatch[B]])(implicit exc: ExecutionContext) =
+		def tryFlatMapCatching[B](f: A => Future[TryCatch[B]])(implicit exc: ExecutionContext) =
 			wrapped.flatMap { r =>
 				wrap(r).toTryCatch match {
 					case TryCatch.Success(value, partialFailures) =>
@@ -381,25 +412,18 @@ object AsyncExtensions
 		protected def wrapped: IterableOnce[Future[T]]
 		
 		/**
-		 * Asynchronously collects the results of these futures into a single collection
-		 * @param builder A builder for forming the resulting collection from successful results
-		 * @param isEmpty A function used for determining whether the built collection is empty.
-		 *                May be used for determining whether the result should be a failure or a success.
-		 * @param exc Implicit execution context
-		 * @tparam To Type of the resulting collection
-		 * @return A future that resolves into the collected items once all these futures have resolved.
-		 *         Will yield a failure if all these futures failed.
-		 *         Will yield a partial failure if some, but not all, of these futures failed.
-		 */
-		def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
-		                   (implicit exc: ExecutionContext): Future[TryCatch[To]]
-		
-		/**
 		 * Wraps a result into a more generic form
 		 * @param result Result to wrap
 		 * @return A [[MayHaveFailed]] wrapper for that result
 		 */
 		protected def wrap(result: T): MayHaveFailed[A]
+		
+		/**
+		 * Flattens and appends a result to a [[TryCatchBuilder]]
+		 * @param builder Builder to which the result should be appended
+		 * @param result Result to append to the builder, wrapped in a [[Try]]
+		 */
+		protected def appendTo(builder: TryCatchBuilder[A, _], result: Try[T]): Unit
 		
 		
 		// COMPUTED ---------------------------
@@ -464,6 +488,20 @@ object AsyncExtensions
 		def futureUsing[To <: Iterable[_]](builder: mutable.Builder[A, To])
 		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
 			customFutureUsing[To](builder) { _.isEmpty }
+		/**
+		 * Asynchronously collects the results of these futures into a single collection
+		 * @param builder A builder for forming the resulting collection from successful results
+		 * @param isEmpty A function used for determining whether the built collection is empty.
+		 *                May be used for determining whether the result should be a failure or a success.
+		 * @param exc Implicit execution context
+		 * @tparam To Type of the resulting collection
+		 * @return A future that resolves into the collected items once all these futures have resolved.
+		 *         Will yield a failure if all these futures failed.
+		 *         Will yield a partial failure if some, but not all, of these futures failed.
+		 */
+		def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
+		                         (implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			_collectResults[T, A, To](wrapped.iterator, new TryCatchBuilder(builder)(isEmpty))(appendTo)
 	}
 	
 	/**
@@ -479,7 +517,7 @@ object AsyncExtensions
 		override protected def failure[B](cause: Throwable): Try[B] = Failure(cause)
 		
 		override protected def flatten(result: Try[A]): Try[A] = result
-		override protected def merge[B](result1: A, result2: Try[B]): Try[B] = result2
+		override protected def merge[B](result1: A, value: A, result2: MayHaveFailed[B]): Try[B] = result2.toTry
 		
 		override protected def resultToFuture[B](result: MayHaveFailed[Future[B]])
 		                                        (implicit exc: ExecutionContext): Future[Try[B]] =
@@ -495,11 +533,9 @@ object AsyncExtensions
 	 */
 	trait FutureSuccesses[A] extends Any with PossiblyFailingFutures[A, A]
 	{
-		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
-		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-			_collectResults[A, A, To](wrapped.iterator, new TryCatchBuilder(builder)(isEmpty)) { _ += _ }
-		
 		override protected def wrap(result: A): MayHaveFailed[A] = AlwaysSuccess(result)
+		
+		override protected def appendTo(builder: TryCatchBuilder[A, _], result: Try[A]): Unit = builder += result
 	}
 	
 	implicit class RichFuture[A](override val wrapped: Future[A])
@@ -750,12 +786,12 @@ object AsyncExtensions
 		
 		// IMPLEMENTED  -------------------------
 		
-		override protected def wrap(result: Try[A]): MayHaveFailed[A] = WrapTry(result)
+		override protected def wrap(result: Try[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
 		
 		override protected def failure[B](cause: Throwable): Try[B] = Failure(cause)
 		override protected def flatten(result: Try[Try[A]]): Try[A] = result.flatten
-		override protected def merge[B](result1: Try[A], result2: Try[B]): Try[B] = result2
+		override protected def merge[B](result1: Try[A], value: A, result2: MayHaveFailed[B]): Try[B] = result2.toTry
 		
 		override protected def resultToFuture[B](result: MayHaveFailed[Future[B]])
 		                                        (implicit exc: ExecutionContext): Future[Try[B]] =
@@ -765,7 +801,7 @@ object AsyncExtensions
 			}
 		
 		override def mapSuccess[B](f: A => B)(implicit exc: ExecutionContext): Future[Try[B]] = wrapped.map { _.map(f) }
-		override def tryMapSuccess[B](f: A => Try[B])(implicit exc: ExecutionContext): Future[Try[B]] =
+		override def tryMap[B](f: A => Try[B])(implicit exc: ExecutionContext): Future[Try[B]] =
 			wrapped.map { _.flatMap(f) }
 		
 		
@@ -800,7 +836,7 @@ object AsyncExtensions
 		  * @tparam B Type of map result
 		  * @return A mapped version of this future
 		  */
-		@deprecated("Renamed to mapSuccess(...)", "v2.8")
+		@deprecated("Renamed to .mapSuccess(...)", "v2.8")
 		def mapIfSuccess[B](map: A => B)(implicit exc: ExecutionContext) = wrapped.map { r => r.map(map) }
 		/**
 		  * If this future yields a successful result, maps that with a mapping function that may fail
@@ -809,7 +845,7 @@ object AsyncExtensions
 		  * @tparam B Type of mapping result.
 		  * @return A mapped version of this future.
 		  */
-		@deprecated("Renamed to tryMapSuccess(...)", "v2.8")
+		@deprecated("Renamed to .tryMap(...)", "v2.8")
 		def tryMapIfSuccess[B](map: A => Try[B])(implicit exc: ExecutionContext) =
 			wrapped.map { r => r.flatMap(map) }
 		/**
@@ -819,7 +855,7 @@ object AsyncExtensions
 		  * @tparam B Type of eventual mapping result
 		  * @return A mapped version of this future
 		  */
-		@deprecated("Renamed to flatMapSuccess(...)", "v2.8")
+		@deprecated("Renamed to .flatMapSuccess(...)", "v2.8")
 		def flatMapIfSuccess[B](map: A => Future[B])(implicit exc: ExecutionContext) = wrapped.flatMap {
 			case Success(v) => map(v).map { Success(_) }
 			case Failure(e) => Future.successful(Failure(e))
@@ -831,7 +867,7 @@ object AsyncExtensions
 		  * @tparam B Type of eventual mapping result when successful
 		  * @return A mapped version of this future
 		  */
-		@deprecated("Renamed to tryFlatMapSuccess(...)", "v2.8")
+		@deprecated("Renamed to .tryFlatMap(...)", "v2.8")
 		def tryFlatMapIfSuccess[B](map: A => Future[Try[B]])(implicit exc: ExecutionContext) = wrapped.flatMap {
 			case Success(v) => map(v)
 			case Failure(e) => Future.successful(Failure(e))
@@ -862,17 +898,14 @@ object AsyncExtensions
 	{
 		// IMPLEMENTED  -----------------------
 		
-		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = WrapTryCatch(result)
+		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): TryCatch[B] = result.toTryCatch
 		
-		override protected def failure[B](cause: Throwable): TryCatch[B] = TryCatch.Failure[B](cause)
+		override protected def failure[B](cause: Throwable): TryCatch[B] = TryCatch.Failure(cause)
 		
 		override protected def flatten(result: Try[TryCatch[A]]): TryCatch[A] = result.flattenCatching
-		
-		override protected def merge[B](result1: TryCatch[A], result2: Try[B]): TryCatch[B] = result2 match {
-			case Success(value) => TryCatch.Success(value, result1.failures)
-			case Failure(error) => TryCatch.Failure(error)
-		}
+		override protected def merge[B](result1: TryCatch[A], value: A, result2: MayHaveFailed[B]): TryCatch[B] =
+			result2.toTryCatch.withAdditionalFailures(result1.failures)
 		
 		override protected def resultToFuture[B](result: MayHaveFailed[Future[B]])
 		                                        (implicit exc: ExecutionContext): Future[TryCatch[B]] =
@@ -883,7 +916,7 @@ object AsyncExtensions
 		
 		override def mapSuccess[B](f: A => B)(implicit exc: ExecutionContext): Future[TryCatch[B]] =
 			wrapped.map { _.map(f) }
-		override def tryMapSuccessCatching[B](f: A => TryCatch[B])(implicit exc: ExecutionContext): Future[TryCatch[B]] =
+		override def tryMapCatching[B](f: A => TryCatch[B])(implicit exc: ExecutionContext): Future[TryCatch[B]] =
 			wrapped.map { _.flatMap(f) }
 		
 		
@@ -929,7 +962,7 @@ object AsyncExtensions
 		 * @tparam B Type of mapping results, when successful
 		 * @return A copy of this future with the specified function applied to the results before resolving
 		 */
-		@deprecated("Renamed to .tryMapSuccessCatching(...)", "v2.8")
+		@deprecated("Renamed to .tryMapCatching(...)", "v2.8")
 		def tryMapIfSuccess[B](map: A => TryCatch[B])(implicit exc: ExecutionContext) =
 			wrapped.map { _.flatMap(map) }
 		/**
@@ -939,7 +972,7 @@ object AsyncExtensions
 		 * @tparam B Type of mapping results, when successful
 		 * @return A future that resolves once the mapping, also, has completed
 		 */
-		@deprecated("Renamed to .tryFlatMapSuccessCatching(...)", "v2.8")
+		@deprecated("Renamed to .tryFlatMapCatching(...)", "v2.8")
 		def tryFlatMapIfSuccess[B](map: A => Future[TryCatch[B]])(implicit exc: ExecutionContext) =
 			wrapped.flatMap {
 				case TryCatch.Success(value, failures) =>
@@ -1011,18 +1044,15 @@ object AsyncExtensions
 		}
 	}
 	
-	implicit class ManyTryFutures[A](val futures: IterableOnce[Future[Try[A]]])
+	implicit class ManyTryFutures[A](override val wrapped: IterableOnce[Future[Try[A]]])
 		extends AnyVal with PossiblyFailingFutures[A, Try[A]]
 	{
 		// IMPLEMENTED  ----------------------
 		
-		override protected def wrapped: IterableOnce[Future[Try[A]]] = futures
+		override protected def wrap(result: Try[A]): MayHaveFailed[A] = result
 		
-		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
-		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-			_collectResults[Try[A], A, To](futures.iterator, new TryCatchBuilder(builder)(isEmpty)) { _ += _.flatten }
-		
-		override protected def wrap(result: Try[A]): MayHaveFailed[A] = WrapTry(result)
+		override protected def appendTo(builder: TryCatchBuilder[A, _], result: Try[Try[A]]): Unit =
+			builder += result.flatten
 		
 		
 		// OTHER    --------------------------
@@ -1033,38 +1063,18 @@ object AsyncExtensions
 		 *         Yields a failure if all these futures failed.
 		  */
 		@deprecated("Replaced with waitForResults()", "v2.8")
-		def waitForResult() = futures.iterator.map { _.waitForResult() }.toTryCatch
+		def waitForResult() = wrapped.iterator.map { _.waitForResult() }.toTryCatch
 	}
 	
-	implicit class ManyTryCatchFutures[A](val futures: IterableOnce[Future[TryCatch[A]]])
+	implicit class ManyTryCatchFutures[A](override val wrapped: IterableOnce[Future[TryCatch[A]]])
 		extends AnyVal with PossiblyFailingFutures[A, TryCatch[A]]
 	{
 		// IMPLEMENTED  ------------------------
 		
-		override protected def wrapped: IterableOnce[Future[TryCatch[A]]] = futures
+		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = result
 		
-		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
-		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-			_collectResults[TryCatch[A], A, To](futures.iterator, new TryCatchBuilder(builder)(isEmpty)) {
-				_ += _.flattenCatching }
-		
-		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = WrapTryCatch(result)
-	}
-	
-	implicit class ManyPossiblyFailingFutures[A](override val wrapped: IterableOnce[Future[MayHaveFailed[A]]])
-		extends AnyVal with PossiblyFailingFutures[A, MayHaveFailed[A]]
-	{
-		override def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
-		                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-			_collectResults[MayHaveFailed[A], A, To](wrapped.iterator, new TryCatchBuilder(builder)(isEmpty)) {
-				(builder, result) =>
-					result match {
-						case Success(result) => builder += result
-						case Failure(error) => builder += error
-					}
-			}
-		
-		override protected def wrap(result: MayHaveFailed[A]): MayHaveFailed[A] = result
+		override protected def appendTo(builder: TryCatchBuilder[A, _], result: Try[TryCatch[A]]): Unit =
+			builder += result.flattenCatching
 	}
 	
 	implicit class CompletedAttempt[A](val t: Try[A]) extends AnyVal

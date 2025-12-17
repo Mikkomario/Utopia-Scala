@@ -2,8 +2,6 @@ package utopia.annex.test
 
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.ContentCategory.Application
-import utopia.access.model.enumeration.Status.InternalServerError
-import utopia.access.model.enumeration.Status
 import utopia.annex.controller.{ApiClient, PreparingResponseParser}
 import utopia.annex.model.response.Response
 import utopia.annex.util.ResponseParseExtensions._
@@ -40,7 +38,7 @@ class TestApiClient(executionContext: ExecutionContext, jsonParseLogic: JsonPars
 		new Gateway(allowBodyParameters = false, allowJsonInUriParameters = true)
 	
 	override lazy val valueResponseParser: ResponseParser[Response[Value]] =
-		ResponseParser.value.unwrapToResponse(responseParseFailureStatus) { v =>
+		ResponseParser.value.unwrapToResponse { v =>
 			v("error", "message", "description", "details").stringOr(v.getString)
 		}
 	override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
@@ -58,8 +56,6 @@ class TestApiClient(executionContext: ExecutionContext, jsonParseLogic: JsonPars
 	override protected implicit def exc: ExecutionContext = executionContext
 	override protected implicit def log: Logger = logger
 	override protected implicit def jsonParser: JsonParser = jsonParseLogic
-	
-	override protected def responseParseFailureStatus: Status = InternalServerError
 	
 	override protected def modifyOutgoingHeaders(original: Headers): Headers = original.mapAcceptedTypes { accepted =>
 		if (accepted.isEmpty) Single(Application.json) else accepted

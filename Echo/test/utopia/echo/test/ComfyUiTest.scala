@@ -1,12 +1,12 @@
 package utopia.echo.test
 
+import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.client.ComfyUiClient
 import utopia.echo.controller.sd.GenerateImages
 import utopia.echo.model.comfyui.Seed.RandomSeed
 import utopia.echo.model.comfyui.settings.SamplerSettings
 import utopia.echo.model.comfyui.{CheckpointModel, ComfyUiDir, Seed}
 import utopia.echo.test.EchoTestContext._
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.console.ConsoleExtensions._

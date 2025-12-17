@@ -1,11 +1,11 @@
 package utopia.echo.controller.client
 
-import utopia.annex.util.RequestResultExtensions._
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.client.ComfyUiClient.waitInterval
 import utopia.echo.model.comfyui.request.{GetWorkResult, RequestWork}
 import utopia.echo.model.comfyui.workflow.node.WorkflowNode
-import utopia.flow.async.TryFuture
 import utopia.flow.async.process.Wait
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.time.TimeExtensions._
@@ -14,7 +14,6 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 object ComfyUiClient
 {
@@ -47,23 +46,29 @@ class ComfyUiClient(gateway: Gateway = Gateway(), serverAddress: String = "http:
 	 */
 	def apply[A](workFlow: Iterable[WorkflowNode], resultParser: FromModelFactory[A],
 	             deprecationView: View[Boolean] = AlwaysFalse) =
-		push(new RequestWork(workFlow, clientId, deprecationView)).future.tryFlatMapSuccess { promptId =>
-			waitForResult(new GetWorkResult[A](promptId, resultParser, deprecationView))
+		push(new RequestWork(workFlow, clientId, deprecationView)).future.flatMap {
+			case Response.Success(promptId, _, _) =>
+				waitForResult(new GetWorkResult[A](promptId, resultParser, deprecationView))
+			case failure: RequestFailure => Future.successful(failure)
 		}
 	
-	private def waitForResult[A](request: GetWorkResult[A]): Future[Try[A]] = {
+	private def waitForResult[A](request: GetWorkResult[A]): Future[RequestResult[A]] = {
 		// Waits a while before looking for the results
 		// Case: Wait completed => Performs a new look-up request
-		if (Wait(waitInterval)) {
-			push(request).future.tryFlatMapSuccess {
-				// Case: Request completed with a result => Finishes
-				case Some(result) => TryFuture.success(result)
-				// Case: No results are available yet => Attempts again after a wait
-				case None => waitForResult(request)
+		if (Wait(waitInterval))
+			push(request).future.flatMap {
+				case success: Response.Success[Option[A]] =>
+					success.value match {
+						// Case: Request completed with a result => Finishes
+						case Some(result) => Future.successful(success.withValue(result))
+						// Case: No results are available yet => Attempts again after a wait
+						case None => waitForResult(request)
+					}
+				case failure: RequestFailure => Future.successful(failure)
 			}
-		}
 		// Case: Wait interrupted
 		else
-			TryFuture.failure(new InterruptedException("Wait for the request result was interrupted"))
+			Future.successful(
+				RequestSendingFailed(new InterruptedException("Wait for the request result was interrupted")))
 	}
 }

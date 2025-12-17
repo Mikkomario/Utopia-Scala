@@ -129,7 +129,7 @@ class OllamaClient(gateway: Gateway, serverAddress: String = "http://localhost:1
 	  *         May yield a failure.
 	  */
 	def ensureEmptySystemMessage(nameOfNewModel: => String)(implicit llm: LlmDesignator) =
-		showModel.future.tryFlatMapSuccess { modelInfo =>
+		showModel.future.tryFlatMap { modelInfo =>
 			if (modelInfo.systemMessage.isEmpty)
 				TryFuture.success(llm)
 			else {

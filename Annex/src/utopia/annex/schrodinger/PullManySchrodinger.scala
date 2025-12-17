@@ -112,7 +112,7 @@ object PullManySchrodinger
 	  */
 	def pullAndParse[L, R](local: Seq[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R],
 	                       emptyIsDead: Boolean = false)(localize: R => L)(implicit exc: ExecutionContext, log: Logger) =
-		apply(local, resultFuture.map { _.parsingManyWith(parser) }, emptyIsDead)(localize)
+		apply(local, resultFuture.map { _.parseMany(parser) }, emptyIsDead)(localize)
 	
 	@deprecated("Deprecated for removal. Please use .pullAndParse(...) instead", "v1.8")
 	def apply[L, R](local: Seq[L], resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[R])
@@ -152,7 +152,7 @@ object PullManySchrodinger
 	def parseRemote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A],
 	                   emptyIsDead: Boolean = false, expectFailure: Boolean = false)
 	                  (implicit exc: ExecutionContext, log: Logger) =
-		remote[A](resultFuture.map { _.parsingManyWith(parser) }, emptyIsDead, expectFailure)
+		remote[A](resultFuture.map { _.parseMany(parser) }, emptyIsDead, expectFailure)
 	
 	@deprecated("Deprecated for removal. Please use .parseRemote(...) instead", "v1.8")
 	def remote[A](resultFuture: Future[RequestResult[Value]], parser: FromModelFactory[A])
