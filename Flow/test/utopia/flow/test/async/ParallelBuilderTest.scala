@@ -47,7 +47,7 @@ object ParallelBuilderTest extends App
 	b += 5
 	testTime(0.seconds)
 	assert(q.containsPendingActions)
-	assert(q.queueSize == 1)
+	assert(q.pendingCount == 1)
 	
 	Wait(0.1.seconds)
 	
@@ -56,19 +56,19 @@ object ParallelBuilderTest extends App
 	
 	b += 8
 	testTime(0.1.seconds)
-	assert(q.queueSize == 4)
+	assert(q.pendingCount == 4)
 	
 	b += 9
 	testTime(0.5.seconds)
-	assert(q.queueSize == 1, q.queueSize)
+	assert(q.pendingCount == 1, q.pendingCount)
 	
 	b ++= (10 to 12)
 	testTime(0.5.seconds)
-	assert(q.queueSize == 4)
+	assert(q.pendingCount == 4)
 	
 	b ++= (13 to 24)
 	testTime(2.0.seconds)
-	assert(q.queueSize == 4)
+	assert(q.pendingCount == 4)
 	
 	private val r = b.result().waitForResult().get
 	assert(r.size == 24)

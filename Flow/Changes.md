@@ -66,6 +66,7 @@
 - Renamed **Iterator**'s `.groupBy(...)` to `.groupConsecutiveBy(...)`
 - Renamed **Uncertain**'s `.isCertainlyExactly(...)` to `.isCertainly(...)`
 - Renamed **VolatileFlag**'s `.lockWhileIfNotSet(...)` to `.viewLockedIfNotSet(...)`
+- Renamed **ActionQueue**'s `.queueSize` to `.pendingCount` and `.queueSizePointer` to `.pendingCountPointer`
 ### Bugfixes
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
 - Events fired from **EventfulVolatile** are now always ordered, and can no longer occur in parallel.

@@ -9,6 +9,7 @@ import utopia.flow.event.model.ChangeResponsePriority.{After, High, Normal}
 import utopia.flow.event.model.Destiny.{ForeverFlux, MaySeal, Sealed}
 import utopia.flow.event.model._
 import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.Extreme.Max
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.time.Duration
 import utopia.flow.util.TryExtensions._
@@ -196,7 +197,6 @@ object Changing
 			val effectPriority = effectPrioritiesIter.next()
 			// Case: These effects should be triggered immediately => Starts processing them
 			if (effectPriority > listenerPriority || (noListenersRemain && effectPriority == listenerPriority)) {
-				// TODO: Simplify case where priority == High
 				// Prepares the effects to process, also taking the queued effects
 				val queuedEffectsBuilder = queuedEffectsBuilders(effectPriority)
 				var effectsIter = effectsByPriority.get(effectPriority) match {
@@ -226,7 +226,9 @@ object Changing
 						// Case: Higher priority effects were issued
 						//       => Interrupts the processing of these (lower priority) effects
 						//          and continues recursively
-						if (chainedEffectsByPriority.keysIterator.exists { _ > effectPriority }) {
+						if (effectPriority.isNot(Max) &&
+							chainedEffectsByPriority.keysIterator.exists { _ > effectPriority })
+						{
 							// Calculates the new remaining events
 							interrupted = true
 							remainingEffects = chainedEffectsByPriority.iterator.filter { _._1 > effectPriority } ++
@@ -288,8 +290,7 @@ object Changing
 	 * @return After-effects that should be triggered after this function.
 	 *         May include a recursive call to this function, if some issued effects took priority.
 	 */
-	// TODO: Simplify case where priority == High
-	protected def fireEventFor[A](priority: ChangeResponsePriority, listenersIter: Iterator[ChangeListener[A]],
+	private def fireEventFor[A](priority: ChangeResponsePriority, listenersIter: Iterator[ChangeListener[A]],
 	                              event: ChangeEvent[A])
 	                             (detachListener: (ChangeResponsePriority, ChangeListener[A]) => Unit)
 	                             (implicit log: Logger): Seq[AfterEffect] =
@@ -312,31 +313,41 @@ object Changing
 						detachListener(priority, listener)
 					
 					// Analyzes the after-effects prepared by the listener
-					// TODO: Optimize the case where afterEffects is empty
-					val effectsByPriority = response.afterEffects.groupToSeqsBy { _.priority }
-					val higherPriorityEffectsIter = effectsByPriority.iterator.filter { _._1 > priority }
-					
-					// Case: Higher priority effects were issued
-					//       => Interrupts listener-informing in order to trigger the effects as quickly as possible
-					if (higherPriorityEffectsIter.hasNext) {
-						interrupted = true
-						interruptingEffects = higherPriorityEffectsIter.toOptimizedSeq
-							.reverseSortBy { _._1 }.flatMap { _._2 }
+					val effectsIter = response.afterEffects.iterator
+					if (effectsIter.hasNext) {
+						// Case: Currently processing high-level listeners => There's no possibility for an interruption
+						if (priority.isMax)
+							laterEffectsBuilder ++= effectsIter
+						// Case: Processing mid- to low priority listeners
+						//       => Checks for interrupting (higher priority) after-effects
+						else {
+							val (effectsToDelay, highPriorityEffects) =
+								effectsIter.divideToSeqsBy { _.priority > priority }.toTuple
+							
+							// Case: Higher priority effects were issued
+							//       => Interrupts listener-informing in order to trigger the effects as quickly as possible
+							if (highPriorityEffects.nonEmpty) {
+								interrupted = true
+								interruptingEffects = highPriorityEffects
+							}
+							
+							// Prepares the other after-effects to be triggered later
+							laterEffectsBuilder ++= effectsToDelay
+						}
 					}
-					
-					// Prepares the other after-effects to be triggered later
-					laterEffectsBuilder ++= effectsByPriority.view.filterKeys { _ >= priority }.valuesIterator.flatten
 				}
 		}
 		
 		// Case: Some listeners were not yet informed of the event
-		//       => Queues the informing of those listeners as an after-effect
+		//       => Queues the informing of those listeners as an additional after-effect
 		if (listenersIter.hasNext)
-			AfterEffect(priority).chaining { fireEventFor(priority, listenersIter, event)(detachListener) } +:
-				laterEffectsBuilder.result()
+			OptimizedIndexedSeq.concat(
+				interruptingEffects,
+				Single(AfterEffect(priority).chaining { fireEventFor(priority, listenersIter, event)(detachListener) }),
+				laterEffectsBuilder.result())
 		// Case: All listeners were informed => Yields the prepared after-effects
 		else
-			laterEffectsBuilder.result()
+			interruptingEffects ++ laterEffectsBuilder.result()
 	}
 	
 	
@@ -1869,7 +1880,9 @@ trait Changing[+A] extends SynchronizedView[A]
 					// Case: May change => Listens to changes until the searched state is found
 					if (mayChange) {
 						val promise = Promise[B]()
-						addListenerAndSimulateEvent(value) { e =>
+						// The listener is added as low-priority,
+						// because futures don't respect change response -effect ordering
+						addLowPriorityListener { e =>
 							// Handles possible failures thrown by the test function
 							Try { condition(e.newValue) } match {
 								case Success(result) =>

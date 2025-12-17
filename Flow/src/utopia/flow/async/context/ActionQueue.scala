@@ -458,11 +458,11 @@ object ActionQueue
 		
 		override def containsPendingActions = queue.nonEmpty
 		
-		override def queueSize: Int = lazyQueueSizeP.current match {
+		override def pendingCount: Int = lazyQueueSizeP.current match {
 			case Some(sizeP) => sizeP.value
 			case None => queue.value.size
 		}
-		override def queueSizePointer = lazyQueueSizeP.value
+		override def pendingCountPointer = lazyQueueSizeP.value
 		
 		override protected def _push[A](action: InteractiveAction[A], prepend: Boolean) = {
 			// Pushes or prepends the action to queue
@@ -507,8 +507,8 @@ object ActionQueue
 		override def currentWidth: Int = processorP.value.count { !_.isComplete }
 		
 		override def debugString: String = processorP.value match {
-			case Some(processor) => s"Processor: {${ processor.debugString }}, queued: $queueSize"
-			case None => s"No processor, queued: $queueSize"
+			case Some(processor) => s"Processor: {${ processor.debugString }}, queued: $pendingCount"
+			case None => s"No processor, queued: $pendingCount"
 		}
 		
 		
@@ -576,7 +576,7 @@ object ActionQueue
 		override def currentWidth: Int = processorsP.value.count { !_.isComplete }
 		
 		override def debugString: String = s"Processors: [${
-			processorsP.value.iterator.map { p => s"{${ p.debugString }}" }.mkString(", ") }], queued: $queueSize"
+			processorsP.value.iterator.map { p => s"{${ p.debugString }}" }.mkString(", ") }], queued: $pendingCount"
 		
 		
 		// OTHER	----------------------
@@ -737,11 +737,11 @@ trait ActionQueue extends MaybeEmpty[ActionQueue]
 	/**
 	 * @return Number of actions that are currently waiting to be processed, i.e. have not started yet.
 	 */
-	def queueSize: Int
+	def pendingCount: Int
 	/**
 	 * A pointer that contains the number of queued (waiting) items in this queue at any time.
 	 */
-	def queueSizePointer: Changing[Int]
+	def pendingCountPointer: Changing[Int]
 	/**
 	 * @return A flag that contains true while there are actions waiting to be started
 	 */
@@ -807,6 +807,11 @@ trait ActionQueue extends MaybeEmpty[ActionQueue]
 	  * @return An execution context that uses this action queue
 	  */
 	def asExecutionContext: ExecutionContext = QueuedExecutionContext
+	
+	@deprecated("Renamed to .pendingCount", "v2.8")
+	def queueSize: Int = pendingCount
+	@deprecated("Renamed to .pendingCountPointer", "v2.8")
+	def queueSizePointer: Changing[Int] = pendingCountPointer
 	
 	
 	// IMPLEMENTED  ------------------

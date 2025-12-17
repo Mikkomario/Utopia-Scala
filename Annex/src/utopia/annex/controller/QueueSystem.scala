@@ -63,7 +63,7 @@ class QueueSystem(api: ApiClient, offlineModeWaitThreshold: Duration = 30.second
 	  * @return A pointer that contains the number of queued (i.e. waiting) requests.
 	  *         In online mode (the standard mode), contains 0.
 	  */
-	def queuedRequestCountPointer = offlineQueue.queueSizePointer
+	def queuedRequestCountPointer = offlineQueue.pendingCountPointer
 	
 	/**
 	  * @return Whether the system is currently in online mode and functioning normally

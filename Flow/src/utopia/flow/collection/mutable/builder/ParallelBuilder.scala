@@ -129,7 +129,7 @@ class ParallelBuilder[-I, A, +To](accessQueue: AccessQueue[ActionQueue], map: Ma
 				accessQueue { queue =>
 					// Case: This item may be appended without overfilling the buffer
 					//       => queues the mapping immediately
-					if (queue.queueSize < bufferSize) {
+					if (queue.pendingCount < bufferSize) {
 						val queuedAction = map.push(queue, elem)
 						builder += queuedAction
 						Future.successful(queuedAction)
@@ -186,7 +186,7 @@ class ParallelBuilder[-I, A, +To](accessQueue: AccessQueue[ActionQueue], map: Ma
 	                           resultBuilder: mutable.Builder[QueuedAction[A], R]): Future[R] =
 	{
 		// Checks how many items may be appended without waiting
-		val immediateCapacity = bufferSize - queue.queueSize
+		val immediateCapacity = bufferSize - queue.pendingCount
 		
 		// Case: Items may be appended => Adds as many as possible
 		if (immediateCapacity > 0) {
