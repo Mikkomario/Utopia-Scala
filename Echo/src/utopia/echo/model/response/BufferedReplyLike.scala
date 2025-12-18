@@ -10,7 +10,7 @@ import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 

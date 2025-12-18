@@ -1,10 +1,11 @@
-package utopia.flow.util
+package utopia.flow.util.result
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
-import utopia.flow.collection.mutable.builder.TryCatchBuilder
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 
+import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -14,7 +15,7 @@ import scala.util.{Failure, Success, Try}
   */
 object TryExtensions
 {
-	implicit class RichTry[A](val t: Try[A])
+	implicit class RichTry[+A](val t: Try[A])
 		extends AnyVal with MayHaveFailed[A] with MayHaveFailedLike[A, RichTry, RichTry, TryCatch]
 	{
 		// COMPUTED --------------------------
@@ -214,107 +215,55 @@ object TryExtensions
 		def handleFailure[U](f: Throwable => U) = forFailure(f)
 	}
 	
-	/*
-	implicit class RichTryTryCatch[A](val t: Try[TryCatch[A]]) extends AnyVal
+	implicit class TriesIterableOnce[A](val tries: IterableOnce[Try[A]]) extends AnyVal with Attempts[A, Try[A], Try]
 	{
-		/**
-		  * @return Flattened copy of this 2-level try into a single TryCatch instance
-		  */
-		def flattenCatching: TryCatch[A] = t.getOrMap { TryCatch.Failure(_) }
-	}
-	*/
-	
-	// TODO: Refactor these to support any IterableOnce[MayHaveFailed[A]]
-	implicit class TriesIterableOnce[A](val tries: IterableOnce[Try[A]]) extends AnyVal
-	{
+		// COMPUTED -------------------------
+		
 		/**
 		  * Converts this series of attempts to a single try. The resulting try succeeds only if all attempts succeeded.
 		  * If a failure is encountered, iteration is immediately ended and that failure is returned.
 		  * @return Success containing all success results or Failure containing the encountered error
 		  */
-		def toTry = {
-			val iter = tries.iterator
-			if (iter.hasNext) {
-				val successesBuilder = OptimizedIndexedSeq.newBuilder[A]
-				var failure: Option[Throwable] = None
-				do {
-					iter.next() match {
-						case Success(item) => successesBuilder += item
-						case Failure(error) => failure = Some(error)
-					}
-				} while (failure.isEmpty && iter.hasNext)
-				failure match {
-					case Some(error) => Failure(error)
-					case None => Success(successesBuilder.result())
-				}
-			}
-			else
-				Success(Empty)
-		}
-		/**
-		  * @return Failure if all attempts in this collection failed, containing the first encountered error.
-		  *         If one or more attempts succeeded, or if no attempts were made, returns a success containing
-		  *         caught errors, as well as successes
-		  */
-		def toTryCatch: TryCatch[IndexedSeq[A]] = {
-			val builder = TryCatchBuilder[A]()
-			builder ++= tries
-			builder.result()
-		}
+		def toTry = tryFlatten[A]
 		
 		/**
-		  * Divides this collection to two separate collections, one for failures and one for successes
-		  * @return Failures + successes
+		  * @return The first failure that was encountered. None if no failures were encountered.
 		  */
-		def divided = tries.divideWith {
+		@deprecated("Renamed to .firstFailure", "v2.8")
+		def anyFailure = tries.iterator.findMap { _.failure }
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override protected def iterator: Iterator[Try[A]] = tries.iterator
+		
+		override def divided = tries.divideWith {
 			case Success(v) => Right(v)
 			case Failure(error) => Left(error)
 		}
 		
-		/**
-		  * @return An iterator that only includes failed attempts
-		  */
-		def failuresIterator = tries.iterator.flatMap { _.failure }
-		/**
-		  * @return The first failure that was encountered. None if no failures were encountered.
-		  */
-		def anyFailure = tries.iterator.findMap { _.failure }
+		override protected def wrap(result: Try[A]): MayHaveFailed[A] = result
+		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
 		
-		/**
-		 * @tparam B Type of the inner items
-		 * @return All collections in this collection, flattened.
-		 *         A failure if this collection contained any failures.
-		 */
-		def tryFlatten[B](implicit ev: A <:< IterableOnce[B]) = {
-			val builder = OptimizedIndexedSeq.newBuilder[B]
-			var failure: Option[Throwable] = None
-			val iter = tries.iterator
-			
-			while (failure.isEmpty && iter.hasNext) {
-				iter.next() match {
-					case Success(coll) => builder ++= coll
-					case Failure(error) => failure = Some(error)
-				}
-			}
-			
-			failure match {
-				case Some(failure) => Failure(failure)
-				case None => Success(builder.result())
-			}
+		override def toTryCatchUsing[To <: Iterable[_]](builder: mutable.Builder[A, To]) = {
+			val resultBuilder = TryCatch.builder.wrap(builder)
+			resultBuilder ++= tries
+			resultBuilder.result()
 		}
 	}
 	
-	implicit class TryCatchesIterableOnce[A](val tries: IterableOnce[TryCatch[A]]) extends AnyVal
+	implicit class TryCatchesIterableOnce[A](val tries: IterableOnce[TryCatch[A]])
+		extends AnyVal with Attempts[A, TryCatch[A], TryCatch]
 	{
-		/**
-		  * @return Success if at least one of the items in this collection was a success,
-		  *         or if this collection is empty.
-		  *         Failure otherwise.
-		  */
-		def toTryCatch: TryCatch[IndexedSeq[A]] = {
-			val builder = TryCatchBuilder[A]()
-			builder.catching ++= tries
-			builder.result()
+		override protected def iterator: Iterator[TryCatch[A]] = tries.iterator
+		
+		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = result
+		override protected def unwrap[B](result: MayHaveFailed[B]): TryCatch[B] = result.toTryCatch
+		
+		override def toTryCatchUsing[To <: Iterable[_]](builder: mutable.Builder[A, To]): TryCatch[To] = {
+			val resultBuilder = TryCatch.builder.wrap(builder)
+			resultBuilder.catching ++= tries
+			resultBuilder.result()
 		}
 	}
 	

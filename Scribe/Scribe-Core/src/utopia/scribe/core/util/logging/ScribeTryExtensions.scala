@@ -3,7 +3,7 @@ package utopia.scribe.core.util.logging
 import utopia.flow.collection.CollectionExtensions.RichIterable
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.util.TryCatch
+import utopia.flow.util.result.TryCatch
 import utopia.scribe.core.controller.logging.Scribe
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Recoverable

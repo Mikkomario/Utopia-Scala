@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.model.ChangeEvent
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.paradigm.shape.shape2d.vector.point.Point

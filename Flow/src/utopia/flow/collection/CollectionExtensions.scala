@@ -14,9 +14,10 @@ import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.util.{HasSize, TryCatch}
+import utopia.flow.util.HasSize
+import utopia.flow.util.result.TryCatch
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
@@ -1449,6 +1450,7 @@ object CollectionExtensions
 		                   (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
 			mergeOrAppend(item)(findMatch) { (_, i) => i }
 		
+		// TODO: These must be renamed, as they conflict with the new Future collection function names
 		/**
 		 * Maps the contents of this collection. Mapping may fail, interrupting all remaining mappings
 		 * @param f  A mapping function. May fail.

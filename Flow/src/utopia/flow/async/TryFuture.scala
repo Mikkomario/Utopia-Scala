@@ -1,7 +1,7 @@
 package utopia.flow.async
 
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.util.TryCatch
+import utopia.flow.util.result.TryCatch
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}

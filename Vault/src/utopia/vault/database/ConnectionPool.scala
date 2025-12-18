@@ -7,7 +7,7 @@ import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile

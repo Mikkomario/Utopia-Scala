@@ -12,7 +12,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.nexus.controller.api.interceptor.{InterceptRequest, RequestInterceptor}
 import utopia.nexus.controller.api.node.ApiNode

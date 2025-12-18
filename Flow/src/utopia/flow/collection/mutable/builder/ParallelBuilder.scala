@@ -7,7 +7,7 @@ import utopia.flow.async.context.{AccessQueue, ActionQueue}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.collection.mutable.builder.BuilderExtensions._
-import utopia.flow.util.TryCatch
+import utopia.flow.util.result.TryCatch
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 

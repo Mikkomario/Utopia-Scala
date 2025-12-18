@@ -14,7 +14,7 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.nexus
 import utopia.nexus.http.{Path, ServerSettings, StreamedBody}

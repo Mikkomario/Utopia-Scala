@@ -9,7 +9,7 @@ import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 

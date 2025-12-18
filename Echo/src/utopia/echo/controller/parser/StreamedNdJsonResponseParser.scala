@@ -8,7 +8,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.Identity
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Lines
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.io.InputStream

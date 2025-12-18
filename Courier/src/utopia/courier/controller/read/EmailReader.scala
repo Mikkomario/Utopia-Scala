@@ -10,7 +10,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile

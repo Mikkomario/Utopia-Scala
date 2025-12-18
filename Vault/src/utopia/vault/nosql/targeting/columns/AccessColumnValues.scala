@@ -6,7 +6,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column

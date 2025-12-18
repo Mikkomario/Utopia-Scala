@@ -2,7 +2,7 @@ package utopia.echo.model.response.openai
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 
 /**
   * Common trait for factories which convert (ordered) output models into output elements of a specific type

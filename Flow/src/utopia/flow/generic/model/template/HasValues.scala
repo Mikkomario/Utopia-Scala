@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 
 import scala.util.Try
 

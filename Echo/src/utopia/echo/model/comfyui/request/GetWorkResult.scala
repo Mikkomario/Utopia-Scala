@@ -11,7 +11,7 @@ import utopia.flow.generic.model.mutable.DataType.{StringType, VectorType}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 

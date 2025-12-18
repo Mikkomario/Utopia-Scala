@@ -1,7 +1,7 @@
-package utopia.flow.util
+package utopia.flow.util.result
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.util.TryExtensions.RichTry
+import utopia.flow.util.result.TryExtensions.RichTry
 import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions

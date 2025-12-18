@@ -2,6 +2,7 @@
 
 ## v2.8 (in development)
 ### Breaking changes
+- Moved **TryExtensions** and **TryCatch** to package `util.result`
 - Multiple breaking changes to **Changing**:
   - Rewrote the change event -processing logic completely
     - Now events are primarily processed in the pointer that originated the chain of events; 
@@ -24,6 +25,7 @@
     or lazy change values.
   - **ChangeResponse**'s `.and(...)` now accepts **AfterEffect** instead of a function
   - **ChangeResponse** trait is now sealed
+- Renamed `.tryFlatten` to `.tryFlattenEach` in **TryExtensions**
 - **TryCatch.Failure** no longer has a generic type parameter
 - Rewrote large sections of **AsyncExtensions**
   - `.current` now yields a **Failure** instead of **None** on failure
@@ -83,6 +85,8 @@
 - Added **PartialMapView** trait, which provides support for key-mapping, for example
 - Added a new **MayHaveFailed** trait
   - Immediate support is added for **Try** (via **TryExtensions**) and **TryCatch**
+  - Also added **PossiblyFailingFuture**, **PossiblyFailingFutures** and **Attempts** traits for facilitating 
+    extension-creation for classes that will extend **MayHaveFailed**
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
 - Added **BuildNothing**

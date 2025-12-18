@@ -14,7 +14,7 @@ import utopia.flow.parse.string.Lines
 import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful.SettableFlag

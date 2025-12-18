@@ -13,7 +13,7 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.io.InputStream
@@ -323,7 +323,9 @@ object ResponseParser
 		  * @tparam B Type of mapped response parse results, when successful
 		  * @return Copy of this parser which also applies the specified mapping function on successes
 		  */
-		def flatMap[B](f: A => Try[B]) = p.map { _.flatMap(f) }
+		def tryMap[B](f: A => Try[B]) = p.map { _.flatMap(f) }
+		@deprecated("Renamed to .tryMap(...)", "v1.9.2")
+		def flatMap[B](f: A => Try[B]) = tryMap(f)
 		
 		/**
 		  * Applies a recovery function to this response-parser

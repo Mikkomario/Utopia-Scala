@@ -18,7 +18,7 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.Now
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.metropolis.model.partial.organization.InvitationData
 import utopia.metropolis.model.post.NewInvitation
 import utopia.metropolis.model.stored.organization.Invitation

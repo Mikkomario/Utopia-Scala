@@ -11,7 +11,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.Lines
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy

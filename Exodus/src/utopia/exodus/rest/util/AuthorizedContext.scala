@@ -18,7 +18,7 @@ import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.NotEmpty
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.metropolis.model.cached.LanguageIds
 import utopia.metropolis.model.enumeration.ModelStyle
 import utopia.nexus.http.{Request, Response, ServerSettings}

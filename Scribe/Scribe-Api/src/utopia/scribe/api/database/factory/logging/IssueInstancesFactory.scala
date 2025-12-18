@@ -1,7 +1,7 @@
 package utopia.scribe.api.database.factory.logging
 
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.scribe.core.model.combined.logging.IssueInstances
 import utopia.vault.error.HandleError
 import utopia.vault.model.enumeration.SelectTarget

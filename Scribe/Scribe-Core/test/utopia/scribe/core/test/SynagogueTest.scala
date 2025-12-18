@@ -1,6 +1,6 @@
 package utopia.scribe.core.test
 
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.scribe.core.controller.logging.Synagogue
 

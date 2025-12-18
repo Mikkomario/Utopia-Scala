@@ -9,7 +9,7 @@ import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile

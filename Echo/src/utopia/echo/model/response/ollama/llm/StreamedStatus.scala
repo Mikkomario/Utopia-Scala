@@ -2,7 +2,7 @@ package utopia.echo.model.response.ollama.llm
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.eventful.SettableFlag

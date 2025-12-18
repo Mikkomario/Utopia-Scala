@@ -9,7 +9,7 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.container.SaveTiming.{Delayed, Immediate, OnJvmClose, OnlyOnTrigger}
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 

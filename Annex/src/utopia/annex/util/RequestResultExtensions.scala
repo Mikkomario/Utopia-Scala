@@ -6,8 +6,8 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.builder.TryCatchBuilder
 import utopia.flow.time.Duration
-import utopia.flow.util.MayHaveFailed
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.{Attempts, MayHaveFailed, PossiblyFailingFuture, PossiblyFailingFutures}
+import utopia.flow.util.result.TryExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -19,20 +19,22 @@ import scala.util.{Failure, Success, Try}
   */
 object RequestResultExtensions
 {
+	implicit class RequestResults[A](val results: IterableOnce[RequestResult[A]])
+		extends AnyVal with Attempts[A, RequestResult[A], RequestResult]
+	{
+		override protected def iterator: Iterator[RequestResult[A]] = results.iterator
+		
+		override protected def wrap(result: RequestResult[A]): MayHaveFailed[A] = result
+		override protected def unwrap[B](result: MayHaveFailed[B]): RequestResult[B] = RequestResult.from(result)
+	}
+	
 	implicit class AsyncRequestResult[A](val wrapped: Future[RequestResult[A]])
 		extends AnyVal with PossiblyFailingFuture[A, RequestResult[A], RequestResult]
 	{
 		// IMPLEMENTED  -----------------------
 		
 		override protected def wrap(result: RequestResult[A]): MayHaveFailed[A] = result
-		override protected def unwrap[B](result: MayHaveFailed[B]): RequestResult[B] = result match {
-			case r: RequestResult[B] => r
-			case r =>
-				r.toTry match {
-					case Success(value) => Response.Success(value)
-					case Failure(error) => RequestSendingFailed(error)
-				}
-		}
+		override protected def unwrap[B](result: MayHaveFailed[B]): RequestResult[B] = RequestResult.from(result)
 		
 		override protected def failure[B](cause: Throwable): RequestResult[B] = RequestSendingFailed(cause)
 		override protected def flatten(result: Try[RequestResult[A]]): RequestResult[A] = result.getOrMap(failure)

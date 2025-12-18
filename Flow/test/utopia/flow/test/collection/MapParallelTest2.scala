@@ -7,7 +7,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.builder.BuildNothing
 import utopia.flow.test.TestContext._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.TryCatch
+import utopia.flow.util.result.TryCatch
 import utopia.flow.view.mutable.eventful.SettableFlag
 
 import scala.util.Random

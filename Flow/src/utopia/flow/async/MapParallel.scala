@@ -9,7 +9,7 @@ import utopia.flow.async.context.{AccessQueue, ActionQueue}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.{ParallelBuilder, TryCatchBuilder}
-import utopia.flow.util.TryCatch
+import utopia.flow.util.result.TryCatch
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 

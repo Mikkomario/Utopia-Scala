@@ -7,7 +7,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords

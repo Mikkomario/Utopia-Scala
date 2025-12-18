@@ -12,7 +12,7 @@ import utopia.flow.generic.model.mutable.{DataType, Variable}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.{HasValues, ModelConvertible, Property}
 import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.util.{Failure, Try}

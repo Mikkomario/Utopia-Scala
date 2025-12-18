@@ -1,4 +1,6 @@
-package utopia.flow.util
+package utopia.flow.util.result
+
+import utopia.flow.collection.immutable.{Empty, Single}
 
 import scala.util.Try
 
@@ -87,6 +89,14 @@ trait MayHaveFailedLike[+A, +R[_], +TR[_], +TCR[_]] extends Any
 	
 	
 	// COMPUTED -------------------------
+	
+	/**
+	 * @return All failures (full & partial) associated with this result
+	 */
+	def failures: Seq[Throwable] = failure match {
+		case Some(error) => Single(error)
+		case None => Empty
+	}
 	
 	/**
 	 * @param ev Implicit evidence that this result contains another result

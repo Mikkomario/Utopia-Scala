@@ -5,7 +5,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Now, Today}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.FileLogger.dateTimeFormat
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.DeprecatingLazy

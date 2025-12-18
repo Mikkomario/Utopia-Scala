@@ -6,7 +6,7 @@ import utopia.flow.parse.EmptyInputStream
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.{Lines, StringFrom}
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.logging.Logger
 

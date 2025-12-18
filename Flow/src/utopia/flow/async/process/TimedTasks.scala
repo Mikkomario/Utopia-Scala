@@ -10,7 +10,7 @@ import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now, Today, WeekDay}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile

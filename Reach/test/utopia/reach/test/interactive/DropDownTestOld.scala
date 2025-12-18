@@ -4,7 +4,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.genesis.image.Image

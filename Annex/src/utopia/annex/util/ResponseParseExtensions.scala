@@ -5,7 +5,7 @@ import utopia.annex.model.response.Response
 import utopia.disciple.controller.parse.{ResponseParseResult, ResponseParser}
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{Logger, NoOpLogger}
 
 import java.io.InputStream

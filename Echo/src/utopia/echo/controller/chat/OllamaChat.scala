@@ -13,7 +13,7 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.template.HasValues
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.Changing
 

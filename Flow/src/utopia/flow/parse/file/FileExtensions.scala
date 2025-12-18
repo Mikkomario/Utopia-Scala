@@ -13,8 +13,8 @@ import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.Lines
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryCatch
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryCatch
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -600,14 +600,14 @@ object FileExtensions
 		
 		/**
 		  * @param filter A filter that determines which paths will be included. Will be called once for each file
-		  *               within this directory and its sub-directories (including the directories themselves).
+		  *               within this directory and its subdirectories (including the directories themselves).
 		  * @return Paths accepted by the filter
 		  */
 		def findDescendants(filter: Path => Boolean): Try[IndexedSeq[Path]] =
-			allChildrenIterator.mapSuccesses { Some(_).filter(filter) }.tryFlatten
+			allChildrenIterator.mapSuccesses { Some(_).filter(filter) }.tryFlattenEach[Path]
 		
 		/**
-		  * @param extension A file extension (Eg. "png"), not including the '.'
+		  * @param extension A file extension (E.g. "png"), not including the '.'
 		  * @return All files directly or indirectly under this directory that have the specified file extension / type
 		  */
 		def allRegularFileChildrenOfType(extension: String) = findDescendants { f =>

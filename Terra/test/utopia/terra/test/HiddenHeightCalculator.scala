@@ -3,7 +3,7 @@ package utopia.terra.test
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.paradigm.measurement.DistanceUnit.Meter
 import utopia.paradigm.measurement.{Distance, DistanceUnit}
 import utopia.terra.controller.coordinate.GlobeMath

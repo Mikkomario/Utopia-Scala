@@ -27,7 +27,7 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import java.io.OutputStream

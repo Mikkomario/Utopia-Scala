@@ -17,7 +17,7 @@ import utopia.exodus.util.ExodusContext.{logger, uuidGenerator}
 import utopia.flow.collection.immutable.caching.iterable.LazyVector
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.time.Now
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.nexus.http.Path
 import utopia.nexus.rest.{Context, ResourceWithChildren}
 import utopia.nexus.result.Result

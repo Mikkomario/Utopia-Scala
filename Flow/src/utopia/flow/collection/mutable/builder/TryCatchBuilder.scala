@@ -1,9 +1,9 @@
 package utopia.flow.collection.mutable.builder
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.util.MayHaveFailed.AlwaysSuccess
-import utopia.flow.util.TryExtensions.RichTry
-import utopia.flow.util.{MayHaveFailed, TryCatch}
+import utopia.flow.util.result.MayHaveFailed.AlwaysSuccess
+import utopia.flow.util.result.TryExtensions.RichTry
+import utopia.flow.util.result.{MayHaveFailed, TryCatch}
 
 import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
@@ -61,6 +61,10 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	 * @return An interface to this builder which accepts successful results
 	 */
 	def fromSuccesses: mutable.Builder[A, TryCatch[Coll]] = Successes
+	/**
+	 * @return An interface to this builder which accepts failures
+	 */
+	def fromFailures: mutable.Builder[Throwable, TryCatch[Coll]] = Failures
 	/**
 	 * @return An interface to this builder which accepts instances of [[TryCatch]] instead of [[Try]]
 	 */
@@ -207,6 +211,24 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 		
 		override def addOne(elem: A): Successes.this.type = {
 			wrapped += elem
+			this
+		}
+		override def addAll(elems: IterableOnce[A]): Successes.this.type = {
+			wrapped ++= elems
+			this
+		}
+	}
+	private object Failures extends mutable.Builder[Throwable, TryCatch[Coll]]
+	{
+		override def result(): TryCatch[Coll] = TryCatchBuilder.this.result()
+		override def clear(): Unit = TryCatchBuilder.this.clear()
+		
+		override def addOne(elem: Throwable): Failures.this.type = {
+			failuresBuilder += elem
+			this
+		}
+		override def addAll(elems: IterableOnce[Throwable]): Failures.this.type = {
+			failuresBuilder ++= elems
 			this
 		}
 	}

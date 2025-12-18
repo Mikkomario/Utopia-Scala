@@ -8,7 +8,7 @@ import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.json.JsonSettingsAccess.defaultSettingsRegex
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 
 import java.io.FileNotFoundException
 import java.nio.file.Path

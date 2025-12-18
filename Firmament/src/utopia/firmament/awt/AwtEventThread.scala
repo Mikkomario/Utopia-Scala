@@ -6,7 +6,7 @@ import utopia.flow.async.process.{Delay, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
 

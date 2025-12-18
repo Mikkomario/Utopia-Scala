@@ -1,4 +1,4 @@
-package utopia.flow.util
+package utopia.flow.util.result
 
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.mutable.builder.TryCatchBuilder
@@ -33,10 +33,6 @@ sealed trait TryCatch[+A] extends MayHaveFailed[A] with MayHaveFailedLike[A, Try
 	 * @return Any single failure encountered. May be critical or non-critical.
 	 */
 	def anyFailure: Option[Throwable]
-	/**
-	 * @return All failures encountered. May be critical or non-critical.
-	 */
-	def failures: Seq[Throwable]
 	/**
 	 * @return Encountered non-critical failures.
 	 */
@@ -180,7 +176,7 @@ object TryCatch
 	 * @param failures Non-critical failures encountered during the process
 	 * @tparam A Type of acquired result
 	 */
-	case class Success[+A](value: A, failures: Seq[Throwable] = Empty) extends TryCatch[A]
+	case class Success[+A](value: A, override val failures: Seq[Throwable] = Empty) extends TryCatch[A]
 	{
 		// COMPUTED ----------------------------
 		
@@ -188,7 +184,8 @@ object TryCatch
 		 * Logs the non-critical failures that were encountered
 		 * @param log Implicit logging implementation
 		 */
-		def logFailures(message: => String = s"Encountered ${failures.size} non-critical errors")(implicit log: Logger) =
+		def logFailures(message: => String = s"Encountered ${failures.size} non-critical errors")
+		               (implicit log: Logger) =
 			failures.headOption.foreach { log(_, message) }
 		
 		

@@ -11,7 +11,7 @@ import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.Duration
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy

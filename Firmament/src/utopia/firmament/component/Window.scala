@@ -18,7 +18,7 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed

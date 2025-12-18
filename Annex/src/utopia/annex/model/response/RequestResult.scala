@@ -4,16 +4,18 @@ import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status
 import utopia.access.model.enumeration.Status.{InternalServerError, OK}
 import utopia.access.model.enumeration.StatusGroup.ServerError
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.model.response
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.util.MayHaveFailed.FailureLike
+import utopia.flow.util.{Mutate, NotEmpty}
+import utopia.flow.util.result.MayHaveFailed.FailureLike
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util._
+import utopia.flow.util.result.{MayHaveFailed, MayHaveFailedLike, TryCatch}
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Represents a result of an outgoing request
@@ -60,6 +62,26 @@ sealed trait RequestResult[+A]
 
 object RequestResult
 {
+	// OTHER    --------------------------
+	
+	/**
+	 * @param result A result of some kind
+	 * @tparam A Type of the wrapped value on success
+	 * @return A request result based on the specified value
+	 */
+	def from[A](result: MayHaveFailed[A]) = result match {
+		case result: RequestResult[A] => result
+		case failure: MayHaveFailed.Failure => RequestSendingFailed(failure.cause)
+		case result =>
+			result.toTry match {
+				case Success(value) => Response.Success(value)
+				case Failure(error) => RequestSendingFailed(error)
+			}
+	}
+	
+	
+	// EXTENSIONS   ----------------------
+	
 	// Adds additional functions for RequestResults of type Value, which is the only data type supported before v1.8
 	implicit class RequestValueResult(val r: RequestResult[Value]) extends AnyVal
 	{

@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.immutable.{DataDeletionRule, Reference, Table, TableColumn}

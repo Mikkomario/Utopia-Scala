@@ -15,7 +15,7 @@ import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Duration
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}

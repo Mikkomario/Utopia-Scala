@@ -7,7 +7,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRule.{Throw, TryCrop, TryExpand}

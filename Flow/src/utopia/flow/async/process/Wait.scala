@@ -4,7 +4,7 @@ import utopia.flow.async.process.WaitTarget.UntilNotified
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.TimeUnit.{MilliSecond, NanoSecond}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.SysErrLogger
 
 import scala.concurrent.ExecutionContext

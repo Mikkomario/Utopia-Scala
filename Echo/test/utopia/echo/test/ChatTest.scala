@@ -13,7 +13,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.view.mutable.Pointer
 

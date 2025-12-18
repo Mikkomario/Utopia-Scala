@@ -2,7 +2,7 @@ package utopia.genesis.handling.action
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.template.{DeepHandler, Handleable, HandlerFactory}

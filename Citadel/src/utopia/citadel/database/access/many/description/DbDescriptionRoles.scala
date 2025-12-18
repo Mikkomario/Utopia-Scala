@@ -3,7 +3,7 @@ package utopia.citadel.database.access.many.description
 import utopia.citadel.util.CitadelContext
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.{ExpiringLazy, RefreshingLazy}
 import utopia.metropolis.model.combined.description.DescribedDescriptionRole

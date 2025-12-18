@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangingStoppedListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
-import utopia.flow.util.TryExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.AbstractChanging
