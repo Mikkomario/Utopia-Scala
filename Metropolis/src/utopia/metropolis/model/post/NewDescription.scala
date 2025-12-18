@@ -19,7 +19,7 @@ object NewDescription extends FromModelFactory[NewDescription]
 	override def apply(model: HasProperties) = schema.validate(model).flatMap { valid =>
 		val languageId = valid("language_id").getInt
 		// All specified descriptions must adhere to description schema
-		valid("descriptions").getVector.tryMap { dv => descriptionSchema.validate(dv.getModel) }.map { descriptionModels =>
+		valid("descriptions").getVector.tryMapAll { dv => descriptionSchema.validate(dv.getModel) }.map { descriptionModels =>
 			// NB: If there are multiple descriptions for a single role, only one of those is preserved
 			NewDescription(languageId, descriptionModels.map { dm => dm("role_id").getInt -> dm("text").getString }.toMap)
 		}

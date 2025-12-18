@@ -255,6 +255,8 @@ object TryExtensions
 	implicit class TryCatchesIterableOnce[A](val tries: IterableOnce[TryCatch[A]])
 		extends AnyVal with Attempts[A, TryCatch[A], TryCatch]
 	{
+		// IMPLEMENTED  -----------------------
+		
 		override protected def iterator: Iterator[TryCatch[A]] = tries.iterator
 		
 		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = result
@@ -264,6 +266,46 @@ object TryExtensions
 			val resultBuilder = TryCatch.builder.wrap(builder)
 			resultBuilder.catching ++= tries
 			resultBuilder.result()
+		}
+		
+		// Overrides the flattening functions, in order to include partial failures
+		// NB: If we get more use-cases where partial failures are a thing, we should include optional support
+		//     for those in the parent function.
+		override def tryFlattenTo[To](builder: mutable.Builder[A, To]): TryCatch[To] =
+			_tryFlattenTo[To] { builder += _ } { builder.result() }
+		override def tryFlattenEachTo[B, To](builder: mutable.Builder[B, To])
+		                                    (implicit ev: A <:< IterableOnce[B]): TryCatch[To] =
+			_tryFlattenTo { builder ++= _ } { builder.result() }
+		
+		
+		// OTHER    --------------------------
+		
+		private def _tryFlattenTo[To](append: A => Unit)(result: => To): TryCatch[To] = {
+			// Collects partial failures and a full failure, if applicable
+			val iter = tries.iterator
+			val partialFailuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
+			var terminatingFailure: Option[Throwable] = None
+			
+			// Iterates until a full failure is encountered
+			while (terminatingFailure.isEmpty && iter.hasNext) {
+				iter.next() match {
+					// Case: Success => Attempts to the result builder & collects partial failures
+					case TryCatch.Success(value, partialFailures) =>
+						append(value)
+						partialFailuresBuilder ++= partialFailures
+					
+					// Case: Full failure => Terminates iteration
+					case TryCatch.Failure(error) => terminatingFailure = Some(error)
+				}
+			}
+			
+			// Prepares the result
+			terminatingFailure match {
+				// Case: Failure
+				case Some(error) => TryCatch.Failure(error)
+				// Case: Success => Includes partial failures
+				case None => TryCatch.Success(result, partialFailuresBuilder.result())
+			}
 		}
 	}
 	

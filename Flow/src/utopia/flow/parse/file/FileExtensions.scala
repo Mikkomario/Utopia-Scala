@@ -684,7 +684,7 @@ object FileExtensions
 		private def recursiveCopyAs(newPath: Path): Try[Path] = {
 			// May need to delete the existing file first
 			newPath.delete().flatMap { _ => Try { Files.copy(p, newPath) } }.flatMap { newParent =>
-				children.flatMap { _.tryForeach { c => new RichPath(c).recursiveCopyTo(newParent).map { _ => () } } }
+				children.flatMap { _.tryUntilFails { c => new RichPath(c).recursiveCopyTo(newParent).map { _ => () } } }
 					.map { _ => newParent }
 			}
 		}
@@ -776,16 +776,16 @@ object FileExtensions
 							val newChildNames = newChildrenByName.keySet
 							
 							// Files that didn't exists previously will be copied over
-							(newChildNames -- myChildNames).tryMap { name =>
+							(newChildNames -- myChildNames).tryMapAll { name =>
 								newChildrenByName(name).copyTo(p)
 							}.flatMap { _ =>
 								// Files that already existed will be overwritten, if changed
-								(newChildNames & myChildNames).tryMap { name =>
+								(newChildNames & myChildNames).tryMapAll { name =>
 									myChildrenByName(name)
 										.overwriteWithIfChanged(newChildrenByName(name))
 								}.flatMap { _ =>
 									// Files that existed but can't be found from new children will be removed
-									(myChildNames -- newChildNames).tryMap { name => myChildrenByName(name).delete() }
+									(myChildNames -- newChildNames).tryMapAll { name => myChildrenByName(name).delete() }
 								}
 							}
 						}

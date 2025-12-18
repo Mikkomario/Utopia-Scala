@@ -71,7 +71,7 @@ trait ToolFactory extends FromModelFactory[Tool]
 		val params = function("parameters").model match {
 			case Some(params) =>
 				val requiredParamNames = params("required").getVector.view.map { _.getString }.toSet
-				params("properties").getModel.properties.tryMap { p =>
+				params("properties").getModel.properties.tryMapAll { p =>
 					ToolParameter.parseFrom(p.name, p.value.getModel, optional = !requiredParamNames.contains(p.name))
 				}
 				

@@ -15,5 +15,5 @@ case class VectorContent[+A](models: Seq[Model])(implicit parser: FromModelFacto
 	/**
 	  * Parsed response content
 	  */
-	lazy val parsed = models.tryMap { parser(_) }
+	lazy val parsed = models.tryMapAll { parser(_) }
 }

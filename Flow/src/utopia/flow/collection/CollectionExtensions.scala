@@ -14,10 +14,10 @@ import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
-import utopia.flow.util.result.TryExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.HasSize
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.result.TryCatch
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
@@ -127,14 +127,22 @@ object CollectionExtensions
 			buildFrom.fromSpecific(coll)(ops.iterator.flatMap { a => f(a).iterator.map { a -> _ } })
 		
 		/**
+		 * Attempts to perform an operation on the items in this collection,
+		 * but terminates and fails if a failure is encountered.
+		 * @param f A function that receives an item and yields either a success or failure.
+		 * @return Failure If 'f' yielded a failure at some point; Otherwise yields an empty success.
+		 */
+		def tryUntilFails[U](f: iter.A => Try[U]): Try[Unit] = ops.findMap { f(_).failure } match {
+			case Some(failure) => Failure(failure)
+			case None => Success(())
+		}
+		/**
 		  * Performs an operation for each item in this collection. Stops if an operation fails.
 		  * @param f A function that takes an item and performs an operation that may fail
 		  * @return Failure if any of the operations failed, success otherwise.
 		  */
-		def tryForeach[U](f: iter.A => Try[U]): Try[Unit] = ops.findMap { f(_).failure } match {
-			case Some(failure) => Failure(failure)
-			case None => Success(())
-		}
+		@deprecated("Renamed to .tryUntilFailure(...)", "v2.8")
+		def tryForeach[U](f: iter.A => Try[U]): Try[Unit] = tryUntilFails(f)
 		
 		/**
 		  * Takes elements from this collection until the specified condition is met. If found, includes the item
@@ -1207,7 +1215,7 @@ object CollectionExtensions
 		/**
 		 * Divides the items in this collection into two groups, based on boolean result
 		 * @param f  A function that separates the items
-		 * @param bf an implicit buildFrom for the resulting collection type
+		 * @param bf an implicit build-from for the resulting collection type
 		 * @tparam To type of the resulting collection
 		 * @return A Pair that contains first the 'false' group, and then the 'true' group
 		 */
@@ -1304,7 +1312,7 @@ object CollectionExtensions
 		  * condition. Once a non-satisfying item has been found, collects it and all the remaining items into another
 		  * collection.
 		  * @param f A function for determining whether an item should be collected to the first collection
-		  * @param bf An implicit buildFrom for the resulting collections
+		  * @param bf An implicit build-from for the resulting collections
 		  * @return The initial consecutive items which satisfied the specified predicate,
 		  *         followed by the remaining items.
 		  */
@@ -1396,7 +1404,7 @@ object CollectionExtensions
 		  * @param append A function that yields a new item to append to this collection.
 		  *               Called only if the specified mapping function 'f' yielded None for all items
 		  *               in this collection.
-		  * @param buildFrom An implicit buildfrom for the resulting collection
+		  * @param buildFrom An implicit build-from for the resulting collection
 		  * @return A copy of this collection with either one item mapped,
 		  *         or the specified item added to the end of this collection
 		  */
@@ -1432,7 +1440,7 @@ object CollectionExtensions
 		  *                  A kind of a find function for the merge target.
 		  * @param merge A function that accepts the already existing item and the new item and merges them yielding
 		  *              a third item, which will then replace the first item.
-		  * @param buildFrom An implicit buildfrom for the resulting collection
+		  * @param buildFrom An implicit build-from for the resulting collection
 		  * @return A copy of this collection with either one item merged with the specified new item,
 		  *         or the specified item added to the end of this collection
 		  */
@@ -1443,93 +1451,128 @@ object CollectionExtensions
 		 * Replaces an existing item with a new version, or appends that version to the end of this collection
 		 * @param item An item to place in this collection
 		 * @param findMatch A function for finding the item to replace
-		 * @param buildFrom An implicit buildfrom for the resulting collection
+		 * @param buildFrom An implicit build-from for the resulting collection
 		 * @return A copy of this collection with either one item replaced or the specified item appended
 		 */
 		def replaceOrAppend(item: iter.A)(findMatch: iter.A => Boolean)
 		                   (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
 			mergeOrAppend(item)(findMatch) { (_, i) => i }
 		
-		// TODO: These must be renamed, as they conflict with the new Future collection function names
 		/**
-		 * Maps the contents of this collection. Mapping may fail, interrupting all remaining mappings
+		 * Attempts to map items in this collection. Fails if any mapping operation fails.
 		 * @param f  A mapping function. May fail.
 		 * @param bf A build from for the final collection (implicit)
-		 * @tparam B  Type of map result
+		 * @tparam B  Type of map result, when successful
 		 * @tparam To Type of final collection
-		 * @return Mapped collection if all mappings succeeded. Failure otherwise.
+		 * @return If all mapping operations succeeded, yields a mapped copy of this collection.
+		 *         If a failure was encountered, yields that failure.
+		 * @see [[tryMapEach]] if you don't want the mapping process to fail at individual mapping failures
 		 */
-		def tryMap[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] = {
-			val buffer = bf.newBuilder(coll)
-			var failure: Option[Throwable] = None
-			
-			// Maps items until the mapping function fails
-			val iter = ops.iterator
-			while (failure.isEmpty && iter.hasNext) {
-				f(iter.next()) match {
-					case Success(mapped) => buffer += mapped
-					case Failure(error) => failure = Some(error)
-				}
-			}
-			
-			failure match {
-				case Some(error) => Failure(error)
-				case None => Success(buffer.result())
-			}
-		}
+		def tryMapAll[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
+			ops.iterator.map(f).tryFlattenTo(bf.newBuilder(coll))
 		/**
-		 * Maps the contents of this collection using a mapping function that may produce a failure.
-		 * If the mapping fails for any item, the whole mapping process is cancelled and fails.
+		 * Attempts to map items in this collection. Fails if any mapping operation (fully) fails.
+		 * Catches *partial* failures.
 		 * @param f A mapping function. May yield full or partial failures.
 		 *          Partial failures are recorded, full failures terminate and fail the mapping process.
-		 * @param bf Implicit buildfrom for the resulting collection
+		 * @param bf Implicit build-from for the resulting collection
 		 * @tparam B Type of items in the resulting collection
 		 * @tparam To Type of the resulting collection
-		 * @return Success or failure.
-		 *         Success contains the mapping results (all successful) and encountered partial failures.
+		 * @return If *every* mapping operation succeeded,
+		 *         yields a success which also contains the encountered partial failures.
+		 *         However, if any (full) failure was encountered, yields that failure instead.
+		 * @see [[mapCatching]] if you don't want the mapping process to fail at individual mapping failures
 		 */
-		def tryMapCatching[B, To](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]): TryCatch[To] = {
-			val caughtFailuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
-			// Maps items until the mapping function fails
-			tryMap[B, To] { a =>
-				val (result, failures) = f(a).separateToTry
-				caughtFailuresBuilder ++= failures
-				result
-			} match {
-				case Success(result) => TryCatch.Success(result, caughtFailuresBuilder.result())
-				case Failure(error) => TryCatch.Failure(error)
-			}
-		}
+		def tryMapAllCatching[B, To](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]): TryCatch[To] =
+			ops.iterator.map(f).tryFlattenTo(bf.newBuilder(coll))
 		/**
-		 * FlatMaps the contents of this collection. Mapping may fail, however, cancelling all remaining mappings
+		 * Attempts to map items in this collection. Fails if any mapping operation fails.
+		 * Flattens the mapping results.
 		 * @param f  A mapping function. May fail.
 		 * @param bf A build from for the final collection (implicit)
-		 * @tparam B  Type of individual map result item
-		 * @tparam To Type of final collection
-		 * @return Flat mapped collection if all mappings succeeded. Failure otherwise.
+		 * @tparam B  Type of individual map result items on success
+		 * @tparam To Type of the final collection
+		 * @return If every mapping operation succeeded, yields the mapped & flattened collection.
+		 *         However, if a failure was encountered, yields that failure instead.
+		 * @see [[tryFlatMapEach]] if you don't want the mapping process to fail at individual mapping failures
 		 */
-		def tryFlatMap[B, To](f: iter.A => Try[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]): Try[To] = {
-			val buffer = bf.newBuilder(coll)
-			var failure: Option[Throwable] = None
-			val iter = ops.iterator
-			
-			while (failure.isEmpty && iter.hasNext) {
-				f(iter.next()) match {
-					case Success(mapped) => buffer ++= mapped
-					case Failure(error) => failure = Some(error)
-				}
-			}
-			
-			failure match {
-				case Some(error) => Failure(error)
-				case None => Success(buffer.result())
-			}
-		}
+		def tryFlatMapAll[B, To](f: iter.A => Try[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]): Try[To] =
+			ops.iterator.map(f).tryFlattenEachTo(bf.newBuilder(coll))
+		/**
+		 * Attempts to map items in this collection. Fails if any mapping operation fails.
+		 * Flattens the mapping results. Collects *partial* failures separately.
+		 * @param f  A mapping function. May fail fully or partially fail.
+		 *           Full failures terminate mapping, while partial failures are only recorded.
+		 * @param bf A build from for the final collection (implicit)
+		 * @tparam B  Type of individual map result items on success
+		 * @tparam To Type of the final collection
+		 * @return If every mapping operation succeeded, yields the mapped & flattened collection,
+		 *         including the encountered partial failures.
+		 *         However, if a (full) failure was encountered, yields that failure instead.
+		 * @see [[flatMapCatching]] if you don't want the mapping process to fail at individual mapping failures
+		 */
+		def tryFlatMapAllCatching[B, To](f: iter.A => TryCatch[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]) =
+			ops.iterator.map(f).tryFlattenEachTo(bf.newBuilder(coll))
+		
+		/**
+		 * Maps every item in this collection and collects the mapping results into a TryCatch.
+		 * @param f A mapping function. May yield a failure.
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam B Type of successful mapping results
+		 * @tparam To Type of the built collection
+		 * @return If one or more mapping operations succeeded, yields a success,
+		 *         where any failed mappings are included as partial failures.
+		 *         If this collection was empty, also yields a success.
+		 *         However, if all mapping operations failed, yields a failure.
+		 */
+		def tryMapEach[B, To <: Iterable[_]](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]) =
+			ops.iterator.map(f).toTryCatchUsing(bf.newBuilder(coll))
+		/**
+		 * Maps every item in this collection, and collects and flattens the mapping results into a TryCatch.
+		 * @param f A mapping function. May yield a failure.
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam B Type of individual successful mapping results
+		 * @tparam To Type of the built collection
+		 * @return If one or more mapping operations succeeded, yields a success,
+		 *         where any failed mappings are included as partial failures.
+		 *         If this collection was empty, also yields a success.
+		 *         However, if all mapping operations failed, yields a failure.
+		 */
+		def tryFlatMapEach[B, To <: Iterable[_]](f: iter.A => Try[IterableOnce[B]])
+		                                        (implicit bf: BuildFrom[Repr, B, To]) =
+			ops.iterator.map(f).flattenCatchingTo(bf.newBuilder(coll))
+		/**
+		 * Maps every item in this collection and collects the mapping results into a TryCatch.
+		 * @param f A mapping function. May yield a full or a partial failure.
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam B Type of successful mapping results
+		 * @tparam To Type of the built collection
+		 * @return If one or more mapping operations succeeded, yields a success,
+		 *         where any failed mappings, as well as collected partial failures, are included as partial failures.
+		 *         If this collection was empty, also yields a success.
+		 *         However, if all mapping operations failed, yields a failure.
+		 */
+		def mapCatching[B, To <: Iterable[_]](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]) =
+			ops.iterator.map(f).toTryCatchUsing(bf.newBuilder(coll))
+		/**
+		 * Maps every item in this collection, and collects and flattens the mapping results into a TryCatch.
+		 * @param f A mapping function. May yield a full or a partial failure.
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam B Type of successful mapping results
+		 * @tparam To Type of the built collection
+		 * @return If one or more mapping operations succeeded, yields a success,
+		 *         where any failed mappings, as well as collected partial failures, are included as partial failures.
+		 *         If this collection was empty, also yields a success.
+		 *         However, if all mapping operations failed, yields a failure.
+		 */
+		def flatMapCatching[B, To <: Iterable[_]](f: iter.A => TryCatch[IterableOnce[B]])
+		                                         (implicit bf: BuildFrom[Repr, B, To]) =
+			ops.iterator.map(f).flattenCatchingTo(bf.newBuilder(coll))
 		
 		/**
 		  * Maps all items in this collection in parallel with each other, utilizing multiple threads.
 		  * This function is more appropriate for small-size collection. For larger collections,
-		  * consider using [[mapParallel]] instead.
+		  * consider using limited parallel-mapping instead.
 		  * @param f A mapping function. Called asynchronously. Expected to block.
 		  * @param bf Implicit build-from for the resulting collection
 		  * @param exc Implicit execution context

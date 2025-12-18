@@ -53,7 +53,7 @@ object ReadDescriptions
 	  */
 	def apply(targets: Iterable[Model])(implicit connection: Connection) = {
 		// Makes sure all targets are valid
-		targets.tryMap { m => targetFrom(m("target")).map { _ -> m } }.map { targets =>
+		targets.tryMapAll { m => targetFrom(m("target")).map { _ -> m } }.map { targets =>
 			// Reads required data (languages and description roles)
 			val languageIds = DbLanguages.all.map { l => l.isoCode -> l.id }.toMap
 			val descriptionRoles = DbDescriptionRoles.pull

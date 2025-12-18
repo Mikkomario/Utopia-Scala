@@ -159,15 +159,17 @@ object RequestResultExtensions
 		def flatMapEach[B](f: A => IterableOnce[B])(implicit exc: ExecutionContext) =
 			wrapped.map { _.map { _.flatMap(f) } }
 		/**
-		  * Maps each value in the response body, if successful, once it resolves.
-		  * Collapses the result into a Try.
+		 * Attempts to map the values within a successful response body, if applicable.
+		 * Fails if *any* mapping operation fails.
 		  * @param f A mapping function applied to successfully acquired body values. May yield a failure.
 		  * @param exc Implicit execution context
 		  * @tparam B Type of mapping results
-		  * @return A mapped copy of this future. Contains a failure if any of the mapping functions failed.
+		  * @return A future that resolves into a success only if *all* of the following conditions are met:
+		 *              1. This future succeeds
+		 *              1. *Every* mapping operation succeeded
 		  */
-		def tryMapEach[B](f: A => Try[B])(implicit exc: ExecutionContext) =
-			wrapped.map { _.tryMap { _.tryMap(f) } }
+		def tryMapAll[B](f: A => Try[B])(implicit exc: ExecutionContext) =
+			wrapped.map { _.tryMap { _.tryMapAll(f) } }
 	}
 	
 	implicit class AsyncOptionalRequestResult[+A](val wrapped: Future[RequestResult[Option[A]]]) extends AnyVal

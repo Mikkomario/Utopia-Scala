@@ -111,7 +111,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 	                  connectionPool: ConnectionPool): Future[Try[Map[Int, AuthTokenWithScopes]]] =
 	{
 		// Prepares one service at a time
-		val preparationResults = taskScopes.groupBy { _.serviceId }.toVector.tryMap { case (serviceId, scopes) =>
+		val preparationResults = taskScopes.groupBy { _.serviceId }.toVector.tryMapAll { case (serviceId, scopes) =>
 			// Checks for existing tokens
 			val tokens = DbAuthTokens.forUserWithId(userId).withScopes.forServiceWithId(serviceId).pull
 			// Checks which of the scopes fulfill the set requirements
@@ -172,7 +172,7 @@ class AcquireTokens(configurations: MapAccess[Int, TokenInterfaceConfiguration])
 			else
 				Future {
 					tokenFutures
-						.tryMap { case (serviceId, tokenFuture) =>
+						.tryMapAll { case (serviceId, tokenFuture) =>
 							tokenFuture.waitForResult().map { serviceId -> _ } }
 						.map { _.toMap }
 				}

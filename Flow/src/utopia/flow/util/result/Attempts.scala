@@ -2,6 +2,7 @@ package utopia.flow.util.result
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.collection.mutable.builder.BuildNothing
 
 import scala.collection.mutable
 
@@ -114,15 +115,20 @@ trait Attempts[+A, T, +R[_]] extends Any
 	}
 	
 	/**
+	 * @return If all items in this collection were successes, yields a success.
+	 *         However, if this collection contained even one failure, yields that failure.
+	 */
+	def toResult = tryFlattenTo(BuildNothing.unit)
+	
+	/**
 	 * Converts this collection into either a success or a failure
 	 * @return If this collection *only* contained successes,
 	 *         yields a successfully flattened version of this collection.
 	 *
 	 *         However, if this collection contained even a single failure, yields that failure instead.
-	 *
 	 * @see [[toTryCatch]], if you don't want this process to fail on individual failures
 	 */
-	def tryFlatten[B >: A] = tryFlattenTo(OptimizedIndexedSeq.newBuilder[B])
+	def tryFlatten[B >: A]: R[IndexedSeq[B]] = tryFlattenTo(OptimizedIndexedSeq.newBuilder[B])
 	/**
 	 * Converts this collection into either a success or a failure.
 	 * Flattens the successful values into a single collection.
@@ -169,7 +175,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 *
 	 * @see [[toTryCatchUsing]], if you don't want this process to fail on individual failures
 	 */
-	def tryFlattenTo[To](builder: mutable.Builder[A, To]) = _tryFlattenTo(builder) { builder ++= _ }
+	def tryFlattenTo[To](builder: mutable.Builder[A, To]) = _tryFlattenTo { builder ++= _ } { builder.result() }
 	/**
 	 * Converts this collection into either a success or a failure while flattening the successful values
 	 * @param builder Builder for collecting successfully acquired values
@@ -182,7 +188,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 * @see [[flattenCatchingTo]], if you don't want this process to fail on individual failures
 	 */
 	def tryFlattenEachTo[B, To](builder: mutable.Builder[B, To])(implicit ev: A <:< IterableOnce[B]) =
-		_tryFlattenTo(builder) { _.foreach { builder ++= _ } }
+		_tryFlattenTo { _.foreach { builder ++= _ } } { builder.result() }
 	
 	/**
 	 * Converts this collection into a TryCatch by separating the successful & failed results
@@ -226,7 +232,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 */
 	def mapSuccessesIterator[B](f: A => B) = iterator.map { map(_) { _.map(f) } }
 	
-	private def _tryFlattenTo[B, To](builder: mutable.Builder[B, To])(append: Option[A] => Unit) = {
+	private def _tryFlattenTo[To](append: Option[A] => Unit)(result: => To) = {
 		// Iterates & builds until a failure is encountered
 		val iter = iterator
 		var failure: Option[R[To]] = None
@@ -240,7 +246,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 		}
 		
 		// If a failure was encountered, yields it; Otherwise builds the success collection.
-		failure.getOrElse { unwrap(MayHaveFailed.success(builder.result())) }
+		failure.getOrElse { unwrap(MayHaveFailed.success(result)) }
 	}
 	
 	private def map[B](result: T)(f: MayHaveFailed[A] => MayHaveFailed[B]) = unwrap(f(wrap(result)))

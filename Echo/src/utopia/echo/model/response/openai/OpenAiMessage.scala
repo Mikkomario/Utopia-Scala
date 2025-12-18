@@ -49,7 +49,7 @@ object OpenAiMessage extends OpenAiOutputElementFromModelFactory[OpenAiMessage]
 					val (messageModels, refusalModels) = contentModels
 						.divideBy { _("type").getString == refusalType }.toTuple
 					messageModels
-						.tryMap { message =>
+						.tryMapAll { message =>
 							// Parses message annotations & text
 							message("annotations").tryVectorWith { _.tryModel.flatMap(annotationParser.apply) }
 								.map { annotations =>

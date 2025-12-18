@@ -22,7 +22,7 @@ object FileSearchTest extends App
 	val resultFuture = Guild.explore(".") { dir =>
 		dir.children.flatMap {
 			_.filter { _.isRegularFile }
-				.tryMap { _.size }.map { _.sum / 1000 }
+				.tryMapAll { _.size }.map { _.sum / 1000 }
 		}
 	}
 	

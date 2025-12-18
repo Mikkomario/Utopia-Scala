@@ -136,7 +136,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	 */
 	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Seq[A] => RequestResult) =
 		handleArrayPost { values =>
-			values.tryMap { v => parser(v.getModel) } match {
+			values.tryMapAll { v => parser(v.getModel) } match {
 				case Success(parsed) => f(parsed)
 				case Failure(error) => BadRequest -> error.getMessage
 			}

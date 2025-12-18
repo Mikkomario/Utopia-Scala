@@ -288,7 +288,7 @@ case class ModelDeclaration private(declarations: Seq[PropertyDeclaration],
             // Casts all required property values to their correct types
             // Fails if any of the casts failed
             requiredMapping
-                .tryMap { case (d, value) =>
+                .tryMapAll { case (d, value) =>
                     value.castTo(d.dataType)
                         .toTry {
                             new DataTypeException(
@@ -321,7 +321,7 @@ case class ModelDeclaration private(declarations: Seq[PropertyDeclaration],
 	                        .toTry
                             .flatMap { children =>
                                 children
-                                    .tryMap { case (childName, declaration, childModel) =>
+                                    .tryMapAll { case (childName, declaration, childModel) =>
                                         declaration.validate(childModel)
                                             .map { validChild =>
 	                                            PropertyDeclaration(childName, ModelType) ->

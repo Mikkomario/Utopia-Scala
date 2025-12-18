@@ -63,7 +63,7 @@ object GetWorkResult
 		// IMPLEMENTED  ---------------
 		
 		override def apply(model: HasProperties): Try[Seq[Path]] = schema.validate(model).flatMap { model =>
-			model(outputNode)("images").getVector.tryMap { image =>
+			model(outputNode)("images").getVector.tryMapAll { image =>
 				image.tryModel.flatMap(imageSchema.validate).map { image =>
 					dir.path/s"output/${ image("subfolder").getString.appendIfNotEmpty("/") }${
 						image("filename").getString }"

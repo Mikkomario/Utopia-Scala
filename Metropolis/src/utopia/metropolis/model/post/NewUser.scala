@@ -18,7 +18,7 @@ object NewUser extends FromModelFactory[NewUser]
 	
 	override def apply(model: HasProperties) = schema.validate(model).flatMap { valid =>
 		// Languages must be parseable
-		valid("languages").getVector.tryMap { v => NewLanguageProficiency(v.getModel) }.flatMap { languages =>
+		valid("languages").getVector.tryMapAll { v => NewLanguageProficiency(v.getModel) }.flatMap { languages =>
 			// Also, email address must be valid (if specified)
 			val emailAddress = valid("email").string
 			if (emailAddress.forall { MetropolisRegex.email(_) })

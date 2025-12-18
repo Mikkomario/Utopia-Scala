@@ -28,7 +28,7 @@ object CompositeImageTest extends App
 	private val icon = SingleColorIcon(CompositeScalingImage(
 		Paths.get("Reach/test-images")
 			.tryIterateChildren { _.filter { _.fileName.contains("smart-toy") }.toOptimizedSeq
-				.tryMap { Image.readFrom(_) } }
+				.tryMapAll { Image.readFrom(_) } }
 			.get))
 	
 	private val window = ReachWindow.contentContextual.using(Framing) { (_, framingF) =>

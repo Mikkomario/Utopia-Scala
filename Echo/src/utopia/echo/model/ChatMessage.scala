@@ -30,7 +30,7 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	
 	override def apply(model: HasProperties): Try[ChatMessage] =
 		model("role").tryString.flatMap(ChatRole.forName).flatMap { role =>
-			model("tool_calls").getVector.tryMap { v => ToolCall(v.getModel) }.map { toolCalls =>
+			model("tool_calls").getVector.tryMapAll { v => ToolCall(v.getModel) }.map { toolCalls =>
 				val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
 				apply(text, thoughts, role, model("images").getVector.flatMap { _.string }, toolCalls)
 			}

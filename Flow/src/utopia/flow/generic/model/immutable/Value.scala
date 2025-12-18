@@ -314,7 +314,7 @@ case class Value(content: Option[Any], dataType: DataType)
     def tryPair = tryGetNonEmpty(pair)("Pair")
     def tryModel = getTry(ModelType) { _.getModel }
     
-    def tryVectorWith[A](f: Value => Try[A]) = tryVector.flatMap { _.tryMap(f) }
+    def tryVectorWith[A](f: Value => Try[A]) = tryVector.flatMap { _.tryMapAll(f) }
     def tryPairWith[A](f: Value => Try[A]) =
         tryPair.flatMap { p => f(p.first).flatMap { first => f(p.second).map { Pair(first, _) } } }
     def tryTupleWith[F, S](first: Value => Try[F])(second: Value => Try[S]): Try[(F, S)] =

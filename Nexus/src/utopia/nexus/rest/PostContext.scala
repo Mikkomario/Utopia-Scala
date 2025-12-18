@@ -172,7 +172,7 @@ abstract class PostContext extends Context
 	  * @return Function result or failure in case of parsing failures
 	  */
 	def handleModelArrayPost[A](parser: Model => Try[A])(f: Seq[A] => Result) = handleArrayPost { values =>
-		values.tryMap { v => parser(v.getModel) } match {
+		values.tryMapAll { v => parser(v.getModel) } match {
 			case Success(parsed) => f(parsed)
 			case Failure(error) => Result.Failure(BadRequest, error.getMessage)
 		}

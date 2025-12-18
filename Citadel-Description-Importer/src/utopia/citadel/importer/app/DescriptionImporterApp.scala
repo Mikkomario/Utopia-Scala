@@ -4,12 +4,12 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.citadel.importer.controller.ReadDescriptions
 import utopia.citadel.util.CitadelContext
 import utopia.flow.async.context.ThreadPool
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.console.{ArgumentSchema, CommandArguments, CommandArgumentsSchema}
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{Connection, ConnectionPool}
 
@@ -24,26 +24,23 @@ import scala.util.{Failure, Success}
   */
 object DescriptionImporterApp extends App
 {
-	
-	
-	implicit val logger: Logger = SysErrLogger
-	implicit val jsonParser: JsonParser = JsonBunny
-	implicit val executionContext: ExecutionContext = new ThreadPool("Description-Importer")
-	val connectionPool = new ConnectionPool()
+	private implicit val logger: Logger = SysErrLogger
+	private implicit val jsonParser: JsonParser = JsonBunny
+	private implicit val executionContext: ExecutionContext = new ThreadPool("Description-Importer")
+	private val connectionPool = new ConnectionPool()
 	
 	// Sets up context based on settings
-	val commandSchema = CommandArgumentsSchema(Vector(
+	private val commandSchema = CommandArgumentsSchema(Vector(
 		ArgumentSchema("input", "in"),
 		ArgumentSchema("database", "db"),
 		ArgumentSchema("user", "u"),
 		ArgumentSchema("password", "pw"),
 		ArgumentSchema("settings", "read", "description-importer-settings.json")
 	))
-	val arguments = CommandArguments(commandSchema, args.toVector)
+	private val arguments = CommandArguments(commandSchema, args.toVector)
 	
-	val settingsPath: Path = arguments("settings").getString
-	lazy val settings = jsonParser(settingsPath) match
-	{
+	private val settingsPath: Path = arguments("settings").getString
+	private lazy val settings = jsonParser(settingsPath) match {
 		case Success(value) => value.getModel
 		case Failure(_) =>
 			println(s"Warning: Not reading external settings")
@@ -51,8 +48,7 @@ object DescriptionImporterApp extends App
 	}
 	
 	// Makes sure the input path exists
-	arguments("input").string.orElse { settings("input").string } match
-	{
+	arguments("input").string.orElse { settings("input").string } match {
 		case Some(inputPathStr) =>
 			val inputPath: Path = inputPathStr
 			if (inputPath.notExists)
@@ -83,7 +79,7 @@ object DescriptionImporterApp extends App
 							{
 								println(s"Reading ${filePaths.size} files in ${inputPath.toAbsolutePath}")
 								connectionPool.tryWith { implicit connection =>
-									filePaths.tryForeach { path =>
+									filePaths.tryUntilFails { path =>
 										val result = ReadDescriptions(path)
 										if (result.isSuccess)
 											println(s"Successfully read ${inputPath.fileName}")
@@ -108,8 +104,7 @@ object DescriptionImporterApp extends App
 				}
 			}
 		case None =>
-			println(s"Please specify the target file or directory by specifying parameter 'input' " +
-				s"either as a command line argument or in a separate settings json file (currently: '${
-					settingsPath.toAbsolutePath}')")
+			println(s"Please specify the target file or directory by specifying parameter 'input' either as a command line argument or in a separate settings json file (currently: '${
+				settingsPath.toAbsolutePath }')")
 	}
 }

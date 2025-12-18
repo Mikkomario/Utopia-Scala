@@ -3,6 +3,7 @@
 ## v1.12 (in development)
 ### Breaking changes
 - Various **RequestResultExtensions** functions now yield **RequestResult** instead of **Try**
+  - Also, for asynchronous Seq-based results, `.tryMapEach(...)` is now `.tryMapAll(...)`
 - The following **ResponseParser** constructors no longer support custom parsing failure -statuses, 
   but use `Response.parseFailureStatus` instead:
   - `.mapOrFail(...)`, `.tryMap(...)` in **PreparingResponseParser**

@@ -149,7 +149,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 	
 	private def referencePathFrom(primaryTable: Table, childPath: Seq[Table]) = {
 		var lastTable = primaryTable
-		childPath.tryMap { nextTable =>
+		childPath.tryMapAll { nextTable =>
 			val reference = References.fromTo(nextTable, lastTable).headOption.orElse { References.fromTo(lastTable,
 				nextTable).headOption }.toTry { new NoReferenceFoundException(
 				s"Can't find a reference between ${nextTable.name} and ${

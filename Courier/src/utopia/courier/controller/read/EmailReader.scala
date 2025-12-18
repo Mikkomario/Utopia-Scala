@@ -10,8 +10,8 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.ResettableLazy
@@ -564,27 +564,29 @@ class EmailReader[A](settings: ReadSettings,
 					case string: String => builder.append(string)
 					case stream: InputStream => builder.appendFrom(stream)
 					case multiPart: Multipart =>
-						(0 until multiPart.getCount).view.tryMap { i => Try { multiPart.getBodyPart(i) } }
-							.map { _.filterNot { _ == null } }
-							.flatMap { _.tryForeach { part =>
-								// Catches exceptions since almost every Java interface method throws
-								Try {
-									// Handles attachments or other part content
-									val disposition = part.getDisposition
-									// Case: Attachment => Attaches it using the builder
-									if (disposition != null &&
-										((disposition ~== Part.ATTACHMENT) || (disposition ~== Part.INLINE)))
-									{
-										// Doesn't know the stream encoding, unfortunately
-										part.getInputStream.consume { stream =>
-											builder.attachFrom(Option(part.getFileName).getOrElse(""), stream)
+						(0 until multiPart.getCount).iterator
+							.map { i => Try { multiPart.getBodyPart(i) } }.tryFlatten[BodyPart]
+							.flatMap { parts =>
+								parts.iterator.filterNot { _ == null }.tryUntilFails { part =>
+									// Catches exceptions since almost every Java interface method throws
+									Try {
+										// Handles attachments or other part content
+										val disposition = part.getDisposition
+										// Case: Attachment => Attaches it using the builder
+										if (disposition != null &&
+											((disposition ~== Part.ATTACHMENT) || (disposition ~== Part.INLINE)))
+										{
+											// Doesn't know the stream encoding, unfortunately
+											part.getInputStream.consume { stream =>
+												builder.attachFrom(Option(part.getFileName).getOrElse(""), stream)
+											}
 										}
-									}
-									// Case: Other content => Uses recursion to process that one
-									else
-										processContent(part.getContent, builder)
-								}.flatten
-							} }
+										// Case: Other content => Uses recursion to process that one
+										else
+											processContent(part.getContent, builder)
+									}.flatten
+								}
+							}
 					// Case: Wrapped message => Processes the message content recursively
 					case message: Message => processMessageContent(message, builder)
 					// Case: Unrecognized message content => Fails

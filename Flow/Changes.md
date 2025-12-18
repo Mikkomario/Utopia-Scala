@@ -26,6 +26,10 @@
   - **ChangeResponse**'s `.and(...)` now accepts **AfterEffect** instead of a function
   - **ChangeResponse** trait is now sealed
 - Renamed `.tryFlatten` to `.tryFlattenEach` in **TryExtensions**
+- Renamed multiple Try-related functions in **CollectionExtensions**:
+  - `.tryMap(...)` is now `.tryMapAll(...)`
+  - `.tryMapCatching(...)` is now `.tryMapAllCatching(...)`
+  - `.tryFlatMap(...)` is now `.tryFlatMapAll(...)`
 - **TryCatch.Failure** no longer has a generic type parameter
 - Rewrote large sections of **AsyncExtensions**
   - `.current` now yields a **Failure** instead of **None** on failure
@@ -64,6 +68,7 @@
 - Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
 - Deprecated `.foreachParallel(...)`, `.mapParallel(...)` and `.mapAllParallel(...)` in **CollectionExtensions**; 
   The new implementations are accessible via `.parallel`
+- Renamed `.tryForeach(...)` to `.tryUntilFails(...)` in **CollectionExtensions**
 - Deprecated **Volatile**'s `synchronizedValue`
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
@@ -116,6 +121,7 @@
   - Added `.fromOrdered(IterableOnce)`
 - **Iterable**
   - Added `.splitAtFirstWhere(...)`
+  - Added `.tryMapEach(...)`, `.tryFlatMapEach(...)`, `.mapCatching(...)` and `.flatMapCatching(...)`
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`

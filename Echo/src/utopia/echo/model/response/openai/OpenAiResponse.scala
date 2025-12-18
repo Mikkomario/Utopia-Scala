@@ -28,11 +28,11 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 	
 	override def apply(model: HasProperties): Try[OpenAiResponse] = schema.validate(model).flatMap { model =>
 		model("usage").tryModel.flatMap(OpenAiTokenUsageStatistics.apply).flatMap { tokenUsage =>
-			model("output").getVector.tryMap { _.tryModel }.flatMap { outputModels =>
+			model("output").getVector.tryMapAll { _.tryModel }.flatMap { outputModels =>
 				val outputByType: Map[String, Seq[(Model, Int)]] = outputModels.zipWithIndex
 					.groupBy { _._1("type").getString }.withDefaultValue(Empty)
 				OpenAiMessage(outputByType).flatMap { messages =>
-					outputByType("reasoning").tryMap { case (model, _) => Reasoning(model) }.flatMap { reasoning =>
+					outputByType("reasoning").tryMapAll { case (model, _) => Reasoning(model) }.flatMap { reasoning =>
 						OpenAiFunctionToolCall(outputByType).flatMap { functionCalls =>
 							WebSearchToolCall(outputByType).flatMap { webSearchCalls =>
 								FileSearchToolCall(outputByType).map { fileSearchCalls =>
