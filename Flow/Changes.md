@@ -168,6 +168,8 @@
 - Remove **Changing**'s `listenerDebuggingLimit` property, which was deprecated in v2.7
 - Removed **AbstractChanging** functions that were deprecated in v2.2
 - Rewrote **ActionQueue**
+- Renamed `.contains(String, Boolean)` to `.containsOther(String, Boolean)` in **StringExtensions**, 
+  because the previous version could not be called because of ambiguous implicits.
 - Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
 - Internal refactoring within **Extreme**'s `.by(...)`

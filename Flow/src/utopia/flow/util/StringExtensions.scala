@@ -231,7 +231,7 @@ object StringExtensions
 		 * @param ignoreCase Whether to ignore case differences (default = false)
 		 * @return Whether this string contains the specified string
 		 */
-		def contains(other: String, ignoreCase: Boolean) = {
+		def containsOther(other: String, ignoreCase: Boolean) = {
 			if (ignoreCase)
 				other.isEmpty || s.findIndexOf(other, ignoreCase = true).isDefined
 			else
@@ -241,7 +241,7 @@ object StringExtensions
 		 * @param other Another string
 		 * @return Whether this string contains specified substring (case-insensitive)
 		 */
-		def containsIgnoreCase(other: String) = contains(other, ignoreCase = true)
+		def containsIgnoreCase(other: String) = containsOther(other, ignoreCase = true)
 		
 		/**
 		 * @param strings Strings to search from this one
@@ -258,7 +258,7 @@ object StringExtensions
 			else
 				nonEmptyStrings.oneOrMany match {
 					// Case: Only one string to search => Proceeds directly to 'contains'
-					case Left(only) => contains(only, ignoreCase)
+					case Left(only) => containsOther(only, ignoreCase)
 					// Case: Multiple strings to search
 					//       => Makes sure containment is possible for all of them before looking for it
 					case Right(strings) =>
@@ -266,7 +266,7 @@ object StringExtensions
 						if (strings.exists { _.length > myLength })
 							false
 						else
-							strings.forall { contains(_, ignoreCase) }
+							strings.forall { containsOther(_, ignoreCase) }
 				}
 		}
 		/**
