@@ -53,6 +53,8 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 		}) { case (url, isHttps) => DomainData(url, isHttps = isHttps) } {
 			case (inserted, (url, _)) => url.toLowerCase -> inserted }.toMap
 	
+	override protected def idOf(value: Domain): Int = value.id
+	
 	override def store(values: Set[String])(implicit connection: Connection) = {
 		// Stores the domain values normally
 		// All URLS are converted into lower case
@@ -64,18 +66,17 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 		val modifiedHttpDomains = lowerCaseValues.iterator.filter { _.startsWith("http") }
 			.flatMap { url =>
 				val key = standardize(url)
-				result.get(key).filter { case (domain, inserted) => !inserted && domain.isHttps.isCertain }
-					.flatMap { case (domain, inserted) =>
-						val newIsHttps = url.lift(4).contains('s')
-						// Case: Http(s) specification should be removed
-						//       => Updates the DB entry, as well as the mapped entry
-						if (domain.isHttps.mightNotBe(newIsHttps)) {
-							domain.access.isHttps.set(UncertainBoolean)
-							Some(key -> (domain.withIsHttps(UncertainBoolean), inserted))
-						}
-						else
-							None
+				result.get(key).filter { domain => domain.existed && domain.isHttps.isCertain }.flatMap { domain =>
+					val newIsHttps = url.lift(4).contains('s')
+					// Case: Http(s) specification should be removed
+					//       => Updates the DB entry, as well as the mapped entry
+					if (domain.isHttps.mightNotBe(newIsHttps)) {
+						domain.access.isHttps.set(UncertainBoolean)
+						Some(key -> domain.map { _.withIsHttps(UncertainBoolean) })
 					}
+					else
+						None
+				}
 			}
 			.toMap
 		

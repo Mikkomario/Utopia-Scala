@@ -5,9 +5,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.NotEmpty
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.logos.database.access.many.text.delimiter.DbDelimiters
 import utopia.logos.database.access.many.text.word.DbWords
@@ -21,8 +19,10 @@ import utopia.logos.model.combined.url.{DetailedLink, DetailedLinkPlacement}
 import utopia.logos.model.stored.text.StoredStatement
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
+import utopia.vault.store.StoreResult
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
 
 /**
   * The root access point when targeting multiple statements at a time
@@ -87,31 +87,33 @@ object DbStatements
 	
 	/**
 	 * Stores n statements which are (to be) linked to a number of texts
-	 * @param texts Texts to insert. Each entry contains 1) text id and 2) text
+	 * @param texts Texts to insert. Each entry contains:
+	 *                  1. Parent text id
+	 *                  1. Text-to-store as a string
 	 * @param connection Implicit DB connection
-	 * @return A sequence of text id + statement id group pairs.
+	 * @return A sequence of text ID + statement ID -group pairs.
 	 */
 	def storeLinked(texts: Seq[(Int, String)])
 	               (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool) =
-		storeFrom(texts) { _._2 } { case (statements, (textId, _)) => textId -> statements }
-			.map { case (textId, statements) => textId -> statements.map { _.id } }
+		storeFrom(texts) { _._2 } { case (statements, (textId, _)) => textId -> statements.map { _.id } }
 	/**
 	 * Stores n texts, attaching the stored statements back to these instances
 	 * @param texts Texts to store
 	 * @param extractText A function that extracts the text portion from the stored values
+	 * @param mergeBack A function which merges stored statements with an original text instance
 	 * @param connection Implicit DB connection
 	 * @tparam O Type of stored texts
 	 * @tparam R Type of the resulting / combined models
 	 * @return Copy of the 'texts' sequence, where each item is accompanied by the statements matching that text
 	 */
-	def storeFrom[O, R](texts: Seq[O])(extractText: O => String)(mergeBack: (Seq[StoredStatement], O) => R)
+	def storeFrom[O, R](texts: Seq[O])(extractText: O => String)(mergeBack: (Seq[StoreResult[StoredStatement]], O) => R)
 	                   (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool) =
 	{
 		val groupedStatements = texts.map { text =>
 			text -> Statement.allFrom(EmojiParser.parseToAliases(extractText(text)))
 		}
 		// Note: Here assumes that stored statements count matches the input
-		val storedStatementsIter = store(groupedStatements.flatMap { _._2 }).iterator.map { _.either }
+		val storedStatementsIter = store(groupedStatements.flatMap { _._2 }).iterator
 		groupedStatements.map { case (text, preparedStatements) =>
 			mergeBack(storedStatementsIter.collectNext(preparedStatements.size), text)
 		}
@@ -125,94 +127,93 @@ object DbStatements
 	  * if it was newly inserted
 	  */
 	def store(text: String)
-	         (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool): Seq[Sided[StoredStatement]] =
+	         (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool): Seq[StoreResult[StoredStatement]] =
 		store(Statement.allFrom(EmojiParser.parseToAliases(text)))
 	/**
 	  * Stores the specified text to the database as a sequence of statements.
 	  * Avoids inserting duplicate entries.
 	  * @param statementData Statement texts to store
 	  * @param connection Implicit DB connection
-	  * @return Stored statements, where each entry is either right,
-	 *         if it existed already, or left, if it was newly inserted.
-	 *         There are as many returned statements as there are entries in 'statementData'
+	  * @return Stored statements. There are as many returned statements as there are entries in 'statementData'
 	  */
+	// TODO: Refactor to yield a Future
+	// TODO: Also, consider rewriting this as storeFrom
 	def store(statementData: Seq[Statement])
 	         (implicit connection: Connection, log: Logger, exc: ExecutionContext, cPool: ConnectionPool) =
 	{
 		if (statementData.isEmpty)
 			Empty
-		else {
+		else
 			storeLock.synchronized {
 				// Stores the delimiters, the words and the links in parallel
-				storeParts(statementData)
-					.map { case (wordMap, linkMap, delimiterMap) =>
+				storeParts(statementData).waitForResult() match {
+					case Success((storedWords, storedLinks, storedDelimiters)) =>
 						// Stores one statement at a time
 						statementData.map { statement =>
 							val words = statement.words.flatMap { word =>
 								val result = {
 									word.data match {
 										case Left(_) =>
-											wordMap.get(word.standardizedText).map { case (wordId, inserted) =>
-												PreparedWordOrLinkPlacement(wordId, word.style) -> inserted
+											storedWords.get(word.standardizedText).map { storedWord =>
+												PreparedWordOrLinkPlacement(storedWord.id, word.style) ->
+													storedWord.isNew
 											}
 										case Right(link) =>
-											linkMap.get(link).map { case (linkId, inserted) =>
-												PreparedWordOrLinkPlacement.link(linkId) -> inserted
+											storedLinks.get(link).map { storedLink =>
+												PreparedWordOrLinkPlacement.link(storedLink.id) -> storedLink.isNew
 											}
 									}
 								}
 								if (result.isEmpty)
 									log(s"Warning: Failed to match $word with options: ${
-										(if (word.isLink) linkMap else wordMap).keys.mkString(", ")}")
+										(if (word.isLink) storedLinks else storedWords).keys.mkString(", ")}")
 								result
 							}
 							// If the words, the links or the delimiter contained new entries,
 							// it is known that this statement doesn't yet exist, and it may be inserted instead
-							val delimiter = delimiterMap.get(statement.delimiter)
-							if (delimiter.exists { _._2 } || words.exists { _._2 })
-								Left(DbStatement.insert(words.map { _._1 }, delimiter.map { _._1 }))
+							val delimiter = storedDelimiters.get(statement.delimiter)
+							if (delimiter.exists { _.isNew } || words.exists { _._2 })
+								StoreResult.inserted(DbStatement.insert(words.map { _._1 }, delimiter.map { _.id }))
 							else
-								DbStatement.store(words.map { _._1 }, delimiter.map { _._1 })
+								DbStatement.store(words.map { _._1 }, delimiter.map { _.id })
 						}
-					}
-					.logWithMessage("Unexpected failure during statement part -storing").getOrElse(Empty)
+						
+					case Failure(error) =>
+						log(error, "Unexpected failure during statement part -storing")
+						Empty
+				}
 			}
-		}
 	}
 	
 	/**
-	 * Stores the delimiters, words and links utilizing parallelism
+	 * Stores the delimiters, words and links in separate threads.
 	 * @param statementData Statements to store
 	 * @param exc Implicit execution context
 	 * @param log Implicit logging implementation
 	 * @param cPool Implicit connection pool
-	 * @return Stored words, stored links and stored delimiters
+	 * @return A future that resolves into 3 values, if successful:
+	 *              1. Stored words (word-to-ID)
+	 *              1. Stored links
+	 *              1. Stored delimiters (string-to-ID)
 	 */
 	private def storeParts(statementData: Seq[Statement])
 	                      (implicit exc: ExecutionContext, log: Logger, cPool: ConnectionPool) =
 	{
 		// Processes the delimiters, the words and the links in parallel
 		val delimiterFuture = processAsync { implicit c =>
-			DbDelimiters.store(statementData.map { _.delimiter }.toSet.filterNot { _.isEmpty })
+			DbDelimiters.store(statementData.iterator.map { _.delimiter }.toSet - "")
 		}
 		val wordFuture = processAsync { implicit c =>
-			DbWords.store(statementData.view.flatMap { _.standardizedWords.map { _._1 } }.toSet).toMap
+			DbWords.store(statementData.iterator.flatMap { _.standardizedWords.map { _._1 } }.toSet).toMap
 		}
-		val linkFuture = statementData.view.flatMap { _.links }.toSet.notEmpty match {
-			case Some(links) =>
-				processAsync { implicit c =>
-					DbLinks.store(links).view.mapValues { case (link, inserted) => link.id -> inserted }.toMap
-				}
-			case None => TryFuture.success(Map[Link, (Int, Boolean)]())
+		val linkFuture = statementData.iterator.flatMap { _.links }.toSet.notEmpty match {
+			case Some(links) => processAsync { implicit c => DbLinks.store(links) }
+			case None => TryFuture.success(Map[Link, StoreResult[DetailedLink]]())
 		}
 		
 		// Combines the information, once each process has finished
-		delimiterFuture.waitForResult().flatMap { delimiters =>
-			wordFuture.waitForResult().flatMap { words =>
-				linkFuture.waitForResult().map { links =>
-					(words, links, delimiters)
-				}
-			}
+		delimiterFuture.tryFlatMap { delimiters =>
+			wordFuture.tryFlatMap { words => linkFuture.mapSuccess { (words, _, delimiters) } }
 		}
 	}
 	

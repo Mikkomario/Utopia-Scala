@@ -21,4 +21,6 @@ object DbWords
 		matchingWords(values).toMap
 	override protected def insertAndMap(values: Seq[String])(implicit connection: Connection): Map[String, Int] =
 		model.insert(values.sorted.map { WordData(_) }).view.map { w => w.text -> w.id }.toMap
+	
+	override protected def idOf(value: Int): Int = value
 }

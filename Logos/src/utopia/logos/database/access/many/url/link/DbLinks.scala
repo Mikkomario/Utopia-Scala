@@ -11,6 +11,7 @@ import utopia.logos.model.combined.url.DetailedLink
 import utopia.logos.model.partial.url.LinkData
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
+import utopia.vault.store.StoreResult
 
 import scala.collection.View
 
@@ -42,25 +43,20 @@ object DbLinks extends ManyLinksAccess with UnconditionalView with ViewManyByInt
 		if (links.nonEmpty) {
 			storeLock.synchronized {
 				// Stores the domains & request paths and prepares new links for storing and inserting
-				val (linksToInsert, linksToStore) = DbRequestPaths.storeFromLinks(links)
-					.divideWith { case (path, link, wasInserted) =>
-						if (wasInserted)
-							Left(link -> path)
-						else
-							Right(link -> path)
-					}
+				val (linksToStore, linksToInsert) = DbRequestPaths.storeFromLinks(links).divideBy { _._1.isNew }.toTuple
 				// Checks for duplicates in certain cases
 				val (preparedInserts, existingMatches) = {
 					if (linksToStore.nonEmpty) {
-						val existingPerPath = withPaths(linksToStore.view.map { _._2.id }.toIntSet).pull
+						val existingPerPath = withPaths(linksToStore.iterator.map { _._1.id }.toIntSet).pull
 							.groupBy { _.pathId }.withDefaultValue(Empty)
 						val (newLinks, duplicates) = linksToStore
-							.divideWith { case (link, path) =>
+							.divideWith { case pathAndLink @ (path, link) =>
 								existingPerPath.get(path.id)
 									.flatMap { _.find { _.queryParameters ~== link.params } } match
 								{
-									case Some(existingMatch) => Right(link -> (DetailedLink(existingMatch, path) -> false))
-									case None => Left(link -> path)
+									case Some(existingMatch) =>
+										Right(link -> StoreResult.existed(DetailedLink(existingMatch, path)))
+									case None => Left(pathAndLink)
 								}
 							}
 						
@@ -72,14 +68,15 @@ object DbLinks extends ManyLinksAccess with UnconditionalView with ViewManyByInt
 				// Inserts link data
 				val inserted = model
 					.insertFrom(preparedInserts) {
-						case (link, path) => LinkData(path.id, ensureModelMaxLength(link.params)) } {
-						case (inserted, (original, path)) => original -> (DetailedLink(inserted, path) -> true) }
+						case (path, link) => LinkData(path.id, ensureModelMaxLength(link.params)) } {
+						case (inserted, (path, originalLink)) =>
+							originalLink -> StoreResult.inserted(DetailedLink(inserted, path)) }
 				
 				View.concat(inserted, existingMatches).toMap
 			}
 		}
 		else
-			Map[Link, (DetailedLink, Boolean)]()
+			Map[Link, StoreResult[DetailedLink]]()
 	}
 	
 	private def ensureModelMaxLength(model: Model) = {

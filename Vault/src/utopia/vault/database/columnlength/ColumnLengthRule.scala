@@ -150,9 +150,10 @@ object ColumnLengthRule
 							// Case: Required limit is too high => fails
 							else
 								throw new MaxLengthExceededException(
-									s"${ column.sqlName } can't be extended to required length")
+									s"${ column.sqlName } can't be extended to required length of ${
+										largerLimit.maxValue} for \"$proposedValue\"")
 						case None => throw new MaxLengthExceededException(
-							s"${ column.sqlName } can't fit $proposedValue and can't be expanded")
+							s"${ column.sqlName } can't fit \"$proposedValue\" and can't be expanded")
 					}
 			}
 		}

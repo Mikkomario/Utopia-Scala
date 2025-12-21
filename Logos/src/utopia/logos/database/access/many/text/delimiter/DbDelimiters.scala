@@ -23,4 +23,6 @@ object DbDelimiters
 		matchingDelimiters(values).toMap
 	override protected def insertAndMap(values: Seq[String])(implicit connection: Connection): Map[String, Int] =
 		model.insert(values.sorted.map { DelimiterData(_) }).view.map { d => d.text -> d.id }.toMap
+	
+	override protected def idOf(value: Int): Int = value
 }

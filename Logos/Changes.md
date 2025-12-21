@@ -6,7 +6,8 @@ Supports **Vault v2.1** and **Flow v2.8**
 - **Domain** model structure changed; `url` no longer contains the protocol part. 
   The protocol is now specified in the `isHttps` property.
   - You can update the existing entries with `DomainDb.cleanHttpPrefixes()` or by using the new migration application.
-- **Domain** storage logic was moved from **DbDomains** to **DomainDb**
+- Moved **Domain** storage logic from **DbDomains** to **DomainDb**
+- Refactored various store functions to yield **StoreResult**s instead of item + boolean -pairs
 ### Deprecations
 - Deprecated **DbDomains** in favor of **AccessDomains** and **DomainDb**
 ### Bugfixes

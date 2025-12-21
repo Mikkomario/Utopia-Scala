@@ -85,10 +85,11 @@ object TwoThreadBuffer
 		
 		/**
 		 * Appends 0-n items to this buffer.
-		 * Blocks until all of the specified items have been successfully placed in this buffer.
+		 * Blocks until all the specified items have been successfully placed in this buffer.
 		 * If this buffer becomes full, some data has to be read before new items may be fit in.
 		 * @param items Items to place within this buffer
 		 */
+		@throws[IllegalStateException]("If this buffer has already been closed")
 		def push(items: Iterable[A]): Unit
 		
 		
@@ -108,15 +109,18 @@ object TwoThreadBuffer
 		 * If this buffer is full, blocks until at least one element has been read first.
 		 * @param item An item to add to this buffer
 		 */
+		@throws[IllegalStateException]("If this buffer has already been closed")
 		def push(item: A): Unit = push(Single(item))
 		
 		/**
 		 * Alias for [[push]]
 		 */
+		@throws[IllegalStateException]("If this buffer has already been closed")
 		def ++=(items: Iterable[A]) = push(items)
 		/**
 		 * Alias for [[push]]
 		 */
+		@throws[IllegalStateException]("If this buffer has already been closed")
 		def +=(item: A) = push(item)
 	}
 	

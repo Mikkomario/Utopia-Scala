@@ -194,10 +194,11 @@ object Store
 				case None => StoreResult.inserted(model.insert(toData(item)))
 			}
 		
+		//noinspection ConvertibleToMethodValue
 		override def keyMapped[K](itemsToStore: IterableOnce[(K, V)], existingItems: Map[K, S])
 		                (implicit connection: Connection) =
 		{
-			val existingResultView = existingItems.view.mapValues(StoreResult.existed)
+			val existingResultView = existingItems.view.mapValues { StoreResult.existed(_) }
 			itemsToStore.nonEmptyIterator match {
 				case Some(itemsIterator) =>
 					// Checks against the existing items,

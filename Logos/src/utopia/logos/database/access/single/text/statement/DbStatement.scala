@@ -17,6 +17,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
+import utopia.vault.store.StoreResult
 
 /**
   * Used for accessing individual statements
@@ -64,7 +65,7 @@ object DbStatement extends SingleRowModelAccess[StoredStatement] with Unconditio
 	  * @return Existing (right) or inserted (left) statement
 	  */
 	def store(words: Seq[PreparedWordOrLinkPlacement], delimiterId: Option[Int])
-	         (implicit connection: Connection) =
+	         (implicit connection: Connection): StoreResult[StoredStatement] =
 	{
 		// Case: Empty statement => Pulls or inserts
 		if (words.isEmpty)
@@ -75,7 +76,7 @@ object DbStatement extends SingleRowModelAccess[StoredStatement] with Unconditio
 			val firstWord = words.head
 			val initialMatchIds = DbStatements.endingWith(delimiterId)
 				.findStartingWith(firstWord.id, Some(firstWord.style), isLink = firstWord.isLink)
-				.map { _.id }.toSet
+				.iterator.map { _.id }.toSet
 			// Reduces the number of potential matches by including more words
 			val remainingMatchIds = words.zipWithIndex.tail
 				.foldLeft(initialMatchIds) { case (potentialStatementIds, (word, wordIndex)) =>

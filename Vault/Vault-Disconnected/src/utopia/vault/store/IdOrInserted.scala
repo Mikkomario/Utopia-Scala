@@ -15,36 +15,55 @@ object IdOrInserted
 	 * @tparam A Type of the newly inserted instance, if included
 	 * @return A wrapper for the specified item
 	 */
-	implicit def apply[A <: HasId[Int]](idOrInserted: Either[A, Int]): IdOrInserted[A] = _IdOrInserted(idOrInserted)
+	implicit def apply[A <: HasId[Int]](idOrInserted: Either[A, Int]): IdOrInserted[A] =
+		new IdOrExtractFromInserted(idOrInserted)
 	/**
 	 * @param id The ID to wrap
 	 * @tparam A Type of the theoretical inserted instance
 	 * @return A new wrapper for the specified ID
 	 */
-	implicit def apply[A <: HasId[Int]](id: Int): IdOrInserted[A] = ExistingIdWrapper(id)
+	implicit def apply[A](id: Int): IdOrInserted[A] = new ExistingIdWrapper(id)
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param id ID of the inserted or existing item
+	 * @param inserted If a new item was inserted, pass it here
+	 * @tparam A Type of the item, if inserted
+	 * @return A new ID or inserted -wrapper for the specified item and/or ID
+	 */
+	def apply[A](id: Int, inserted: Option[A]): IdOrInserted[A] = new _IdOrInserted[A](id, inserted)
 	
 	
 	// NESTED   ------------------------
 	
-	private case class ExistingIdWrapper[+A <: HasId[Int]](id: Int) extends IdOrInserted[A]
+	private class ExistingIdWrapper[+A](override val id: Int) extends IdOrInserted[A]
 	{
 		override val isNew: Boolean = false
 		override val inserted: Option[A] = None
 		override val existingId: Option[Int] = Some(id)
 	}
 	
-	private case class _IdOrInserted[+A <: HasId[Int]](data: Either[A, Int]) extends IdOrInserted[A]
+	private class IdOrExtractFromInserted[+A <: HasId[Int]](data: Either[A, Int]) extends IdOrInserted[A]
 	{
 		// ATTRIBUTES   ----------------
 		
-		override lazy val id: Int = data.rightOrMap { _.id }
-		override lazy val isNew: Boolean = data.isLeft
+		override val id: Int = data.rightOrMap { _.id }
 		
 		
 		// IMPLEMENTED  ----------------
 		
+		override def isNew: Boolean = data.isLeft
+		
 		override def inserted: Option[A] = data.leftOption
 		override def existingId: Option[Int] = data.toOption
+	}
+	
+	private class _IdOrInserted[+A](override val id: Int, override val inserted: Option[A]) extends IdOrInserted[A]
+	{
+		override def isNew: Boolean = inserted.isDefined
+		override def existingId: Option[Int] = if (isNew) None else Some(id)
 	}
 }
 
@@ -55,30 +74,12 @@ object IdOrInserted
  * @author Mikko Hilpinen
  * @since 27.07.2025, v1.22
  */
-trait IdOrInserted[+A <: HasId[Int]] extends HasId[Int]
+trait IdOrInserted[+A] extends StoredId
 {
 	// ABSTRACT ----------------------------
-	
-	/**
-	 * @return Whether this represents / wraps a newly inserted instance
-	 */
-	def isNew: Boolean
 	
 	/**
 	 * @return If this represents a newly inserted instance, yields that instance. Otherwise, yields None.
 	 */
 	def inserted: Option[A]
-	/**
-	 * @return If this represents an instance that already existed in the DB, yields the ID of that instance.
-	 *         Otherwise, yields None.
-	 */
-	def existingId: Option[Int]
-	
-	
-	// COMPUTED -------------------------
-	
-	/**
-	 * @return Whether this represents an instance that already existed in the DB
-	 */
-	def existed = !isNew
 }

@@ -11,6 +11,7 @@ import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.Domain
 import utopia.vault.database.Connection
 import utopia.vault.nosql.view.{UnconditionalView, ViewManyByIntIds}
+import utopia.vault.store.StoreResult
 
 /**
   * The root access point when targeting multiple request paths at a time
@@ -38,7 +39,7 @@ object DbRequestPaths
 	 *              1. Whether this represents a newly inserted request path
 	 */
 	def storeFromLinks(links: Iterable[Link])(implicit connection: Connection, log: Logger) =
-		storeFrom(links) { _.domain } { _.path } { (path, link, wasInserted) => (path, link, wasInserted) }
+		storeFrom(links) { _.domain } { _.path } { (path, link) => path -> link }
 	/**
 	 * Stores a group of request paths
 	 * @param values Values from which request path data is extracted
@@ -56,30 +57,29 @@ object DbRequestPaths
 	 */
 	def storeFrom[A, R](values: Iterable[A])
 	                   (extractDomain: A => String)(extractPath: A => String)
-	                   (merge: (DetailedRequestPath, A, Boolean) => R)
+	                   (merge: (StoreResult[DetailedRequestPath], A) => R)
 	                   (implicit connection: Connection, log: Logger) =
 	{
 		if (values.isEmpty)
 			Empty
 		else
 			storeLock.synchronized {
-				// Stores the domains first
-				val domainValues = DomainDb
-					.storeFrom(values)(extractDomain) { (domain, value, wasInserted) => (domain, value, wasInserted) }
+				// Stores the domains first.
+				// Contains first entries for the existing domains, then for newly inserted domains.
+				val existingAndNewDomainEntries = DomainDb.storeFrom(values)(extractDomain) {
+					(domain, value) => (domain, extractPath(value), value) }
+					.divideBy { _._1.isNew }
 				
-				// Next, stores the request paths
-				val (pathsToInsert, pathsToStore) = domainValues
-					.divideWith { case (domain, value, wasInserted) =>
-						val path = extractPath(value)
-						if (wasInserted) Left((domain, path, value)) else Right((domain, path, value))
-					}
-				// Paths on new domains may be inserted without duplicate checks
-				val insertResults = model.insertFrom(pathsToInsert) {
+				// Next, stores the request paths;
+				// Paths on newly inserted domains may be inserted without duplicate checks
+				val insertResults = model.insertFrom(existingAndNewDomainEntries.second) {
 					case (domain, path, _) => RequestPathData(domain.id, path) } {
-					case (path, (domain, _, value)) => merge(DetailedRequestPath(path, domain), value, true) }
+					case (path, (domain, _, value)) =>
+						merge(StoreResult.inserted(DetailedRequestPath(path, domain)), value) }
 				// Paths on existing domains must be stored more carefully
-				val storeResults = Store.storeFrom(pathsToStore) { case (domain, path, _) => domain -> path } {
-					case (path, (_, _, original), wasInserted) => merge(path, original, wasInserted) }
+				val storeResults = Store.storeFrom(existingAndNewDomainEntries.first) {
+					case (domain, path, _) => domain.wrapped -> path } {
+					case (path, (_, _, original)) => merge(path, original) }
 				
 				insertResults ++ storeResults
 			}
@@ -128,5 +128,7 @@ object DbRequestPaths
 				case (path, (domain, pathStr)) => (domain.id -> pathStr.toLowerCase) -> domain(path) }
 				.toMap
 		}
+		
+		override protected def idOf(value: DetailedRequestPath): Int = value.id
 	}
 }

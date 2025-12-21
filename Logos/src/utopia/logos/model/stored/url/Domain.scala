@@ -1,6 +1,7 @@
 package utopia.logos.model.stored.url
 
 import utopia.flow.parse.string.Regex
+import utopia.flow.util.StringExtensions._
 import utopia.logos.database.access.url.domain.AccessDomain
 import utopia.logos.model.combined.url.DetailedRequestPath
 import utopia.logos.model.factory.url.DomainFactoryWrapper
@@ -55,17 +56,18 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 			url
 		// Looks for the http(s) part
 		else {
-			val modified = httpRegex.endIndexIteratorIn(url).nextOption() match {
+			val noControl = url.stripControlCharacters.trim
+			val modified = httpRegex.endIndexIteratorIn(noControl).nextOption() match {
 				// Case: Http(s) found => Looks for www.
 				case Some(httpEndIndex) =>
 					// Case: www also found => Yields the same URL
-					if (wwwRegex.existsIn(url))
-						url
+					if (wwwRegex.existsIn(noControl))
+						noControl
 					// Case: No www => Checks whether needed (not used on number-based URLs)
 					else {
-						val (toHttp, afterHttp) = url.splitAt(httpEndIndex)
+						val (toHttp, afterHttp) = noControl.splitAt(httpEndIndex)
 						if (afterHttp.headOption.exists { _.isDigit })
-							url
+							noControl
 						else
 							s"${toHttp}www.$afterHttp"
 					}
@@ -73,10 +75,10 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 				// Case: No http(s) => Adds it and also looks, whether www. should be added
 				case None =>
 					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
-					if (wwwRegex.existsIn(url) || url.headOption.exists { _.isDigit })
-						s"$httpPart$url"
+					if (wwwRegex.existsIn(noControl) || noControl.headOption.exists { _.isDigit })
+						s"$httpPart$noControl"
 					else
-						s"${httpPart}www.$url"
+						s"${httpPart}www.$noControl"
 			}
 			// Removes the trailing forward slash, also
 			if (modified.endsWith("/"))

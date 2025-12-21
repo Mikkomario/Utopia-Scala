@@ -5,14 +5,15 @@ import utopia.flow.collection.immutable.WeakList
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.vault.database.Connection
+import utopia.vault.store.StoreResult
 
-import scala.collection.{MapView, View}
+import scala.collection.MapView
 
 /**
  * An abstract thread-safe implementation of a storing interface that weakly caches generated mappings.
- * @tparam I Type of values accepted for storing
+ * @tparam I Type of values accepted for storing (i.e. input)
  * @tparam K Type of stored mapping keys
- * @tparam V Type of database values attached to the stored values
+ * @tparam V Type of database-stored representations / versions (e.g. I = before storing, V = after storing)
  * @author Mikko Hilpinen
  * @since 27.02.2025, v0.5
  */
@@ -59,6 +60,13 @@ abstract class CachingVolatileMapStore[I, K, V]
 	 */
 	protected def insertAndMap(values: Seq[I])(implicit connection: Connection): Map[K, V]
 	
+	/**
+	 * Acquires the ID of a stored item
+	 * @param value A stored item from which an ID is to be extracted
+	 * @return ID of the specified item / value
+	 */
+	protected def idOf(value: V): Int
+	
 	
 	// COMPUTED -----------------------------
 	
@@ -88,16 +96,15 @@ abstract class CachingVolatileMapStore[I, K, V]
 	 * Stores the specified values in the DB. Avoids inserting duplicates.
 	 * @param values Values that will be transformed and stored
 	 * @param extract A function that extracts an insertable part from a value
-	 * @param merge A function that merges 3 values:
-	 *                  1. The inserted value
+	 * @param merge A function that merges 2 values:
+	 *                  1. The stored value (either inserted or already existed)
 	 *                  1. The original value
-	 *                  1. Whether the value was inserted
 	 * @param connection Implicit DB connection
 	 * @tparam A Type of original values
 	 * @tparam R Type of merge results
 	 * @return Merge results
 	 */
-	def storeFrom[A, R](values: Iterable[A])(extract: A => I)(merge: (V, A, Boolean) => R)
+	def storeFrom[A, R](values: Iterable[A])(extract: A => I)(merge: (StoreResult[V], A) => R)
 	                   (implicit connection: Connection, log: Logger) =
 	{
 		// Extracts the information to store
@@ -109,28 +116,30 @@ abstract class CachingVolatileMapStore[I, K, V]
 			val matchingValue = valueMap.get(standardize(extracted))
 			if (matchingValue.isEmpty)
 				log(s"Warning: Stored value $original => $extracted didn't match any of the resulting map values")
-			matchingValue.map { case (value, wasInserted) => merge(value, original, wasInserted) }
+			matchingValue.map { merge(_, original) }
 		}
 	}
 	/**
 	 * Stores the specified values to the database. Avoids inserting duplicates.
 	 * @param values Values to store
 	 * @param connection Implicit DB connection
-	 * @return A Map (view) where keys are the specified values and values are their DB matches.
-	 *         Each value is attached to a boolean indicating whether the entry was just inserted.
+	 * @return A Map (view) where the specified items have been mapped to their unique keys.
+	 *         Each value is represented as a [[StoreResult]],
+	 *         indicating whether it was inserted or already existed in the DB.
 	 */
 	def store(values: Set[I])(implicit connection: Connection) = {
 		// Case: No values to pull
 		if (values.isEmpty)
-			MapView.empty[K, (V, Boolean)]
+			MapView.empty[K, StoreResult[V]]
 		else {
 			// Looks up cached information, and which values require database access
 			val cached = this.cached
 			val valuesToPull = diff(values, cached.keySet)
+			println(s"Storing: ${ values.mkString(", ") }; Needs to pull: ${ valuesToPull.mkString(", ") }")
 			
 			// Case: Cache contains all requested values => Uses cached information
 			if (valuesToPull.isEmpty)
-				cached.view.mapValues { _ -> true }
+				cached.view.mapValues { wrap(_, inserted = false) }
 			else {
 				// DB interactions are synchronized
 				storeLock.synchronized {
@@ -139,13 +148,17 @@ abstract class CachingVolatileMapStore[I, K, V]
 					val newValues = diff(valuesToPull, existing.keySet)
 					// Case: No inserts are needed => returns
 					if (newValues.isEmpty)
-						(cached ++ existing).view.mapValues { _ -> true }
+						(cached ++ existing).view.mapValues { wrap(_, inserted = false) }
 					else {
 						val inserted = insertAndMap(newValues.toOptimizedSeq)
 						cache(inserted)
-						(View.concat(cached, existing).map { case (k, v) => k -> (v -> true) }.toMap ++
-							inserted.view.mapValues { _ -> false })
-							.view
+						
+						if (cached.isEmpty && existing.isEmpty)
+							inserted.view.mapValues { wrap(_, inserted = true) }
+						else
+							((cached.iterator ++ existing).map { case (k, v) => k -> wrap(v, inserted = false) } ++
+								inserted.iterator.map { case (k, v) => k -> wrap(v, inserted = true) })
+								.toMap.view
 					}
 				}
 			}
@@ -153,4 +166,6 @@ abstract class CachingVolatileMapStore[I, K, V]
 	}
 	
 	private def cache(mapping: Map[K, V]) = cachedMapsP.update { _ :+ mapping }
+	
+	private def wrap(stored: V, inserted: Boolean) = StoreResult(stored, idOf(stored), isNew = inserted)
 }
