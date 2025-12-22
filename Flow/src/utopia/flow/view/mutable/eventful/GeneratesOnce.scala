@@ -36,7 +36,7 @@ object GeneratesOnce
 	 * @return A new pointer that will initialize once its value is called
 	 */
 	def simulatingOldValue[A](oldValue: => A)(value: => A)(implicit log: Logger): GeneratesOnce[A] =
-		new _GeneratesOnce[A](Some(oldValue), value)
+		new _GeneratesOnce[A](Some({ () => oldValue }), value)
 	
 	/**
 	 * Creates a new pre-initialized pointer
@@ -51,7 +51,7 @@ object GeneratesOnce
 	
 	// NESTED   --------------------------------
 	
-	private class _GeneratesOnce[A](simulateOldValue: => Option[A], generate: => A)(implicit log: Logger)
+	private class _GeneratesOnce[A](simulateOldValue: Option[() => A], generate: => A)(implicit log: Logger)
 		extends AbstractMayStopChanging[A] with GeneratesOnce[A]
 	{
 		// ATTRIBUTES   -------------------------
@@ -75,8 +75,13 @@ object GeneratesOnce
 			lazyCurrentPointer.current.foreach { _.set(value) }
 			
 			// Fires the change event (if necessary), as well as the changing stopped -event
-			if (hasListeners)
-				fireEvent(ChangeEvent(simulateOldValue.getOrElse(value), value))
+			if (hasListeners) {
+				val oldValue = simulateOldValue match {
+					case Some(getOldValue) => getOldValue()
+					case None => value
+				}
+				fireEvent(ChangeEvent(oldValue, value))
+			}
 			declareChangingStopped()
 			
 			value
@@ -91,7 +96,7 @@ object GeneratesOnce
 		override def currentPointer = lazyCurrentPointer.value.readOnly
 		
 		override protected def _map[B](f: A => B): GeneratesOnce[B] = {
-			val mapped = new _GeneratesOnce[B](simulateOldValue.map(f) , f(value))
+			val mapped = new _GeneratesOnce[B](simulateOldValue.map { original => { () => f(original()) } }, f(value))
 			// If the other pointer is being listened to, propagates change events in this pointer to that pointer,
 			// as expected by map calls to Changing
 			addListener(ChangeListener.once { _ => if (mapped.hasListeners) mapped.value })
@@ -128,7 +133,7 @@ object GeneratesOnce
  * @author Mikko Hilpinen
  * @since 06.10.2025, v2.7
  */
-trait GeneratesOnce[+A] extends MayStopChanging[A] with Lazy[A]
+trait GeneratesOnce[+A] extends GeneratesLike[A, GeneratesOnce] with MayStopChanging[A]
 {
 	// ABSTRACT -----------------------------
 	
@@ -136,33 +141,13 @@ trait GeneratesOnce[+A] extends MayStopChanging[A] with Lazy[A]
 	 * @return A flag that contains true after this pointer has been initialized
 	 */
 	def initializedFlag: Flag
-	/**
-	 * @return A flag that contains true while this pointer has not yet been initialized
-	 */
-	def emptyFlag: Flag
-	
-	/**
-	 * @return A pointer that contains None until this pointer is initialized.
-	 *         Once this pointer is initialized, contains the same value.
-	 */
-	def currentPointer: Changing[Option[A]]
-	
-	/**
-	 * @param f A mapping function to apply
-	 * @tparam B Type of the mapping results
-	 * @return A changing item that:
-	 *              - Initializes lazily, like this pointer
-	 *              - Contains a mapped result
-	 *              - Generates change events when/if this pointer changes
-	 */
-	protected def _map[B](f: A => B): GeneratesOnce[B]
 	
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def destiny: Destiny = if (isInitialized) Sealed else MaySeal
+	override def nonEmptyFlag: Flag = initializedFlag
 	
-	override def map[B](f: A => B): GeneratesOnce[B] = _map(f)
+	override def destiny: Destiny = if (isInitialized) Sealed else MaySeal
 	
 	override def lightMap[B](f: A => B): GeneratesOnce[B] = current match {
 		case Some(value) => GeneratesOnce.initialized[B](f(value))

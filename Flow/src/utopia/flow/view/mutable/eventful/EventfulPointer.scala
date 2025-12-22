@@ -10,6 +10,14 @@ import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingW
 
 object EventfulPointer extends LoggingPointerFactory[EventfulPointer]
 {
+	// COMPUTED -----------------------------
+	
+	/**
+	 * @return Access to constructors for pointers which only become eventful lazily / on-demand
+	 */
+	def lazily = BecomesEventfulPointer
+	
+	
 	// IMPLEMENTED    -----------------------
 	
 	/**

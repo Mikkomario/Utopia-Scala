@@ -4,11 +4,20 @@ import utopia.flow.time.Duration
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Resettable
+import utopia.flow.view.mutable.eventful.GeneratesAgain
 
 import scala.concurrent.ExecutionContext
 
 object ResettableLazy
 {
+	// COMPUTED ----------------------
+	
+	/**
+	 * @return Access to eventful resettable lazy constructors
+	 */
+	def lazily = GeneratesAgain
+	
+	
 	// OTHER    ----------------------
 	
 	/**

@@ -92,6 +92,9 @@
   - Immediate support is added for **Try** (via **TryExtensions**) and **TryCatch**
   - Also added **PossiblyFailingFuture**, **PossiblyFailingFutures** and **Attempts** traits for facilitating 
     extension-creation for classes that will extend **MayHaveFailed**
+- Added **GeneratesAgain** (an eventful **ResettableLazy**)
+- Added **BecomesEventfulPointer** and **BecomesEventfulVolatile**, 
+  which initialize their eventful functionality lazily.
 - Added **EmptyInputStream**
 - Added support for lazily initialized **Constant**s
 - Added **BuildNothing**

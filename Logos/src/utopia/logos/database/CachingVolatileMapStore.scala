@@ -135,7 +135,6 @@ abstract class CachingVolatileMapStore[I, K, V]
 			// Looks up cached information, and which values require database access
 			val cached = this.cached
 			val valuesToPull = diff(values, cached.keySet)
-			println(s"Storing: ${ values.mkString(", ") }; Needs to pull: ${ valuesToPull.mkString(", ") }")
 			
 			// Case: Cache contains all requested values => Uses cached information
 			if (valuesToPull.isEmpty)
