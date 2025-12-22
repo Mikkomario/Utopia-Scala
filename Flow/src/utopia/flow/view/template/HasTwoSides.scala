@@ -136,6 +136,14 @@ trait HasTwoSides[+A]
 	def existsWith[B](other: HasTwoSides[B])(f: (A, B) => Boolean) =
 		f(first, other.first) || f(second, other.second)
 	/**
+	 * @param other Another pair
+	 * @param f A predicate that compares the values of these pairs as a pair
+	 * @tparam B Type of values in the other pair
+	 * @return Whether the specified predicate returns true for either side
+	 */
+	def existsPairWith[B >: A](other: HasTwoSides[B])(f: Pair[B] => Boolean) =
+		existsWith(other) { (a, b) => f(Pair(a, b)) }
+	/**
 	  * @param other Another pair
 	  * @param f     A predicate that compares the values of these pairs
 	  * @tparam B Type of values in the other pair
@@ -144,12 +152,49 @@ trait HasTwoSides[+A]
 	def forallWith[B](other: HasTwoSides[B])(f: (A, B) => Boolean) =
 		f(first, other.first) && f(second, other.second)
 	/**
+	 * @param other Another pair
+	 * @param f     A predicate that compares the values of these pairs as a pair
+	 * @tparam B Type of values in the other pair
+	 * @return Whether the specified predicate returns true for both sides
+	 */
+	def forallPairsWith[B >: A](other: HasTwoSides[B])(f: Pair[B] => Boolean) =
+		forallWith(other) { (a, b) => f(Pair(a, b)) }
+	/**
+	 * Calls the specified function for two first values, then for two second values
+	 * @param other Another pair
+	 * @param f A function which handles the first values, and then the second values
+	 * @tparam B Type of the values in the other pair
+	 * @tparam U Arbitrary 'f' result type
+	 */
+	def foreachWith[B, U](other: HasTwoSides[B])(f: (A, B) => U): Unit = {
+		f(first, other.first)
+		f(second, other.second)
+	}
+	/**
+	 * Calls the specified function for two first values, then for two second values
+	 * @param other Another pair
+	 * @param f A function which handles the first values as a pair, and then the second values as a pair
+	 * @tparam B Type of the values in the other pair
+	 * @tparam U Arbitrary 'f' result type
+	 */
+	def foreachPairWith[B >: A, U](other: HasTwoSides[B])(f: Pair[B] => U) =
+		foreachWith(other) { (a, b) => f(Pair(a, b)) }
+	/**
 	  * Merges this pair with another pair, resulting in a pair containing the entries from both
 	  * @param other Another pair
 	  * @tparam B Type of items in the other pair
-	  * @return A pair that combines the values of both of these pairs in tuples
+	  * @return A pair that combines the values of both of these pairs as tuples
 	  */
 	def zip[B](other: HasTwoSides[B]) = Pair((first, other.first), (second, other.second))
+	/**
+	 * Merges this pair with another pair, resulting in a pair containing two pairs:
+	 *      1. The first values from both these pairs
+	 *      1. The second values from both these pairs
+	 * @param other Another pair
+	 * @tparam B Type of items in the other pair
+	 * @return A pair that combines the values of both of these pairs as pairs
+	 */
+	def pairWith[B >: A](other: HasTwoSides[B]) = Pair(Pair(first, other.first), Pair(second, other.second))
 	
 	/**
 	  * Merges together the two values in this pair using a function.

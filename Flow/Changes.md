@@ -81,6 +81,7 @@
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
 - Events fired from **EventfulVolatile** are now always ordered, and can no longer occur in parallel.
 - Bugfix to **OptimizedBridge**, which would sometimes not auto-detach from the origin pointer correctly
+- Bugfix to **GeneratesOnce**'s mapping, which could previously generate double the events
 - Bugfix to **TwoThreadBuffer.Output**'s `.push(Iterable)`, which threw under some rare circumstances
 ### New features
 - New features relating to **Changing**:
@@ -164,6 +165,7 @@
   - **EventfulVolatile** now processes (root level) change events in synchronized manner, one-by-one.
   - After-effects generated in `addListenerAndSimulateEvent(...)` are now wrapped in **Try**; 
     Errors are logged.
+- **GeneratesOnce** no longer performs the mapping lazily, if the original pointer/lazy has already been initialized
 - **OptimizedSeqBuilder**'s `.knownSize` now functions past size 2
 - **UncertainBoolean**'s `||(Boolean)` and `&&(Boolean)` parameters are now call-by-name
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**

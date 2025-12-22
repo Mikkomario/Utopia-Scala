@@ -10,7 +10,7 @@ import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.mutable.{Pointer, Settable}
-import utopia.flow.view.mutable.async.{EventfulVolatile, LockableVolatile}
+import utopia.flow.view.mutable.async.{BecomesEventfulVolatile, EventfulVolatile, LockableVolatile}
 import utopia.flow.view.mutable.eventful._
 
 import scala.util.Try
@@ -774,16 +774,107 @@ object ChangingTest extends App
 	assert(go2.value == 2)
 	assert(go2GenerateCalls == 2)
 	
-	assert(go3.nonInitialized)
-	assert(go3.current.isEmpty)
-	assert(go3.destiny == MaySeal)
+	assert(go3.isInitialized)
+	assert(go3.current.contains(-1))
+	assert(go3.destiny == Sealed)
 	
 	// Queries the remaining value
 	assert(go3.value == -1)
 	
-	assert(go3.isInitialized)
-	assert(go3.current.contains(-1))
-	assert(go3.destiny == Sealed)
+	// Tests BecomesEventfulPointer and BecomesEventfulVolatile
+	
+	private val bes = Pair(BecomesEventfulPointer(1), BecomesEventfulVolatile(1))
+	private val besDescriptions = Pair("regular", "volatile")
+	private def testBes(f: BecomesEventfulPointer[Int] => Boolean) =
+		bes.foreachWith(besDescriptions) { (p, desc) => assert(f(p), desc) }
+	
+	testBes { _.value == 1 }
+	
+	bes.foreach { _.value = 2 }
+	testBes { _.value == 2 }
+	
+	bes.foreach { _.update { _ * 2 } }
+	testBes { _.value == 4 }
+	
+	private val beps = bes.map { _.eventful }
+	private def testBeps(f: EventfulPointer[Int] => Boolean) =
+		beps.foreachWith(besDescriptions) { (p, desc) => assert(f(p), desc) }
+		
+	testBeps { _.value == 4 }
+	testBes { _.value == 4 }
+	
+	beps.foreach { _.value = 2 }
+	
+	testBes { _.value == 2 }
+	
+	bes.foreach { _.update { _ * 3 } }
+	
+	testBeps { _.value == 6 }
+	testBes { _.value == 6 }
+	
+	// Tests GeneratesAgain
+	
+	private val counter = Iterator.iterate(1) { _ + 1 }
+	private val ga = GeneratesAgain.simulatingOldValue(0) { counter.next() }
+	private var gaPrev = -1
+	private var gaResult = -1
+	ga.addListener { e =>
+		gaResult = e.newValue
+		gaPrev = e.oldValue
+	}
+	
+	assert(ga.isNotSet)
+	assert(ga.current.isEmpty)
+	
+	assert(ga.value == 1)
+	assert(gaResult == 1)
+	assert(gaPrev == 0)
+	assert(ga.current.contains(1))
+	assert(ga.isSet)
+	
+	assert(ga.reset())
+	assert(!ga.reset())
+	
+	assert(ga.isNotSet)
+	assert(ga.current.isEmpty)
+	
+	assert(ga.value == 2)
+	assert(gaResult == 2)
+	assert(gaPrev == 1, gaPrev)
+	
+	assert(ga.emptyFlag.isNotSet)
+	
+	assert(ga.reset())
+	
+	assert(ga.emptyFlag.isSet)
+	
+	private val ga2 = ga.map { -_ }
+	private var ga2Result = 0
+	private var ga2Prev = 0
+	ga2.addListener { e =>
+		ga2Result = e.newValue
+		ga2Prev = e.oldValue
+	}
+	
+	assert(ga2.isNotSet)
+	
+	assert(ga.value == 3)
+	assert(ga2Result == -3, ga2Result)
+	assert(ga2Prev == -2, ga2Prev)
+	assert(ga2.isSet)
+	
+	println("Resetting GA")
+	assert(ga.reset())
+	assert(ga2.isNotSet)
+	
+	println("Retrieving mapped GA")
+	assert(ga2.value == -4)
+	assert(ga2Result == -4, ga2Result)
+	assert(ga2Prev == -3, ga2Prev)
+	assert(gaResult == 4)
+	assert(gaPrev == 3)
+	println("Retrieving GA")
+	assert(ga.value == 4)
 	
 	println("Done!")
 }

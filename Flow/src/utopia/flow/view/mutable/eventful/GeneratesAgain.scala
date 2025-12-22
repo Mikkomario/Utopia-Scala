@@ -1,10 +1,10 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.event.listener.ChangingStoppedListener
-import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.event.model.Destiny.ForeverFlux
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.eventful.OptimizedMirror
 import utopia.flow.view.mutable.async.BecomesEventfulVolatile
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.{AbstractChanging, Changing, ChangingWrapper, Flag}
@@ -112,13 +112,8 @@ object GeneratesAgain
 			}
 			
 			// Case: Generated a new value => Updates "last value" and fires a change event, if needed
-			if (wasGenerated) {
-				val last = lastValue
-				lastValue = Some(result)
-				
-				if (hasListeners)
-					fireEvent(ChangeEvent(last.getOrElse { simulateOldValue.getOrElse(result) }, result))
-			}
+			if (wasGenerated && hasListeners)
+				fireEvent(ChangeEvent(lastValue.getOrElse { simulateOldValue.getOrElse(result) }, result))
 			
 			result
 		}
@@ -126,29 +121,45 @@ object GeneratesAgain
 		override def current: Option[A] = wrapped.value
 		override def currentPointer: Changing[Option[A]] = wrapped.eventful.readOnly
 		
-		override def reset(): Boolean = wrapped.reset()
+		override def reset(): Boolean = {
+			val resetResult = wrapped.pop()
+			resetResult.foreach { v => lastValue = Some(v) }
+			resetResult.isDefined
+		}
 		
 		override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit = ()
 		
-		override protected def _map[B](f: A => B): GeneratesAgain[B] = {
-			// Generates a mapped lazily initialized pointer
-			val mapped = new _GeneratesAgain[B](lastValue.orElse(simulateOldValue).map(f), f(generate), volatile)
-			
-			// Whenever this pointer is initialized, cascades the change events from the mapped pointer, also
-			// Whenever this pointer is reset, also resets the other pointer
-			wrapped.eventful.addListener { e =>
-				if (e.newValue.isDefined) {
-					if (mapped.hasListeners)
-						mapped.value
-				}
-				else
-					mapped.reset()
-				
-				Continue
-			}
-			
-			mapped
+		override protected def _map[B](f: A => B): GeneratesAgain[B] = new MappedGeneratesAgain[A, B](this, f)
+	}
+	
+	private class MappedGeneratesAgain[A, B](source: GeneratesAgain[A], f: A => B)
+		extends GeneratesAgain[B] with ChangingWrapper[B]
+	{
+		// ATTRIBUTES   ---------------------------
+		
+		override protected val wrapped: Changing[B] = OptimizedMirror(source)(f)
+		override lazy val currentPointer: Changing[Option[B]] = source.currentPointer.map { _.map(f) }
+		
+		
+		// IMPLEMENTED  ---------------------------
+		
+		override implicit def listenerLogger: Logger = source.listenerLogger
+		
+		// Makes sure the source pointer is updated when retrieving the value
+		override def value: B = {
+			source.value
+			super.value
 		}
+		override def current: Option[B] = if (source.isSet) Some(wrapped.value) else None
+		
+		override def isInitialized: Boolean = source.isInitialized
+		override def nonEmptyFlag: Flag = source.nonEmptyFlag
+		override def emptyFlag: Flag = source.emptyFlag
+		
+		override def reset(): Boolean = source.reset()
+		
+		override def map[C](f: B => C) = _map(f)
+		override protected def _map[C](f: B => C): GeneratesAgain[C] = new MappedGeneratesAgain[B, C](this, f)
 	}
 }
 
@@ -159,6 +170,3 @@ object GeneratesAgain
  * @since 22.12.2025, v2.8
  */
 trait GeneratesAgain[+A] extends GeneratesLike[A, GeneratesAgain] with ResettableLazy[A]
-{
-
-}

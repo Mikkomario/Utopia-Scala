@@ -1,12 +1,11 @@
 package utopia.flow.view.mutable.eventful
 
-import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
-import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, Flag, MayStopChanging}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed, OptimizedMirror}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, Flag}
 
 object GeneratesOnce
 {
@@ -95,13 +94,9 @@ object GeneratesOnce
 		 */
 		override def currentPointer = lazyCurrentPointer.value.readOnly
 		
-		override protected def _map[B](f: A => B): GeneratesOnce[B] = {
-			val mapped = new _GeneratesOnce[B](simulateOldValue.map { original => { () => f(original()) } }, f(value))
-			// If the other pointer is being listened to, propagates change events in this pointer to that pointer,
-			// as expected by map calls to Changing
-			addListener(ChangeListener.once { _ => if (mapped.hasListeners) mapped.value })
-			
-			mapped
+		override protected def _map[B](f: A => B): GeneratesOnce[B] = current match {
+			case Some(value) => new AlreadyGenerated[B](f(value))
+			case None => new MappedGeneratesOnce[A, B](this, f)
 		}
 	}
 	
@@ -120,11 +115,39 @@ object GeneratesOnce
 		
 		// IMPLEMENTED  -----------------------
 		
-		override protected def declareChangingStopped(): Unit = ()
+		override protected def _map[B](f: A => B): GeneratesOnce[B] = new AlreadyGenerated[B](f(value))
+	}
+	
+	private class MappedGeneratesOnce[A, B](source: GeneratesOnce[A], f: A => B)
+		extends GeneratesOnce[B] with ChangingWrapper[B]
+	{
+		// ATTRIBUTES   ---------------------
 		
-		override protected def _map[B](f: A => B): GeneratesOnce[B] = GeneratesOnce { f(value) }
+		protected override val wrapped = OptimizedMirror(source)(f)
+		override lazy val currentPointer: Changing[Option[B]] = source.currentPointer.map { _.map(f) }
 		
-		override def lightMap[B](f: A => B): GeneratesOnce[B] = new AlreadyGenerated[B](f(value))
+		
+		// IMPLEMENTED  ---------------------
+		
+		override implicit def listenerLogger: Logger = source.listenerLogger
+		
+		override def value: B = {
+			source.value // Makes sure the source is up-to-date
+			super.value
+		}
+		override def destiny: Destiny = source.destiny
+		
+		override def current: Option[B] = if (source.isInitialized) Some(wrapped.value) else None
+		
+		override def isInitialized: Boolean = source.isInitialized
+		override def initializedFlag: Flag = source.initializedFlag
+		override def emptyFlag: Flag = source.emptyFlag
+		
+		override def map[C](f: B => C) = _map(f)
+		override protected def _map[C](f: B => C): GeneratesOnce[C] = current match {
+			case Some(value) => new AlreadyGenerated[C](f(value))
+			case None => new MappedGeneratesOnce[B, C](this, f)
+		}
 	}
 }
 
@@ -133,7 +156,7 @@ object GeneratesOnce
  * @author Mikko Hilpinen
  * @since 06.10.2025, v2.7
  */
-trait GeneratesOnce[+A] extends GeneratesLike[A, GeneratesOnce] with MayStopChanging[A]
+trait GeneratesOnce[+A] extends GeneratesLike[A, GeneratesOnce]
 {
 	// ABSTRACT -----------------------------
 	
@@ -148,9 +171,4 @@ trait GeneratesOnce[+A] extends GeneratesLike[A, GeneratesOnce] with MayStopChan
 	override def nonEmptyFlag: Flag = initializedFlag
 	
 	override def destiny: Destiny = if (isInitialized) Sealed else MaySeal
-	
-	override def lightMap[B](f: A => B): GeneratesOnce[B] = current match {
-		case Some(value) => GeneratesOnce.initialized[B](f(value))
-		case None => map(f)
-	}
 }

@@ -9,7 +9,6 @@ import utopia.flow.view.template.HasTwoSides
 
 import scala.annotation.switch
 import scala.annotation.unchecked.uncheckedVariance
-import scala.collection.immutable.VectorBuilder
 import scala.collection.{IndexedSeqOps, mutable}
 
 /**
@@ -263,6 +262,17 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	def mergeWith[B, R](other: HasTwoSides[B])(f: (A, B) => R) =
 		newPair(f(first, other.first), f(second, other.second))
 	/**
+	 * Combines this pair with another pair, matching first and second items together
+	 * @param other Another pair
+	 * @param f A merge function that accepts paired values from both pairs.
+	 *          This function is called first for the first values, and then again for the second values.
+	 * @tparam B Type of other pair
+	 * @tparam R Type of merge result
+	 * @return A combined pair
+	 */
+	def pairAndMergeWith[B >: A, R](other: HasTwoSides[B])(f: Pair[B] => R) =
+		mergeWith(other) { (a, b) => f(Pair(a, b)) }
+	/**
 	  * Combines this pair with another pair, matching first and second items together
 	  * @param other Another pair
 	  * @param f A merge function that accepts a value from both pairs.
@@ -273,11 +283,28 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	  * @return All merge results as a vector
 	  */
 	def flatMergeWith[B, R](other: HasTwoSides[B])(f: (A, B) => IterableOnce[R]) = {
-		val builder = new VectorBuilder[R]()
+		val builder = OptimizedIndexedSeq.newBuilder[R]
 		builder ++= f(first, other.first)
 		builder ++= f(second, other.second)
 		builder.result()
 	}
+	/**
+	 * Combines this pair with another pair, matching first and second items together
+	 * @param other Another pair
+	 * @param f A merge function that accepts a pair of values,
+	 *          where a pair is formed by combining the first or the second values together.
+	 *
+	 *          Returns 0-n items.
+	 *
+	 *          This function is called twice: Once for the first values of both these pairs,
+	 *          then for the second values in the same manner.
+	 *
+	 * @tparam B Type of values in the other pair
+	 * @tparam R Type of individual merge results
+	 * @return All merge results as a vector
+	 */
+	def pairAndFlatMergeWith[B >: A, R](other: HasTwoSides[B])(f: Pair[B] => IterableOnce[R]) =
+		flatMergeWith(other) { (a, b) => f(Pair(a, b)) }
 	/**
 	  * Attempts to merge this pair with another pair
 	  * @param other Another pair
@@ -290,6 +317,19 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 	  */
 	def findMergeWith[B, R](other: HasTwoSides[B])(f: (A, B) => Option[R]) =
 		f(first, other.first).flatMap { a => f(second, other.second).map { newPair(a, _) } }
+	/**
+	 * Attempts to merge this pair with another pair
+	 * @param other Another pair
+	 * @param f A merge function that combines paired values from both of these pairs.
+	 *          Returns None in cases where merging is not possible.
+	 *          Will be called 1-2 times, each time receiving either the first or the second values as a pair.
+	 * @tparam B Type of values in the other pair
+	 * @tparam R Type of merged values, when successful
+	 * @return A pair with two merge result values, or None if the specified function returned None at any point.
+	 */
+	def findPairAndMergeWith[B >: A, R](other: HasTwoSides[B])(f: Pair[B] => Option[R]) =
+		findMergeWith(other) { (a, b) => f(Pair(a, b)) }
+	
 	/**
 	  * @param keys A pair of keys
 	  * @tparam K Type of keys used
