@@ -8,6 +8,7 @@ import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.casting.ValueConverterManager
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.flow.operator.ScopeUsable
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.string.Lines
 import utopia.flow.util.StringExtensions._
@@ -489,7 +490,8 @@ object Connection
   * @author Mikko Hilpinen
   * @since 16.4.2017
   */
-class Connection(initialDBName: Option[String] = None)(implicit log: Logger) extends AutoCloseable
+class Connection(initialDBName: Option[String] = None)(implicit log: Logger)
+	extends AutoCloseable with ScopeUsable[Connection]
 {
 	// ATTRIBUTES    -----------------
 	
@@ -546,6 +548,8 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger) ext
 	
 	
 	// IMPLEMENTED  -----------------
+	
+	override def self: Connection = this
 	
 	// Exceptions during closing are ignored
 	override def close() = Try { currentConnection.foreach { _.close() } }

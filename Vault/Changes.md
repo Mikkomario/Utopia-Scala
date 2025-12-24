@@ -14,6 +14,7 @@
 - Added classes for lazily initializing values from the DB: 
   **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
 - Added a new **DbMap** class for pulling and caching values from a database table
+- In **Store**, added support for replacing ID -based deprecation
 - **JoiningDbReader** now supports the addition of new join conditions after instance creation
 - Added **StoredId** trait
 - Added **Filterable** trait
