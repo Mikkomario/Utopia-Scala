@@ -138,6 +138,8 @@
   - Added `.failIfLocked(...)` and `.ifUnlocked(...)`
 - **Map** (via **CollectionExtensions**)
   - Added `.mapInputView(...)` and `.flatMapInputView(...)`
+- **MapAccess** (object)
+  - Added `.wrap(Lazy)` constructor
 - **MapView** (via **CollectionExtensions**)
   - Added `.mapInput(...)` and `.flatMapInput(...)`
 - **MayBeSet**

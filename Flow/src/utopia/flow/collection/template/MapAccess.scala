@@ -1,5 +1,8 @@
 package utopia.flow.collection.template
 
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
+
 import scala.language.implicitConversions
 
 object MapAccess
@@ -8,6 +11,18 @@ object MapAccess
 	
 	implicit def wrap[K, V](map: collection.Map[K, V]): MapAccess[K, V] = new MapWrapper[K, V](map)
 	implicit def wrapView[K, V](mapView: collection.MapView[K, V]): MapAccess[K, V] = new MapViewWrapper[K, V](mapView)
+	
+	/**
+	 * @param lazyMap A lazily initialized container that will yield the map to wrap
+	 * @tparam K Type of map keys used
+	 * @tparam V Type of map values used
+	 * @return A new map access, which accesses the map from the lazy container, when necessary
+	 */
+	implicit def wrap[K, V](lazyMap: Lazy[collection.Map[K, V]]): MapAccess[K, V] = lazyMap.current match {
+		// Case: Already initialized => Simply wraps the acquired map
+		case Some(map) => wrap(map)
+		case None => new LazyMapWrapper[K, V](lazyMap)
+	}
 	
 	/**
 	 * @param f A function that serves as a mapping
@@ -26,7 +41,7 @@ object MapAccess
 	 * @tparam V Type of yielded values
 	 * @return A map access that lazily wraps the specified map
 	 */
-	def wrapLazily[K, V](map: => collection.Map[K, V]): MapAccess[K, V] = new LazyMapWrapper[K, V](map)
+	def wrapLazily[K, V](map: => collection.Map[K, V]): MapAccess[K, V] = new LazyMapWrapper[K, V](Lazy(map))
 	
 	
 	// NESTED   ----------------------------
@@ -50,11 +65,9 @@ object MapAccess
 	{
 		override def apply(key: K): V = mapView(key)
 	}
-	private class LazyMapWrapper[K, +V](getMap: => collection.Map[K, V]) extends MapAccess[K, V]
+	private class LazyMapWrapper[K, +V](lazyMap: View[collection.Map[K, V]]) extends MapAccess[K, V]
 	{
-		private lazy val map = getMap
-		
-		override def apply(key: K): V = map(key)
+		override def apply(key: K): V = lazyMap.value(key)
 	}
 }
 

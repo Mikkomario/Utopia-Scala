@@ -4,6 +4,8 @@
 ### Breaking changes
 - **FilterableView**'s required `self` -property is now public instead of protected
   - This will likely cause build errors. However, these should be easily fixed with a simple find-and-replace.
+- Refactored **Store** interface to provide functions which don't require existing and inserted types to match. 
+  Had to add new generic type parameters to achieve this, which may cause some build errors.
 - `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
 ### Deprecations
 - Deprecated **Joinable**'s `.where(Condition)` in favor of `.onlyJoinIf(Condition)` 
@@ -30,7 +32,6 @@
     - Added new "generic" constructor functions that support additional custom construction parameters
   - Trait
     - Added `.keyMapUnique(...)` and `.keyMappedUnique(...)`
-
 - **StoreResult** (object)
   - Added new constructors, including support for types other than those extending **HasId**
 - **TimeDeprecatableView**
