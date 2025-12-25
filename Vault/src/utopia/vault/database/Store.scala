@@ -140,8 +140,9 @@ object Store
 		 * @return A new store interface
 		 */
 		//noinspection ConvertibleToMethodValue
-		def mapInserted[E <: HasId[Int]](wrapInserted: S => E) =
-			apply[E, StoreResult[E]] { i => StoreResult.inserted(wrapInserted(i)) } { StoreResult.existed(_) }
+		def mapInserted[E <: HasId[Int]](wrapInserted: (In, S) => E) =
+			apply[E, StoreResult[E]] { (input, inserted) => StoreResult.inserted(wrapInserted(input, inserted)) } {
+				StoreResult.existed(_) }
 		/**
 		 * Creates a store interface, which wraps existing values to another type
 		 * @param wrapExisting A function which converts a pre-existing item to a stored item
@@ -149,20 +150,21 @@ object Store
 		 * @return A new store interface
 		 */
 		def mapExisting[E](wrapExisting: E => S)(implicit ev: S <:< HasId[Int]) =
-			apply[E, StoreResult[S]] { i => StoreResult(i, i.id, isNew = true) } { e =>
+			apply[E, StoreResult[S]] { (_, i) => StoreResult(i, i.id, isNew = true) } { e =>
 				val wrapped = wrapExisting(e)
 				StoreResult(wrapped, wrapped.id, isNew = false)
 			}
 		
 		/**
 		 * Creates a new custom-mapping store
-		 * @param insertedToResult A function which converts an inserted item into a result
+		 * @param insertedToResult A function which converts an inserted item into a result.
+		 *                         Receives both the original input, and the inserted item.
 		 * @param existingToResult A function which converts a pre-existing item into a result
 		 * @tparam E Type of the accepted existing items
 		 * @tparam R Type of generated store results
 		 * @return A new store interface
 		 */
-		def apply[E, R](insertedToResult: S => R)(existingToResult: E => R) =
+		def apply[E, R](insertedToResult: (In, S) => R)(existingToResult: E => R) =
 			new AdvancedPreparedStore[In, E, D, S, R](model)(toData)(insertedToResult)(existingToResult)
 	}
 	
@@ -224,7 +226,7 @@ object Store
 		 * @param inserted The inserted item
 		 * @return A store result wrapping the inserted item
 		 */
-		protected def insertedResult(inserted: S): R
+		protected def insertedResult(input: In, inserted: S): R
 		/**
 		 * Wraps an existing item as a store result
 		 * @param existing The existing item
@@ -246,7 +248,7 @@ object Store
 							if (replacer.handleMatch(item, item, existing)) {
 								val lazyInserted = Lazy { model.insert(toData(item)) }
 								replacer.replace(MapAccess { _ => lazyInserted.value })
-								insertedResult(lazyInserted.value)
+								insertedResult(item, lazyInserted.value)
 							}
 							// Case: Duplicate => Yields the existing item
 							else
@@ -257,7 +259,7 @@ object Store
 						case None => existingResult(existing)
 					}
 				// Case: No existing match => Inserts the item
-				case None => insertedResult(model.insert(toData(item)))
+				case None => insertedResult(item, model.insert(toData(item)))
 			}
 		
 		//noinspection ConvertibleToMethodValue
@@ -291,11 +293,12 @@ object Store
 							// Performs the inserts before or after the replacement
 							val lazyInserted = Lazy {
 								model.insertFrom(inserts) { case (_, item) => toData(item) } {
-									case (inserted, (key, _)) => key -> inserted }
+									case (inserted, (key, item)) => (key, item, inserted) }
 							}
 							// Performs the replacement, if appropriate
 							replaceHandler.foreach { replacer =>
-								val lazyInsertedMap = lazyInserted.map { _.toMap[Any, S] }
+								val lazyInsertedMap = lazyInserted
+									.map { _.iterator.map { case (key, _, inserted) => key -> inserted }.toMap[Any, S] }
 								replacer.replace(MapAccess.wrap[Any, S](lazyInsertedMap))
 							}
 							// Converts the insertion results into store-results
@@ -303,8 +306,8 @@ object Store
 							// Combines the existing and inserted results into a map
 							View.concat(
 								existingResultView,
-								lazyInserted.value.view.map { case (key, inserted) =>
-									key -> insertedResult(inserted)
+								lazyInserted.value.view.map { case (key, item, inserted) =>
+									key -> insertedResult(item, inserted)
 								}
 							).toMap
 						
@@ -323,7 +326,7 @@ object Store
 	                                                                  (toData: In => D)
 		extends AbstractStore[In, S, D, S, StoreResult[S], Repr](model, replaceHandler)(toData)
 	{
-		override protected def insertedResult(inserted: S) = StoreResult.inserted(inserted)
+		override protected def insertedResult(input: In, inserted: S) = StoreResult.inserted(inserted)
 		override protected def existingResult(existing: S) = StoreResult.existed(existing)
 	}
 	
@@ -407,10 +410,10 @@ object Store
 	
 	class AdvancedPreparedStore[In, E, -D, S, +R](model: Inserter[D, S],
 	                                              replaceHandler: Option[ReplaceHandler[In, E, S]] = None)
-	                                             (toData: In => D)(wrapInsert: S => R)(wrapExisting: E => R)
+	                                             (toData: In => D)(wrapInsert: (In, S) => R)(wrapExisting: E => R)
 		extends AbstractStore[In, E, D, S, R, AdvancedPreparedStore[In, E, D, S, R]](model, replaceHandler)(toData)
 	{
-		override protected def insertedResult(inserted: S): R = wrapInsert(inserted)
+		override protected def insertedResult(input: In, inserted: S): R = wrapInsert(input, inserted)
 		override protected def existingResult(existing: E): R = wrapExisting(existing)
 		
 		override def using(handler: ReplaceHandler[In, E, S]): AdvancedPreparedStore[In, E, D, S, R] =

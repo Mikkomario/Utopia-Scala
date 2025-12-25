@@ -6,6 +6,7 @@
   - This will likely cause build errors. However, these should be easily fixed with a simple find-and-replace.
 - Refactored **Store** interface to provide functions which don't require existing and inserted types to match. 
   Had to add new generic type parameters to achieve this, which may cause some build errors.
+- Separated **ReplaceHandler** and **CanUseReplaceHandler** into separate files
 - `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
 ### Deprecations
 - Deprecated **Joinable**'s `.where(Condition)` in favor of `.onlyJoinIf(Condition)` 
