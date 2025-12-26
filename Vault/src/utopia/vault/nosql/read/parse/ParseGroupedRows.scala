@@ -54,8 +54,7 @@ trait ParseGroupedRows[+A] extends ParseRows[Seq[A]] with HasTable
 				case rowsView: View[Row] => apply(rowsView.iterator, index)
 				case rows: Seq[Row] => apply(rows, index)
 				case rows: Iterable[Row] =>
-					rows.groupBy { _(index) }.valuesIterator.flatMap { rows => tryParseGroup(rows.toOptimizedSeq) }
-						.toOptimizedSeq
+					rows.groupToSeqsBy { _(index) }.valuesIterator.flatMap(tryParseGroup).toOptimizedSeq
 				case rows => apply(rows.iterator, index)
 			}
 		
@@ -78,7 +77,7 @@ trait ParseGroupedRows[+A] extends ParseRows[Seq[A]] with HasTable
 	}
 	
 	private def apply(rows: Seq[Row], index: Column) =
-		rows.groupBy { _(index) }.valuesIterator.flatMap(tryParseGroup).toOptimizedSeq
+		rows.groupToSeqsBy { _(index) }.valuesIterator.flatMap(tryParseGroup).toOptimizedSeq
 	private def apply(rowsIter: Iterator[Row], index: Column) =
 		rowsIter.groupConsecutiveBy { _(index) }.flatMap { case (_, rows) => tryParseGroup(rows) }.toOptimizedSeq
 	

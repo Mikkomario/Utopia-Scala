@@ -179,7 +179,7 @@ object Connection
 					
 					// Checks which read column belongs to which table
 					// Some columns may be outside the specified tables
-					val (otherIndices, tableIndices) = columnIndices.groupBy(meta.getTableName)
+					val (otherIndices, tableIndices) = columnIndices.groupToSeqsBy(meta.getTableName)
 						.divideWith { case (tableName, indices) =>
 							tableIndex.get(tableName) match {
 								// Case: Targeting one of the read tables

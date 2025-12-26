@@ -101,7 +101,7 @@ trait DbRowReader[+A] extends DbReader[Seq[A]] with ParseRow[A]
 				rows match {
 					case rowsView: View[Row] => _parseMultiLinked(rowsView.iterator, index)(f)
 					case rows: Iterable[Row] =>
-						rows.groupBy { _(index) }.valuesIterator
+						rows.groupToSeqsBy { _(index) }.valuesIterator
 							.flatMap { rows => tryParse(rows.head).map { left => f(left, rows) } }
 					case rows => _parseMultiLinked(rows.iterator, index)(f)
 				}

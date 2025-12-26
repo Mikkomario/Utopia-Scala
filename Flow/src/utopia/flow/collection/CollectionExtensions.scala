@@ -538,10 +538,71 @@ object CollectionExtensions
 		 * @param f  A function that separates the items
 		 * @return A Pair that contains first the 'false' group, and then the 'true' group
 		 */
-		def divideToSeqsBy(f: A => Boolean) = {
-			val builders = Pair.fill { OptimizedIndexedSeq.newBuilder[A] }
+		def divideToSeqsBy(f: A => Boolean) = divideToBy(OptimizedIndexedSeq.newBuilder)(f)
+		/**
+		 * Divides the items in this collection into two groups, based on boolean result
+		 * @param f  A function that separates the items
+		 * @return A Pair that contains first the 'false' group, and then the 'true' group
+		 */
+		def divideToSetsBy(f: A => Boolean) = divideToBy(mutable.Set[A]().mapResult { _.toSet })(f)
+		/**
+		 * Divides the items in this collection into two groups, based on boolean result
+		 * @param makeBuilder A function for constructing the two builders for building the resulting collections.
+		 *                    Called twice.
+		 * @param f  A function that separates the items
+		 * @return A Pair that contains first the 'false' group, and then the 'true' group
+		 */
+		def divideToBy[To](makeBuilder: => mutable.Builder[A, To])(f: A => Boolean) = {
+			val builders = Pair.fill(makeBuilder)
 			i.iterator.foreach { a => if (f(a)) builders.second += a else builders.first += a }
 			builders.map { _.result() }
+		}
+		
+		/**
+		 * Divides / maps the items in this collection to two groups
+		 * @param f A function for separating / mapping the items
+		 * @tparam L Type of left group items
+		 * @tparam R Type of right group items
+		 * @return The Left group and then the Right group (as sequences)
+		 */
+		def divideWith[L, R](f: A => Either[L, R]) = {
+			i.nonEmptyIterator match {
+				case Some(iter) =>
+					val lBuilder = OptimizedIndexedSeq.newBuilder[L]
+					val rBuilder = OptimizedIndexedSeq.newBuilder[R]
+					iter.map(f).foreach {
+						case Left(l) => lBuilder += l
+						case Right(r) => rBuilder += r
+					}
+					lBuilder.result() -> rBuilder.result()
+				
+				case None => Empty -> Empty
+			}
+		}
+		/**
+		 * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
+		 * resulting group(s)
+		 * @param f A function that accepts an item in this collection and returns 0-n grouped items
+		 *          (Left(x) for a left group item x and Right(y) for a right group item y)
+		 * @tparam L Type of left group items
+		 * @tparam R Type of right group items
+		 * @return A Pair containing first the left group items and second the collected right group items.
+		 *         Both groups appear in Vector format.
+		 */
+		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
+			i.nonEmptyIterator match {
+				case Some(iter) =>
+					val lBuilder = OptimizedIndexedSeq.newBuilder[L]
+					val rBuilder = OptimizedIndexedSeq.newBuilder[R]
+					iter.flatMap(f).foreach {
+						case Left(l) => lBuilder += l
+						case Right(r) => rBuilder += r
+					}
+					lBuilder.result() -> rBuilder.result()
+				
+				// Case: No items to divide
+				case None => Empty -> Empty
+			}
 		}
 		
 		/**
@@ -563,29 +624,32 @@ object CollectionExtensions
 		/**
 		 * Groups all items in this collection into collections of some type by mapping them to keys
 		 * @param makeBuilder A function for creating a new builder for a group
+		 * @param includeDefault Whether the resulting map should include an empty default value (default = false)
 		 * @param f A function for mapping an item to a key
 		 * @tparam K Type of keys used
 		 * @tparam To Type of collections to which items are grouped
 		 * @return A map where keys are the results of 'f' and values are all items which matched that key
 		 */
-		def groupByUsing[K, To](makeBuilder: => mutable.Builder[A, To])(f: A => K) =
-			groupMapUsing(makeBuilder)(f)(Identity)
+		def groupByUsing[K, To](makeBuilder: => mutable.Builder[A, To], includeDefault: Boolean = false)
+		                       (f: A => K) =
+			groupMapUsing(makeBuilder, includeDefault)(f)(Identity)
 		/**
 		 * @param f A function for mapping an item to a key
 		 * @tparam K Type of keys used
-		 * @return A map where keys are the results of 'f' and values are all items which matched that key
+		 * @return A map where keys are the results of 'f' and values are all items which matched that key.
 		 */
 		def groupToSeqsBy[K](f: A => K) = groupByUsing(OptimizedIndexedSeq.newBuilder)(f)
 		/**
 		 * @param f A function for mapping an item to a key
 		 * @tparam K Type of keys used
-		 * @return A map where keys are the results of 'f' and values are all distinct items which matched that key
+		 * @return A map where keys are the results of 'f' and values are all distinct items which matched that key.
 		 */
 		def groupToSetsBy[K](f: A => K) = groupByUsing(mutable.Set[A]().mapResult { _.toSet })(f)
 		
 		/**
 		 * Groups all items in this collection into value collections of some type by mapping them to key-value pairs
 		 * @param makeBuilder A function for creating a new builder for a group
+		 * @param includeDefault Whether the resulting map should include an empty default value (default = false)
 		 * @param toKey A function for mapping an item to a key
 		 * @param toValue A function for mapping an item into a value
 		 * @tparam K Type of keys used
@@ -594,11 +658,15 @@ object CollectionExtensions
 		 * @return A map where keys are the results of 'toKey'
 		 *         and values are the results of 'toValue' for all items which matched that key
 		 */
-		def groupMapUsing[K, V, To](makeBuilder: => mutable.Builder[V, To])(toKey: A => K)(toValue: A => V) = {
+		def groupMapUsing[K, V, To](makeBuilder: => mutable.Builder[V, To], includeDefault: Boolean = false)
+		                           (toKey: A => K)(toValue: A => V) =
+		{
+			// Builds the resulting map using a mutable builder-map
 			val builder = mutable.Map.empty[K, mutable.Builder[V, To]]
 			i.iterator.foreach { a =>
 				val key = toKey(a)
 				val value = toValue(a)
+				// Adds the mapping result to an existing builder, or adds a new builder
 				builder.get(key) match {
 					case Some(builder) => builder += value
 					case None =>
@@ -607,7 +675,14 @@ object CollectionExtensions
 						builder += (key -> newBuilder)
 				}
 			}
-			builder.view.mapValues { _.result() }.toMap
+			// Converts the results into an immutable map
+			val resultMap = builder.view.mapValues { _.result() }.toMap
+			
+			// Adds a default value, if appropriate
+			if (includeDefault)
+				resultMap.withDefaultValue(makeBuilder.result())
+			else
+				resultMap
 		}
 		/**
 		 * Groups all items in this collection into value sequences by mapping them to key-value pairs
@@ -616,7 +691,7 @@ object CollectionExtensions
 		 * @tparam K Type of keys used
 		 * @tparam V Type of individual values used
 		 * @return A map where keys are the results of 'toKey'
-		 *         and values are the results of 'toValue' for all items which matched that key
+		 *         and values are the results of 'toValue' for all items which matched that key.
 		 */
 		def groupMapToSeqs[K, V](toKey: A => K)(toValue: A => V) =
 			groupMapUsing[K, V, IndexedSeq[V]](OptimizedIndexedSeq.newBuilder)(toKey)(toValue)
@@ -627,7 +702,7 @@ object CollectionExtensions
 		 * @tparam K Type of keys used
 		 * @tparam V Type of individual values used
 		 * @return A map where keys are the results of 'toKey'
-		 *         and values are the results of 'toValue' for all items which matched that key
+		 *         and values are the results of 'toValue' for all items which matched that key.
 		 */
 		def groupMapToSets[K, V](toKey: A => K)(toValue: A => V) =
 			groupMapUsing[K, V, Set[V]](mutable.Set[V]().mapResult { _.toSet })(toKey)(toValue)
@@ -639,7 +714,8 @@ object CollectionExtensions
 		 * @param reduce A function for combining two keys together
 		 * @tparam K Type of keys used
 		 * @return A map where keys are generated using 'f' and 'reduce' and values are all original items
-		 *         mapping to those keys (directly or indirectly)
+		 *         mapping to those keys (directly or indirectly).
+		 *         Includes an empty default value.
 		 */
 		def groupBySimilar[K](f: A => K)(areSimilar: (K, K) => Boolean)(reduce: (K, K) => K) = {
 			// Builds the map incrementally using a mutable version
@@ -672,7 +748,7 @@ object CollectionExtensions
 				}
 			}
 			// Converts the result into an immutable map
-			builder.view.map { case (key, builder) => key -> builder.result() }.toMap
+			builder.view.map { case (key, builder) => key -> builder.result() }.toMap.withDefaultValue(Empty)
 		}
 		/**
 		 * Joins similar entries in this collection together
@@ -683,52 +759,6 @@ object CollectionExtensions
 		def joinSimilar(areSimilar: (A, A) => Boolean)(reduce: (A, A) => A) =
 			groupBySimilar(Identity)(areSimilar)(reduce).valuesIterator.map { _.reduce(reduce) }.toOptimizedSeq
 		
-		/**
-		  * Divides / maps the items in this collection to two groups
-		  * @param f A function for separating / mapping the items
-		  * @tparam L Type of left group items
-		  * @tparam R Type of right group items
-		  * @return The Left group and then the Right group (as sequences)
-		  */
-		def divideWith[L, R](f: A => Either[L, R]) = {
-			i.nonEmptyIterator match {
-				case Some(iter) =>
-					val lBuilder = OptimizedIndexedSeq.newBuilder[L]
-					val rBuilder = OptimizedIndexedSeq.newBuilder[R]
-					iter.map(f).foreach {
-						case Left(l) => lBuilder += l
-						case Right(r) => rBuilder += r
-					}
-					lBuilder.result() -> rBuilder.result()
-				
-				case None => Empty -> Empty
-			}
-		}
-		/**
-		  * Divides the contents of this collection into two groups. Each item may represent 0-n items in the
-		  * resulting group(s)
-		  * @param f A function that accepts an item in this collection and returns 0-n grouped items
-		  *          (Left(x) for a left group item x and Right(y) for a right group item y)
-		  * @tparam L Type of left group items
-		  * @tparam R Type of right group items
-		  * @return A Pair containing first the left group items and second the collected right group items.
-		 *         Both groups appear in Vector format.
-		  */
-		def flatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
-			i.nonEmptyIterator match {
-				case Some(iter) =>
-					val lBuilder = OptimizedIndexedSeq.newBuilder[L]
-					val rBuilder = OptimizedIndexedSeq.newBuilder[R]
-					iter.flatMap(f).foreach {
-						case Left(l) => lBuilder += l
-						case Right(r) => rBuilder += r
-					}
-					lBuilder.result() -> rBuilder.result()
-					
-				// Case: No items to divide
-				case None => Empty -> Empty
-			}
-		}
 		/**
 		  * Maps the items in this collection into two different collections
 		  * @param f A mapping function that produces two results (left -> right) for each item
@@ -1219,12 +1249,8 @@ object CollectionExtensions
 		 * @tparam To type of the resulting collection
 		 * @return A Pair that contains first the 'false' group, and then the 'true' group
 		 */
-		def divideBy[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) = {
-			val falseBuilder = bf.newBuilder(coll)
-			val trueBuilder = bf.newBuilder(coll)
-			ops.iterator.foreach { a => if (f(a)) trueBuilder += a else falseBuilder += a }
-			Pair(falseBuilder.result(), trueBuilder.result())
-		}
+		def divideBy[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) =
+			ops.divideToBy(bf.newBuilder(coll))(f)
 		
 		/**
 		 * Attempts to successfully "find" a value for each item in this collection.

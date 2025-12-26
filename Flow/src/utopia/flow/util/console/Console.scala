@@ -2,11 +2,12 @@ package utopia.flow.util.console
 
 import utopia.flow.async.process.Breakable
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.result.TryExtensions._
+import utopia.flow.util.StringUtils
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
@@ -26,7 +27,7 @@ object Console
 	 * @param prompt Prompt displayed before requesting user to type the next command (call-by-name, default = empty)
 	 * @param terminatorPointer A pointer that contains true when this console should be closed (default = always false)
 	 * @param closeCommandName Name of the command that closes this console (default = empty = no close command is used)
-	 * @param jsonParser Implicit json parser for command argument handling
+	 * @param jsonParser Implicit JSON parser for command argument handling
 	 * @return A new console
 	 */
 	def apply(commandsPointer: View[Iterable[Command]], prompt: => String = "",
@@ -42,7 +43,7 @@ object Console
 	 *                         (default = empty = no close command is used).
 	 *                         Please note that if empty, the only way to close this console
 	 *                         is through the stop() method
-	 * @param jsonParser jsonParser Implicit json parser for command argument handling
+	 * @param jsonParser jsonParser Implicit JSON parser for command argument handling
 	 * @return A new console
 	 */
 	def static(commands: Iterable[Command], prompt: => String = "", closeCommandName: String = "")
@@ -55,7 +56,7 @@ object Console
 	 * @param closeCommandName Name of the command that closes this console
 	 *                         (default = empty = no close command is used)
 	 * @param testTermination A function called between commands to see whether this console should close.
-	 *                        Returns true when its time for this console to close.
+	 *                        Returns true when it's time for this console to close.
 	 * @param jsonParser jsonParser jsonParser Implicit json parser for command argument handling
 	 * @return A new console
 	 */
@@ -73,7 +74,7 @@ object Console
  * @param prompt Prompt displayed before requesting user to type the next command (call-by-name, default = empty)
  * @param terminatorPointer A pointer that contains true when this console should be closed (default = always false)
  * @param closeCommandName Name of the command that closes this console (default = empty = no close command is used)
- * @param jsonParser Implicit json parser for command argument handling
+ * @param jsonParser Implicit JSON parser for command argument handling
  */
 class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
               terminatorPointer: View[Boolean] = View(false), closeCommandName: String = "")
@@ -88,44 +89,55 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 	private val stopFlag = Volatile.switch
 	private val stopPromiseCache = ResettableLazy { Promise[Unit]() }
 	
-	private lazy val helpCommand = Command("help", "man",
-		"Lists available commands or describes a command if one is specified")(
-		ArgumentSchema("command", "cmd", help = "Name of the described command")) { args =>
-		args("command").string match
-		{
-			// Case: Requests information about a specific command
-			case Some(commandName) =>
-				val availableCommands = commandsPointer.value
-				// Finds the targeted command
-				availableCommands.find { _.matchesName(commandName) } match
-				{
-					// Case: Targeted command found => Describes it and its arguments
-					case Some(command) =>
-						command.helpOption.foreach(println)
-						if (command.takesArguments)
-						{
-							println("Arguments:")
-							command.argumentsSchema.arguments.foreach { arg => println(s"- $arg") }
-						}
-						else
-							println(s"${command.nameAndAlias} doesn't take any arguments")
-					// Case: Command not found => Informs the user
-					case None =>
-						if (commandName ~== closeCommandName)
-							println("Closes this console. Takes no arguments.")
-						else
-						{
+	private lazy val helpCommand = {
+		val closeCommandRepresentation = closeCommandName.ifNotEmpty
+			.map { Command.withoutArguments(_, help = "Closes this console") { () } }
+			.emptyOrSingle
+		Command("help", "man",
+			"Lists available commands or describes a command if one is specified")(
+			ArgumentSchema("command", "cmd", help = "Name of the described command")) { args =>
+			args("command").string match {
+				// Case: Requests information about a specific command
+				case Some(commandName) =>
+					val availableCommands = commandsPointer.value ++ closeCommandRepresentation
+					// Finds the targeted command
+					availableCommands.find { _.matchesName(commandName) } match {
+						// Case: Targeted command found => Describes it and its arguments
+						case Some(command) =>
+							if (command.argumentsSchema.nonEmpty) {
+								println(StringUtils.asciiTableFrom[ArgumentSchema](command.argumentsSchema.arguments,
+									Vector(
+										"Name" -> { _.name },
+										"Alias" -> { _.alias },
+										"Default" -> { _.defaultValue.getString },
+										"Description" -> { _.help.splitToLinesIterator(80).mkString("\n") }
+									),
+									(command.nameAndAlias +: command.help.ifNotEmpty.emptyOrSingle).mkString("\n")
+								))
+								command.help.ifNotEmpty.foreach(println)
+							}
+							else
+								println(s"${command.nameAndAlias}: Doesn't take any arguments")
+								
+						// Case: Command not found => Informs the user
+						case None =>
 							println(s"'$commandName' doesn't match any command")
-							findClosestMatch(commandName, availableCommands)
-								.foreach { command => println(s"Did you mean ${command.nameAndAlias}?") }
-						}
-				}
-			// Case: Requests a list of commands => Prints the list
-			case None =>
-				println("Available commands:")
-				commandsPointer.value.foreach { command => println(s"- $command") }
-				closeCommandName.notEmpty.foreach { close => println(s"- $close: Closes this console") }
-				println("For more information about a specific command, add that command's name or alias as the first argument of this command")
+							proposeClosestMatch(commandName, availableCommands)
+					}
+				// Case: Requests a list of commands => Prints the list
+				case None =>
+					println(StringUtils.asciiTableFrom[Command](
+						OptimizedIndexedSeq.concat(commandsPointer.value, closeCommandRepresentation),
+						Vector(
+							"Name" -> { _.name },
+							"Alias" -> { _.alias },
+							"Arguments" -> { _.argumentsSchema.arguments.iterator.map { _.name }.mkString("\n") },
+							"Description" -> { _.help.splitToLinesIterator(80).mkString("\n") }
+						),
+						"Available commands"
+					))
+					println("For more information about a specific command, add that command's name or alias as the first argument of this command")
+			}
 		}
 	}
 	
@@ -203,8 +215,7 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 							// Case: No command found => informs the user
 							case None =>
 								println(s"'$commandPart' doesn't match any available command")
-								findClosestMatch(commandPart, availableCommands)
-									.foreach { command => println(s"Did you mean ${command.nameAndAlias}?") }
+								proposeClosestMatch(commandPart, availableCommands)
 								println("Use the 'help' command to see a list of available commands")
 						}
 					}
@@ -223,8 +234,9 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 	
 	// OTHER    ----------------------------
 	
-	private def findClosestMatch(input: String, options: Iterable[Command]) = {
-		options.bestMatch { c => c.name.isSimilarTo(input, 2) || c.alias.notEmpty.exists { _.isSimilarTo(input, 1) } }
+	private def proposeClosestMatch(input: String, options: Iterable[Command]) = {
+		val closest = options
+			.bestMatch { c => c.name.isSimilarTo(input, 2) || c.alias.notEmpty.exists { _.isSimilarTo(input, 1) } }
 			.oneOrMany match
 		{
 			case Left(only) => Some(only)
@@ -254,5 +266,6 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 							}
 					}
 		}
+		closest.foreach { c => println(s"Did you mean ${c.nameAndAlias}?") }
 	}
 }

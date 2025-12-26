@@ -42,6 +42,7 @@
 - **Iterable**'s `.find(Extreme)` (in **CollectionExtensions**) is now named `.findExtreme(Extreme)`
   - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
 - **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
+- Changed the parameter ordering and -logic in `StringUtils.asciiTableFrom(...)`
 - **Constant** is now a trait instead of a class
 - Some **LogQueue** functions now yields **IndexedSeq** instead of **Vector**
 - **RecursiveDirectoriesIterator** now yields **IndexedSeq**s instead of **Vector**s
@@ -129,7 +130,7 @@
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
-  - Added `.divideToSeqsBy(...)`
+  - Added `.divideToBy(...)`, `.divideToSeqsBy(...)` and `.divideToSetsBy(...)`
   - Added `.tryFlatten` for collections of **Try**
   - Added various `.mapParallelTo(...)` functions
 - **Lazy** (object)
@@ -175,8 +176,10 @@
 - Remove **Changing**'s `listenerDebuggingLimit` property, which was deprecated in v2.7
 - Removed **AbstractChanging** functions that were deprecated in v2.2
 - Rewrote **ActionQueue**
+- Updated help command's output in **Console**
 - Renamed `.contains(String, Boolean)` to `.containsOther(String, Boolean)` in **StringExtensions**, 
   because the previous version could not be called because of ambiguous implicits.
+- `.groupByUsing(...)` and `.groupMapUsing(...)` in **IterableOnce** now support optional default value -generation
 - Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
 - Internal refactoring within **Extreme**'s `.by(...)`

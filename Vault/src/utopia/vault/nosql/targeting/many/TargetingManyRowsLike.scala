@@ -200,6 +200,16 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 		pullWithMany[B](Pair(firstColumn, secondColumn) ++ moreColumns)(map)
 	
 	/**
+	 * Pulls all accessible items, grouping them by a specific property
+	 * @param toKey A function which yields the property by which the pulled entries are grouped
+	 * @param connection Implicit DB connection
+	 * @tparam K Type of map keys used
+	 * @return Grouped pulled items. Includes an empty default value.
+	 */
+	def pullAndGroupBy[K](toKey: A => K)(implicit connection: Connection) =
+		stream { _.groupToSeqsBy(toKey) }.withDefaultValue(Empty)
+	
+	/**
 	  * Pulls all accessible data, grouping it by values read from an additional column.
 	  * If the specified column is not included in this access point's [[target]], joins it.
 	  * @param column Column by which read items are grouped

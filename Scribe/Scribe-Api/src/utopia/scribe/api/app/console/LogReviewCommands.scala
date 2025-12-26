@@ -161,9 +161,13 @@ class LogReviewCommands(implicit log: Logger)
 					println()
 					println(StringUtils.asciiTableFrom[(Severity, Seq[ManagedIssue])](
 						activeIssues.groupBy { _.severity }.toOptimizedSeq.reverseSortBy { _._1 },
-						Vector("Severity", "#Active", "#New", "#New variants"),
-						_._1.toString, _._2.size.toString, _._2.count { _.created >= timeThreshold }.toString,
-						_._2.iterator.map { i => newVariantCounts(i.id) }.sum.toString))
+						Vector(
+							"Severity" -> { _._1.toString },
+							"#Active" -> { _._2.size.toString },
+							"#New" -> { _._2.count { _.created >= timeThreshold }.toString },
+							"#New variants" -> { _._2.iterator.map { i => newVariantCounts(i.id) }.sum.toString }
+						),
+						"Summary"))
 					
 					queuedIssuesP.value =
 						sortedIssues.map[Either[Int, ManagedIssue]] { row => Right(row.issue) } -> 0
@@ -492,8 +496,12 @@ class LogReviewCommands(implicit log: Logger)
 	lazy val comments = Command.withoutArguments("comments", help = "Displays the comments on the last opened issue") {
 		val comments = queuedCommentsP.value
 		if (comments.nonEmpty)
-			println(StringUtils.asciiTableFrom[Comment](comments, Pair("Time", "Comment"),
-				c => timeDescription(c.created), _.text.splitToLinesIterator(80).mkString("\n")))
+			println(StringUtils.asciiTableFrom[Comment](comments,
+				Pair(
+					"Time" -> { c => timeDescription(c.created) },
+					"Comment" -> { _.text.splitToLinesIterator(80).mkString("\n") }
+				),
+				s"Comments on issue #${ comments.head.issueId }"))
 	}
 	/**
 	 * A command for marking notifications as read
@@ -575,24 +583,27 @@ class LogReviewCommands(implicit log: Logger)
 	private def printStatusTableFor(issues: Seq[StatusRow], timeThreshold: Instant = recent) = {
 		val now = Now.toInstant
 		println(StringUtils.asciiTableFrom[StatusRow](issues,
-			Vector("ID", "Severity", "Context", "Age", "Count", "Notice"),
-			_.issue.id.toString, _.issue.severity.toString,
-			_.issue.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n"),
-			i => (now - i.lastOccurrence).description, _.occurrenceCount.toString,
-			{ row =>
-				if (row.issue.hasUnreadNotifications)
-					"!!!"
-				else if (row.issue.created >= timeThreshold)
-					"NEW"
-				else {
-					if (row.newVariantCount == 1)
-						"New variant"
-					else if (row.newVariantCount > 0)
-						s"${ row.newVariantCount } new variants"
-					else
-						""
-				}
-			}))
+			Vector(
+				"ID" -> { _.issue.id.toString },
+				"Severity" -> { _.issue.severity.toString },
+				"Context" -> { _.issue.aliasOrContext.splitToLinesIterator(40, contextSplitRegex).mkString("\n") },
+				"Age" -> { i => (now - i.lastOccurrence).description },
+				"Count" -> { _.occurrenceCount.toString },
+				"Notice" -> { row =>
+					if (row.issue.hasUnreadNotifications)
+						"!!!"
+					else if (row.issue.created >= timeThreshold)
+						"NEW"
+					else {
+						if (row.newVariantCount == 1)
+							"New variant"
+						else if (row.newVariantCount > 0)
+							s"${ row.newVariantCount } new variants"
+						else
+							""
+					}
+				}),
+			"Active issues"))
 	}
 	
 	private def summarize(issue: ManagedIssueInstances, threshold: Instant = recent) = {

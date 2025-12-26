@@ -43,6 +43,6 @@ case class ArgumentSchema(name: String, alias: String = "", defaultValue: Value 
 	override def toString = {
 		val defaultPart = if (hasDefault) s" default=${defaultValue.toJson}" else ""
 		val descriptionPart = if (hasHelp) s" // $help" else ""
-		s"<$nameAndAlias>" + defaultPart + descriptionPart
+		s"<$nameAndAlias>$defaultPart$descriptionPart"
 	}
 }

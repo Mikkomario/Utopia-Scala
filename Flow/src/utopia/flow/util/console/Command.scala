@@ -8,7 +8,12 @@ import utopia.flow.util.StringExtensions._
 
 object Command
 {
+	// ATTRIBUTES   ---------------------
+	
 	private val whiteSpacesOutsideQuotationsRegex = Regex.whiteSpace.ignoringQuotations
+	
+	
+	// OTHER    -------------------------
 	
 	/**
 	 * Creates a new command that doesn't take any arguments

@@ -173,7 +173,7 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
                              (merge: (P, C1, C2) => R) =
     {
         val parsers = Vector(f1, f2, f3)
-        rows.view
+        rows.iterator
             .filter { row => parsers.forall { _.shouldParse(row) } }
             .flatMap { row =>
                 f1.tryParse(row).flatMap { parent =>
@@ -199,17 +199,18 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
         val tp = parentFactory.table
         val tc = childFactory.table
         // Processes all rows concerning a single parent index as a single group
-        rows.filter { _.containsDataForTable(tp) }.groupBy { _.indexForTable(tp) }.flatMap { case (_, rows) =>
-            parentFactory.tryParse(rows.head).map { parent =>
-                val children = rows.view
-                    .filter { _.containsDataForTable(tc) }
-                    // Makes sure the secondary entries are unique
-                    .distinctBy { _.indexForTable(tc) }
-                    .flatMap(childFactory.tryParse)
-                    .toVector
-                merge(parent, children)
+        rows.iterator.filter { _.containsDataForTable(tp) }.groupToSeqsBy { _.indexForTable(tp) }
+            .flatMap { case (_, rows) =>
+                parentFactory.tryParse(rows.head).map { parent =>
+                    val children = rows.view
+                        .filter { _.containsDataForTable(tc) }
+                        // Makes sure the secondary entries are unique
+                        .distinctBy { _.indexForTable(tc) }
+                        .flatMap(childFactory.tryParse)
+                        .toVector
+                    merge(parent, children)
+                }
             }
-        }
     }
     /**
       * Performs grouped parsing on three levels:
@@ -243,28 +244,29 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
         val tm = midFactory.table
         val te = endFactory.table
         // Groups the rows based on the parent index
-        rows.filter { _.containsDataForTable(tp) }.groupBy { _.indexForTable(tp) }.flatMap { case (_, rows) =>
-            // Parses one parent entry for each unique index
-            parentFactory.tryParse(rows.head).map { parent =>
-                // Groups the sub-rows based on mid table index
-                val mids = rows.filter { _.containsDataForTable(tm) }.groupBy { _.indexForTable(tm) }
-                    .flatMap { case (_, rows) =>
-                        // Again, parses a single mid-entry for each unique index
-                        midFactory.tryParse(rows.head).map { mid =>
-                            // Finally, parses an entry for each remaining sub-row
-                            val ends = rows.view
-                                .filter { _.containsDataForTable(te) }
-                                .distinctBy { _.indexForTable(te) }
-                                .flatMap(endFactory.tryParse)
-                                .toVector
-                            // Joins the 3rd level entries to 2nd level entries
-                            mergeBottom(mid, ends)
+        rows.iterator.filter { _.containsDataForTable(tp) }.groupToSeqsBy { _.indexForTable(tp) }
+            .flatMap { case (_, rows) =>
+                // Parses one parent entry for each unique index
+                parentFactory.tryParse(rows.head).map { parent =>
+                    // Groups the sub-rows based on mid table index
+                    val mids = rows.iterator.filter { _.containsDataForTable(tm) }.groupToSeqsBy { _.indexForTable(tm) }
+                        .flatMap { case (_, rows) =>
+                            // Again, parses a single mid-entry for each unique index
+                            midFactory.tryParse(rows.head).map { mid =>
+                                // Finally, parses an entry for each remaining sub-row
+                                val ends = rows.view
+                                    .filter { _.containsDataForTable(te) }
+                                    .distinctBy { _.indexForTable(te) }
+                                    .flatMap(endFactory.tryParse)
+                                    .toVector
+                                // Joins the 3rd level entries to 2nd level entries
+                                mergeBottom(mid, ends)
+                            }
                         }
-                    }
-                // Joins the 2nd level merge results to 1st level entries
-                mergeTop(parent, mids)
+                    // Joins the 2nd level merge results to 1st level entries
+                    mergeTop(parent, mids)
+                }
             }
-        }
     }
     
     /**
@@ -293,13 +295,14 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
     def groupAnd[P, R](parentFactory: ParseRow[P] with HasTable)(postProcess: (P, Seq[Row]) => R) = {
         val table = parentFactory.table
         // Groups the rows based on unique indices
-        rows.filter { _.containsDataForTable(table) }.groupBy { _.indexForTable(table) }.flatMap { case (_, rows) =>
-            // Parses one entry for each unique index
-            parentFactory.tryParse(rows.head).map { parent =>
-                // Continues processing with the specified function
-                postProcess(parent, rows)
+        rows.iterator.filter { _.containsDataForTable(table) }.groupToSeqsBy { _.indexForTable(table) }
+            .flatMap { case (_, rows) =>
+                // Parses one entry for each unique index
+                parentFactory.tryParse(rows.head).map { parent =>
+                    // Continues processing with the specified function
+                    postProcess(parent, rows)
+                }
             }
-        }
     }
     /**
       * Groups and parses the rows based on three levels of items.
@@ -328,20 +331,22 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
         val tp = parentFactory.table
         val tm = midFactory.table
         // Groups the rows based on primary table index
-        rows.filter { _.containsDataForTable(tp) }.groupBy { _.indexForTable(tp) }.flatMap { case (_, rows) =>
-            // Parses one entry for each unique index
-            parentFactory.tryParse(rows.head).map { parent =>
-                // Groups the sub-rows based on the mid-table index
-                val midResults = rows.filter { _.containsDataForTable(tm) }.groupBy { _.indexForTable(tm) }
-                    .flatMap { case (_, rows) =>
-                        // Again, parses one entry per index
-                        // Processes these entries using the specified function
-                        midFactory.tryParse(rows.head).map { mid => postProcessMid(mid, rows) }
-                    }
-                // Merges the results
-                mergeTop(parent, midResults)
+        rows.iterator.filter { _.containsDataForTable(tp) }.groupToSeqsBy { _.indexForTable(tp) }
+            .flatMap { case (_, rows) =>
+                // Parses one entry for each unique index
+                parentFactory.tryParse(rows.head).map { parent =>
+                    // Groups the sub-rows based on the mid-table index
+                    val midResults = rows.iterator.filter { _.containsDataForTable(tm) }
+                        .groupToSeqsBy { _.indexForTable(tm) }
+                        .flatMap { case (_, rows) =>
+                            // Again, parses one entry per index
+                            // Processes these entries using the specified function
+                            midFactory.tryParse(rows.head).map { mid => postProcessMid(mid, rows) }
+                        }
+                    // Merges the results
+                    mergeTop(parent, midResults)
+                }
             }
-        }
     }
     
     /**
@@ -350,7 +355,8 @@ case class Result(rows: Seq[Row] = Empty, generatedKeys: Seq[Value] = Empty, upd
      * @return Sub-results found. Please note that this won't include any results / rows without data from the primary table.
      */
     def split(primaryTable: Table) = {
-        val rowsPerId = rows.filter { _.containsDataForTable(primaryTable) }.groupBy { _.indexForTable(primaryTable) }
-        rowsPerId.valuesIterator.map { rows => copy(rows = rows) }.toVector
+        val rowsPerId = rows.iterator.filter { _.containsDataForTable(primaryTable) }
+            .groupToSeqsBy { _.indexForTable(primaryTable) }
+        rowsPerId.valuesIterator.map { rows => copy(rows = rows) }.toOptimizedSeq
     }
 }

@@ -41,8 +41,8 @@ object References
 	private val fromIndex = Cache.clearable { dbName: String =>
 		referencesP.value.get(dbName) match {
 			case Some(references) =>
-				references.groupBy { _.from.tableName }
-					.view.mapValues { _.view.map { ref => ref.from.name -> ref }.toMap }.toMap
+				references.groupToSeqsBy { _.from.tableName }
+					.view.mapValues { _.iterator.map { ref => ref.from.name -> ref }.toMap }.toMap
 			
 			// FIXME: Somehow we arrive here sometimes at program startup
 			//  (although we shouldn't have any Table instances before the setup function is called)
@@ -60,8 +60,8 @@ object References
 	private val toIndex = Cache.clearable { dbName: String =>
 		referencesP.value.get(dbName) match {
 			case Some(references) =>
-				references.groupBy { _.to.tableName }
-					.view.mapValues { _.toOptimizedSeq.groupBy { _.to.name }.withDefaultValue(Empty) }.toMap
+				references.groupToSeqsBy { _.to.tableName }
+					.view.mapValues { _.groupBy { _.to.name }.withDefaultValue(Empty) }.toMap
 					.withDefaultValue(Map[String, Seq[Reference]]().withDefaultValue(Empty))
 				
 			case None => throw EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")

@@ -36,6 +36,8 @@
     - Added `.keyMapUnique(...)` and `.keyMappedUnique(...)`
 - **StoreResult** (object)
   - Added new constructors, including support for types other than those extending **HasId**
+- **TargetingManyRowsLike**
+  - Added `.pullAndGroupBy(...)`
 - **TimeDeprecatableView**
   - Added `.deprecatedSince(Instant)`
 - **TimelineView**

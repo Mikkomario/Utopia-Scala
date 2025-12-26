@@ -36,7 +36,7 @@ object DatabaseReferenceReader
 	  * @return References between the specified tables
 	  */
 	def apply(tables: Iterable[Table])(implicit connection: Connection) =
-		tables.groupBy { _.databaseName }.flatMap { case (dbName, tables) => _apply(dbName, tables) }
+		tables.groupToSeqsBy { _.databaseName }.flatMap { case (dbName, tables) => _apply(dbName, tables) }
 	
 	/**
 	  * Sets up the References object to contain all references between the provided tables. If
@@ -46,7 +46,7 @@ object DatabaseReferenceReader
 	  * @param connection the database connection used
 	  */
 	def setupReferences(tables: Iterable[Table])(implicit connection: Connection) =
-		tables.groupBy { _.databaseName }.foreach { case (dbName, dbTables) =>
+		tables.groupToSeqsBy { _.databaseName }.foreach { case (dbName, dbTables) =>
 			References.setup(dbName, _apply(dbName, dbTables))
 		}
 	
