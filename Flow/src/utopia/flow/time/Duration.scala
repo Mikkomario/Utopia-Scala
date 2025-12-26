@@ -788,7 +788,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	 */
 	def roundTo(unit: TimeUnit) = tryLength match {
 		case Success((length, myUnit)) =>
-			if (myUnit >= unit) this else Duration(unit.countPreciselyIn(length, myUnit).round, unit)
+			if (myUnit >= unit) this else Duration(unit.countPreciselyIn(length, myUnit).round.toLong, unit)
 		case _ => this
 	}
 	

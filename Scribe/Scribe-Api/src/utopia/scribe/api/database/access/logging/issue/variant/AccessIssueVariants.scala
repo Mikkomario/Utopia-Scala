@@ -112,7 +112,7 @@ abstract class AccessIssueVariants[A, +Repr <: TargetingManyLike[_, Repr, _]](wr
 	  * @return Access to issue variants which have not occurred since the specified time threshold
 	  */
 	def notOccurredSince(threshold: Instant) =
-		leftJoin(occurrenceModel.table.where(occurrenceModel.latest >= threshold)).filter(occurrenceModel.id.isNull)
+		leftJoin(occurrenceModel.table.onlyJoinIf(occurrenceModel.latest >= threshold)).filter(occurrenceModel.id.isNull)
 }
 
 /**

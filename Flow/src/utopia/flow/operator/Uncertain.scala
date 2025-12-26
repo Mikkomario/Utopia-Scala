@@ -76,7 +76,7 @@ trait Uncertain[A]
 	  *         This result may be uncertain.
 	  */
 	def ==(v: A): UncertainBoolean = {
-		if (isCertainlyExactly(v))
+		if (isCertainly(v))
 			CertainlyTrue
 		else if (mayBe(v))
 			UncertainBoolean
@@ -90,7 +90,7 @@ trait Uncertain[A]
 	  */
 	def !=(v: A): UncertainBoolean = {
 		if (mayBe(v)) {
-			if (isCertainlyExactly(v))
+			if (isCertainly(v))
 				CertainlyFalse
 			else
 				UncertainBoolean

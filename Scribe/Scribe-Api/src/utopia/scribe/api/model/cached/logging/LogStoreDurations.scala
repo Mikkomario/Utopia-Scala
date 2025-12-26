@@ -34,11 +34,10 @@ case class LogStoreDurations(durations: Map[Severity, LogStoreDuration] = Map())
 	  *         to which they apply.
 	  *         E.g. May return a duration for Debug to Warning, and then another value for Unrecoverable to Critical
 	  */
-	def specifiedRangesIterator = {
-		Severity.values.iterator.groupBy(durations.get).flatMap { case (duration, severities) =>
+	def specifiedRangesIterator =
+		Severity.values.iterator.groupConsecutiveBy(durations.get).flatMap { case (duration, severities) =>
 			duration.map { d => IterableSpan(severities.ends) -> d }
 		}
-	}
 	
 	
 	// OTHER    ---------------------------

@@ -40,11 +40,11 @@ sealed trait UncertainBoolean
 	/**
 	 * @return Whether this value is known to be true
 	 */
-	def isCertainlyTrue = isCertainlyExactly(true)
+	def isCertainlyTrue = isCertainly(true)
 	/**
 	 * @return Whether this boolean is known to be false
 	 */
-	def isCertainlyFalse = isCertainlyExactly(false)
+	def isCertainlyFalse = isCertainly(false)
 	/**
 	  * @return If this boolean is not known to be true
 	  */

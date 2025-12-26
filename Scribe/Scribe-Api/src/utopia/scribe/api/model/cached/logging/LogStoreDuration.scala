@@ -152,7 +152,7 @@ case class LogStoreDuration(thresholds: Map[CleanupOperation, Seq[Pair[Duration]
 					Span(larger.first, smaller.first) -> larger.second
 				}
 			// Merges consecutive ranges together where applicable
-			rangesIter.groupBy { _._2 }.map { case (duration, ranges) =>
+			rangesIter.groupConsecutiveBy { _._2 }.map { case (duration, ranges) =>
 				val mergedRange = ranges.oneOrMany match {
 					case Left((onlyRange, _)) => onlyRange
 					case Right(ranges) => Span(ranges.head._1.start, ranges.last._1.end)

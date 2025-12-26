@@ -22,7 +22,7 @@ object PropertyRenames
 	 * @return A combination of the specified renamings
 	 */
 	def apply(first: (String, String), second: (String, String), more: (String, String)*): PropertyRenames =
-		new PropertyRenames(Pair[Pair[String]](first, second) ++ more.iterator.map(Pair.tupleToPair))
+		new PropertyRenames(Pair[Pair[String]](first, second) ++ more.iterator.map(Pair.from))
 	
 	/**
 	 * @param renames Renamings to apply, where the first values are the original property names and the
@@ -109,7 +109,7 @@ class PropertyRenames(private val renames: Seq[Pair[String]]) extends MaybeEmpty
 	 *                 The second value is the new (external) property name.
 	 * @return A copy of these renames with the specified one added
 	 */
-	def +(renaming: (String, String)): PropertyRenames = this + Pair.tupleToPair(renaming)
+	def +(renaming: (String, String)): PropertyRenames = this + Pair.from(renaming)
 	
 	/**
 	 * @param newRenames New mappings to add to this set.
