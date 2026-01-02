@@ -15,9 +15,9 @@ import scala.collection.View
  */
 object CollectionTest extends App
 {
-	val words = Vector("Apina", "Banaani", "Car", "David")
+	private val words = Vector("Apina", "Banaani", "Car", "David")
 	
-	val lengthUnder4 = words.findMap {
+	private val lengthUnder4 = words.findMap {
 		w =>
 			val len = w.length
 			if (len <= 3) Some(len) else None
@@ -26,27 +26,27 @@ object CollectionTest extends App
 	assert(lengthUnder4.contains(3))
 	
 	// Tests bestMatch -feature
-	val conditions1 = Vector[String => Boolean](_.length > 3, _.contains('n'))
-	val conditions2 = Vector[String => Boolean](_.length <= 3, _.contains('n'))
-	val conditions3 = Vector[String => Boolean](_.nonEmpty)
+	private val conditions1 = Vector[String => Boolean](_.length > 3, _.contains('n'))
+	private val conditions2 = Vector[String => Boolean](_.length <= 3, _.contains('n'))
+	private val conditions3 = Vector[String => Boolean](_.nonEmpty)
 	
-	val result1: Vector[String] = words.bestMatch(conditions1)
-	val result2: Vector[String] = words.bestMatch(conditions2)
-	val result3: Vector[String] = words.bestMatch(conditions3)
+	private val result1: Vector[String] = words.bestMatch(conditions1)
+	private val result2: Vector[String] = words.bestMatch(conditions2)
+	private val result3: Vector[String] = words.bestMatch(conditions3)
 	
 	assert(result1 == Vector("Apina", "Banaani"))
 	assert(result2 == Vector("Car"), result2)
 	assert(result3 == words)
 	
-	val numbers = Vector(1, 2, 3, 4, 5)
-	val range = NumericSpan(2, 4)
+	private val numbers = Vector(1, 2, 3, 4, 5)
+	private val range = NumericSpan(2, 4)
 	
 	//noinspection ConvertibleToMethodValue
 	assert(numbers.bestMatch { range.contains(_) } == Vector(2, 3, 4))
 	
 	assert(words.mapFirstWhere { _.startsWith("C") } { _.toUpperCase } == Vector("Apina", "Banaani", "CAR", "David"))
 	
-	val splitResult = words.splitToSegments(2)
+	private val splitResult = words.splitToSegments(2)
 	assert(splitResult.size == 2)
 	assert(splitResult.forall { _.size == 2 })
 	
@@ -57,7 +57,7 @@ object CollectionTest extends App
 	assert(numbers.findAndPop { _ > 2 } == (Some(3), Vector(1, 2, 4, 5)), numbers.findAndPop { _ > 2 })
 	
 	// Tests withoutIndex
-	val v1 = Vector(1, 2, 3, 4)
+	private val v1 = Vector(1, 2, 3, 4)
 	assert(v1.withoutIndex(0) == Vector(2, 3, 4), v1.withoutIndex(0))
 	assert(v1.withoutIndex(1) == Vector(1, 3, 4), v1.withoutIndex(1))
 	assert(v1.withoutIndex(2) == Vector(1, 2, 4), v1.withoutIndex(2))
@@ -95,7 +95,7 @@ object CollectionTest extends App
 	assert(Pair(1, 2) == Vector(1, 2))
 	
 	// Tests consecutive grouping
-	val joined = Vector(1, 3, 5, 2, 4, 1).groupConsecutiveWith { _.last % 2 == _ % 2 }
+	private val joined = Vector(1, 3, 5, 2, 4, 1).groupConsecutiveWith { _.last % 2 == _ % 2 }
 	
 	assert(joined.size == 3)
 	assert(joined.head == Vector(1, 3, 5))
@@ -174,6 +174,15 @@ object CollectionTest extends App
 	
 	assert(numbers3.padToFrom(6) { Iterator.iterate(4) { _ + 1 } } == Vector(1, 2, 3, 4, 5, 6))
 	assert(numbers3.padToFrom(2) { throw new IllegalStateException("Can't arrive here") } == numbers3)
+	
+	// Tests distinct append functions
+	private val v2 = Vector(1, 2, 3)
+	
+	assert(v2.appendIfDistinct(4) == Vector(1, 2, 3, 4))
+	assert(v2.appendIfDistinct(2) == Vector(1, 2, 3))
+	assert(v2.appendAllIfDistinct(Pair(1, 4)) == Vector(1, 2, 3, 4))
+	assert(v2.appendAllIfDistinct(Vector(1, 2, 3)) == Vector(1, 2, 3))
+	assert(v2.appendAllIfDistinct(Pair(4, 5)) == Vector(1, 2, 3, 4, 5))
 	
 	println("Success!")
 }

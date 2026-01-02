@@ -79,6 +79,8 @@
 - Renamed **ActionQueue**'s `.queueSize` to `.pendingCount` and `.queueSizePointer` to `.pendingCountPointer`
 - Renamed **Try**'s `.handleFailure(...)` to `.forFailure(...)` (in **TryExtensions**)
 ### Bugfixes
+- Bugfix to `.appendAllIfDistinct(IterableOnce)` in **CollectionExtensions**, 
+  which previously discarded all existing values
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**
 - Events fired from **EventfulVolatile** are now always ordered, and can no longer occur in parallel.
 - Bugfix to **OptimizedBridge**, which would sometimes not auto-detach from the origin pointer correctly

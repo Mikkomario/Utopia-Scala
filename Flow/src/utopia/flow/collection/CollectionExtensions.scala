@@ -2022,13 +2022,10 @@ object CollectionExtensions
 		                                         (implicit buildFrom: BuildFrom[Repr, B, That]): That =
 		{
 			val iter = items.iterator
-			if (iter.hasNext) {
-				val builder = buildFrom.newBuilder(coll)
-				builder ++= iter.filterNot(ops.contains)
-				builder.result()
-			}
+			if (iter.hasNext)
+				buildFrom.fromSpecific(coll)(ops ++ items.iterator.filterNot(ops.contains))
 			else
-				buildFrom.fromSpecific(coll)(seq(coll))
+				buildFrom.fromSpecific(coll)(ops)
 		}
 		
 		/**
