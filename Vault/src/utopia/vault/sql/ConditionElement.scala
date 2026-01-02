@@ -1,10 +1,11 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.range.HasInclusiveEnds
-import utopia.flow.collection.immutable.{Empty, IntSet, Pair, Single}
+import utopia.flow.collection.immutable.range.{HasInclusiveEnds, MayHaveOrderedEnds}
+import utopia.flow.collection.immutable._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.view.template.HasTwoSides
 import utopia.vault.model.enumeration.ComparisonOperator
 
 import scala.language.implicitConversions
@@ -103,31 +104,66 @@ trait ConditionElement
 		if (min == max)
 			<=>(min)
 		else
-			Condition(toSqlSegment + "BETWEEN" + min.toSqlSegment + "AND" + max.toSqlSegment)
+			Condition(SqlSegment.combine(" ",
+				Right(toSqlSegment), Left("BETWEEN"), Right(min.toSqlSegment), Left("AND"), Right(max.toSqlSegment)))
 	}
 	/**
 	  * @param minMax Minimum and maximum allowed values (inclusive), as a pair
 	  * @return A condition that returns true if the tested value is
-	  *         1) Equal or larger than the first value, and
-	  *         2) Smaller or equal than the second value
+	  *             1. Equal or larger than the first value, and
+	  *             1. Smaller or equal than the second value
 	  */
-	def isBetween(minMax: Pair[ConditionElement]): Condition = isBetween(minMax.first, minMax.second)
+	def isBetween[A](minMax: HasTwoSides[A])(implicit toElement: A => ConditionElement): Condition =
+		isBetween(toElement(minMax.first), toElement(minMax.second))
+	
+	/**
+	 * @param min Minimum value (inclusive)
+	 * @param max Maximum value (inclusive)
+	 * @return A condition that yields values where this element is somewhere outside the specified range
+	 */
+	def notBetween(min: ConditionElement, max: ConditionElement) = {
+		if (min == max)
+			<>(min)
+		else
+			Condition(SqlSegment.combine(" ", Right(toSqlSegment), Left("NOT BETWEEN"), Right(min.toSqlSegment),
+				Left("AND"), Right(max.toSqlSegment)))
+	}
+	/**
+	 * @param minMax Minimum and maximum values (inclusive)
+	 * @return A condition that yields values where this element is somewhere outside the specified range
+	 */
+	def notBetween[A](minMax: HasTwoSides[A])(implicit toElement: A => ConditionElement): Condition =
+		notBetween(toElement(minMax.first), toElement(minMax.second))
+	
+	/**
+	 * @param range A range of values. May be open.
+	 * @param toElement Implicit condition element conversion to apply
+	 * @tparam A Type of the range end values
+	 * @return A condition that limits values to the specified range
+	 */
+	def within[A](range: MayHaveOrderedEnds[A])(implicit toElement: A => ConditionElement) =
+		_within(range, ">", "<", Condition.alwaysFalse) { Condition.and(_) }
+	/**
+	 * @param range A range of values. May be open.
+	 * @param toElement Implicit condition element conversion to apply
+	 * @tparam A Type of the range end values
+	 * @return A condition that limits values to those outside the specified range
+	 */
+	def notWithin[A](range: MayHaveOrderedEnds[A])(implicit toElement: A => ConditionElement) =
+		_within(range, "<", ">", Condition.alwaysTrue) { Condition.or(_) }
 	
 	/**
 	  * Creates an in condition that returns true if one of the provided element values matches
 	  * this element's value
 	  */
 	def in(elements: Iterable[ConditionElement]) = {
-		// Uses simpler conditions if they are more suitable
-		if (elements.isEmpty)
-			Condition.alwaysFalse
-		else if (elements.size == 1)
-			this <=> elements.head
-		else {
-			val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq) { _.mkString(", ") }
-			val inSegment = rangeSegment.copy(sql = s"(${ rangeSegment.sql })")
-			
-			Condition(toSqlSegment + "IN" + inSegment)
+		elements.emptyOneOrMany match {
+			case None => Condition.alwaysFalse
+			case Some(Left(only)) => <=>(only)
+			case Some(Right(elements)) =>
+				Condition(SqlSegment.combine(" ",
+					Right(toSqlSegment), Left("IN"),
+					Right(SqlSegment.concat(", ", elements.iterator.map { _.toSqlSegment }).withinParentheses)))
 		}
 	}
 	/**
@@ -221,18 +257,13 @@ trait ConditionElement
 	  * Creates an in condition that returns true if NONE of the provided element values matches
 	  * this element's value
 	  */
-	def notIn(elements: Iterable[ConditionElement]) = {
-		// Uses simpler conditions if they are more suitable
-		if (elements.isEmpty)
-			Condition.alwaysTrue
-		else if (elements.size == 1)
-			this <> elements.head
-		else {
-			val rangeSegment = SqlSegment.combine(elements.map { _.toSqlSegment }.toSeq) { _.mkString(", ") }
-			val inSegment = rangeSegment.copy(sql = s"(${ rangeSegment.sql })")
-			
-			Condition(toSqlSegment + "NOT IN" + inSegment)
-		}
+	def notIn(elements: Iterable[ConditionElement]) = elements.emptyOneOrMany match {
+		case None => Condition.alwaysTrue
+		case Some(Left(only)) => <>(only)
+		case Some(Right(elements)) =>
+			Condition(SqlSegment.combine(" ",
+				Right(toSqlSegment), Left("NOT IN"),
+				Right(SqlSegment.concat(", ", elements.iterator.map { _.toSqlSegment }).withinParentheses)))
 	}
 	/**
 	  * @param elements Values not accepted for this element
@@ -312,6 +343,33 @@ trait ConditionElement
 				range.iterator.map { Left(_) }
 			else
 				Single(Right(range))
+		}
+	}
+	
+	private def _within[A](range: MayHaveOrderedEnds[A], compareToSmaller: String, compareToLarger: String,
+	                       emptyResult: => Condition)(combine: Seq[Condition] => Condition)
+	                      (implicit toElement: A => ConditionElement) =
+	{
+		// Case: Empty range specified
+		if (range.isEmpty)
+			emptyResult
+		else {
+			// Converts the defined end-points into smaller & larger -conditions
+			val elements = {
+				val compareOrder = {
+					if (range.isAscending)
+						Pair(compareToSmaller, compareToLarger)
+					else
+						Pair(compareToLarger, compareToSmaller)
+				}
+				val startCondition = range.startOption.map { _ -> s"${ compareOrder.first }=" }
+				val endCondition = range.endOption.map {
+					_ -> (if (range.isInclusive) s"${ compareOrder.second }=" else compareOrder.second)
+				}
+				OptimizedIndexedSeq.concat(startCondition, endCondition)
+			}
+			// Combines the generated conditions
+			combine(elements.map { case (value, operator) => makeCondition(operator, toElement(value)) })
 		}
 	}
 }

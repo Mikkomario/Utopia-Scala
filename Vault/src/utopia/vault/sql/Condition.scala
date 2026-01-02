@@ -88,28 +88,39 @@ object Condition
 	 * @param values Acceptable values
 	 * @return A condition that is met by rows where the column matches one of the specified values
 	 */
-	def indexIn(index: Column, values: IterableOnce[Int]) = _indexIn(values)(index.in) { index.in(_) }
+	def indexIn(index: Column, values: IterableOnce[Int]) =
+		_indexIn(values)(index.in) { index.in(_) } { index <=> _ }(alwaysFalse)
 	/**
 	 * @param index An integer-based (index) column
 	 * @param values Excluded values
 	 * @return A condition that is met by rows where the column does not match any of the specified values
 	 */
 	def indexNotIn(index: Column, values: IterableOnce[Int]) =
-		_indexIn(values)(index.notIn) { index.notIn(_) }
-	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inOther: Iterable[Int] => Condition) = {
+		_indexIn(values)(index.notIn) { index.notIn(_) } { index <> _ }(alwaysTrue)
+	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inOther: Iterable[Int] => Condition)
+	                    (equals: Int => Condition)(inEmpty: Condition) =
+	{
 		values match {
 			case s: IntSet => inInts(s)
 			case i: Set[Int] =>
-				val kn = values.knownSize
 				// Case: Short collection => Won't bother converting to an int-set
-				if (kn >= 0 && kn <= 6)
+				if (values.sizeIfKnown.exists { _ <= 6 })
 					inOther(i)
 				// Case: Longer collection => Converts targeted ids to an int-set
 				else
 					inInts(IntSet.from(i))
 					
 			case p: Pair[Int] => inOther(p.distinct)
-			case i => inInts(IntSet.from(i))
+			case s: Single[Int] => equals(s.value)
+			case i =>
+				i.knownSize match {
+					case 0 => inEmpty
+					case 1 => equals(i.iterator.next())
+					// Case: The collection may be larger => Converts it into an IntSet
+					case x if x < 0 || x > 6 => inInts(IntSet.from(i))
+					// Case: The collection is known to be very small => Converts it into a Set
+					case _ => inOther(Set.from(i))
+				}
 		}
 	}
 	
@@ -118,9 +129,7 @@ object Condition
 			case None => resultOnEmpty
 			case Some(Left(only)) => only
 			case Some(Right(conditions)) =>
-				val actualSeparator = s" $separator "
-				val noParentheses = SqlSegment.combine(conditions.map { _.segment }) { _.mkString(actualSeparator) }
-				Condition(noParentheses.copy(sql = s"(${ noParentheses.sql })"))
+				apply(SqlSegment.concat(s" $separator ", conditions.iterator.map { _.segment }).withinParentheses)
 		}
 	}
 }
@@ -161,7 +170,7 @@ case class Condition(segment: SqlSegment, knownResult: UncertainBoolean = Uncert
 	// OTHER    -------------------------
 	
 	/**
-	  * Combines the conditions together using a logical AND. All of the conditions are wrapped in
+	  * Combines the conditions together using a logical AND. All the conditions are wrapped in
 	  * single parentheses '()' and performed together, from left to right.
 	  */
 	def &&(others: Seq[Condition]): Condition = Condition.and(this +: others)
@@ -171,18 +180,18 @@ case class Condition(segment: SqlSegment, knownResult: UncertainBoolean = Uncert
 	  */
 	def &&(other: Condition): Condition = Condition.and(Pair(this, other))
 	/**
-	  * Combines the conditions together using a logical AND. All of the conditions are wrapped in
+	  * Combines the conditions together using a logical AND. All the conditions are wrapped in
 	  * single parentheses '()' and performed together, from left to right.
 	  */
 	def &&(first: Condition, second: Condition, more: Condition*): Condition = this && (Pair(first, second) ++ more)
 	/**
 	  * @param other Another condition
-	  * @return A combination (using AND) of these conditions, wrapped in parenthesis '()'
+	  * @return A combination (using AND) of these conditions, wrapped in parentheses '()'
 	  */
 	def &&(other: Option[Condition]): Condition = this && other.emptyOrSingle
 	
 	/**
-	  * Combines the conditions together using a logical OR. All of the conditions are wrapped in
+	  * Combines the conditions together using a logical OR. All the conditions are wrapped in
 	  * single parentheses '()' and performed together, from left to right.
 	  */
 	def ||(others: Seq[Condition]) = Condition.or(this +: others)
@@ -193,7 +202,7 @@ case class Condition(segment: SqlSegment, knownResult: UncertainBoolean = Uncert
 	def ||(other: Condition): Condition = Condition.or(Pair(this, other))
 	/**
 	  * @param other Another condition
-	  * @return A combination of these conditions (using OR) wrapped in parenthesis '()'
+	  * @return A combination of these conditions (using OR) wrapped in parentheses '()'
 	  */
 	def ||(other: Option[Condition]): Condition = this || other.emptyOrSingle
 	

@@ -24,6 +24,15 @@ trait TargetingTimeline[+A, +Repr, +One] extends TargetingManyLike[A, Repr, One]
 	 */
 	def latest = timeline(Last)
 	
+	/**
+	 * @return A copy of this access, which orders the accessed items chronologically
+	 */
+	def chronological = withOrdering(OrderBy.ascending(timestampColumn))
+	/**
+	 * @return A copy of this access, which orders the accessed items from newest to oldest
+	 */
+	def latestToEarliest = withOrdering(OrderBy.descending(timestampColumn))
+	
 	
 	// OTHER    ----------------------
 	
