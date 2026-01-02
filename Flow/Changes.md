@@ -78,6 +78,7 @@
 - Renamed **VolatileFlag**'s `.lockWhileIfNotSet(...)` to `.viewLockedIfNotSet(...)`
 - Renamed **ActionQueue**'s `.queueSize` to `.pendingCount` and `.queueSizePointer` to `.pendingCountPointer`
 - Renamed **Try**'s `.handleFailure(...)` to `.forFailure(...)` (in **TryExtensions**)
+- Renamed **JsonSettingsAccess**'s `.accessible` to `.isAccessible`
 ### Bugfixes
 - Bugfix to `.appendAllIfDistinct(IterableOnce)` in **CollectionExtensions**, 
   which previously discarded all existing values
@@ -106,6 +107,7 @@
 - Added **TryCatchBuilder**
 - Added **LimitedCountIterator**
 - Added **SynchronizedView** trait
+- Added **PropertiesWrapper** trait
 ### New methods
 - **Builder** (via **BuilderExtensions**)
   - Added `.mapInput(...)`
@@ -124,6 +126,8 @@
   - Added `.compare(...)`
 - **Future** (via **AsyncExtensions**)
   - Added a large number of new functions relating to successes & failures
+- **HasValues**
+  - Added a new `.tryGet(...)` variant
 - **IntSet** (object)
   - Added `.fromOrdered(IterableOnce)`
 - **Iterable**
@@ -135,6 +139,8 @@
   - Added `.divideToBy(...)`, `.divideToSeqsBy(...)` and `.divideToSetsBy(...)`
   - Added `.tryFlatten` for collections of **Try**
   - Added various `.mapParallelTo(...)` functions
+- **JsonSettingsAccess**
+  - Added `.toModel: Try[Model]`
 - **Lazy** (object)
   - Added `.resettable` and `.volatile(...)` for constructing different **Lazy** types
 - **Lockable**
@@ -182,6 +188,7 @@
 - Renamed `.contains(String, Boolean)` to `.containsOther(String, Boolean)` in **StringExtensions**, 
   because the previous version could not be called because of ambiguous implicits.
 - `.groupByUsing(...)` and `.groupMapUsing(...)` in **IterableOnce** now support optional default value -generation
+- **JsonSettingsAccess** now extends **HasPropertiesLike**
 - Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
 - Internal refactoring within **Extreme**'s `.by(...)`

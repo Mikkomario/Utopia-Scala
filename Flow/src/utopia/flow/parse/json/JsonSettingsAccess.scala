@@ -1,8 +1,8 @@
 package utopia.flow.parse.json
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
+import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, Value}
+import utopia.flow.generic.model.template.{HasPropertiesLike, PropertiesWrapper}
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.json.JsonSettingsAccess.defaultSettingsRegex
@@ -12,7 +12,7 @@ import utopia.flow.util.result.TryExtensions._
 
 import java.io.FileNotFoundException
 import java.nio.file.Path
-import scala.util.Failure
+import scala.util.{Failure, Try}
 
 object JsonSettingsAccess
 {
@@ -23,7 +23,7 @@ object JsonSettingsAccess
 }
 
 /**
- * An interface used for accessing settings from a json file
+ * An interface used for accessing settings from a JSON file
  * @author Mikko Hilpinen
  * @since 14.9.2023, v2.2
  *
@@ -34,15 +34,16 @@ object JsonSettingsAccess
  *                      By default, accepts any file that contains "settings" or "Settings" in its name.
  *                      Note: This file name -part doesn't include the file type extension,
  *                      which is required to match "json".
- * @param schema        A model declaration that must be fulfilled by the json object contents of the targeted file.
- *                      By default, accepts any json object.
- * @param jsonReader    A json parser used to parse the settings json file(s)
+ * @param schema        A model declaration that must be fulfilled by the JSON object contents of the targeted file.
+ *                      By default, accepts any JSON object.
+ * @param jsonReader    A JSON parser used to parse the settings JSON file(s)
  * @param log           A logging implementation notified in case settings reading fails
- *                      (e.g. if no settings file may be found or if json parsing fails)
+ *                      (e.g. if no settings file may be found or if JSON parsing fails)
  */
 class JsonSettingsAccess(rootDirectory: Path = FileUtils.workingDirectory, fileNameRegex: Regex = defaultSettingsRegex,
                          schema: ModelDeclaration = ModelDeclaration.empty)
                         (implicit jsonReader: JsonParser, log: Logger)
+	extends PropertiesWrapper[Constant]
 {
 	// ATTRIBUTES   --------------------------------
 	
@@ -51,7 +52,7 @@ class JsonSettingsAccess(rootDirectory: Path = FileUtils.workingDirectory, fileN
 	 * Contains a failure if no settings file was found, one couldn't be parsed or if the file contents
 	 * didn't fulfill all the schema requirements.
 	 */
-	protected lazy val parsed = {
+	val toModel = {
 		// Case: Invalid root directory => Fails
 		if (rootDirectory.notExists)
 			Failure(new FileNotFoundException(s"The specified root directory ${rootDirectory.absolute} doesn't exist"))
@@ -76,7 +77,7 @@ class JsonSettingsAccess(rootDirectory: Path = FileUtils.workingDirectory, fileN
 	 * An empty model in case of a parse failure.
 	 */
 	// Failures are logged. An empty model is used in case of a failure.
-	protected lazy val model = parsed.log.getOrElse(Model.empty)
+	protected lazy val model = toModel.logWithMessage("Failed to access settings").getOrElse(Model.empty)
 	
 	
 	// COMPUTED -------------------------
@@ -84,34 +85,33 @@ class JsonSettingsAccess(rootDirectory: Path = FileUtils.workingDirectory, fileN
 	/**
 	 * @return Whether these settings are accessible. I.e. whether they were successfully read.
 	 */
-	def accessible = parsed.isSuccess
+	def isAccessible = toModel.isSuccess
+	@deprecated("Renamed to isAccessible", "v2.8")
+	def accessible = isAccessible
 	/**
 	 * @return Whether these settings are not accessible. I.e. the reading process failed.
 	 */
-	def nonAccessible = !accessible
+	def nonAccessible = !isAccessible
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override protected def wrapped: HasPropertiesLike[Constant] = model
+	
+	override def tryGet[A](propName: String, altPropNames: String*)(f: Value => Try[A]): Try[A] =
+		tryGet(propName +: altPropNames)(f)
+	override def tryGet[A](propNames: Iterable[String])(f: Value => Try[A]): Try[A] =
+		toModel.flatMap { _.tryGet(propNames)(f) }
 	
 	
 	// OTHER    -------------------------
 	
 	/**
-	 * @param settingName Name of the targeted setting property
-	 * @return A value that matches that property
-	 */
-	def apply(settingName: String) = model(settingName)
-	/**
-	 * @param prio1Key Priority 1 setting property name
-	 * @param prio2Key Alternative name for that property
-	 * @param moreKeys More alternative names
-	 * @return A value that matches any of those properties
-	 */
-	def apply(prio1Key: String, prio2Key: String, moreKeys: String*) =
-		model(Pair(prio1Key, prio2Key) ++ moreKeys)
-	
-	/**
 	 * @param settingName Name of the targeted setting / property
 	 * @return Non-empty value of the targeted property. Failure if no value is defined or if settings-parsing failed.
 	 */
-	def required(settingName: String) = parsed.flatMap { m =>
+	@deprecated("Please use .tryGet(...) instead", "v2.8")
+	def required(settingName: String) = toModel.flatMap { m =>
 		m.nonEmpty(settingName).toTry { new NoSuchElementException(s"Required setting $settingName is missing") }
 	}
 }

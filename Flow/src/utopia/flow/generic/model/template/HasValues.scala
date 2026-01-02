@@ -6,7 +6,7 @@ import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.result.TryExtensions._
 
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 /**
   * Common trait for interfaces that contain (and possibly generate) named values
@@ -108,13 +108,28 @@ trait HasValues extends MapAccess[String, Value]
 	  * @tparam A type of expected parse results
 	  * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
 	  */
-	def tryGet[A](propName: String, altPropNames: String*)(f: Value => Try[A]) = {
-		val value = apply(propName +: altPropNames)
+	def tryGet[A](propName: String, altPropNames: String*)(f: Value => Try[A]) =
+		_tryGet(apply(propName +: altPropNames), propName)(f)
+	/**
+	 * Attempts to retrieve a value from this model.
+	 * In case of a failure, provides an error message which indicates, which property was being accessed.
+	 * @param propNames Names of the targeted properties, in order of descending priority
+	 * @param f A function which converts the value to the desired type,
+	 *          yielding a failure if the value could not be parsed.
+	 * @tparam A type of expected parse results
+	 * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
+	 */
+	def tryGet[A](propNames: Iterable[String])(f: Value => Try[A]) = {
+		if (propNames.isEmpty)
+			Failure(new IllegalArgumentException("No property was targeted"))
+		else
+			_tryGet(apply(propNames), propNames.head)(f)
+	}
+	private def _tryGet[A](value: Value, propName: => String)(f: Value => Try[A]) =
 		f(value).mapFailure { cause =>
 			if (value.isEmpty)
 				new IllegalArgumentException(s"\"$propName\" was not specified", cause)
 			else
 				new IllegalArgumentException(s"Value of \"$propName\" could not be accepted", cause)
 		}
-	}
 }
