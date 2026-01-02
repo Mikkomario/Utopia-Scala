@@ -7,6 +7,7 @@ import utopia.flow.collection.immutable.Pair.PairIsIterable
 import utopia.flow.collection.immutable._
 import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySeq, LazyVector}
 import utopia.flow.collection.immutable.range.HasEnds
+import utopia.flow.collection.mutable.builder.BuilderExtensions._
 import utopia.flow.collection.mutable.iterator._
 import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{EndingSequence, First, Last}
@@ -16,8 +17,8 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.HasSize
 import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
+import utopia.flow.util.result.{MayHaveFailed, PossiblyFailingFutures, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.SettableFlag
@@ -833,6 +834,143 @@ object CollectionExtensions
 		  * @return An iterator that reduces the items in this collection and returns every iteration result
 		  */
 		def reduceLeftIterator(f: (A, A) => A) = FoldingIterator.reduce(i.iterator)(f)
+		
+		/**
+		 * Maps the contents of this collection using a mapping function which performs the mapping asynchronously.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching errors thrown by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def mapAsync[B](f: A => Future[B])(implicit exc: ExecutionContext) =
+			mapAsyncTo(OptimizedIndexedSeq.newBuilder[B])(f)
+		/**
+		 * Maps the contents of this collection using a mapping function which performs the mapping asynchronously.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param builder Builder for constructing the final collection
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @tparam To Type of the built collection
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching errors thrown by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def mapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[B])
+		                                    (implicit exc: ExecutionContext) =
+			i.iterator.map(f).futureUsing(builder)
+		
+		/**
+		 * Maps the contents of this collection using a mapping function which performs the mapping asynchronously.
+		 * Flattens the results.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching errors thrown by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def flatMapAsync[B](f: A => Future[IterableOnce[B]])(implicit exc: ExecutionContext) =
+			flatMapAsyncTo(OptimizedIndexedSeq.newBuilder[B])(f)
+		/**
+		 * Maps the contents of this collection using a mapping function which performs the mapping asynchronously.
+		 * Flattens the results.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param builder Builder for constructing the final collection
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @tparam To Type of the built collection
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching errors thrown by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def flatMapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[IterableOnce[B]])
+		                                        (implicit exc: ExecutionContext) =
+			mapAsyncTo(builder.flatten)(f)
+		
+		/**
+		 * Attempts to map the contents of this collection using a mapping function
+		 * which performs the mapping asynchronously.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching the failures yielded by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def tryMapAsync[B](f: A => Future[MayHaveFailed[B]])(implicit exc: ExecutionContext) =
+			tryMapAsyncTo(OptimizedIndexedSeq.newBuilder[B])(f)
+		/**
+		 * Attempts to map the contents of this collection using a mapping function
+		 * which performs the mapping asynchronously.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param builder Builder for constructing the final collection
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @tparam To Type of the built collection
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching the failures yielded by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def tryMapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[MayHaveFailed[B]])
+		                                       (implicit exc: ExecutionContext) =
+			PossiblyFailingFutures.wrap(i.iterator.map(f)).futureUsing(builder)
+		
+		/**
+		 * Attempts to map the contents of this collection using a mapping function
+		 * which performs the mapping asynchronously.
+		 * Flattens the successful results.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching the failures yielded by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def tryFlatMapAsync[B](f: A => Future[MayHaveFailed[IterableOnce[B]]])(implicit exc: ExecutionContext) =
+			tryFlatMapAsyncTo(OptimizedIndexedSeq.newBuilder[B])(f)
+		/**
+		 * Attempts to map the contents of this collection using a mapping function
+		 * which performs the mapping asynchronously.
+		 * Flattens the successful results.
+		 *
+		 * Note: The mapping is NOT performed in parallel, but consecutively.
+		 *
+		 * @param builder Builder for constructing the final collection
+		 * @param f A mapping function which completes asynchronously
+		 * @param exc Implicit execution context
+		 * @tparam B Type of mapping results
+		 * @tparam To Type of the built collection
+		 * @return A future that resolves once all items in this collection have been mapped.
+		 *         Wraps the result in a [[TryCatch]], catching the failures yielded by 'f'.
+		 * @see [[parallel]], if you want the mapping to be performed in parallel
+		 */
+		def tryFlatMapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])
+		                                           (f: A => Future[MayHaveFailed[IterableOnce[B]]])
+		                                           (implicit exc: ExecutionContext) =
+			tryMapAsyncTo(builder.flatten)(f)
 	}
 	
 	implicit class IntsIterableOnce(val i: IterableOnce[Int]) extends AnyVal

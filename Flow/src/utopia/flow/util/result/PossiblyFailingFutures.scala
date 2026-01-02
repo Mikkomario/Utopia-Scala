@@ -1,8 +1,8 @@
 package utopia.flow.util.result
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.collection.mutable.builder.{BuildNothing, TryCatchBuilder}
-import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.result.PossiblyFailingFutures._collectResults
 
 import scala.collection.mutable
@@ -11,6 +11,16 @@ import scala.util.{Failure, Success, Try}
 
 object PossiblyFailingFutures
 {
+	// OTHER    --------------------------
+	
+	/**
+	 * @param futures Futures to wrap
+	 * @tparam A Type of successful future values
+	 * @return An extender for those futures
+	 */
+	def wrap[A](futures: IterableOnce[Future[MayHaveFailed[A]]]): PossiblyFailingFutures[A, MayHaveFailed[A]] =
+		new _PossiblyFailingFutures[A](futures)
+	
 	/**
 	 * Collects the results of 0-n futures into a single collection
 	 * @param futuresIter An iterator that yields the futures remaining to be collected
@@ -52,6 +62,21 @@ object PossiblyFailingFutures
 			// Case: All items were processed => Builder the resulting collection
 			case None => Future.successful(builder.result())
 		}
+	}
+	
+	
+	// NESTED   ----------------------------
+	
+	private class _PossiblyFailingFutures[A](override protected val wrapped: IterableOnce[Future[MayHaveFailed[A]]])
+		extends PossiblyFailingFutures[A, MayHaveFailed[A]]
+	{
+		override protected def wrap(result: MayHaveFailed[A]): MayHaveFailed[A] = result
+		
+		override protected def appendTo(builder: TryCatchBuilder[A, _], result: Try[MayHaveFailed[A]]): Unit =
+			result match {
+				case Success(result) => builder += result
+				case Failure(error) => builder += error
+			}
 	}
 }
 

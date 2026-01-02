@@ -81,6 +81,7 @@ object StringUtilsTest extends App
 	
 	println("YV- 2716".filterWith(Regex.letterOrDigit))
 	
+	println("---")
 	println(StringUtils.asciiTableFrom[String](Vector("ABC", "Test", "2-line\nString"),
 		Vector(
 			"Str" -> Identity, "Length" -> { _.length.toString }, "Letter" -> { _.head.toString }
@@ -90,7 +91,8 @@ object StringUtilsTest extends App
 		Vector(
 			"Str" -> Identity, "Length" -> { _.length.toString }, "Letter" -> { _.head.toString }
 		),
-		"Test table 2", skipLineSeparators = true))
+		"Test table 2\nSome other text", skipLineSeparators = true))
+	println("---")
 	
 	println()
 	

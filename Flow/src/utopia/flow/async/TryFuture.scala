@@ -61,4 +61,9 @@ object TryFuture
 	  * @return A completed future that failed with that cause / error
 	  */
 	def failure[A](error: Throwable) = Future.successful(Failure[A](error))
+	/**
+	 * @param error An error / cause of failure
+	 * @return A completed future that failed with that cause / error
+	 */
+	def failureCatching(error: Throwable) = Future.successful(TryCatch.Failure(error))
 }

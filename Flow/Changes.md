@@ -138,7 +138,7 @@
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
   - Added `.divideToBy(...)`, `.divideToSeqsBy(...)` and `.divideToSetsBy(...)`
   - Added `.tryFlatten` for collections of **Try**
-  - Added various `.mapParallelTo(...)` functions
+  - Added various `.mapAsync(...)` functions
 - **JsonSettingsAccess**
   - Added `.toModel: Try[Model]`
 - **Lazy** (object)

@@ -109,7 +109,9 @@ class Console(commandsPointer: View[Iterable[Command]], prompt: => String = "",
 									Vector(
 										"Name" -> { _.name },
 										"Alias" -> { _.alias },
-										"Default" -> { _.defaultValue.getString },
+										"Default" -> { arg =>
+											arg.defaultDescription.nonEmptyOrElse(arg.defaultValue.getString)
+										},
 										"Description" -> { _.help.splitToLinesIterator(80).mkString("\n") }
 									),
 									(command.nameAndAlias +: command.help.ifNotEmpty.emptyOrSingle).mkString("\n")

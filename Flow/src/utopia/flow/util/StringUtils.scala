@@ -44,17 +44,18 @@ object StringUtils
 			}
 			
 			// Generates the actual table
-			val separatorLine = s"\n+${ columnWidths.map { w => "-" * (w + 2) }.mkString("+") }+\n"
+			val separatorLine = s"+${ columnWidths.map { w => "-" * (w + 2) }.mkString("+") }+"
+			val separatorRow = s"\n$separatorLine\n"
 			val builder = new StringBuilder(separatorLine)
+			builder += '\n'
 			
 			// Writes the main header, if applicable
 			header.ifNotEmpty.foreach { header =>
 				val headerWidth = columnWidths.sum + (columns.size - 1) * 3
 				// Splits the header in case its very long
-				header.splitToLinesIterator(headerWidth).foreach { headerPart =>
-					builder ++= s"| ${ headerPart.padTo(headerWidth, ' ') } |"
-				}
-				builder ++= separatorLine
+				builder ++= header.splitToLinesIterator(headerWidth)
+					.map { headerPart => s"| ${ headerPart.padTo(headerWidth, ' ') } |" }.mkString("\n")
+				builder ++= separatorRow
 			}
 			
 			// Writes the headers
@@ -65,9 +66,10 @@ object StringUtils
 				if (y > 0 && skipLineSeparators)
 					builder += '\n'
 				else
-					builder ++= separatorLine
+					builder ++= separatorRow
 				rowContents(xRange, values.map { _(y) }, columnWidths, builder)
 			}
+			builder += '\n'
 			builder ++= separatorLine
 			
 			builder.result()

@@ -26,8 +26,10 @@ object ArgumentSchema
  * @param alias Short name / code for this parameter (empty string means no alias)
  * @param defaultValue Value used by default (default = empty)
  * @param help A helpful explanation for this argument (default = empty)
+ * @param defaultDescription Description of the default value logic, if applicable (default = empty)
  */
-case class ArgumentSchema(name: String, alias: String = "", defaultValue: Value = Value.empty, help: String = "")
+case class ArgumentSchema(name: String, alias: String = "", defaultValue: Value = Value.empty, help: String = "",
+                          defaultDescription: String = "")
 	extends ArgumentMatchable
 {
 	/**

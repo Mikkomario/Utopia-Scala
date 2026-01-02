@@ -1,6 +1,6 @@
 package utopia.flow.util.result
 
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.TryCatchBuilder
 import utopia.flow.util.logging.Logger
 
@@ -168,7 +168,7 @@ object TryCatch
 	}
 	
 	
-	// NESTED   -------------------------
+	// VALUES   -------------------------
 	
 	/**
 	 * Represents a successful attempt that may have partially failed
@@ -284,6 +284,34 @@ object TryCatch
 		override def logWithMessage(message: => String)(implicit log: Logger) = {
 			log(cause, message)
 			None
+		}
+	}
+	
+	
+	// EXTENSIONS   ----------------------------
+	
+	implicit class TryCatchMany[A](val t: TryCatch[Iterable[A]]) extends AnyVal
+	{
+		/**
+		 * @param other Another attempt
+		 * @tparam B Type of individual results in the other attempt
+		 * @return A combined version of these two attempts,
+		 *         which is a success if either of these attempts succeeded.
+		 *         Contains the combined values and/or failures from both attempts.
+		 */
+		def ++[B >: A](other: TryCatch[Iterable[B]]): TryCatch[IndexedSeq[B]] = t match {
+			case Success(coll1, failures1) =>
+				other match {
+					case Success(coll2, failures2) =>
+						Success(OptimizedIndexedSeq.concat(coll1, coll2), failures1 ++ failures2)
+					case Failure(error2) =>
+						Success(OptimizedIndexedSeq.from(coll1), failures1 :+ error2)
+				}
+			case Failure(error1) =>
+				other match {
+					case Success(coll2, failures2) => Success(OptimizedIndexedSeq.from(coll2), error1 +: failures2)
+					case Failure(_) => Failure(error1)
+				}
 		}
 	}
 }
