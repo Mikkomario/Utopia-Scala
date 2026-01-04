@@ -59,9 +59,10 @@ trait ChangingWrapper[+A] extends Changing[A]
 		wrapped.addListenerOfPriority(priority)(lazyListener.value)
 	override def addListenerOfPriority(priority: ChangeResponsePriority)(listener: => ChangeListener[A]): Unit =
 		wrapped.addListenerOfPriority(priority)(listener)
-	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, priority: ChangeResponsePriority)
+	override def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, priority: ChangeResponsePriority,
+	                                                 alwaysGenerateEvent: Boolean)
 	                                                (changeListener: => ChangeListener[B]): Unit =
-		wrapped.addListenerAndSimulateEvent(simulatedOldValue, priority)(changeListener)
+		wrapped.addListenerAndSimulateEvent(simulatedOldValue, priority, alwaysGenerateEvent)(changeListener)
 	
 	override def removeListener(changeListener: Any) = wrapped.removeListener(changeListener)
 	

@@ -176,6 +176,7 @@
   - **EventfulVolatile** now processes (root level) change events in synchronized manner, one-by-one.
   - After-effects generated in `addListenerAndSimulateEvent(...)` are now wrapped in **Try**; 
     Errors are logged.
+  - `.addListenerAndSimulateEvent(...)` now contains an optional parameter `alwaysGenerateEvent: Boolean`
 - **GeneratesOnce** no longer performs the mapping lazily, if the original pointer/lazy has already been initialized
 - **OptimizedSeqBuilder**'s `.knownSize` now functions past size 2
 - **UncertainBoolean**'s `||(Boolean)` and `&&(Boolean)` parameters are now call-by-name

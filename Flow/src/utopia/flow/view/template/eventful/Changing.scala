@@ -695,14 +695,17 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @param priority Priority assigned for this listener.
 	 *                 Listeners and their generated effects are triggered in order of their priority.
 	 *                 Default = Normal.
-	  * @param changeListener    A listener that should be informed (call by name)
+	  * @param alwaysGenerateEvent Whether to simulate a change event
+	 *                            even when 'simulatedOldValue' matches this item's current value. Default = false.
+	 * @param changeListener    A listener that should be informed (call by name)
 	  */
-	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, priority: ChangeResponsePriority = Normal)
+	def addListenerAndSimulateEvent[B >: A](simulatedOldValue: B, priority: ChangeResponsePriority = Normal,
+	                                        alwaysGenerateEvent: Boolean = false)
 	                                       (changeListener: => ChangeListener[B]): Unit =
 	{
 		val lazyNewListener = Lazy(changeListener)
 		// Performs the simulation
-		val simulationResult = simulateChangeEventFor(lazyNewListener.value, simulatedOldValue)
+		val simulationResult = simulateChangeEventFor(lazyNewListener.value, simulatedOldValue, alwaysGenerateEvent)
 		// Adds the listener, if appropriate (i.e. if the listener didn't detach itself during the simulation)
 		if (simulationResult.shouldContinueListening)
 			addListenerOfPriority(priority)(lazyNewListener.value)
@@ -1697,13 +1700,16 @@ trait Changing[+A] extends SynchronizedView[A]
 	  * @param listener A listener to inform
 	  * @param simulatedOldValue A simulated old value for this item. A change event will be generated only if this
 	  *                          value is different from this item's current value.
-	  * @tparam B Type of the simulated value / listener
+	  * @param alwaysGenerateEvent Whether to simulate a change event even when
+	 *                            'simulatedOldValue' matches the current value.
+	 * @tparam B Type of the simulated value / listener
 	  * @return Whether the listener should be informed of future change events
 	  */
-	protected def simulateChangeEventFor[B >: A](listener: => ChangeListener[B], simulatedOldValue: B) =
+	protected def simulateChangeEventFor[B >: A](listener: => ChangeListener[B], simulatedOldValue: B,
+	                                             alwaysGenerateEvent: Boolean) =
 	{
 		val current = value
-		if (simulatedOldValue != current)
+		if (alwaysGenerateEvent || simulatedOldValue != current)
 			listener.onChangeEvent(ChangeEvent(simulatedOldValue, current))
 		else
 			Continue
