@@ -125,7 +125,7 @@ object References
 	}
 	
 	
-	// OTHER METHODS    ------------------
+	// OTHER    ----------------------------
 	
 	/**
 	  * Sets up reference data for a single database. Existing data will be preserved.
@@ -367,16 +367,15 @@ object References
 	  * @param connection Implicit DB connection
 	  * @return Number of references that were updated
 	  */
-	def replace(table: Table, targetIndex: Value, withIndex: Value)(implicit connection: Connection) = {
+	def replace(table: Table, targetIndex: Value, withIndex: Value)(implicit connection: Connection) =
 		table.primaryColumn match {
 			case Some(index) =>
 				to(index).iterator
 					.map { reference =>
-						connection(Update(reference.from, withIndex) + Where(reference.to <=> targetIndex))
+						connection(Update(reference.from, withIndex) + Where(reference.from <=> targetIndex))
 							.updatedRowCount
 					}
 					.sum
 			case None => 0
 		}
-	}
 }

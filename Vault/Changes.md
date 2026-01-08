@@ -13,6 +13,8 @@
   (same functionality, different name)
 - Deprecated **IntIndexFilterableView** in favor of **IntIndexFilterable**
 - Deprecated the previous `.combine(...)` implementation in **SqlSegment**
+### Bugfixes
+- Fixed `References.replace(...)`
 ### New features
 - Added classes for lazily initializing values from the DB: 
   **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
