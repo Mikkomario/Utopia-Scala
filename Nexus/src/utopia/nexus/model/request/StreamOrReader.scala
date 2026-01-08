@@ -6,12 +6,14 @@ import utopia.flow.parse.EmptyInputStream
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.{Lines, StringFrom}
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 
-import java.io.{BufferedReader, InputStream, InputStreamReader}
+import java.io._
 import java.nio.charset.{Charset, StandardCharsets}
+import scala.io.Codec
 import scala.util.{Failure, Success, Try}
 
 object StreamOrReader
@@ -58,6 +60,14 @@ object StreamOrReader
 	 * @return A new interface for wrapping that reader
 	 */
 	def readerOnly(charset: Charset, reader: => BufferedReader): StreamOrReader = new ReaderWrapper(charset, reader)
+	
+	/**
+	 * Creates a [[StreamOrReader]] by wrapping a buffered string
+	 * @param string A string
+	 * @param codec Implicit encoding, in which the string is streamed
+	 * @return A new stream-or-reader interface wrapping the specified string
+	 */
+	def readString(string: String)(implicit codec: Codec): StreamOrReader = new StringStream(string, codec.charSet)
 	
 	
 	// NESTED   -----------------------
@@ -131,6 +141,40 @@ object StreamOrReader
 			if (_closed)
 				throw new IllegalStateException("This reader has already been closed")
 		}
+	}
+	
+	private class StringStream(string: String, override val charset: Charset) extends StreamOrReader
+	{
+		// ATTRIBUTES   ---------------------
+		
+		private val lazyBytes = Lazy { string.getBytes(charset) }
+		private val lazyStream = Lazy { new ByteArrayInputStream(lazyBytes.value) }
+		private val lazyReader = Lazy {
+			new BufferedReader(new StringReader(string), lazyBytes.current match {
+				case Some(bytes) => bytes.length
+				case None => defaultBufferSize
+			})
+		}
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def isEmpty: UncertainBoolean = string.isEmpty
+		
+		override def closed: Boolean = false
+		
+		override def stream: InputStream = lazyStream.value
+		override def reader: BufferedReader = lazyReader.value
+		override def either: Either[InputStream, BufferedReader] = lazyReader.current.toRight(stream)
+		
+		override def bufferToString(implicit log: Logger): Try[String] = Success(string)
+		override def bufferAsJson(implicit jsonParser: JsonParser, log: Logger): Try[Value] =
+			Success(jsonParser.valueOf(string))
+		override def bufferToXml(implicit log: Logger): Try[XmlElement] = XmlReader.parseString(string)
+		
+		override def close(): Unit = ()
+		
+		override def iterateLines[A](f: Iterator[String] => A): Try[A] = Try { f(string.linesIterator) }
 	}
 	
 	private class _StreamOrReader(openStream: => InputStream, getReader: => BufferedReader, getCharset: => Charset,

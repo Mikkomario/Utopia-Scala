@@ -59,6 +59,7 @@ Rewrote the whole module
     **NotFound** always yields the 404 Not Found -status.
 - The new request interception logic allows for a greater control at different points of request execution
 - **Request** class can now represent a buffered state
+- Added **ApiRequestCommand** class for performing/testing API requests locally
 
 ## v1.9.6 - 01.11.2025
 A new build supporting **Flow v2.7**.

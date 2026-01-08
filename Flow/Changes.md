@@ -101,6 +101,7 @@
 - Added **BecomesEventfulPointer** and **BecomesEventfulVolatile**, 
   which initialize their eventful functionality lazily.
 - Added **EmptyInputStream**
+- Added **ConsoleStream** for writing into `System.out` without ever closing it
 - Added support for lazily initialized **Constant**s
 - Added **BuildNothing**
 - Added **CompoundingSeqBuilder**

@@ -207,6 +207,7 @@ object ApiRoot
  *
  *                      See [[ContentWriter]] companion object for existing implementations.
  *
+ * @param rootPath Path that precedes the API version path parameter
  * @param latestVersion The latest API version. Default = v1.
  *                      Note: Will always be adjusted to include all versions mentioned in 'nodesByVersion'.
  * @param interceptors Interceptors used for recording and/or modifying the received requests,
@@ -226,8 +227,8 @@ object ApiRoot
  * @since 06.11.2025, based on RequestHandler written 9.9.2017
  */
 class ApiRoot[C <: AutoCloseable, -Body](nodesByVersion: Map[ApiVersion, Iterable[ApiNode[C]]],
-                                         contentWriter: ContentWriter[C], rootPath: Seq[String] = Empty,
-                                         latestVersion: ApiVersion = ApiVersion.v1,
+                                         contentWriter: ContentWriter[C], val rootPath: Seq[String] = Empty,
+                                         val latestVersion: ApiVersion = ApiVersion.v1,
                                          interceptors: Iterable[InterceptRequest[C]])
                                         (prepareContext: (Request[Body], ApiVersion) => C)
                                         (implicit log: Logger)

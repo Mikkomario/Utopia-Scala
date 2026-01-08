@@ -19,6 +19,7 @@
   - Added `.selectType(...)`
   - Added various split-iterator functions
 ### Other changes
+- **Headers** now extends **SureFromModelFactory**
 - Internal refactoring within **Headers**
 
 ## v1.6.1 - 01.11.2025

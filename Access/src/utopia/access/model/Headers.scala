@@ -4,7 +4,7 @@ import utopia.access.model.enumeration.Method
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.ModelConvertible
@@ -22,9 +22,9 @@ import java.util.Base64
 import scala.io.Codec
 import scala.language.implicitConversions
 import scala.math.Ordering.Double.TotalOrdering
-import scala.util.{Success, Try}
+import scala.util.Try
 
-object Headers extends FromModelFactory[Headers]
+object Headers extends SureFromModelFactory[Headers]
 {
 	// ATTRIBUTES    ---------------------
 	
@@ -50,11 +50,9 @@ object Headers extends FromModelFactory[Headers]
 	
 	// IMPLEMENTED    ----------------------
 	
-	override def apply(model: HasProperties) = {
-		val fields = model.nonEmptyProperties
-			.flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap
-		Success(new Headers(fields))
-	}
+	override def parseFrom(model: HasProperties): Headers =
+		apply(model.nonEmptyPropertiesIterator
+			.flatMap { property => property.value.string.map { property.name.toLowerCase -> _ } }.toMap)
 	
 	
 	// OTHER    ----------------------------
