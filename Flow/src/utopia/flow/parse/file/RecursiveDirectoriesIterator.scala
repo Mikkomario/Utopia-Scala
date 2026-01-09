@@ -19,7 +19,7 @@ class RecursiveDirectoriesIterator(origin: Path) extends Iterator[Try[(Path, Seq
 	
 	private val originConsumedFlag = Settable()
 	// Left side is regular children, right side is subdirectories
-	private lazy val children = origin.iterateChildren { _.divideToSeqsBy { _.isDirectory } }
+	private lazy val children = origin.iterateChildren { _.divideToSeqsBy { _.isExistingDirectory } }
 	private lazy val subDirectoriesIterator = children.toOption.iterator
 		.flatMap { case Pair(_, dirs) => dirs.iterator.flatMap { new RecursiveDirectoriesIterator(_) } }
 	

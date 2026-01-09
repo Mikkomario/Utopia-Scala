@@ -66,7 +66,7 @@ object DescriptionImporterApp extends App
 				
 				// Attempts to read the target
 				val result = {
-					if (inputPath.isDirectory)
+					if (inputPath.isExistingDirectory)
 					{
 						inputPath.allRegularFileChildrenOfType("json").flatMap { filePaths =>
 							if (filePaths.isEmpty)

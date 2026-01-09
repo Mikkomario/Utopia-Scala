@@ -44,9 +44,12 @@
 - **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
 - Changed the parameter ordering and -logic in `StringUtils.asciiTableFrom(...)`
 - **Constant** is now a trait instead of a class
+- **Path**'s `.isDirectory` and `.isRegularFile` (in **FileExtensions**) no longer require file existence 
+  in order to yield `true`. 
+  - The previous implementations are available as `.isExistingDirectory` and `.isExistingRegularFile`
 - Some **LogQueue** functions now yields **IndexedSeq** instead of **Vector**
 - **RecursiveDirectoriesIterator** now yields **IndexedSeq**s instead of **Vector**s
-- `.findDescendants(...)` in **FileExtensions** now yields **IndexedSeq** instead of **Vector**
+- `.subDirectories` and `.findDescendants(...)` in **FileExtensions** now yield **IndexedSeq** instead of **Vector**
 - `OptimizedIndexedSeq.newBuilder` now yields **OptimizedSeqBuilder** instead of **Builder**
   - The implementation didn't change, only the outward-facing type declaration
 ### Deprecation
@@ -67,6 +70,7 @@
   - Deprecated `ChangeResponse.continueIf(Boolean)` and `.continueUnless(Boolean)`
   - Deprecated **ChangingWithListeners**'s `.highPriorityListeners`, `.standardListeners` and `.allListeners`
 - Deprecated **CompoundingVectorBuilder** in favor of **CompoundingSeqBuilder**
+- Deprecated `.withMappedFileName(...)` in **FileExtensions**
 - Deprecated `.foreachParallel(...)`, `.mapParallel(...)` and `.mapAllParallel(...)` in **CollectionExtensions**; 
   The new implementations are accessible via `.parallel`
 - Renamed `.tryForeach(...)` to `.tryUntilFails(...)` in **CollectionExtensions**
@@ -88,6 +92,7 @@
 - Bugfix to **GeneratesOnce**'s mapping, which could previously generate double the events
 - Bugfix to **TwoThreadBuffer.Output**'s `.push(Iterable)`, which threw under some rare circumstances
 ### New features
+- Added **AppConfig**, which allows one to read and write app-specific properties relatively securely
 - New features relating to **Changing**:
   - There are now 3 supported listener priorities: **Normal**, **High** and **After**
     - After level is treated as after-effects, basically
@@ -125,6 +130,9 @@
   - Added `.lazily(...)`
 - **Extreme**
   - Added `.compare(...)`
+- **FileUtils**
+  - Added `.mapFileNameWithoutExtension(String)(...)` and `.mapFileOrDirectoryName(...)`
+  - Added `.appDirectory(...)` and `.appConfigFile(...)`
 - **Future** (via **AsyncExtensions**)
   - Added a large number of new functions relating to successes & failures
 - **HasValues**
@@ -158,6 +166,12 @@
   - Added various mapping functions that target individual properties
 - **OutputStream** (via **StreamExtensions**)
   - Added `.writeUsing(...)`
+- **Path** (via **FileExtensions**)
+  - Added `.fileNameAndExtension`
+  - Added `.hasFileType`
+  - Added `.mapFileName(...)` and `.mapFileNameWithoutExtension(...)`
+  - Added `.create()`
+  - Added `.hide()` and `.restrictAccess()`
 - **Pointer**
   - Added `.pop(Int)` to **Seq**-based **Pointer**s
 - **Regex** (object)
@@ -196,6 +210,7 @@
 - Internal refactoring within **Extreme**'s `.by(...)`
 - Internal refactoring within **Lazy**
 - Internal refactoring within some collection functions in **CollectionExtensions** and **TryExtensions**
+- Internal refactoring within various **Path** functions in **FileExtensions**
 
 ## v2.7 - 01.11.2025
 This update focuses on the following features:

@@ -21,7 +21,7 @@ object FileSearchTest extends App
 	implicit val exc: ExecutionContext = new ThreadPool("File Search Test")
 	val resultFuture = Guild.explore(".") { dir =>
 		dir.children.flatMap {
-			_.filter { _.isRegularFile }
+			_.filter { _.isExistingRegularFile }
 				.tryMapAll { _.size }.map { _.sum / 1000 }
 		}
 	}

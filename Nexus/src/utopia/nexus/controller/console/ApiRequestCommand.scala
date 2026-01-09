@@ -13,6 +13,7 @@ import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command, ConsoleStream}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
+import utopia.flow.view.immutable.View
 import utopia.nexus.controller.api.ApiRoot
 import utopia.nexus.model.api.ApiVersion
 import utopia.nexus.model.request.{Request, StreamOrReader}
@@ -30,15 +31,20 @@ object ApiRequestCommand
 	/**
 	 * Creates a new command for performing API requests
 	 * @param api The API utilized, accepts streamed requests
-	 * @param token API key passed into the bearer-token Authorization header
+	 * @param tokenView A view that yields the API key passed into the bearer-token Authorization header
 	 * @param exc Implicit execution context
 	 * @param log Implicit logging interface
 	 * @return A new command for performing API requests
 	 * @see [[apply]] if you need to customize the requests further
 	 */
-	def usingToken(api: ApiRoot[_, StreamOrReader], token: String)(implicit exc: ExecutionContext, log: Logger) =
-		apply(api) {
-			_.mapBody { body => StreamOrReader.readString(body.toJson) }.mapHeaders { _.withBearerAuthorization(token) }
+	def usingToken(api: ApiRoot[_, StreamOrReader], tokenView: View[String])
+	              (implicit exc: ExecutionContext, log: Logger) =
+		apply(api) { req =>
+			val withJsonBody = req.mapBody { body => StreamOrReader.readString(body.toJson) }
+			tokenView.value.ifNotEmpty match {
+				case Some(token) => withJsonBody.mapHeaders { _.withBearerAuthorization(token) }
+				case None => withJsonBody
+			}
 		}
 	
 	/**

@@ -57,6 +57,19 @@ class AccessQueue[+A](value: A)(implicit exc: ExecutionContext)
 		}.value // Starts 'f', if not queued already
 	
 	/**
+	 * Queues access to the protected item
+	 * @param f A function called once the wrapped item is accessible.
+	 *          Called asynchronously. Expected to block.
+	 *
+	 *          Reference to this function's input value should not be stored anywhere
+	 *          outside this function's lifecycle.
+	 *
+	 * @tparam B Result type of f
+	 * @return A future that resolves once 'f' completed
+	 */
+	def async[B](f: A => B) = apply { a => Future { f(a) } }
+	
+	/**
 	 * Waits until the protected item is accessible, then calls the specified function.
 	 *
 	 * Note: This function may block for extended time periods.

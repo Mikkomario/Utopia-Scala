@@ -24,9 +24,9 @@ object FileTest extends App
 	assert(dir2.exists)
 	assert(jsonOriginal.exists)
 	assert((dir1 / "notExists.json").notExists)
-	assert(dir1.isDirectory)
-	assert(dir2.isDirectory)
-	assert(jsonOriginal.isRegularFile)
+	assert(dir1.isExistingDirectory)
+	assert(dir2.isExistingDirectory)
+	assert(jsonOriginal.isExistingRegularFile)
 	
 	// Tests File name, type & last modified
 	assert(jsonOriginal.fileName == "test.json")
@@ -39,7 +39,7 @@ object FileTest extends App
 	assert(newDir.notExists)
 	assert(newDir.asExistingDirectory.get == newDir)
 	assert(newDir.exists)
-	assert(newDir.isDirectory)
+	assert(newDir.isExistingDirectory)
 	assert(jsonOriginal.asExistingDirectory.isFailure)
 	
 	// Tests parents & children
@@ -52,13 +52,13 @@ object FileTest extends App
 	// Copies test.json as json2.json
 	val jsonCopy = jsonOriginal.copyAs(dir1 / "json2.json").get
 	assert(jsonCopy.exists)
-	assert(jsonCopy.isRegularFile)
+	assert(jsonCopy.isExistingRegularFile)
 	assert(jsonCopy.fileType == "json")
 	
 	// Copies dir1
 	val dir1Copy = dir1.copyAs(origin / "test-dir-1-copy").get
 	assert(dir1Copy.exists)
-	assert(dir1Copy.isDirectory)
+	assert(dir1Copy.isExistingDirectory)
 	assert((dir1Copy / "json2.json").exists)
 	
 	// Copies test.json to dir2

@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce, UntilExternalFailureIterator}
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
 import utopia.flow.parse.AutoClose._
@@ -12,6 +12,7 @@ import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.Lines
+import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
@@ -22,6 +23,7 @@ import java.awt.Desktop
 import java.io._
 import java.nio.channels.FileChannel
 import java.nio.file._
+import java.nio.file.attribute.{AclEntry, AclEntryPermission, AclEntryType, AclFileAttributeView, DosFileAttributeView, FileAttribute, PosixFilePermission, PosixFilePermissions}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
@@ -76,28 +78,44 @@ object FileExtensions
 		/**
 		  * @return File name portion of this path
 		  */
-		def fileName = Option(p.getFileName).map { _.toString }.getOrElse("")
-		/**
-		  * @return File name portion of this path, without the extension portion (such as ".txt")
-		  */
-		def fileNameWithoutExtension = Option(p.getFileName) match {
-			case Some(part) => part.toString.untilLast(".")
+		def fileName = Option(p.getFileName) match {
+			case Some(name) => name.toString
 			case None => ""
 		}
 		/**
-		  * @return The name and the extension of this file.
-		 *         In case of directories, the extension is an empty string.
+		  * @return File name portion of this path, without the extension portion (such as ".txt")
 		  */
-		def fileNameAndType = fileName.splitAtLast(".")
+		def fileNameWithoutExtension = _mapMyFileName("")(Identity) { _ take _ }
+		/**
+		  * @return The name and the type of this file, as a Pair.
+		 *         In case of directories, the file type is an empty string.
+		 *         The returned type never contains the leading '.'.
+		 * @see [[fileNameAndExtension]], if you want the file type to include the leading '.'.
+		  */
+		def fileNameAndType = fileNameAndExtension.mapSecond { _.drop(1) }
+		/**
+		 * @return The name and type extension of this file, as a Pair.
+		 *         In case of directories, the extension is an empty string.
+		 *         The returned extension is always starts with '.', unless empty.
+		 * @see [[fileNameAndType]], if you want to exclude the leading '.' from the extension.
+		 */
+		def fileNameAndExtension = _mapMyFileName(Pair.twice("")) { Pair(_, "") } { (name, splitIndex) =>
+			Pair.from(name.splitAt(splitIndex))
+		}
+		/**
+		 * @return the type of this file (portion after last '.'). Returns an empty string for directories and
+		 *         for files without type.
+		 */
+		def fileType = _mapMyFileName("") { _ => "" } { (name, splitIndex) => name.drop(splitIndex + 1) }
+		/**
+		 * @return Whether this path points to a file with a type, indicating that it represents a regular file
+		 */
+		def hasFileType = _mapMyFileName(false) { _ => false } { (_, _) => true }
+		
 		/**
 		  * @return The last modified time of this file (may fail). May not work properly for directories.
 		  */
 		def lastModified = Try { Files.getLastModifiedTime(p).toInstant }
-		/**
-		  * @return the type of this file (portion after last '.'). Returns an empty string for directories and
-		  *         for files without type.
-		  */
-		def fileType = fileName.afterLast(".")
 		
 		/**
 		  * @return True if this path is not absolute.
@@ -118,13 +136,37 @@ object FileExtensions
 			.getOrElse { p.normalize() }
 		
 		/**
-		  * @return Whether this path represents an existing directory
-		  */
-		def isDirectory = Files.isDirectory(p)
+		 * @return Whether this path represents a directory.
+		 *         A non-existing path is considered to represent a directory, if it doesn't specify a file type.
+		 * @see [[isExistingDirectory]]
+		 */
+		def isDirectory = {
+			if (notExists)
+				_mapMyFileName(false) { _ => true } { (_, _) => false }
+			else
+				isExistingDirectory
+		}
 		/**
-		  * @return Whether this path represents an existing regular file (non-directory)
+		 * @return Whether this path represents a regular file.
+		 *         A non-existing path is considered to represent a regular file if it specifies a file type.
+		 * @see [[isExistingRegularFile]]
+		 */
+		def isRegularFile = {
+			if (notExists)
+				hasFileType
+			else
+				isExistingRegularFile
+		}
+		/**
+		  * @return Whether this path points to an *existing* directory
+		 * @see [[isDirectory]]
 		  */
-		def isRegularFile = Files.isRegularFile(p)
+		def isExistingDirectory = Files.isDirectory(p)
+		/**
+		  * @return Whether this path points to an *existing* regular file (non-directory)
+		 * @see [[isRegularFile]]
+		  */
+		def isExistingRegularFile = Files.isRegularFile(p)
 		
 		/**
 		  * @return A parent path for this path. None if this path is already a root path.
@@ -163,33 +205,33 @@ object FileExtensions
 		/**
 		  * @return Directories directly under this one (returns empty vector for regular files). May fail.
 		  */
-		def subDirectories = iterateChildren { _.filter { _.isDirectory }.toVector }
+		def subDirectories = iterateChildren { _.filter { _.isExistingDirectory }.toOptimizedSeq }
 		/**
-		  * @return An iterator that returns all sub-directories of this directory, their sub-directories and so-on.
+		  * @return An iterator that returns all subdirectories of this directory, their subdirectories and so-on.
 		  *         Includes the regular files with each directory, also.
 		  */
 		def allSubDirectoriesIterator = {
 			children match {
 				case Success(children) =>
-					children.iterator.filter { _.isDirectory }.flatMap { new RecursiveDirectoriesIterator(_) }
+					children.iterator.filter { _.isExistingDirectory }.flatMap { new RecursiveDirectoriesIterator(_) }
 				case Failure(error) => PollableOnce(Failure(error))
 			}
 		}
 		/**
-		  * @return An iterator that returns this directory, all sub-directories under this directory,
-		  *         all their sub-directories, and so on.
+		  * @return An iterator that returns this directory, all subdirectories under this directory,
+		  *         all their subdirectories, and so on.
 		  *         The regular files under each directory are also included.
 		  */
 		def allDirectoriesIterator = {
-			if (isDirectory)
+			if (isExistingDirectory)
 				new RecursiveDirectoriesIterator(p)
 			else
 				Iterator.empty
 		}
 		/**
-		  * @return All non-directory files in this directory and its sub-directories
+		  * @return All non-directory files in this directory and its subdirectories
 		  */
-		def allRegularFileChildren = findDescendants { _.isRegularFile }
+		def allRegularFileChildren = findDescendants { _.isExistingRegularFile }
 		
 		/**
 		  * @return This path as an existing directory (creating the directory if possible & necessary).
@@ -198,7 +240,7 @@ object FileExtensions
 		def asExistingDirectory = {
 			if (notExists)
 				createDirectories()
-			else if (isRegularFile)
+			else if (hasFileType)
 				Failure(new IOException(s"$p is not a directory"))
 			else
 				Success(p)
@@ -214,29 +256,28 @@ object FileExtensions
 				p
 			// Case: This path exists => Has to generate a new name
 			else {
-				val myName = fileName
+				val (fileName, extension) = fileNameAndExtension.toTuple
 				// Finds similar file names that are already being used
-				val competitorNames = iterateSiblings { _.map { _.fileName }.filter { _.startsWith(myName) }.toSet }
-					.getOrElse(Set())
+				val competitorNames = iterateSiblings { _.map { _.fileName }.filter { _.startsWith(fileName) }.toSet }
+					.getOrElse(Set[String]())
 				// Checks which character to use to separate the index from the main file name part
-				val separatorChar = {
-					if (myName.contains('-'))
+				val separator = {
+					if (fileName.contains('-'))
 						'-'
-					else if (myName.contains('_'))
+					else if (fileName.contains('_'))
 						'_'
-					else if (myName.containsMany("."))
+					else if (fileName.nonEmpty && fileName.view.tail.iterator.contains('.'))
 						'.'
-					else if (myName.contains(' '))
+					else if (fileName.contains(' '))
 						' '
 					else
 						'-'
 				}
-				val (myNameBeginning, myExtension) = myName.splitAtLast(".").toTuple
-				val myFullExtension = if (myExtension.isEmpty) myExtension else s".$myExtension"
 				// Generates new names until one is found which isn't a duplicate
 				val newName = Iterator.iterate(2) { _ + 1 }
-					.map { index => s"$myNameBeginning$separatorChar$index$myFullExtension" }
+					.map { index => s"$fileName$separator$index$extension" }
 					.find { !competitorNames.contains(_) }.get
+				
 				withFileName(newName)
 			}
 		}
@@ -247,7 +288,7 @@ object FileExtensions
 		  */
 		def size: Try[Long] = {
 			// Size of a regular file is delegated to java.nio.Files while size of a directory is calculated recursively
-			if (isRegularFile)
+			if (isExistingRegularFile)
 				Try { Files.size(p) }
 			else {
 				// Iterates through the children, calculating file sizes.
@@ -258,7 +299,7 @@ object FileExtensions
 				while (iterator.hasNext && failure.isEmpty) {
 					iterator.next() match {
 						case Success(path) =>
-							if (path.isRegularFile)
+							if (path.isExistingRegularFile)
 								Try { Files.size(path) } match {
 									case Success(size) => total += size
 									case Failure(error) => failure = Some(error)
@@ -274,20 +315,20 @@ object FileExtensions
 		}
 		
 		/**
-		  * Lazily converts this path (and its sub-directories and files) into a tree structure
+		  * Lazily converts this path (and its subdirectories and files) into a tree structure
 		  * @param log A logger to use to log possible failures to scan for directory children
 		  * @return A lazily initialized tree structure based on this path,
 		  *         where each node represents a file or a directory.
 		  */
 		def toTree(implicit log: Logger): LazyTree[Path] = {
 			// Case: Regular file => Doesn't need any scanning
-			if (isRegularFile)
+			if (isExistingRegularFile)
 				LazyTree.initializedEmpty(p)
 			// Case: Directory => lazily reads the directory contents when going downwards
 			else
 				LazyTree.iterate[Path](Lazy.initialized(p)) { path =>
 					// Case: Directory => lazily scans further
-					if (path.isDirectory)
+					if (path.isExistingDirectory)
 						path.children match {
 							// Case: Directory scanning succeeded => opens a new layer of nodes
 							case Success(children) => children.map(Lazy.initialized)
@@ -302,6 +343,19 @@ object FileExtensions
 				}
 		}
 		
+		/**
+		 * @return 3 strings that form this file's name:
+		 *              1. The full file name
+		 *              1. This file's name without the extension
+		 *              1. This file's extension, including the leading '.'
+		 */
+		private def fileNameAndParts = _mapMyFileName(("", "", "")) {
+			name => (name, name, "") } {
+			(name, splitIndex) =>
+				val (namePart, extension) = name.splitAt(splitIndex)
+				(name, namePart, extension)
+		}
+		
 		
 		// IMPLEMENTED  ---------------------------
 		
@@ -310,7 +364,7 @@ object FileExtensions
 		override def isEmpty: Boolean = {
 			// Case: Directory => Checks whether this directory contains any files
 			//                    Considered nonEmpty on file read failures
-			if (isDirectory)
+			if (isExistingDirectory)
 				iterateChildren { !_.hasNext }.getOrElse(false)
 			// Case: Regular file => Existing regular files are never considered empty
 			//                       Returns false on a read failure
@@ -406,7 +460,7 @@ object FileExtensions
 		  * @return The returned value. Failure if something threw during this operation.
 		  */
 		def iterateChildren[A](f: Iterator[Path] => A) = {
-			if (isDirectory)
+			if (isExistingDirectory)
 				Try { Files.list(p).consume { stream => f(stream.iterator().asScala) } }
 			else
 				Try { f(Iterator.empty) }
@@ -518,7 +572,7 @@ object FileExtensions
 		  */
 		def containsDirect(childFileName: String) = (this / childFileName).exists
 		/**
-		  * Checks whether this directory or any sub-directory within this directory contains a file with the
+		  * Checks whether this directory or any subdirectory within this directory contains a file with the
 		  * specified name (case-insensitive).
 		  * @param childFileName Name of the searched file (including file extension)
 		  * @return Whether this directory system contains a file with the specified name
@@ -572,30 +626,64 @@ object FileExtensions
 		
 		/**
 		  * @param newFileName New file name (may or may not contain an extension)
-		  * @return A copy of this path with specified file name (NB: No file is being renamed as part of this operation)
+		  * @return A copy of this path with specified file name
+		 *         (NB: No actual file is renamed as part of this operation)
 		  */
 		def withFileName(newFileName: String) = {
-			val myName = fileName
+			val (fullName, _, extension) = fileNameAndParts
 			// Case: Already has that file name => returns self
-			if (myName == newFileName)
+			if (fullName == newFileName)
 				p
 			// Case: Name needs to be changed
 			else {
 				// Checks whether extension was specified in the new file name.
 				// Includes the extension from the old name if necessary
-				val actualNewName = if (!newFileName.contains('.') && myName.contains('.'))
-					s"$newFileName.${ myName.afterLast(".") }" else newFileName
+				val actualNewName = FileUtils.mapFileOrDirectoryName(newFileName) {
+					name => s"$name$extension" } { (name, _) => name }
 				// Resolves a new path
-				parentOption match {
-					case Some(parent) => parent / actualNewName
-					case None => actualNewName: Path
-				}
+				_withFileName(actualNewName)
 			}
+		}
+		private def _withFileName(newFileName: String) = parentOption match {
+			case Some(parent) => parent / newFileName
+			case None => newFileName: Path
+		}
+		
+		/**
+		 * Modifies the file name of this path. Note: No actual file renaming occurs.
+		 * @param f A mapping function applied to this file's name
+		 * @return A copy of this path where the file name (i.e. the last part) has been updated.
+		 */
+		def mapFileName(f: Mutate[String]) = {
+			val original = fileName
+			val modified = f(original)
+			// Case: No change => Preserves this path
+			if (modified == original)
+				p
+			// Case: Modified name => Changes this path
+			else
+				_withFileName(modified)
+		}
+		/**
+		 * Modifies this path's file name part, preserving the file type (if applicable).
+		 * Note: No actual file renaming occurs.
+		 * @param f A mapping function applied to this file's name part.
+		 *          Doesn't receive, and shouldn't yield, a file extension.
+		 * @return A modified copy of this path
+		 */
+		def mapFileNameWithoutExtension(f: Mutate[String]) = {
+			val (original, extension) = fileNameAndExtension.toTuple
+			val modified = f(original)
+			if (modified == original)
+				p
+			else
+				_withFileName(s"$modified$extension")
 		}
 		/**
 		  * @param f a file name mapping function
 		  * @return A copy of this path that has the mapped file name
 		  */
+		@deprecated("Please use .mapFileName(...) instead. Notice, however, the simpler functionality when it comes to file-extension handling.", "v2.8")
 		def withMappedFileName(f: String => String) = withFileName(f(fileName))
 		
 		/**
@@ -607,11 +695,11 @@ object FileExtensions
 			allChildrenIterator.mapSuccesses { Some(_).filter(filter) }.tryFlattenEach[Path]
 		
 		/**
-		  * @param extension A file extension (E.g. "png"), not including the '.'
+		  * @param extension A file extension (E.g. "png"), not including the '.' (case-insensitive)
 		  * @return All files directly or indirectly under this directory that have the specified file extension / type
 		  */
 		def allRegularFileChildrenOfType(extension: String) = findDescendants { f =>
-			f.isRegularFile && (f.fileType ~== extension)
+			f.isExistingRegularFile && (f.fileType ~== extension)
 		}
 		
 		/**
@@ -628,7 +716,7 @@ object FileExtensions
 				Failure(new FileNotFoundException(s"Cannot move ${p.toAbsolutePath} because it doesn't exist"))
 			else {
 				// Directories with content will have to be first copied, then removed
-				if (isDirectory)
+				if (isExistingDirectory)
 					copyTo(targetDirectory, conflictResolve).flatMap { newDir => delete().map { _ => newDir } }
 				else {
 					// May need to create target directory if it doesn't exist yet
@@ -766,8 +854,8 @@ object FileExtensions
 			else if (notExists)
 				overwriteWith(anotherPath)
 			// Copying from directory to directory is handled recursively
-			else if (isDirectory) {
-				if (anotherPath.isDirectory) {
+			else if (isExistingDirectory) {
+				if (anotherPath.isExistingDirectory) {
 					children.flatMap { myChildren =>
 						anotherPath.children.flatMap { newChildren =>
 							val myChildrenByName = myChildren.map { c => c.fileName -> c }.toMap
@@ -812,7 +900,7 @@ object FileExtensions
 			if (notExists)
 				Success(false)
 			// In case of a directory, may need to clear contents first
-			else if (isDirectory) {
+			else if (isExistingDirectory) {
 				// If any of child deletion fails, the whole process is interrupted
 				// Deletes this directory once the children have been removed
 				if (allowDeletionOfDirectoryContents)
@@ -841,26 +929,34 @@ object FileExtensions
 		/**
 		  * Creates this directory (and ensures existence of parent directories as well). If this is not a directory,
 		  * simply creates parent directories.
-		  * @return This path. Failure if couldn't create directories.
+		  * @return This path. Failure if directories could not be created.
 		  */
 		def createDirectories() = {
 			if (notExists) {
-				// Checks whether this file should be a directory (doesn't have a file type) or a regular file
-				// (has file type)
-				if (fileType.isEmpty)
-					Try { Files.createDirectories(p) }
-				else
+				// Case: This file specifies a file type
+				//       => Assumes that it represents a regular file => Creates the parent directories, only
+				if (hasFileType)
 					createParentDirectories()
+				// Case: This file doesn't specify a file type => Assumes that it represents a directory => Creates it
+				else
+					Try { Files.createDirectories(p) }
 			}
+			// Case: Already exists => No change is necessary
 			else
 				Success(p)
 		}
 		/**
-		  * Creates directories above this path. Eg. for path "dir1/dir2/fileX.txt" would ensure existence of dir1 and dir2
-		  * @return This path, failure if couldn't create directories
+		  * Creates directories above this path.
+		 * E.g. for path "dir1/dir2/fileX.txt" would ensure existence of dir1 and dir2
+		  * @return This path, failure if directories couldn't be created.
 		  */
-		def createParentDirectories() =
-			parentOption.map { dir => Try[Unit] { Files.createDirectories(dir) } }.getOrElse(Success(())).map { _ => p }
+		def createParentDirectories() = {
+			parentOption match {
+				case Some(parent) => Try { Files.createDirectories(parent) }.map { _ => p }
+				// Case: This is the root path => No parent directories need be created
+				case None => Success(p)
+			}
+		}
 		
 		/**
 		  * @param another Another file
@@ -869,7 +965,7 @@ object FileExtensions
 		def hasSameLastModifiedAs(another: Path): Boolean = {
 			// Directories need to be handled a bit differently (files inside the directory may have changed)
 			val directLastModifiedComparison = lastModified.success.exists { another.lastModified.success.contains }
-			if (isDirectory && another.isDirectory) {
+			if (isExistingDirectory && another.isExistingDirectory) {
 				if (directLastModifiedComparison) {
 					Pair(children, another.children)
 						.map { _.getOrElse(Vector()).sortBy { _.fileName } }
@@ -1021,11 +1117,11 @@ object FileExtensions
 		  *         or if the writing or reading failed.
 		  */
 		def editToCopy[A](copyPath: Path)(f: FileEditor => A)(implicit codec: Codec) = {
-			// Makes sure this is an existing regular file
-			if (isDirectory)
-				Failure(new IOException("Directories can't be edited using .editToCopy(...)"))
-			else if (notExists)
+			if (notExists)
 				Failure(new FileNotFoundException(s"$p doesn't exists and therefore can't be edited"))
+			// Makes sure this is an existing regular file
+			else if (isExistingDirectory)
+				Failure(new IOException("Directories can't be edited using .editToCopy(...)"))
 			else
 				// Writes into the new file using an editor and the specified controlling function
 				copyPath.writeUsing { writer =>
@@ -1060,7 +1156,7 @@ object FileExtensions
 		  */
 		def edit[A](f: FileEditor => A)(implicit codec: Codec) = {
 			// Finds a copy name that hasn't been taken yet
-			val (fileNamePart, extensionPart) = fileName.splitAtLast(".").toTuple
+			val (fileNamePart, extensionPart) = fileNameAndType.toTuple
 			// Writes to copy by editing the original
 			val copyPath = withFileName(s"$fileNamePart-temp.$extensionPart").unique
 			editToCopy(copyPath)(f)
@@ -1080,7 +1176,7 @@ object FileExtensions
 		  * @return Success or failure
 		  */
 		def editInDesktop() =
-			performDesktopOperation { d => if (isDirectory) d.open(p.toFile) else d.edit(p.toFile) }
+			performDesktopOperation { d => if (isExistingDirectory) d.open(p.toFile) else d.edit(p.toFile) }
 		/**
 		  * Prints this file using the default desktop application
 		  * @return Success or failure
@@ -1091,13 +1187,175 @@ object FileExtensions
 		  * @return Success or failure
 		  */
 		def openDirectory() = performDesktopOperation { d =>
-			if (isDirectory) d.open(p.toFile) else d.open(parent.toFile)
+			if (isExistingDirectory) d.open(p.toFile) else d.open(parent.toFile)
 		}
 		/**
 		  * Opens resource manager for this file's / directory's parent directory
 		  * @return Success or failure
 		  */
 		def openFileLocation() = performDesktopOperation { _.open(parent.toFile) }
+		
+		/**
+		 * Creates this file or directory, unless it already exists
+		 * @param attributes File attributes to assign. Default = empty.
+		 * @return This path. Failure if this file or directory didn't exist and could not be created.
+		 */
+		def create(attributes: => Seq[FileAttribute[_]] = Empty) = {
+			// Case: This file/directory doesn't exist yet
+			//       => Creates either a file or a directory, based on the file name / type
+			//          (also creating parent directories)
+			if (notExists)
+				createParentDirectories().flatMap { _ => _create(attributes) }
+			// Case: This file already exists => Success
+			else
+				Success(p)
+		}
+		/**
+		 * Creates this file or directory. Assumes that it doesn't exist yet, and that the parent directory exists.
+		 * @param attributes File attributes to assign. Default = empty.
+		 * @return This path. Failure if this file or directory didn't could not be created.
+		 */
+		private def _create(attributes: => Seq[FileAttribute[_]] = Empty) = {
+			if (hasFileType)
+				Try { Files.createFile(p, attributes: _*) }
+			else
+				Try { Files.createDirectory(p, attributes: _*) }
+		}
+		
+		/**
+		 * Hides this file or directory.
+		 * On Windows, this modifies the DOS attribute: hidden.
+		 * On Linux and macOS, this simply renames this file or directory to start with '.'.
+		 * @param create Whether to create this file or directory, if it doesn't exist.
+		 *               Default = false.
+		 *
+		 *               If left to false and called for a non-existing file or directory,
+		 *               this path will be modified to start with '.' and no other changes are made.
+		 *               On Windows, this causes the resulting file, if created, to not be actually hidden,
+		 *               unless this function is called again after file-creation.
+		 *
+		 * @return A hidden version of this path. May be renamed.
+		 */
+		def hide(create: Boolean = false): Try[Path] = {
+			// Case: This file/directory doesn't exist => May create a new file/directory
+			if (notExists) {
+				// Case: File-creation allowed => Creates this files and then hides it
+				if (create)
+					this.create().flatMap { _ => hide() }
+				// Case: File-creation not enabled => Only modifies this path
+				else
+					Success(mapFileName { _.startingWith(".") })
+			}
+			// Case: Existing file => Checks whether DOS attributes are used (Windows)
+			else
+				Option(Files.getFileAttributeView(p, classOf[DosFileAttributeView])) match {
+					// Case: DOS attributes used => Modifies them
+					case Some(dosAttributes) =>
+						Try {
+							dosAttributes.setHidden(true)
+							p
+						}
+					// Case: No DOS attributes used (Linux & macOS) => Renames this file to start with '.', if necessary
+					case None =>
+						val _fileName = p.fileName
+						if (_fileName.isEmpty || _fileName.head == '.')
+							Success(p)
+						else
+							rename(s".${_fileName}")
+				}
+		}
+		
+		/**
+		 * Restricts access to this file, so that only the current user is allowed to read and write into it
+		 * (but not to execute it)
+		 * @param allowCreation Whether to create a new empty file or directory, if no file exists yet.
+		 *                      Default = false = fails if this file doesn't exist.
+		 * @return This path. Failure if permissions couldn't be altered,
+		 *         or if this file didn't exist and 'allowFileCreation' was set to false.
+		 */
+		def restrictAccess(allowCreation: Boolean = false): Try[Path] = {
+			// Checks whether this file exists (an existing file or directory is required for accessing a file store)
+			val _exists = exists
+			// Case: This file doesn't exist and can't be created => Fails
+			if (!_exists && !allowCreation)
+				Failure(new FileNotFoundException(s"$this doesn't exist"))
+			else {
+				// Acquires a file store from this file or the parent directory (which is created, if necessary)
+				val store = {
+					// Case: This file already exists => Acquires the file store directly for this file
+					if (_exists)
+						Try { Files.getFileStore(p) }
+					// Case: This file doesn't exist yet => Acquires the file store for the parent directory
+					else
+						parent.createDirectories().flatMap { parent => Try { Files.getFileStore(parent) } }
+				}
+				store.flatMap { store =>
+					// Case: POSIX file permissions are available (Linux & MaxOS) => Modifies those
+					if (store.supportsFileAttributeView("posix")) {
+						// Allows owner read & write, denies others
+						val permissions = Set(
+							PosixFilePermission.OWNER_READ,
+							PosixFilePermission.OWNER_WRITE
+						)
+						// Case: This file exists => Modifies the existing file permissions
+						if (_exists)
+							Try { Files.setPosixFilePermissions(p, permissions.asJava) }
+						// Case: This file doesn't exist => Creates a new file with the specified file permissions
+						else
+							_create(Single(PosixFilePermissions.asFileAttribute(permissions.asJava)))
+					}
+					// Case: POSIX not supported, but ACL is (Windows) => Uses ACL to restrict file access
+					else if (store.supportsFileAttributeView("acl")) {
+						// Creates the file if it doesn't exist
+						val existingFile = if (_exists) Success(p) else _create()
+						existingFile.flatMap { path =>
+							// Accesses the file's ACL attributes
+							Option(Files.getFileAttributeView(path, classOf[AclFileAttributeView]))
+								.toTry { new UnsupportedOperationException(
+									"Neither POSIX nor ACL are supported on this device") }
+								.flatMap { attributes =>
+									// Acquires the current user (requires the appropriate system property)
+									Try { Option(System.getProperty("user.name")) }
+										.flatMap { _.toTry { new UnsupportedOperationException(
+											"`user.name` is not defined as a system property") } }
+										.flatMap { user =>
+											Try {
+												FileSystems.getDefault
+													.getUserPrincipalLookupService.lookupPrincipalByName(user)
+											}
+										}
+										.flatMap { user =>
+											// Disables inheritance and restricts access to the user (read & write),
+											// exclusively
+											val permissions = Set(
+												AclEntryPermission.READ_DATA, AclEntryPermission.WRITE_DATA,
+												AclEntryPermission.READ_ATTRIBUTES, AclEntryPermission.WRITE_ATTRIBUTES
+											)
+											val entry = AclEntry.newBuilder()
+												.setType(AclEntryType.ALLOW).setPrincipal(user)
+												.setPermissions(permissions.asJava)
+												.build()
+											Try {
+												attributes.setAcl(Single(entry).asJava)
+												path
+											}
+										}
+								}
+						}
+					}
+					// Case: Neither POSIX nor ACL is supported => Fails
+					else
+						Failure(new UnsupportedOperationException("Neither POSIX nor ACL are supported on this device"))
+				}
+			}
+		}
+		
+		private def _mapMyFileName[A](empty: => A)(directory: String => A)(file: (String, Int) => A) =
+			Option(p.getFileName) match {
+				case Some(namePath) => FileUtils.mapFileOrDirectoryName(namePath.toString)(directory)(file)
+				// Case: No file name given
+				case None => empty
+			}
 		
 		private def performDesktopOperation(f: Desktop => Unit) = {
 			if (Desktop.isDesktopSupported)

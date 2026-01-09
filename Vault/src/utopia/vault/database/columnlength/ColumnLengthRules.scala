@@ -128,7 +128,7 @@ object ColumnLengthRules
 	
 	private def loadFromJsonIn(path: Path)(process: Model => Unit)(implicit jsonParser: JsonParser) = {
 		// Case: Directory specified => Loads from all JSON files within the directory and its subdirectories
-		if (path.isDirectory)
+		if (path.isExistingDirectory)
 			path.allChildrenIterator
 				.filter { _.toOption.forall { _.fileType ~== "json" } }
 				.map { _.flatMap { path =>

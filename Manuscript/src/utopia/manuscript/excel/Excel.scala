@@ -34,7 +34,7 @@ object Excel
 	  * @return Function result value or a failure if file-opening failed or if the function threw.
 	  */
 	def open[A](path: Path)(f: Excel => A) = {
-		if (path.isRegularFile) {
+		if (path.isExistingRegularFile) {
 			Try {
 				// Uses either xls (HSSF) or xlsx parsing
 				path.fileType.toLowerCase match {
