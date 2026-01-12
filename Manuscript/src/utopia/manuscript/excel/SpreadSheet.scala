@@ -15,7 +15,7 @@ import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 
 /**
-  * An interface used for interacting with a specific spread-sheet.
+  * An interface used for interacting with a specific spreadsheet.
   * This interface should be used only while the associated document is open.
   * @author Mikko Hilpinen
   * @since 31/01/2024, v1.0
@@ -31,12 +31,12 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	// COMPUTED ---------------------------
 	
 	/**
-	  * @return All rows within this spread-sheet
+	  * @return All rows within this spreadsheet
 	  * @see [[rowsIterator]]
 	  */
 	def rows = lazyRows.value
 	/**
-	  * @return An iterator that lists all (non-empty) rows in this spread-sheet from top to bottom
+	  * @return An iterator that lists all (non-empty) rows in this spreadsheet from top to bottom
 	  */
 	def rowsIterator = lazyRows.current match {
 		case Some(rows) => rows.iterator
@@ -79,15 +79,15 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	// OTHER    ----------------------
 	
 	/**
-	  * Iterates the rows in this spread-sheet as converted to models
+	  * Iterates the rows in this spreadsheet as converted to models
 	  * @param headers Headers that specify, which model property name appears in which column (using 0-based indexing)
-	  * @param locateInDocument Whether a header row is expected to be found within this spread-sheet.
+	  * @param locateInDocument Whether a header row is expected to be found within this spreadsheet.
 	  *                         If set to true, all rows until and including the header row will be skipped.
 	  *                         Default = false, which causes all rows to be read / processed.
 	  * @param preLoadModels Whether all cell values should be read immediately.
 	  *                If false (default), the resulting model may only be used while the cells are available
-	  *                (i.e. while the spread-sheet is open).
-	  *                Set to true if you want to store or use the models after the spread-sheet closes.
+	  *                (i.e. while the spreadsheet is open).
+	  *                Set to true if you want to store or use the models after the spreadsheet closes.
 	  * @return An iterator that yields models, each parsed from a row by mapping its values to the specified headers
 	  */
 	@tailrec
@@ -108,13 +108,13 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 			iter.map { _.toModel(headers, preLoadModels) }
 	}
 	/**
-	  * Iterates the rows in this spread-sheet as converted to models.
+	  * Iterates the rows in this spreadsheet as converted to models.
 	  * @param headers Headers, which are used as model property names.
 	  *                Expects a full list. I.e. other headers won't be read / accessible.
 	  * @param preLoadModels Whether all cell values should be read immediately.
 	  *                If false (default), the resulting model may only be used while the cells are available
-	  *                (i.e. while the spread-sheet is open).
-	  *                Set to true if you want to store or use the models after the spread-sheet closes.
+	  *                (i.e. while the spreadsheet is open).
+	  *                Set to true if you want to store or use the models after the spreadsheet closes.
 	  * @return An iterator that yields models, each parsed from a row by mapping its values to the specified headers.
 	  *         Rows before and including the actual header row are not included in this iterator.
 	  * @see [[modelsIteratorCompletingHeaders]]
@@ -122,7 +122,7 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	def modelsIteratorLocatingHeaders(headers: UnallocatedHeaders, preLoadModels: Boolean = false) =
 		_modelsIterator(preLoadModels) { _.locateHeaders(headers) }
 	/**
-	  * Iterates the rows in this spread-sheet as converted to models.
+	  * Iterates the rows in this spreadsheet as converted to models.
 	  * @param partialHeaders Headers which must appear on the header row.
 	  *                       Other values listed on that row will be converted to headers, also.
 	  *                       (I.e. this list doesn't need to include all the used headers,
@@ -133,8 +133,8 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 	  *
 	  * @param preLoadModels Whether all cell values should be read immediately.
 	  *                If false (default), the resulting model may only be used while the cells are available
-	  *                (i.e. while the spread-sheet is open).
-	  *                Set to true if you want to store or use the models after the spread-sheet closes.
+	  *                (i.e. while the spreadsheet is open).
+	  *                Set to true if you want to store or use the models after the spreadsheet closes.
 	  * @return An iterator that yields models, each parsed from a row by mapping its values to the specified headers.
 	  *         Rows before and including the actual header row are not included in this iterator.
 	  */

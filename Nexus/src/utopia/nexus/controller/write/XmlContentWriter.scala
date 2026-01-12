@@ -88,7 +88,12 @@ object XmlContentWriter
 	 */
 	private def toXml(elementName: NamespacedString, model: Model)(implicit naming: XmlElementNames): XmlElement =
 		XmlElement(elementName,
-			children = model.propertiesIterator.map { p => toXml(p.name.capitalize, p.value) }.toOptimizedSeq)
+			children = model.propertiesIterator
+				.map { p =>
+					val name = if (naming.capitalize) p.name.capitalize else p.name
+					toXml(name, p.value)
+				}
+				.toOptimizedSeq)
 	
 	
 	// NESTED   ----------------------------
@@ -107,23 +112,27 @@ object XmlContentWriter
 		
 		/**
 		 * Creates a set of XML element names
-		 * @param root Name used for the root element. Default = "Response".
-		 * @param description Name used for result descriptions. Default = "Message".
-		 * @param listItem Name used for individual list/collection elements. Default = "ListItem".
+		 * @param root Name used for the root element. Default = "response".
+		 * @param description Name used for result descriptions. Default = "message".
+		 * @param listItem Name used for individual list/collection elements. Default = "listItem".
 		 * @param descriptionAttribute Name used for the description, when written as an XML attribute.
 		 *                             Default = "description".
 		 * @param listLengthAttribute Name used for the list length -attribute. Default = "length".
+		 * @param capitalize Whether capitalization should be added to the generated element names.
+		 *                   Default = false.
 		 * @param namespace Implicit XML namespace to apply
 		 * @return Specified XML element names
 		 */
-		def apply(root: String = "Response", description: String = "Message", listItem: String = "ListItem",
-		          descriptionAttribute: String = "description", listLengthAttribute: String = "length")
+		def apply(root: String = "response", description: String = "message", listItem: String = "listItem",
+		          descriptionAttribute: String = "description", listLengthAttribute: String = "length",
+		          capitalize: Boolean = false)
 		         (implicit namespace: Namespace = Namespace.empty): XmlElementNames =
-			_XmlElementNames(namespace, root, description, listItem, descriptionAttribute, listLengthAttribute)
+			_XmlElementNames(namespace, root, description, listItem, descriptionAttribute, listLengthAttribute,
+				capitalize)
 		
 		private case class _XmlElementNames(namespace: Namespace, root: String, description: String,
 		                                    listItem: String, descriptionAttribute: String,
-		                                    listLengthAttribute: String)
+		                                    listLengthAttribute: String, capitalize: Boolean)
 			extends XmlElementNames
 	}
 	/**
@@ -132,7 +141,7 @@ object XmlContentWriter
 	trait XmlElementNames
 	{
 		/**
-		 * @return XML namespace to apply thoughout the whole response
+		 * @return XML namespace to apply throughout the whole response
 		 */
 		def namespace: Namespace
 		
@@ -156,6 +165,11 @@ object XmlContentWriter
 		 * @return Name used for the list length -attribute
 		 */
 		def listLengthAttribute: String
+		
+		/**
+		 * @return Whether capitalization should be added to the generated element names
+		 */
+		def capitalize: Boolean
 	}
 	
 	object XmlEnveloper
@@ -171,26 +185,28 @@ object XmlContentWriter
 		}
 		/**
 		 * Creates a set of XML element names
-		 * @param root Name used for the root element. Default = "Response".
-		 * @param value Name used for the element containing the result's value. Default = "Value".
+		 * @param root Name used for the root element. Default = "response".
+		 * @param value Name used for the element containing the result's value. Default = "value".
 		 * @param valueOnFailure Name used for the element containing the result's value in case of failure
 		 *                       responses.
 		 *                       Note that failure responses often specify a description instead of value.
-		 *                       Default = "Value".
-		 * @param description Name used for result descriptions. Default = "Message".
-		 * @param status Name used for the response status element. Default = "Status".
-		 * @param headers Name used for the XML element containing the response headers. Default = "Headers".
-		 * @param listItem Name used for individual list/collection elements. Default = "ListItem".
+		 *                       Default = "value".
+		 * @param description Name used for result descriptions. Default = "message".
+		 * @param status Name used for the response status element. Default = "status".
+		 * @param headers Name used for the XML element containing the response headers. Default = "headers".
+		 * @param listItem Name used for individual list/collection elements. Default = "listItem".
 		 * @param listLengthAttribute Name used for the list length -attribute. Default = "length".
 		 * @param descriptionAttribute Name used for the description, when written as an XML attribute.
 		 *                             Default = "description".
+		 * @param capitalize Whether capitalization should be added to the generated element names.
+		 *                   Default = false.
 		 * @param namespace Implicit XML namespace to apply
 		 */
-		case class XmlEnvelopeNames(root: String = "Response", value: String = "Value",
-		                            valueOnFailure: String = "Value", description: String = "Message",
-		                            status: String = "Status", headers: String = "Headers",
-		                            listItem: String = "ListItem", listLengthAttribute: String = "length",
-		                            descriptionAttribute: String = "description")
+		case class XmlEnvelopeNames(root: String = "response", value: String = "value",
+		                            valueOnFailure: String = "value", description: String = "message",
+		                            status: String = "status", headers: String = "headers",
+		                            listItem: String = "listItem", listLengthAttribute: String = "length",
+		                            descriptionAttribute: String = "description", capitalize: Boolean = false)
 		                           (implicit val namespace: Namespace = Namespace.empty)
 			extends XmlElementNames
 	}
