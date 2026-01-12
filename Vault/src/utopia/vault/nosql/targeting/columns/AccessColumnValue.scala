@@ -3,8 +3,10 @@ package utopia.vault.nosql.targeting.columns
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.Identity
+import utopia.flow.parse.json.JsonParser
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Column
+import utopia.vault.nosql.targeting.columns.AccessColumnValue.AccessColumnValueFactory.AccessGenericColumnValueFactory
 import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 
 import scala.util.Try
@@ -18,13 +20,76 @@ object AccessColumnValue
 	  * @param column Targeted column
 	  * @return A factory for constructing the column value access interface
 	  */
-	def apply(access: AccessColumn, column: Column) = new AccessColumnValueFactory(access, column)
+	def apply(access: AccessColumn, column: Column) = AccessColumnValueFactory(access, column)
 	
 	
 	// NESTED   --------------------------
 	
-	class AccessColumnValueFactory(access: AccessColumn, column: Column)
+	object AccessColumnValueFactory
 	{
+		// OTHER    ----------------------
+		
+		/**
+		 * @param access Access point used for accessing column values
+		 * @param column Targeted column
+		 * @return A factory for constructing the column value access interface
+		 */
+		def apply(access: AccessColumn, column: Column): AccessColumnValueFactory =
+			new _AccessColumnValueFactory(access, column)
+		
+		
+		// NESTED   ----------------------
+		
+		private class AccessGenericColumnValueFactory(wrapped: AccessColumnValueFactory)
+		                                             (implicit jsonParser: JsonParser)
+			extends AccessColumnValueFactory
+		{
+			override def parsingGenericValues(implicit jsonParser: JsonParser): AccessColumnValueFactory = this
+			
+			override def custom[O, I](parse: Value => O)(toValue: I => Value): PreparedAccessColumnValueFactory[O, I] =
+				wrapped.custom { v =>
+					if (v.isEmpty)
+						parse(Value.empty)
+					else
+						parse(jsonParser.valueOf(v.getString))
+				}(toValue)
+		}
+		
+		private class _AccessColumnValueFactory(access: AccessColumn, column: Column) extends AccessColumnValueFactory
+		{
+			def custom[O, I](parse: Value => O)(toValue: I => Value) =
+				new PreparedAccessColumnValueFactory[O, I](access, column, parse, toValue)
+		}
+	}
+	
+	trait AccessColumnValueFactory
+	{
+		// ABSTRACT ----------------------
+		
+		/**
+		 * Creates a new column value access
+		 * @param parse A function for parsing individual column values into the presented data type
+		 * @param toValue A function that converts an input value into a value to update the column with
+		 * @tparam O Type of parse function output
+		 * @tparam I Type of accepted input
+		 * @return A factory for finalizing the accessor into either a concrete or an iterable version
+		 */
+		def custom[O, I](parse: Value => O)(toValue: I => Value): PreparedAccessColumnValueFactory[O, I]
+		
+		
+		// COMPUTED ----------------------
+		
+		/**
+		 * @param jsonParser Implicit JSON parser used when interpreting the column (String) values
+		 * @return A copy of this factory which parses the values into JSON before processing them further.
+		 *         E.g. Whereas this factory would present '"A"' (String) or '[1,2,3]' (String)
+		 *         as 'parse' function parameters, the resulting factory would yield
+		 *         'A' (String) and '[1,2,3]' (Vector).
+		 */
+		def parsingGenericValues(implicit jsonParser: JsonParser): AccessColumnValueFactory =
+			new AccessGenericColumnValueFactory(this)
+		
+		
 		// OTHER    ----------------------
 		
 		/**
@@ -55,16 +120,6 @@ object AccessColumnValue
 		def tryParse[A](parse: Value => Try[A])(implicit valueOf: A => Value) =
 			custom(parse)(valueOf).iterateWith { _.toOption }
 		
-		/**
-		 * Creates a new column value access
-		 * @param parse A function for parsing individual column values into the presented data type
-		 * @param toValue A function that converts an input value into a value to update the column with
-		 * @tparam O Type of parse function output
-		 * @tparam I Type of accepted input
-		 * @return A factory for finalizing the accessor into either a concrete or an iterable version
-		 */
-		def custom[O, I](parse: Value => O)(toValue: I => Value) =
-			new PreparedAccessColumnValueFactory[O, I](access, column, parse, toValue)
 		/**
 		 * Creates a new column value access. Doesn't specify a value conversion for column updates.
 		 * @param parse A function for parsing individual column values into the presented data type

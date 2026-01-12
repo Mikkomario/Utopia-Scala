@@ -11,6 +11,7 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
+import utopia.flow.parse.StreamExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryCatch
@@ -77,7 +78,15 @@ object AppConfig
 	 * @return A new app config instance. Failure if JSON-parsing failed.
 	 */
 	def apply(path: Path)(implicit jsonParser: JsonParser, exc: ExecutionContext, log: Logger): Try[AppConfig] =
-		jsonParser(path).flatMap { value => if (value.isEmpty) Success(Model.empty) else value.tryModel }
+		path
+			.tryReadWith { stream =>
+				stream.notEmpty match {
+					// Case: Non-empty file => Attempts to parse the file contents as JSON
+					case Some(stream) => jsonParser(stream).flatMap { _.tryModel }
+					// Case: Empty file => Continues with an empty initial model
+					case None => Success(Model.empty)
+				}
+			}
 			.map { new AppConfig(path, _) }
 }
 

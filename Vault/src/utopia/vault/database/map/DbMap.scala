@@ -4,9 +4,10 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.{Duration, TimeUnit}
 import utopia.flow.view.mutable.Resettable
-import utopia.vault.database.map.DbMap.DbMapValue
+import utopia.vault.database.map.DbMap.{DbMapValue, GenericDbMap}
 import utopia.vault.database.value.{LazyDbValue, LazyLookUpDbValue}
 import utopia.vault.database.{Connection, ConnectionPool}
 import utopia.vault.model.immutable.Column
@@ -138,6 +139,16 @@ object DbMap
 		}
 	}
 	
+	private class GenericDbMap[-K, -C](wrapped: DbMap[K, C])(implicit jsonParser: JsonParser) extends DbMap[K, C]
+	{
+		override def parsingJson(implicit jsonParser: JsonParser): DbMap[K, C] = this
+		
+		override def accessWith[A, In](key: K)(makeValue: AccessColumnValueFactory => AccessColumnValue[A, _, In]): DbMapValue[A, In] =
+			wrapped.accessWith(key) { factory => makeValue(factory.parsingGenericValues) }
+		
+		override def withContext(newContext: C): DbMap[K, C] = new GenericDbMap(wrapped.withContext(newContext))
+	}
+	
 	private class _DbMap[-K, -C, +V <: AccessColumn with Filterable[V]](access: V, context: Option[C] = None)
 	                                                                   (implicit cPool: ConnectionPool,
 	                                                                    params: DbMapParams[K, C])
@@ -219,6 +230,7 @@ object DbMap
 /**
  * An interface for accessing and storing (generic) values from/to a database table
  * @tparam K Type of map keys used
+ * @tparam C Type of accepted context
  * @author Mikko Hilpinen
  * @since 20.11.2025, v2.1
  */
@@ -241,6 +253,15 @@ trait DbMap[-K, -C]
 	 * @return A copy of this map using the specified context instead
 	 */
 	def withContext(newContext: C): DbMap[K, C]
+	
+	
+	// COMPUTED ---------------------
+	
+	/**
+	 * @param jsonParser JSON parser used when interpreting column values
+	 * @return A copy of this map which expects column values to contain JSON strings.
+	 */
+	def parsingJson(implicit jsonParser: JsonParser): DbMap[K, C] = new GenericDbMap[K, C](this)
 	
 	
 	// OTHER    ---------------------

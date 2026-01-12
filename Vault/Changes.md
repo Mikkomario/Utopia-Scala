@@ -8,6 +8,7 @@
   Had to add new generic type parameters to achieve this, which may cause some build errors.
 - Separated **ReplaceHandler** and **CanUseReplaceHandler** into separate files
 - `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
+- **AccessColumnValueFactory** is now a trait instead of a class
 ### Deprecations
 - Deprecated **Joinable**'s `.where(Condition)` in favor of `.onlyJoinIf(Condition)` 
   (same functionality, different name)
@@ -25,6 +26,8 @@
 - Added **Filterable** trait
 - Added **ConditionallyJoinable** trait
 ### New methods
+- **AccessColumnValueFactory**
+  - Added `.parsingGenericValues` for supporting generic, JSON-based columns
 - **AccessColumnValues**
   - Added `.takeMin(Int)(...)`, `.takeMax(Int)(...)` and `.take(Extreme, Int)(...)`
   - Added `.streamAscending(...)`, `.streamDescending(...)` and `.streamOrdered(Extreme, Boolean)(...)`
