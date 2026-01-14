@@ -91,6 +91,8 @@
 - Bugfix to **OptimizedBridge**, which would sometimes not auto-detach from the origin pointer correctly
 - Bugfix to **GeneratesOnce**'s mapping, which could previously generate double the events
 - Bugfix to **TwoThreadBuffer.Output**'s `.push(Iterable)`, which threw under some rare circumstances
+- Bugfix to **CompoundingBuilder**, which would previous throw in some situations where `addAll` 
+  referenced the builder's contents
 ### New features
 - Added **AppConfig**, which allows one to read and write app-specific properties relatively securely
 - New features relating to **Changing**:

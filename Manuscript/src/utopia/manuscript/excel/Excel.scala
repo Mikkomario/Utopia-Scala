@@ -34,7 +34,7 @@ object Excel
 	  * @return Function result value or a failure if file-opening failed or if the function threw.
 	  */
 	def open[A](path: Path)(f: Excel => A) = {
-		if (path.isExistingRegularFile) {
+		if (path.isExistingRegularFile)
 			Try {
 				// Uses either xls (HSSF) or xlsx parsing
 				path.fileType.toLowerCase match {
@@ -49,7 +49,6 @@ object Excel
 							.consume { pkg => new Excel(new XSSFWorkbook(pkg)).consume(f) }
 				}
 			}
-		}
 		// Case: Attempting to open a directory or a non-existing file
 		else
 			Failure(new FileNotFoundException(s"There is no existing regular file at $path"))

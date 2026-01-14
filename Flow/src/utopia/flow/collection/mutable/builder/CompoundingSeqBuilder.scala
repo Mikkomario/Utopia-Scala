@@ -22,7 +22,7 @@ class CompoundingSeqBuilder[A](initialState: Seq[A] = Empty)
 	override def length = super[CompoundingBuilder].size
 	override def isEmpty = super[CompoundingBuilder].isEmpty
 	
-	override def toIndexedSeq = IndexedSeq.from(currentState)
+	override def toIndexedSeq = OptimizedIndexedSeq.from(currentState)
 	override def toVector = Vector.from(currentState)
 	
 	override protected def newBuilder() = OptimizedIndexedSeq.newBuilder
