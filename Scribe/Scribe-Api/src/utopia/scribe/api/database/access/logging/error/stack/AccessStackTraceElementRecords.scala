@@ -13,7 +13,7 @@ object AccessStackTraceElementRecords
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(StackTraceElementRecordDbReader)
+	override val root = apply(StackTraceElementRecordDbReader)
 	
 	
 	// IMPLEMENTED	--------------------

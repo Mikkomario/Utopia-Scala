@@ -40,7 +40,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	/**
 	 * A console command for leaving a comment on the open issue
 	 */
-	lazy val comment = Command.withoutArguments("comment", help = "Comments on the currently open issue") {
+	val comment = Command.withoutArguments("comment", help = "Comments on the currently open issue") {
 		openIssueP.value.foreach { issueId =>
 			readMultiLine("Please write the comment.").foreach { comment =>
 				connectionPool.logging { implicit c =>
@@ -53,7 +53,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	/**
 	 * A console command for requesting a notification to be generated
 	 */
-	lazy val follow = Command.withoutArguments("follow", "track",
+	val follow = Command.withoutArguments("follow", "track",
 		help = "Flags the currently open issue, so that a notification will be generated once it appears the next time") {
 		openIssueP.value.foreach { issueId =>
 			connectionPool.logging { implicit c =>
@@ -65,7 +65,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	/**
 	 * A console command for marking an issue fixed
 	 */
-	lazy val fixed = Command("fixed", "resolve", help = "Marks the currently open issue as fixed / resolved")(
+	val fixed = Command("fixed", "resolve", help = "Marks the currently open issue as fixed / resolved")(
 		ArgumentSchema("in", "version", help = "Version on which this fix is released. Default = fix has already been released."),
 		ArgumentSchema.flag("keep", "K", help = "Whether to keep displaying the issue normally")) {
 		args =>
@@ -89,7 +89,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	/**
 	 * A console command for silencing an issue
 	 */
-	lazy val silence = Command("silence", "mute",
+	val silence = Command("silence", "mute",
 		help = "Silences the currently open issue, so that it will not be reported anymore")(
 		ArgumentSchema("until", help = "Date, duration or version, until which the issue should remain silenced. Default = forever.")) {
 		args =>
@@ -138,7 +138,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	/**
 	 * A console command for giving an issue a new name
 	 */
-	lazy val alias = Command("alias", "name", help = "Gives an issue a new name")(
+	val alias = Command("alias", "name", help = "Gives an issue a new name")(
 		ArgumentSchema("issue", help = "ID of the issue to name. Defaults to the currently open issue.")) {
 		args =>
 			args("issue").int.orElse(openIssueP.value) match {
@@ -169,7 +169,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	 * A console command for adjusting issue severity
 	 */
 	// WET WET (from alias)
-	lazy val changeSeverity = Command("severity", "adjust", help = "Assigns a new severity for an issue")(
+	val changeSeverity = Command("severity", "adjust", help = "Assigns a new severity for an issue")(
 		ArgumentSchema("issue", help = "ID of the issue to name. Defaults to the currently open issue.")) {
 		args =>
 			args("issue").int.orElse(openIssueP.value) match {
@@ -207,13 +207,13 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 			}
 	}
 	
-	private lazy val staticCommands = Pair(alias, changeSeverity)
-	private lazy val conditionalCommands = Vector(comment, fixed, silence, follow)
+	private val staticCommands = Pair(alias, changeSeverity)
+	private val conditionalCommands = Vector(comment, fixed, silence, follow)
 	
 	/**
 	 * A pointer that contains the currently available console commands
 	 */
-	lazy val pointer = openIssueP.lightMap { _.isDefined }
+	val pointer = openIssueP.lightMap { _.isDefined }
 		.lightMap { if (_) staticCommands ++ conditionalCommands else staticCommands }
 	
 	

@@ -14,7 +14,7 @@ object AccessResolutions
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val all: AccessResolutionRows[Resolution] = apply(ResolutionDbReader).all
+	override val all: AccessResolutionRows[Resolution] = apply(ResolutionDbReader).all
 	
 	/**
 	 * Access to resolutions, including comment and notification information, where applicable.

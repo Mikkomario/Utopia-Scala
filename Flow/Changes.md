@@ -43,6 +43,11 @@
   - The previous version was not kept, because it had some rare naming conflicts with the original `.find(...)` function
 - **FindExtreme** is no longer an inner class of **Extreme**, but is now a trait inside **Extreme**'s companion object
 - Changed the parameter ordering and -logic in `StringUtils.asciiTableFrom(...)`
+- Multiple changes to **Console** constructors:
+  - The `prompt` parameter no longer has a default value
+  - In static constructors, the `prompt` is no longer call-by-name, and `closeCommandName` no longer has a default value
+  - `.apply(...)` now requires the `commandsPointer` to be **Changing** instead of **View**
+  - The `commandsPointer` parameter is of different type in the `new` constructor
 - **Constant** is now a trait instead of a class
 - **Path**'s `.isDirectory` and `.isRegularFile` (in **FileExtensions**) no longer require file existence 
   in order to yield `true`. 
@@ -75,6 +80,7 @@
   The new implementations are accessible via `.parallel`
 - Renamed `.tryForeach(...)` to `.tryUntilFails(...)` in **CollectionExtensions**
 - Deprecated **Volatile**'s `synchronizedValue`
+- Deprecated `Console.terminating(...)`
 - Renamed `.optionFrom(...)` in **Extreme** and **FindExtreme** to `.findFrom(...)`
 - Renamed `Pair.tupleToPair(...)` to `Pair.from(...)`
 - Renamed **Iterator**'s `.groupBy(...)` to `.groupConsecutiveBy(...)`
@@ -90,6 +96,7 @@
 - Events fired from **EventfulVolatile** are now always ordered, and can no longer occur in parallel.
 - Bugfix to **OptimizedBridge**, which would sometimes not auto-detach from the origin pointer correctly
 - Bugfix to **GeneratesOnce**'s mapping, which could previously generate double the events
+- **FileLogger**'s time-formatting is now in 24-hour format, as intended
 - Bugfix to **TwoThreadBuffer.Output**'s `.push(Iterable)`, which threw under some rare circumstances
 - Bugfix to **CompoundingBuilder**, which would previous throw in some situations where `addAll` 
   referenced the builder's contents
@@ -109,6 +116,9 @@
   which initialize their eventful functionality lazily.
 - Added **EmptyInputStream**
 - Added **ConsoleStream** for writing into `System.out` without ever closing it
+- **Console** now supports namespacing
+- **Console** now accepts `listAvailableCommands: Boolean`, 
+  which makes it so that the available commands are listed whenever prompting the user for the next command.
 - Added support for lazily initialized **Constant**s
 - Added **BuildNothing**
 - Added **CompoundingSeqBuilder**
@@ -178,6 +188,8 @@
   - Added `.pop(Int)` to **Seq**-based **Pointer**s
 - **Regex** (object)
   - Added multiple new static values
+- **Seq** (via **CollectionExtensions**)
+  - Added various `.popExtreme(...)` functions
 - **StringFrom**
   - Added `.take(Int)`
 - **Uncertain**

@@ -8,7 +8,7 @@ object AccessResolution extends AccessOneDeprecatingRoot[AccessResolution[Resolu
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val all: AccessResolution[Resolution] = AccessResolutions.all.head
+	override val all: AccessResolution[Resolution] = AccessResolutions.all.head
 }
 
 /**

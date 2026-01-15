@@ -48,7 +48,9 @@ object ScribeConsoleApp extends App
 	
 	private val reviewCommands = new LogReviewCommands()
 	private val manageCommands = new ManageIssueCommands(reviewCommands.openIssueIdPointer)
-	private val commandsP = reviewCommands.pointer.mergeWith(manageCommands.pointer) { _ ++ _ }
+	private val commandsP = reviewCommands.pointer.mergeWith(manageCommands.pointer) { (review, manage) =>
+		Map("review" -> review, "manage" -> manage)
+	}
 	
 	
 	// APP CODE --------------------------------
@@ -56,9 +58,6 @@ object ScribeConsoleApp extends App
 	// Starts the console
 	println("Welcome to the Scribe utility console!")
 	println("You will find the available commands with the 'help' command.")
-	Console(commandsP,
-		s"\nNext command (${ commandsP.value.iterator.map { _.name }.mkString(" | ") } | exit):",
-		closeCommandName = "exit")
-		.run()
+	Console.namespaced(commandsP, s"\nNext command", closeCommandName = "exit", listAvailableCommands = true).run()
 	println("Bye!")
 }

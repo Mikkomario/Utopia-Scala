@@ -2,6 +2,9 @@
 
 ## v1.2.1 (in development)
 A new build supporting **Flow v2.8**
+### New methods
+- **IterableOnce** of type **Throwable** (via **ScribeTryExtensions**)
+  - Added `.logWith(...)`
 
 ## v1.2 - 01.11.2025
 This version adds the basis for new **Scribe API** features (i.e. for the new console commands), 

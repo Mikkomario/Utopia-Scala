@@ -243,7 +243,7 @@ object XmlContentWriter
 		                    (implicit context: Any): (WriteResponseBody, Status) =
 		{
 			val baseElements = Vector(
-				XmlElement(naming.status, status.code),
+				XmlElement(naming.status, status.code).withAttribute("name", status.name),
 				toXml(if (status.isSuccess) naming.value else naming.valueOnFailure, content.value),
 				XmlElement(naming.description, content.description),
 				XmlElement(naming.headers,

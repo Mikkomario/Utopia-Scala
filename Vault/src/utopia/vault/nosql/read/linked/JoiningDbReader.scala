@@ -64,22 +64,35 @@ abstract class JoiningDbReader[+L, +R, +A](protected val left: DbRowReader[L], p
 {
 	// ATTRIBUTES   ----------------------
 	
-	override lazy val tables: Seq[Table] = OptimizedIndexedSeq.concat(left.tables, bridges, right.tables)
-	override lazy val target: SqlTarget = {
+	private val rightTables = right.tables
+	override val tables: Seq[Table] = OptimizedIndexedSeq.concat(left.tables, bridges, rightTables)
+	override val target: SqlTarget = {
+		val joinTargets = {
+			// Case: Using LEFT JOIN => Left-joins all the right-side tables
+			if (joinType == JoinType.Left)
+				scala.collection.View.concat(bridges, rightTables).map { _ -> joinType }.toOptimizedSeq
+			// Case: Using INNER or RIGHT JOIN => Applies the right reader's join types (which may include left joins)
+			else
+				OptimizedIndexedSeq.concat(
+					bridges.view.map { _ -> joinType },
+					rightTables.view.zip((joinType +: right.target.joinTypes).padTo(rightTables.size, joinType))
+				)
+		}
+		val appliedConditions = joinConditions.filterNot { _.isAlwaysTrue }
+		
 		// Applies the joins as conditional, if applicable
 		val joined = {
-			val appliedConditions = joinConditions.filterNot { _.isAlwaysTrue }
-			
 			// No join conditions applied => Just joins the tables
 			if (appliedConditions.isEmpty)
-				bridges ++ right.tables
+				joinTargets
 			// Case: Join conditions applicable
-			else {
-				(bridges ++ right.tables).oneOrMany match {
+			else
+				joinTargets.oneOrMany match {
 					// Case: Only one table joined => All conditions are applied to that table
-					case Left(table) => Single(table.onlyJoinIf(Condition.and(appliedConditions)))
+					case Left((table, joinType)) =>
+						Single(table.onlyJoinIf(Condition.and(appliedConditions)) -> joinType)
 					// Case: Multiple tables joined => Join conditions are applied to the tables which they concern
-					case Right(tables) =>
+					case Right(joinTargets) =>
 						val conditionByTable = appliedConditions.iterator
 							.map { condition =>
 								val table = condition.toWhereClause.targetTables.find(tables.contains)
@@ -91,18 +104,19 @@ abstract class JoiningDbReader[+L, +R, +A](protected val left: DbRowReader[L], p
 							.groupMapReduce { _._1 } { _._2 } { _ && _ }
 						
 						// Applies the join conditions
-						tables.map { table =>
-							conditionByTable.get(table) match {
+						joinTargets.map { case (table, joinType) =>
+							val conditionalTable = conditionByTable.get(table) match {
 								case Some(condition) => table.onlyJoinIf(condition)
 								case None => table
 							}
+							conditionalTable -> joinType
 						}
 				}
-			}
 		}
-		left.target.join(joined, joinType)
+		joined.iterator.groupConsecutiveBy { _._2 }
+			.foldLeft(left.target) { case (left, (joinType, right)) => left.join(right.view.map { _._1 }, joinType) }
 	}
-	override lazy val selectTarget: SelectTarget = left.selectTarget + right.selectTarget
+	override val selectTarget: SelectTarget = left.selectTarget + right.selectTarget
 	
 	
 	// IMPLEMENTED  ----------------------

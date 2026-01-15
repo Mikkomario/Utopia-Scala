@@ -19,7 +19,7 @@ import scala.io.Codec
 
 object FileLogger
 {
-	private val dateTimeFormat = DateTimeFormatter.ofPattern("hh:mm:ss")
+	private val dateTimeFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 }
 
 /**

@@ -4,6 +4,8 @@
 Supports **Flow v2.8**, **Vault v2.1** and **Nexus v2.0**
 ### Deprecations
 - Deprecated **rest.logging.LoggingNode** in favor of the new **Nexus v2**-compatible version under `controller.node`
+### Other changes
+- The console app now utilizes namespacing
 
 ## v1.1 - 01.11.2025
 Following **Vault v2.0** update, this version introduces new targeting-based database interaction classes. 

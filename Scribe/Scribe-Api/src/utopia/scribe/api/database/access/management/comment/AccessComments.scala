@@ -12,7 +12,7 @@ object AccessComments
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(CommentDbReader)
+	override val root = apply(CommentDbReader)
 	
 	
 	// IMPLEMENTED	--------------------

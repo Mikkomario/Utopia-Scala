@@ -12,7 +12,7 @@ object AccessIssueAliases
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(IssueAliasDbReader)
+	override val root = apply(IssueAliasDbReader)
 	
 	
 	// IMPLEMENTED	--------------------

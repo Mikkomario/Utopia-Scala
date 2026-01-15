@@ -50,9 +50,9 @@ object DbLoggingTest extends App
 					println(s"Describing error $errorId")
 					AccessErrorRecord(errorId).topToBottomIterator.foreach { error =>
 						println(error.data.exceptionType)
-						error.stackAccess.topToBottomIterator.groupBy { _.fileAndClassName }
+						error.stackAccess.topToBottomIterator.groupConsecutiveBy { _.fileAndClassName }
 							.foreach { case (className, stack) =>
-								stack.iterator.groupBy { _.methodName }.toVector.oneOrMany match {
+								stack.iterator.groupConsecutiveBy { _.methodName }.toVector.oneOrMany match {
 									case Left((methodName, lines)) =>
 										println(s"\t$className.$methodName: [${ lines.map { _.lineNumber }.mkString(", ") }]")
 									case Right(methods) =>

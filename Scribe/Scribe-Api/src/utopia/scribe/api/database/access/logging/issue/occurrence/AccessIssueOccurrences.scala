@@ -17,7 +17,7 @@ object AccessIssueOccurrences
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(IssueOccurrenceDbReader)
+	override val root = apply(IssueOccurrenceDbReader)
 	
 	
 	// IMPLICIT	--------------------

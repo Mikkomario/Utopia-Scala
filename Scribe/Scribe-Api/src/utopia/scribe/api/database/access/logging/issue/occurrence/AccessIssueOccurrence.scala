@@ -9,7 +9,7 @@ object AccessIssueOccurrence extends AccessOneRoot[AccessIssueOccurrence[IssueOc
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessIssueOccurrences.root.head
+	override val root = AccessIssueOccurrences.root.head
 	
 	
 	// IMPLICIT	--------------------

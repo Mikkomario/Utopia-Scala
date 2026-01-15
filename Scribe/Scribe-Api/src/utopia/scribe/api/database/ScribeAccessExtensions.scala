@@ -1,6 +1,6 @@
 package utopia.scribe.api.database
 
-import utopia.scribe.api.database.access.single.logging.stack_trace_element_record.DbStackTraceElementRecord
+import utopia.scribe.api.database.access.logging.error.stack.AccessStackTraceElementRecord
 import utopia.scribe.core.model.stored.logging.ErrorRecord
 
 /**
@@ -15,7 +15,6 @@ object ScribeAccessExtensions
 		/**
 		  * @return Access to the stack trace of this error
 		  */
-		// TODO: Replace after ensuring that topToBottomIterator is available in the new access interface
-		def stackAccess = DbStackTraceElementRecord(e.stackTraceId)
+		def stackAccess = AccessStackTraceElementRecord(e.stackTraceId)
 	}
 }

@@ -16,7 +16,7 @@ object AccessIssues extends AccessManyRoot[AccessIssues[Issue]]
 	/**
 	  * Root issue access point
 	  */
-	override lazy val root = apply(AccessManyRows(IssueFactory))
+	override val root = apply(AccessManyRows(IssueFactory))
 	
 	
 	// IMPLICIT ------------------------------

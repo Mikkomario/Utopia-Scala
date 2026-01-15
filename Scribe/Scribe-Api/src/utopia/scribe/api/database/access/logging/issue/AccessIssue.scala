@@ -11,7 +11,7 @@ object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessIssues.root.head
+	override val root = AccessIssues.root.head
 	
 	/**
 	  * Access to individual issues in the DB, also including issue variant information

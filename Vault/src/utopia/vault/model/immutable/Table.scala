@@ -99,6 +99,7 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	// IMPLEMENTED  ----------------------------
 	
 	override def tables = Single(this)
+	override def joinTypes = Empty
 	
 	override def contains(table: Table): Boolean = table == this
 	
@@ -115,7 +116,23 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 				case None =>
 					// Secondarily, finds indirect references
 					References.toBiDirectionalLinkGraphFrom(this)
-						.shortestRoutesTo { node => originTables.contains(node.value) }.cheapest match
+						.cheapestRoutesTo[Int] { node => originTables.contains(node.value) } { edge =>
+							// Evaluates the routes by:
+							//      1. Length
+							//      2. Whether joining via nullable columns
+							//      3. Whether joining the same direction as the reference (avoiding many-to-one links)
+							//      4. Route ambiguity (based on the number of tables that may be involved)
+							val (reference, sameDirection) = edge.value
+							val referenceTypeCost = if (reference.from.allowsNull) 1000 else 0
+							// Note: We're moving in the graph from the join target to a join origin,
+							//       so reference "same direction" has a different meaning
+							val directionCost = if (sameDirection) 100 else 0
+							val nextTable = (if (sameDirection) reference.to else reference.from).table
+							val referenceCountCost = References.from(nextTable).size + References.to(nextTable).size
+							
+							10000 + referenceTypeCost + directionCost + referenceCountCost
+						}
+						.cheapest match
 					{
 						case Some(result) =>
 							Success(result.anyRoute.view.reverse

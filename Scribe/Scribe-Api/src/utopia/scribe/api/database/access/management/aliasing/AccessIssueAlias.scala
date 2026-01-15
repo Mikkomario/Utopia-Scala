@@ -8,7 +8,7 @@ object AccessIssueAlias extends AccessOneRoot[AccessIssueAlias[IssueAlias]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessIssueAliases.root.head
+	override val root = AccessIssueAliases.root.head
 }
 
 /**

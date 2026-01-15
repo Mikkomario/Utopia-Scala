@@ -14,5 +14,6 @@ trait Indexed extends HasTable
 	/**
 	  * @return The index column in the primary table
 	  */
+	@throws[NoSuchElementException]("If this item's table has no primary column")
 	def index = table.primaryColumn.get
 }

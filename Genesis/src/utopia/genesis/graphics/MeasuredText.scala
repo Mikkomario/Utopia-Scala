@@ -270,7 +270,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 			None
 		else {
 			val x = caretX(lineIndex, indexOnLine)
-			carets(nextLineIndex).minOptionIndexBy { c => (c.start.x - x).abs }.map { nextLineIndex -> _ }
+			carets(nextLineIndex).findMinIndexBy { c => (c.start.x - x).abs }.map { nextLineIndex -> _ }
 		}
 	}
 	
@@ -401,6 +401,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 	  * @param highlightedCaretRanges Areas within this text to highlight
 	  * @return Standard draw targets + highlight draw targets (which include bounds)
 	  */
+	//noinspection ScalaUnnecessaryParentheses
 	def drawTargets(highlightedCaretRanges: Iterable[Range] = Empty): (Vector[(String, Point)], IndexedSeq[(String, Point, Bounds)]) = {
 		// If there aren't any highlighted ranges, uses the cached values
 		if (highlightedCaretRanges.isEmpty || isEmpty)
@@ -526,7 +527,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 				val xMod = alignment.horizontal.position(rawBounds.width, totalWidth)
 				val lineTopLeft = Point(topLeft.x + xMod, yCursor)
 				// Stores visible line bounds and text draw origin, both relative to (0,0) anchor
-				lineBoundsBuilder += ((Bounds(lineTopLeft, rawBounds.size), lineTopLeft - rawBounds.position))
+				lineBoundsBuilder += (Bounds(lineTopLeft, rawBounds.size) -> (lineTopLeft - rawBounds.position))
 				
 				yCursor += rawBounds.height + extraLineMargin
 			}

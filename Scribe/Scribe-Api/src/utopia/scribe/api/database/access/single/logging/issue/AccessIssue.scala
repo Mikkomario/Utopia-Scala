@@ -7,7 +7,7 @@ import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, Target
 @deprecated("Replaced with targeting access classes", "v1.1")
 object AccessIssue extends AccessOneRoot[AccessIssue[Issue]]
 {
-	override lazy val root: AccessIssue[Issue] = AccessIssues.root.head
+	override val root: AccessIssue[Issue] = AccessIssues.root.head
 }
 
 /**

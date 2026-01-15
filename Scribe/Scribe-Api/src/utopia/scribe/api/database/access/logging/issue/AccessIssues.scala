@@ -20,7 +20,7 @@ object AccessIssues
 	
 	private val resolutionModel = ResolutionDbModel
 	
-	override lazy val root = apply(IssueDbReader)
+	override val root = apply(IssueDbReader)
 	
 	/**
 	  * Access to issues in the DB, also including issue variant information

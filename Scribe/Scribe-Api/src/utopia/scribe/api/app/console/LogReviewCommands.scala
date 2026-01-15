@@ -91,21 +91,21 @@ class LogReviewCommands(implicit log: Logger)
 	 * A pointer that contains the IDs of the notifications that may be closed
 	 */
 	private val queuedNotificationIdsP = Pointer.eventful(IntSet.empty)
-	private lazy val mayCloseNotificationsFlag: Flag = queuedNotificationIdsP.lightMap { _.nonEmpty }
+	private val mayCloseNotificationsFlag: Flag = queuedNotificationIdsP.lightMap { _.nonEmpty }
 	
 	private val queuedCommentsP = Pointer.eventful.emptySeq[Comment]
 	private val hasQueuedCommentsFlag: Flag = queuedCommentsP.lightMap { _.nonEmpty }
 	
-	private lazy val hasMoreVariantsFlag: Flag = queuedVariantsP
+	private val hasMoreVariantsFlag: Flag = queuedVariantsP
 		.map { case (variants, nextIndex) => variants.hasSize > nextIndex }
-	private lazy val hasQueuedErrorFlag: Flag = queuedErrorIdP.lightMap { _.isDefined }
-	private lazy val hasMoreIssuesOrOccurrencesFlag: Flag = moreP
+	private val hasQueuedErrorFlag: Flag = queuedErrorIdP.lightMap { _.isDefined }
+	private val hasMoreIssuesOrOccurrencesFlag: Flag = moreP
 		.map { case (data, nextIndex) => data.size > nextIndex }
 	
 	/**
 	 * A console command for summarizing active and recent issues.
 	 */
-	lazy val status = Command("status", "st", "Shows current issue status")(
+	val status = Command("status", "st", "Shows current issue status")(
 		ArgumentSchema("since", "t", help = "A time threshold for including issues. Default = last 7 days.")) {
 		args =>
 			connectionPool.logging { implicit c =>
@@ -183,7 +183,7 @@ class LogReviewCommands(implicit log: Logger)
 	 * A console command for listing currently active issues.
 	 * Accepts time and context filters.
 	 */
-	lazy val list = Command("list", "ls", "Lists currently active issues")(
+	val list = Command("list", "ls", "Lists currently active issues")(
 		ArgumentSchema("level", "lvl",
 			help = "The level of issues to include [1,6] where 1 represents debug information and 6 represents critical failures. \nAlternatively you may use level names: Debug | Info | Warning | Recoverable | Unrecoverable | Critical. \nYou may also specify two values (lowest - highest), if you want to target a range."),
 		ArgumentSchema("filter", "f", help = "A filter applied to issue context (optional)"),
@@ -282,7 +282,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A console command for queueing issues for the "see next" command.
 	 */
-	lazy val queue = Command("queue", "q",
+	val queue = Command("queue", "q",
 		help = "Queues a list of issues, so that they can be unqueued with the 'see next' command")(
 		ArgumentSchema("issues", help = "IDs of the issues to queue. Separated with commas, semicolons or plus signs."),
 		ArgumentSchema.flag("append", "A", help = "Whether to append these issues to the queue instead of overwriting the queue.")) {
@@ -310,7 +310,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A command for reviewing detailed information about an issue
 	 */
-	lazy val see = Command("see", help = "Displays more detailed information about the targeted issue")(
+	val see = Command("see", help = "Displays more detailed information about the targeted issue")(
 		ArgumentSchema("target", "t", help = "Id of the targeted issue. Alternatively 'next'")) { args =>
 		// Finds the issue targeting data from user input
 		val target = args("target").castTo(IntType, StringType) match {
@@ -356,7 +356,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A console command for reviewing information about the next queued issue variant
 	 */
-	lazy val next = Command.withoutArguments("next", "variant",
+	val next = Command.withoutArguments("next", "variant",
 		help = "Lists information about the next queued issue variant") {
 		queuedVariantsP.mutate { case (variants, nextIndex) =>
 			variants.lift(nextIndex).map { _ -> (nextIndex < variants.size - 1) } -> (variants -> (nextIndex + 1))
@@ -418,7 +418,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A console command for reviewing the next issue occurrences, or for listing more issues
 	 */
-	lazy val more = Command.withoutArguments("more",
+	val more = Command.withoutArguments("more",
 		help = "Prints information about another set of queued issues or occurrences") {
 		// Collects the next 15 issues or the next occurrence
 		val next = moreP.mutate { case (from, nextIndex) =>
@@ -460,7 +460,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A console command for displaying an error's stack trace
 	 */
-	lazy val stack = Command.withoutArguments("stack",
+	val stack = Command.withoutArguments("stack",
 		help = "Prints the stack trace of the most recently encountered error") {
 		queuedErrorIdP.value match {
 			case Some(errorId) =>
@@ -493,7 +493,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A command for displaying the comments on the last opened issue
 	 */
-	lazy val comments = Command.withoutArguments("comments", help = "Displays the comments on the last opened issue") {
+	val comments = Command.withoutArguments("comments", help = "Displays the comments on the last opened issue") {
 		val comments = queuedCommentsP.value
 		if (comments.nonEmpty)
 			println(StringUtils.asciiTableFrom[Comment](comments,
@@ -506,7 +506,7 @@ class LogReviewCommands(implicit log: Logger)
 	/**
 	 * A command for marking notifications as read
 	 */
-	lazy val close = Command.withoutArguments("close", "read", help = "Marks the last notifications as read") {
+	val close = Command.withoutArguments("close", "read", help = "Marks the last notifications as read") {
 		val idsToClose = queuedNotificationIdsP.getAndSet(IntSet.empty)
 		if (idsToClose.nonEmpty) {
 			connectionPool.logging { implicit c =>
@@ -517,11 +517,11 @@ class LogReviewCommands(implicit log: Logger)
 	}
 	
 	// Determines the commands available at each time
-	private lazy val staticCommands = Vector(status, list, queue, see)
+	private val staticCommands = Vector(status, list, queue, see)
 	/**
 	 * A pointer that contains the currently available commands
 	 */
-	lazy val pointer = hasMoreVariantsFlag
+	val pointer = hasMoreVariantsFlag
 		.mergeWith(Vector(hasQueuedErrorFlag, hasMoreIssuesOrOccurrencesFlag, hasQueuedCommentsFlag,
 			mayCloseNotificationsFlag)) {
 			variants =>

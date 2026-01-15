@@ -14,7 +14,7 @@ object AccessErrorRecords
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(ErrorRecordDbReader)
+	override val root = apply(ErrorRecordDbReader)
 	
 	
 	// IMPLICIT	--------------------

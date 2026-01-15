@@ -3,14 +3,14 @@ package utopia.flow.util.console
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.Regex
-import utopia.flow.util.console.Command.whiteSpacesOutsideQuotationsRegex
+import utopia.flow.util.console.Command.whiteSpaceOutsideQuotesR
 import utopia.flow.util.StringExtensions._
 
 object Command
 {
 	// ATTRIBUTES   ---------------------
 	
-	private val whiteSpacesOutsideQuotationsRegex = Regex.whiteSpace.ignoringQuotations
+	private val whiteSpaceOutsideQuotesR = Regex.whiteSpace.ignoringQuotations
 	
 	
 	// OTHER    -------------------------
@@ -90,13 +90,6 @@ class Command(val name: String, val alias: String = "",
 	// OTHER    ------------------------------
 	
 	/**
-	 * Executes this command with the specified arguments
-	 * @param arguments Arguments for executing this command
-	 * @param jsonParser Implicit json parser
-	 */
-	def apply(arguments: Seq[String])(implicit jsonParser: JsonParser) =
-		execute(CommandArguments(argumentsSchema, arguments))
-	/**
 	 * Executes this command without arguments
 	 * @param jsonParser Implicit json parser
 	 */
@@ -109,6 +102,13 @@ class Command(val name: String, val alias: String = "",
 	 */
 	def apply(firstParam: String, moreParams: String*)(implicit jsonParser: JsonParser): Unit =
 		apply(firstParam +: moreParams)
+	/**
+	 * Executes this command with the specified arguments
+	 * @param arguments Arguments for executing this command
+	 * @param jsonParser Implicit json parser
+	 */
+	def apply(arguments: Seq[String])(implicit jsonParser: JsonParser) =
+		execute(CommandArguments(argumentsSchema, arguments))
 	
 	/**
 	 * Processes the specified string into an argument list and then executes this command with those arguments
@@ -116,5 +116,5 @@ class Command(val name: String, val alias: String = "",
 	 * @param jsonParser Implicit json parser
 	 */
 	def parseAndExecute(argumentsString: String)(implicit jsonParser: JsonParser) =
-		if (argumentsString.isEmpty) apply() else apply(whiteSpacesOutsideQuotationsRegex.split(argumentsString))
+		if (argumentsString.isEmpty) apply() else apply(whiteSpaceOutsideQuotesR.split(argumentsString))
 }

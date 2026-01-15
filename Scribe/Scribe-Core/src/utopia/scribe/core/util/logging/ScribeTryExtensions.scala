@@ -1,8 +1,8 @@
 package utopia.scribe.core.util.logging
 
-import utopia.flow.collection.CollectionExtensions.RichIterable
-import utopia.flow.generic.model.immutable.{Constant, Model}
+import utopia.flow.collection.CollectionExtensions.{RichIterable, _}
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.util.result.TryCatch
 import utopia.scribe.core.controller.logging.Scribe
 import utopia.scribe.core.model.enumeration.Severity
@@ -228,5 +228,39 @@ object ScribeTryExtensions
 		                    variantDetails: Model = Model.empty)
 		                   (implicit scribe: Scribe) =
 			scribeToOption { (s, e, _) => s.in(subContext).variant(variantDetails)(e, message, details) }
+	}
+	
+	implicit class Failures(val failures: IterableOnce[Throwable]) extends AnyVal
+	{
+		/**
+		 * Logs all encountered failures. Groups them by the type of encountered error.
+		 * The specified parameters are call-by-name, and are ignored if this collection is empty.
+		 * @param message Message to write to the log entries. Default = empty = no message.
+		 * @param details Occurrence-specific details to include.
+		 *                Default = empty = no details beside failure counts will be included.
+		 * @param subContext This issue's context under the 'scribe's regular context.
+		 *                   Default = empty = uses 'scribe's context.
+		 * @param severity Severity of this issue. Default = Unrecoverable.
+		 * @param variantDetails Issue variant -specific details to include.
+		 *                       Default = empty = only the error type forms a new variant.
+		 * @param scribe Implicit Scribe instance that performs the logging
+		 */
+		def logWith(message: => String = "", details: => Model = Model.empty, subContext: => String = "",
+		            severity: Severity = Severity.default, variantDetails: => Model = Model.empty)
+		           (implicit scribe: Scribe) =
+			failures.nonEmptyIterator.foreach { failuresIter =>
+				val groupedFailures = failuresIter.groupToSeqsBy { _.getClass.getSimpleName }
+				val totalFailureCount = groupedFailures.valuesIterator.map { _.size }.sum
+				
+				val _scribe = scribe.in(subContext)(severity).variant(variantDetails)
+				val _message = message
+				val _details = details
+				
+				groupedFailures.foreach { case (errorName, failures) =>
+					_scribe.variant("error", errorName)
+						.apply(_message, _details ++ Model.from(
+							"theseFailures" -> failures.size, "totalFailures" -> totalFailureCount))
+				}
+			}
 	}
 }

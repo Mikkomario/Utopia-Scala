@@ -11,7 +11,7 @@ object AccessErrorRecord extends AccessOneRoot[AccessErrorRecord[ErrorRecord]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessErrorRecords.root.head
+	override val root = AccessErrorRecords.root.head
 	
 	
 	// IMPLICIT	--------------------

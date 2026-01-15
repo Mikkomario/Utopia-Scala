@@ -8,7 +8,7 @@ object AccessIssueNotification extends AccessOneDeprecatingRoot[AccessIssueNotif
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val all = AccessIssueNotifications.all.head
+	override val all = AccessIssueNotifications.all.head
 }
 
 /**

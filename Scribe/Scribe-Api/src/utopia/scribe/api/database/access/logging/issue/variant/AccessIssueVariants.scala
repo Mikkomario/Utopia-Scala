@@ -20,7 +20,7 @@ object AccessIssueVariants
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = apply(IssueVariantDbReader)
+	override val root = apply(IssueVariantDbReader)
 	
 	/**
 	  * Access to issue variants in the DB, also including issue information

@@ -44,9 +44,11 @@ object StringUtils
 			}
 			
 			// Generates the actual table
-			val separatorLine = s"+${ columnWidths.map { w => "-" * (w + 2) }.mkString("+") }+"
+			val separatorLineParts = columnWidths.map { w => "-" * (w + 2) }
+			val separatorLine = s"+${ separatorLineParts.mkString("+") }+"
 			val separatorRow = s"\n$separatorLine\n"
-			val builder = new StringBuilder(separatorLine)
+			val builder = new StringBuilder(
+				if (header.isEmpty) separatorLine else s"+${ separatorLineParts.mkString("-") }+")
 			builder += '\n'
 			
 			// Writes the main header, if applicable

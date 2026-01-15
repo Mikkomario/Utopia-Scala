@@ -8,7 +8,7 @@ object AccessComment extends AccessOneRoot[AccessComment[Comment]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessComments.root.head
+	override val root = AccessComments.root.head
 }
 
 /**

@@ -5,12 +5,12 @@ import utopia.vault.model.template.{HasTables, Joinable}
 import utopia.vault.sql.JoinType._
 
 /**
-  * Sql targets are suited targets for operations like select, update and delete. A target may
-  * consist of one or more tables and can always be converted to an sql segment when necessary
+  * SQL targets are suited targets for operations like select, update and delete. A target may
+  * consist of one or more tables and can always be converted to an SQL segment when necessary
   */
 trait SqlTarget extends HasTables
 {
-	// ABSTRACT METHODS    --------------------
+	// ABSTRACT    --------------------
 	
 	/**
 	  * @return Name of the targeted database
@@ -18,9 +18,14 @@ trait SqlTarget extends HasTables
 	def databaseName: String
 	
 	/**
-	  * Converts this sql target into a SQL segment
+	  * Converts this SQL target into a SQL segment
 	  */
 	def toSqlSegment: SqlSegment
+	
+	/**
+	 * @return Join types involved in this target. One entry should be involved for each join applied.
+	 */
+	def joinTypes: Seq[JoinType]
 	
 	/**
 	 * @param table A table
@@ -39,9 +44,9 @@ trait SqlTarget extends HasTables
 		if (contains(join.to.table))
 			this
 		else
-			SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, tables :+ join.to.table)
+			SqlTargetWrapper(toSqlSegment + join.toSqlSegment, databaseName, tables :+ join.to.table,
+				joinTypes :+ join.joinType)
 	}
-	
 	/**
 	  * Adds 0-n joins to this target
 	  * @param joins Joins to append to this target
@@ -51,13 +56,14 @@ trait SqlTarget extends HasTables
 		if (joins.isEmpty)
 			this
 		else {
-			// TODO: This filtering might be unnecessary now that Joinable.toJoinFrom is more carefully implemented
 			val newJoins = joins.filterNot { join => contains(join.to.table) }
 			if (newJoins.isEmpty)
 				this
-			else
-				SqlTargetWrapper(toSqlSegment ++ newJoins.map { _.toSqlSegment }, databaseName,
-					tables ++ newJoins.map { _.to.table })
+			else {
+				val newJoinsView = newJoins.view
+				SqlTargetWrapper(toSqlSegment ++ newJoinsView.map { _.toSqlSegment }, databaseName,
+					tables ++ newJoinsView.map { _.to.table }, joinTypes ++ newJoinsView.map { _.joinType })
+			}
 		}
 	}
 	

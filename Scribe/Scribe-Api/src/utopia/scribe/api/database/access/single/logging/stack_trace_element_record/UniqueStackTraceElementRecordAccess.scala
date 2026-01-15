@@ -88,13 +88,8 @@ trait UniqueStackTraceElementRecordAccess
 	  * An iterator that returns this stack, starting from this element
 	  * @param c Implicit DB connection
 	  */
-	def topToBottomIterator(implicit c: Connection) = {
-		OptionsIterator.iterate(pull) 
-		{
-			 stack =>
-					stack.causeId.flatMap { DbStackTraceElementRecord(_).pull }
-		}
-	}
+	def topToBottomIterator(implicit c: Connection) =
+		OptionsIterator.iterate(pull) { stack => stack.causeId.flatMap { DbStackTraceElementRecord(_).pull } }
 	
 	/**
 	  * Factory used for constructing database the interaction models

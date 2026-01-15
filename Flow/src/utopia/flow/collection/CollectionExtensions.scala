@@ -45,6 +45,22 @@ object CollectionExtensions
 	
 	// OTHER    -----------------------------
 	
+	@throws[NoSuchElementException]("Throws when called for an empty sequence")
+	private def _extremeIndexBy[A, B](coll: IterableOnce[A], extreme: Extreme)(f: A => B)(implicit order: Ordering[B]) = {
+		val appliedOrder = extreme.ascendingToExtreme(order)
+		val withIndexIter = coll.iterator.zipWithIndex
+		var extremeIndex = 0
+		var mostExtreme = f(withIndexIter.next()._1)
+		withIndexIter.foreach { case (item, index) =>
+			val result = f(item)
+			if (appliedOrder.gt(result, mostExtreme)) {
+				extremeIndex = index
+				mostExtreme = result
+			}
+		}
+		extremeIndex
+	}
+	
 	private def _tryReduceIterator[A](seq: SeqOps[A, IterableOnce, _])(f: (A, A) => Option[A]) = {
 		// Tracks the indices which have already been merged with other items
 		val skipIndices = mutable.Set[Int]()
@@ -86,7 +102,7 @@ object CollectionExtensions
 	{
 		// ATTRIBUTES   -----------------------
 		
-		private lazy val ops = iter(coll)
+		private val ops = iter(coll)
 		
 		
 		// OTHER    ---------------------------
@@ -1016,7 +1032,7 @@ object CollectionExtensions
 	{
 		// ATTRIBUTES   -----------------------
 		
-		private lazy val ops = iter(coll)
+		private val ops = iter(coll)
 		
 		
 		// COMPUTED ---------------------------
@@ -1448,7 +1464,6 @@ object CollectionExtensions
 			_bestMatch(coll, matcher)
 		
 		private def _bestMatch(coll: Repr, matcher: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
-			val ops = iter(coll)
 			// Case: 1 or 0 items => Result will always be the best match
 			if (ops.sizeCompare(2) < 0)
 				coll
@@ -2129,7 +2144,60 @@ object CollectionExtensions
 	{
 		// ATTRIBUTES   ------------------------
 		
-		private lazy val ops = seq(coll)
+		private val ops = seq(coll)
+		
+		
+		// COMPUTED ----------------------------
+		
+		/**
+		 * Finds and extracts the largest item from this collection
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @return Returns 2 values:
+		 *              1. The largest item in this collection. None if this collection is empty.
+		 *              1. All other items in this collection
+		 */
+		def findAndPopMax[B >: seq.A](implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+			findAndPop[B](Max)
+		/**
+		 * Finds and extracts the smallest item from this collection
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @return Returns 2 values:
+		 *              1. The smallest item in this collection. None if this collection is empty.
+		 *              1. All other items in this collection
+		 */
+		def findAndPopMin[B >: seq.A](implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+			findAndPop[B](Min)
+		
+		/**
+		 * Finds and extracts the largest item from this collection
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @throws NoSuchElementException If this collection is empty
+		 * @return Returns 2 values:
+		 *              1. The largest item in this collection
+		 *              1. All other items in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def popMax[B >: seq.A](implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+			pop[B](Max)
+		/**
+		 * Finds and extracts the smallest item from this collection
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @throws NoSuchElementException If this collection is empty
+		 * @return Returns 2 values:
+		 *              1. The smallest item in this collection
+		 *              1. All other items in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def popMin[B >: seq.A](implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+			pop[B](Min)
 		
 		
 		// OTHER    ----------------------------
@@ -2174,7 +2242,6 @@ object CollectionExtensions
 		  * @return A copy of this sequence with the specified index mapped
 		  */
 		def mapIndex[B >: seq.A, That](index: Int)(f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
-		{
 			buildFrom.fromSpecific(coll)(new AbstractView[B] {
 				override def iterator: AbstractIterator[B] = new AbstractIterator[B] {
 					val it = ops.iterator
@@ -2195,7 +2262,6 @@ object CollectionExtensions
 					}
 				}
 			})
-		}
 		/**
 		  * @param end Targeted collection end-point
 		  * @param f Mapping function to apply to that end of this collection
@@ -2241,29 +2307,158 @@ object CollectionExtensions
 		  * @param buildFrom A can build from for resulting collection (implicit)
 		  * @return A copy of this sequence with specified item mapped. Returns this if no such item was found.
 		  */
-		def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-		{
+		def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)
+		                 (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
 			ops.indexWhere(find) match {
 				case index if index >= 0 => mapIndex(index)(map)
 				case _ => coll
 			}
-		}
 		
 		/**
 		  * Finds and removes an item from this sequence. If no item is found, no removal happens either.
 		  * @param f A find function to find the item to remove.
-		  * @param buildFrom A buildfrom for the filtered copy of this collection
+		  * @param buildFrom A build-from for the filtered copy of this collection
 		  * @return Either:
 		  *             a) (Some(result), other items), if a result was found, or
 		  *             b) (None, this collection), if no result was found
 		  */
 		def findAndPop[B >: seq.A](f: seq.A => Boolean)
 		                          (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
-		{
 			ops.indexWhere(f) match {
 				case index if index >= 0 => Some(ops(index)) -> _withoutIndex(ops.iterator, index)
 				case _ => None -> coll
 			}
+		
+		/**
+		 * Finds and extracts the largest item from this collection
+		 * @param f A mapping function used for acquiring the compared values
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @tparam Y Type of the compared values
+		 * @return Returns 2 values:
+		 *              1. The largest item in this collection. None if this collection is empty.
+		 *              1. All other items in this collection
+		 */
+		def findAndPopMaxBy[B >: seq.A, Y](f: seq.A => Y)
+		                                  (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]) =
+			findAndPopExtremeBy[B, Y](Max)(f)
+		/**
+		 * Finds and extracts the smallest item from this collection
+		 * @param f A mapping function used for acquiring the compared values
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @tparam Y Type of the compared values
+		 * @return Returns 2 values:
+		 *              1. The smallest item in this collection. None if this collection is empty.
+		 *              1. All other items in this collection
+		 */
+		def findAndPopMinBy[B >: seq.A, Y](f: seq.A => Y)
+		                                  (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]) =
+			findAndPopExtremeBy[B, Y](Min)(f)
+		
+		/**
+		 * Finds and extracts the largest item from this collection
+		 * @param f A mapping function used for acquiring the compared values
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @tparam Y Type of the compared values
+		 * @throws NoSuchElementException If this collection is empty
+		 * @return Returns 2 values:
+		 *              1. The largest item in this collection
+		 *              1. All other items in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def popMaxBy[B >: seq.A, Y](f: seq.A => Y)
+		                           (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]): (B, Repr) =
+			popExtremeBy(Max)(f)
+		/**
+		 * Finds and extracts the smallest item from this collection
+		 * @param f A mapping function used for acquiring the compared values
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @tparam Y Type of the compared values
+		 * @throws NoSuchElementException If this collection is empty
+		 * @return Returns 2 values:
+		 *              1. The smallest item in this collection
+		 *              1. All other items in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def popMinBy[B >: seq.A, Y](f: seq.A => Y)
+		                           (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]): (B, Repr) =
+			popExtremeBy[B, Y](Min)(f)
+		
+		/**
+		 * Finds and extracts the most extreme item from this collection
+		 * @param extreme The targeted extreme (Min | Max)
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @return Returns 2 values:
+		 *              1. The most extreme item in this collection. None if this collection is empty.
+		 *              1. All other items in this collection
+		 */
+		def findAndPop[B >: seq.A](extreme: Extreme)(implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+			findAndPopExtremeBy[B, seq.A](extreme)(Identity)
+		/**
+		 * Finds and extracts the most extreme item from this collection
+		 * @param extreme The targeted extreme (Min | Max)
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @throws NoSuchElementException If this collection is empty
+		 * @return Returns 2 values:
+		 *              1. The most extreme item in this collection
+		 *              1. All other items in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def pop[B >: seq.A](extreme: Extreme)(implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+			popExtremeBy[B, seq.A](extreme)(Identity)
+		
+		/**
+		 * Finds and extracts the most extreme item from this collection
+		 * @param extreme The targeted extreme (Min | Max)
+		 * @param f A mapping function used for acquiring the compared values
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @tparam Y Type of the compared values
+		 * @return Returns 2 values:
+		 *              1. The most extreme item in this collection. None if this collection is empty.
+		 *              1. All other items in this collection
+		 */
+		def findAndPopExtremeBy[B >: seq.A, Y](extreme: Extreme)(f: seq.A => Y)
+		                                      (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]) =
+		{
+			if (ops.isEmpty)
+				None -> coll
+			else {
+				val (item, remainder) = popExtremeBy[B, Y](extreme)(f)
+				Some(item) -> remainder
+			}
+		}
+		/**
+		 * Finds and extracts the most extreme item from this collection
+		 * @param extreme The targeted extreme (Min | Max)
+		 * @param f A mapping function used for acquiring the compared values
+		 * @param bf A build-from for the remaining collection
+		 * @param ord Implicit ordering applied (ascending)
+		 * @tparam B Type of the extracted value
+		 * @tparam Y Type of the compared values
+		 * @throws NoSuchElementException If this collection is empty
+		 * @return Returns 2 values:
+		 *              1. The most extreme item in this collection
+		 *              1. All other items in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def popExtremeBy[B >: seq.A, Y](extreme: Extreme)(f: seq.A => Y)
+		                               (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]): (B, Repr) =
+		{
+			val index = _extremeIndexBy(ops, extreme)(f)
+			ops(index) -> _withoutIndex(ops.iterator, index)
 		}
 		
 		/**
@@ -2283,7 +2478,7 @@ object CollectionExtensions
 		}
 		private def _withoutIndex(iter: Iterator[seq.A], index: Int)
 		                         (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-			buildFrom.fromSpecific(coll)(iter.zipWithIndex.flatMap { case (a, i) => if (i == index) None else Some(a) })
+			buildFrom.fromSpecific(coll)(iter.zipWithIndex.filterNot { _._2 == index }.map { _._1 })
 		
 		/**
 		  * Performs specified operation for each item in this sequence. Called function will also receive item index
@@ -2578,6 +2773,8 @@ object CollectionExtensions
 	
 	implicit class RichSeq[A](val s: Seq[A]) extends AnyVal
 	{
+		// COMPUTED -----------------------------
+		
 		/**
 		  * @return The last 2 elements of this collection as a pair
 		  * @throws NoSuchElementException If this collection contains less than 2 elements
@@ -2619,10 +2816,51 @@ object CollectionExtensions
 		def random = s.apply(Random.nextInt(s.size))
 		
 		/**
+		 * @param ord Implicit ordering to apply
+		 * @return Index of the largest item in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def indexOfLargest(implicit ord: Ordering[A]) = indexOf(Max)
+		/**
+		 * @param ord Implicit ordering to apply
+		 * @return Index of the largest item in this collection. None if this collection is empty.
+		 */
+		def findIndexOfLargest(implicit ord: Ordering[A]) = findIndexOf(Max)
+		/**
+		 * @param ord Implicit ordering to apply
+		 * @return Index of the smallest item in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def indexOfSmallest(implicit ord: Ordering[A]) = indexOf(Min)
+		/**
+		 * @param ord Implicit ordering to apply
+		 * @return Index of the smallest item in this collection. None if this collection is empty.
+		 */
+		def findIndexOfSmallest(implicit ord: Ordering[A]) = findIndexOf(Min)
+		
+		
+		// OTHER    ----------------------------
+		
+		/**
 		  * @param end Targeted end of this collection
 		  * @return The index of the element at that end of this collection. Out of bounds if this collection is empty.
 		  */
 		def indexOf(end: End) = end.indexFrom(s)
+		
+		/**
+		 * @param extreme Targeted extreme (Min | Max)
+		 * @param ord Implicit ordering applied
+		 * @return Index of the most extreme item in this collection
+		 */
+		@throws[NoSuchElementException]("If this collection is empty")
+		def indexOf(extreme: Extreme)(implicit ord: Ordering[A]) = extremeIndexBy(extreme)(Identity)
+		/**
+		 * @param extreme Targeted extreme (Min | Max)
+		 * @param ord Implicit ordering applied
+		 * @return Index of the most extreme item in this collection. None if this collection is empty.
+		 */
+		def findIndexOf(extreme: Extreme)(implicit ord: Ordering[A]) = findExtremeIndexBy(extreme)(Identity)
+		
 		/**
 		 * Finds the index of the specified item
 		 * @param item Searched item
@@ -2678,18 +2916,7 @@ object CollectionExtensions
 		  * @throws NoSuchElementException If this sequence is empty
 		  */
 		@throws[NoSuchElementException]("Throws when called for an empty sequence")
-		def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) = {
-			var maxIndex = 0
-			var maxResult = f(s.head)
-			s.indices.drop(1).foreach { index =>
-				val result = f(s(index))
-				if (order.compare(result, maxResult) > 0) {
-					maxIndex = index
-					maxResult = result
-				}
-			}
-			maxIndex
-		}
+		def maxIndexBy[B](f: A => B)(implicit order: Ordering[B]) = extremeIndexBy(Max)(f)
 		/**
 		  * @param f     A mapping function
 		  * @param order Ordering for mapped values
@@ -2698,25 +2925,49 @@ object CollectionExtensions
 		  * @throws NoSuchElementException If this sequence is empty
 		  */
 		@throws[NoSuchElementException]("Throws when called for an empty sequence")
-		def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = maxIndexBy(f)(order.reverse)
+		def minIndexBy[B](f: A => B)(implicit order: Ordering[B]) = extremeIndexBy(Min)(f)
 		/**
-		  * @param f     A mapping function
-		  * @param order Ordering for mapped values
-		  * @tparam B Type of map result
-		  * @return The index in this sequence that contains the largest value when mapped.
-		  *         None if this sequence is empty.
-		  */
-		def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
-			if (s.isEmpty) None else Some(maxIndexBy(f))
+		 * @param f     A mapping function
+		 * @param order Ordering for mapped values
+		 * @tparam B Type of map result
+		 * @return The index in this sequence that contains the largest value when mapped.
+		 *         None if this sequence is empty.
+		 */
+		def findMaxIndexBy[B](f: A => B)(implicit order: Ordering[B]) = findExtremeIndexBy(Max)(f)
+		@deprecated("Renamed to .findMaxIndexBy(...)", "v2.8")
+		def maxOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = findMaxIndexBy(f)
 		/**
-		  * @param f     A mapping function
-		  * @param order Ordering for mapped values
-		  * @tparam B Type of map result
-		  * @return The index in this sequence that contains the smallest value when mapped.
-		  *         None if this sequence is empty.
-		  */
-		def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) =
-			maxOptionIndexBy(f)(order.reverse)
+		 * @param f     A mapping function
+		 * @param order Ordering for mapped values
+		 * @tparam B Type of map result
+		 * @return The index in this sequence that contains the smallest value when mapped.
+		 *         None if this sequence is empty.
+		 */
+		def findMinIndexBy[B](f: A => B)(implicit order: Ordering[B]) = findExtremeIndexBy(Min)(f)
+		@deprecated("Renamed to .findMinIndexBy(...)", "v2.8")
+		def minOptionIndexBy[B](f: A => B)(implicit order: Ordering[B]) = findExtremeIndexBy(Min)(f)
+		
+		/**
+		 * @param extreme Targeted extreme (Min | Max)
+		 * @param f     A mapping function
+		 * @param order Ascending order used for comparing the mapping results
+		 * @tparam B Type of mapping results
+		 * @return The index in this sequence that contains the most extreme value, when mapped
+		 * @throws NoSuchElementException If this collection is empty
+		 */
+		@throws[NoSuchElementException]("Throws when called for an empty sequence")
+		def extremeIndexBy[B](extreme: Extreme)(f: A => B)(implicit order: Ordering[B]) =
+			_extremeIndexBy(s, extreme)(f)
+		/**
+		 * @param extreme Targeted extreme (Min | Max)
+		 * @param f     A mapping function
+		 * @param order Ascending order used for comparing the mapping results
+		 * @tparam B Type of mapping results
+		 * @return The index in this sequence that contains the most extreme value, when mapped.
+		 *         None if this collection is empty.
+		 */
+		def findExtremeIndexBy[B](extreme: Extreme)(f: A => B)(implicit order: Ordering[B]) =
+			if (s.isEmpty) None else Some(extremeIndexBy(extreme)(f))
 		
 		/**
 		  * @param firstIndex Index of the first collected element

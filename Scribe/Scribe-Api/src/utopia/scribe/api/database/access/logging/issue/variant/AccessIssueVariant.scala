@@ -12,7 +12,7 @@ object AccessIssueVariant extends AccessOneRoot[AccessIssueVariant[IssueVariant]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessIssueVariants.root.head
+	override val root = AccessIssueVariants.root.head
 	
 	/**
 	  * Access to individual issue variants in the DB, also including issue information

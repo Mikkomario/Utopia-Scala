@@ -1,16 +1,20 @@
 package utopia.vault.sql
 
-sealed trait JoinType
+import utopia.flow.operator.ordering.SelfComparable
+
+sealed trait JoinType extends SelfComparable[JoinType]
 {
     // ABSTRACT --------------------------
     
     /**
-      * @return An sql representation of this join type
+      * @return An SQL representation of this join type
       */
     def toSql: String
     
     
     // IMPLEMENTED  ----------------------
+    
+    override def self: JoinType = this
     
     override def toString = toSql
 }
@@ -32,7 +36,9 @@ object JoinType
       */
     object Inner extends JoinType
     {
-        override def toSql = "INNER"
+        override val toSql = "INNER"
+        
+        override def compareTo(o: JoinType): Int = if (o == Inner) 0 else 1
     }
     /**
       * Left join includes all rows from the left side table and joined rows from the right side
@@ -40,7 +46,13 @@ object JoinType
       */
     object Left extends JoinType
     {
-        override def toSql = "LEFT"
+        override val toSql = "LEFT"
+        
+        override def compareTo(o: JoinType): Int = o match {
+            case Left => 0
+            case Right => 1
+            case Inner => -1
+        }
     }
     /**
       * Right join includes all rows from the right side table and joined rows from the left side
@@ -48,6 +60,8 @@ object JoinType
       */
     object Right extends JoinType
     {
-        override def toSql = "RIGHT"
+        override val toSql = "RIGHT"
+        
+        override def compareTo(o: JoinType): Int = if (o == Right) 0 else -1
     }
 }

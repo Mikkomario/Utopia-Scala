@@ -14,7 +14,7 @@ object AccessIssueNotifications
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val all = apply(IssueNotificationDbReader).all
+	override val all = apply(IssueNotificationDbReader).all
 	
 	
 	// IMPLEMENTED	--------------------
