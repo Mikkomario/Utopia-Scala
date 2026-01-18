@@ -35,7 +35,7 @@ object LazySeq extends SeqFactory[LazySeq] with LazyFactory[LazySeq]
 	// OTHER    ------------------------------
 	
 	def apply[A]() = empty[A]
-	def apply[A](items: IterableOnce[Lazy[A]]) = new LazySeq[A](CachingSeq(items))
+	def apply[A](items: IterableOnce[Lazy[A]]) = new LazySeq[A](CachingSeq.from(items))
 }
 
 /**
@@ -71,7 +71,7 @@ class LazySeq[+A] private(wrapped: CachingSeq[Lazy[A]])
 	override def lengthCompare(otherSize: Int) = wrapped.lengthCompare(otherSize)
 	override def lengthCompare(that: Iterable[_]) = wrapped.lengthCompare(that)
 	
-	override def map[B](f: A => B) = LazySeq(wrapped.iterator.map { a => Lazy { f(a.value) } })
+	override def map[B](f: A => B) = LazySeq(wrapped.iterator.map { _.lightMap(f) })
 	override def flatMap[B](f: A => IterableOnce[B]) =
 		LazySeq(iterator.flatMap { a => f(a).iterator.map(Lazy.initialized) })
 	

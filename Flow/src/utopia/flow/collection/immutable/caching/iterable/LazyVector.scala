@@ -118,7 +118,7 @@ class LazyVector[+A] private(wrapped: IndexedSeq[Lazy[A]])
 	  * @tparam B Type of resulting collection contents
 	  * @return A lazily mapped copy of this collection
 	  */
-	override def map[B](f: A => B) = new LazyVector[B](wrapped.map { l => Lazy { f(l.value) } })
+	override def map[B](f: A => B) = new LazyVector[B](wrapped.map { _.lightMap(f) })
 	
 	override def prepended[B >: A](elem: B) = new LazyVector[B](wrapped.prepended(Lazy.initialized(elem)))
 	

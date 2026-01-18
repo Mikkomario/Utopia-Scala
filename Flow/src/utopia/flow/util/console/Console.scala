@@ -2,11 +2,11 @@ package utopia.flow.util.console
 
 import utopia.flow.async.process.Breakable
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
-import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single, Tree}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.StringUtils
+import utopia.flow.util.console.Console.Commands
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.result.TryExtensions._
@@ -22,6 +22,11 @@ import scala.util.Try
 
 object Console
 {
+	// TYPES    ------------------------------
+	
+	private type Commands = Tree[(Seq[String], Iterable[Command])]
+	
+	
 	// OTHER    ------------------------------
 	
 	/**
@@ -131,18 +136,13 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 	private val stopFlag = Volatile.switch
 	private val stopPromiseCache = ResettableLazy { Promise[Unit]() }
 	
-	private var lastNamespace = ""
+	private var lastNamespace: Seq[String] = Empty
 	
 	private val helpCommand: Command = {
 		val closeCommandRepresentation = closeCommandName.ifNotEmpty
 			.map { Command.withoutArguments(_, help = "Closes this console") { () } }
 			.emptyOrSingle
-		val commandsP = commandsPointer.lazyMap {
-			_.updatedWith("") {
-				case Some(commands) => Some(OptimizedIndexedSeq.concat(commands, closeCommandRepresentation))
-				case None => Some(closeCommandRepresentation)
-			}
-		}
+		val commandsP = commandsPointer.lazyMap { commandTreeFrom(_, closeCommandRepresentation) }
 		
 		Command("help", "man",
 			"Lists available commands or describes a command if one is specified")(
@@ -172,12 +172,13 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 					}
 				// Case: Requests a list of commands => Prints the list
 				case None =>
-					commandsP.value.oneOrMany match {
+					val groupedCommands = commandsP.value.allNavsIterator.groupMapReduce { _._1 } { _._2 } { _ ++ _ }
+					groupedCommands.oneOrMany match {
 						case Left((_, commands)) => listCommands(commands, "Available commands")
 						case Right(namespaces) =>
-							namespaces.toOptimizedSeq.sortBy { _._1 }.foreach { case (namespace, commands) =>
-								listCommands(commands, namespace)
-							}
+							namespaces.iterator.map { case (ns, commands) => ns.mkString(":") -> commands }
+								.toOptimizedSeq.sortBy { _._1 }
+								.foreach { case (namespace, commands) => listCommands(commands, namespace) }
 					}
 					println("\nFor more information about a specific command, specify that command's name or alias as the first argument of this command")
 			}
@@ -228,9 +229,8 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 			val closeCommand = closeCommandName.notEmpty.map { commandName =>
 				Command.withoutArguments(commandName, help = "Closes this console") { closed = true }
 			}
-			val defaultCommands = Map("" -> (helpCommand +: closeCommand.emptyOrSingle))
-			val allCommandsP = commandsPointer
-				.lazyMap { _.mergeWith(defaultCommands) { _ ++ _ }.withDefaultValue(Empty) }
+			val defaultCommands = helpCommand +: closeCommand.emptyOrSingle
+			val allCommandsP = commandsPointer.lazyMap { commandTreeFrom(_, defaultCommands) }
 			
 			while (!stopFlag.getAndReset() && !closed && !terminatorPointer.value) {
 				// Asks the user for input
@@ -259,41 +259,92 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 	
 	// OTHER    ----------------------------
 	
-	private def appliedPrompt(commands: => Map[String, Iterable[Command]]) = {
+	/**
+	 * Converts a list of commands into a namespaced tree format
+	 * @param namespaced A map of namespaced commands,
+	 *                   where keys are namespaces (prefixes) and values are commands under that namespace
+	 * @param other Other commands that are not assigned an external namespace
+	 * @return A tree that contains the specified commands, grouped by namespace
+	 */
+	private def commandTreeFrom(namespaced: Map[String, Iterable[Command]], other: Iterable[Command]): Commands = {
+		// Converts the specified command-sets into a list of namespace-command pairs
+		val commandsWithNamespaces = OptimizedIndexedSeq.concat(
+			namespaced.view.flatMap { case (ns, commands) =>
+				val nsElements = {
+					if (ns.isEmpty)
+						Empty
+					else
+						ns.split(Command.namespaceSplitRegex)
+				}
+				// Prepends the external namespace to the command's internal namespace
+				commands.map { c => (nsElements ++ c.namespace) -> c }
+			},
+			other.view.map { c => c.namespace -> c })
+		
+		// Commands without namespace are placed at the root node
+		val (nonNamespacedCommands, namespacedCommands) = commandsWithNamespaces.divideBy { _._1.nonEmpty }.toTuple
+		// Groups the namespaced commands into trees
+		val namespaceNodes = Tree.groupingBranches(namespacedCommands.map { case (namespace, command) =>
+			val emptyNodes: Seq[(Seq[String], Option[Command])] =
+				(1 until namespace.size).map { len => namespace.take(len) -> None }
+			emptyNodes :+ (namespace -> Some(command))
+		}) { _._1 } { (ns, commands) => ns -> (commands.flatMap { _._2 }.toOptimizedSeq: Iterable[Command]) }
+		
+		// Combines the generated trees under a root node
+		Tree[(Seq[String], Iterable[Command])](Empty -> nonNamespacedCommands.map { _._2 }, namespaceNodes)
+	}
+	
+	/**
+	 * Lists the available commands, if appropriate
+	 * @param commands Currently available commands
+	 * @return A prompt to show to the user
+	 */
+	private def appliedPrompt(commands: => Commands) = {
 		if (listAvailableCommands) {
 			val _commands = commands
 			val commandsList = {
-				if (_commands.hasSize > 1) {
-					if (_commands.valuesIterator.map { _.size }.foldLeftIterator(0) { _ + _ }.exists { _ > 8 }) {
-						_commands.get(lastNamespace) match {
-							case Some(commands) =>
-								s"${ commands.iterator.map { _.name }.toOptimizedSeq.sorted.mkString(", ") }, ..."
-							case None => "..."
+				// Case: Namespaces are used => May limit the displayed node-set to the last used namespace
+				if (_commands.hasChildren) {
+					val root = {
+						// Case: Last command had no namespace, or there are not that many commands
+						//       => Shows all commands
+						if (lastNamespace.isEmpty ||
+							_commands.allNavsIterator.map { _._2.size }.foldLeftIterator(0) { _ + _ }.forall { _ <= 8 })
+							_commands
+						else
+							targetNamespace(_commands, lastNamespace).getOrElse(_commands)
+					}
+					// Checks for duplicate command names and displays those with the namespace included
+					val contentsStr = root.allNavsIterator
+						.flatMap { case (ns, commands) => commands.iterator.map { c => (ns, c.name) } }
+						.groupToSeqsBy { _._2 }.iterator
+						.flatMap { case (commandName, versions) =>
+							if (versions.hasSize > 1)
+								versions.iterator.map { case (ns, name) =>
+									s"${ ns.view.drop(lastNamespace.size).mkString(":").appendIfNotEmpty(":") }$name"
+								}
+							// Unique command names are displayed without the namespace
+							else
+								Single(commandName)
 						}
-					}
-					else {
-						_commands.iterator
-							.flatMap { case (ns, commands) => commands.iterator.map { c => (ns, c.name) } }
-							.groupToSeqsBy { _._2 }.iterator
-							.flatMap { case (commandName, versions) =>
-								if (versions.hasSize > 1)
-									versions.iterator.map { case (ns, name) =>
-										s"${ ns.appendIfNotEmpty(":") }$name"
-									}
-								else
-									Single(commandName)
-							}
-							.toOptimizedSeq.sorted.mkString(", ")
-					}
+						.toOptimizedSeq.sorted.mkString(", ")
+					
+					if ((root eq _commands) || contentsStr.isEmpty)
+						contentsStr
+					// Case: Some commands were not listed, adds "..."
+					else
+						s"$contentsStr, ..."
 				}
+				// Case: There's only one namespace used
+				//       => Lists all commands in either their alias or name, depending on how many there are to list
 				else {
 					val commandToString = {
-						if (_commands.valuesIterator.map { _.size }.sum > 8)
+						if (_commands.allNavsIterator.map { _._2.size }.sum > 8)
 							{ c: Command => c.aliasOrName }
 						else
 							{ c: Command => c.name }
 					}
-					_commands.valuesIterator.flatten.map(commandToString).toOptimizedSeq.sorted.mkString(", ")
+					_commands.allNavsIterator.flatMap { _._2 }.map(commandToString).toOptimizedSeq.sorted.mkString(", ")
 				}
 			}
 			s"$prompt\n[$commandsList]"
@@ -302,30 +353,52 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 			prompt
 	}
 	
-	private def findCommand(commands: Map[String, Iterable[Command]], input: String) = {
-		val (specifiedNamespace, commandName) = input.splitAtLast(":").toTuple
-		val targetNamespace = specifiedNamespace.nonEmptyOrElse(lastNamespace)
+	private def findCommand(commands: Commands, input: String) = {
+		// Determines the targeted namespace & command name
+		val (namespaceInput, commandName) = if (input.contains(':')) input.splitAtLast(":").toTuple else "" -> input
+		val targetedNamespace = {
+			if (namespaceInput.isEmpty)
+				lastNamespace
+			else
+				namespaceInput.splitIterator(Command.namespaceSplitRegex).map { _.toLowerCase }.toOptimizedSeq
+		}
+		val namespaceNode = targetNamespace(commands, targetedNamespace)
 		
 		// Finds the targeted command
-		val result = commands(targetNamespace).find { _.matchesName(commandName) }.map { _ -> targetNamespace }
+		// Option 1: Finds a command from the targeted namespace
+		val result = namespaceNode
+			.flatMap { _.nav._2.find { _.matchesName(commandName) }.map { _ -> targetedNamespace } }
+			// Option 2: Finds a command from the non-namespaced group
 			.orElse {
-				if (specifiedNamespace.isEmpty && lastNamespace.nonEmpty)
-					commands("").find { _.matchesName(commandName) }.map { _ -> "" }
+				if (namespaceInput.isEmpty && lastNamespace.nonEmpty)
+					commands.nav._2.find { _.matchesName(commandName) }.map { _ -> Empty }
 				else
 					None
 			}
+			// Option 3: Finds a command from within the targeted namespace, including lower namespaces
 			.orElse {
-				commands.iterator
-					.flatMap { case (namespace, commands) =>
-						commands.iterator.filter { _.matchesName(commandName) }
-							.map { c => (c, namespace) -> s"${ namespace.appendIfNotEmpty(":") }${ c.name }" }
-					}
+				if (namespaceInput.isEmpty)
+					None
+				else
+					namespaceNode.flatMap { _.topDownNodesBelowIterator.findMap { node =>
+						node.nav._2.find { _.matchesName(commandName) }.map { _ -> node.nav._1 }
+					} }
+			}
+			// Option 4: Finds all commands matching the specified name.
+			//           If there are many options, allows the user to select one.
+			.orElse {
+				commands.nodesBelowIterator
+					.flatMap { node => node.nav._2.filter { _.matchesName(commandName) }.map { _ -> node.nav._1 } }
 					.toOptimizedSeq.emptyOneOrMany
 					.flatMap {
-						case Left((only, _)) => Some(only)
+						case Left(only) => Some(only)
 						case Right(many) =>
 							println("Which of the following commands did you mean? (empty cancels)")
-							StdIn.selectFrom(many, "commands")
+							StdIn.selectFrom(
+								many.map { case p @ (c, namespace) =>
+									p -> s"${ namespace.mkString(":").appendIfNotEmpty(":") }${ c.name }"
+								},
+								"commands")
 					}
 			}
 		
@@ -334,21 +407,38 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 		
 		if (result.isEmpty) {
 			println(s"\"$input\" doesn't match any available command")
-			proposeClosestMatch(commandName, targetNamespace, commands)
+			proposeClosestMatch(commandName, targetedNamespace, commands)
 			println("Use the \"help\" command to see a list of available commands")
 		}
 		
 		result.map { _._1 }
 	}
 	
-	private def proposeClosestMatch(input: String, namespace: String, options: Map[String, Iterable[Command]]) = {
-		val all = options.iterator.flatMap { case (namespace, commands) => commands.iterator.map { namespace -> _ } }
-			.toOptimizedSeq
+	/**
+	 * Finds the targeted namespace (node)
+	 * @param commands A tree listing all available commands ana namespaces
+	 * @param namespace Targeted namespace
+	 * @return Node which matches the targeted namespace. None if no node matched that namespace.
+	 */
+	private def targetNamespace(commands: Commands, namespace: Seq[String]): Option[Commands] = {
+		// Option 1: Checks for an absolute namespace match
+		commands.follow(namespace) { (node, namespace) => node._1.last == namespace }.orElse {
+			// Option 2: Checks for a partial / relative namespace match
+			namespace.headOption.flatMap { firstElem =>
+				commands.topDownNodesBelowIterator.find { _.nav._1.headOption.contains(firstElem) }
+					.flatMap { targetNamespace(_, namespace) }
+			}
+		}
+	}
+	
+	private def proposeClosestMatch(input: String, namespace: Seq[String], options: Commands) = {
+		val all = options.allNavsIterator
+			.flatMap { case (namespace, commands) => commands.iterator.map { namespace -> _ } }.toOptimizedSeq
 		val closest = all
 			.bestMatch(
 				{ c => c._2.name.isSimilarTo(input, 2) || c._2.alias.notEmpty.exists { _.isSimilarTo(input, 1) } },
-				{ c => c._1 ~== namespace },
-				{ c => c._1.isSimilarTo(namespace, 2) })
+				{ c => c._1.iterator.zip(namespace).forall { case (a, b) => a == b } },
+				{ c => c._1 == namespace })
 			.oneOrMany match
 		{
 			case Left(only) => Some(only)
@@ -384,7 +474,7 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 					}
 		}
 		closest.foreach { case (namespace, command) =>
-			println(s"Did you mean ${ namespace.appendIfNotEmpty(":") }${command.nameAndAlias}?") }
+			println(s"Did you mean ${ namespace.mkString(":").appendIfNotEmpty(":") }${command.nameAndAlias}?") }
 	}
 	
 	private def listCommands(commands: Iterable[Command], header: String) = {

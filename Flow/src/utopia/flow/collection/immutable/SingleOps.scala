@@ -7,7 +7,8 @@ import scala.collection.immutable.IndexedSeqOps
   * @tparam A Type of wrapped values
   * @tparam CC Generic collection constructor to use (variable length, variable content type (A))
   * @tparam C Type of same underlying type (A) collections with variable length
-  * @tparam S Type of generic (mapped) collections of length 1
+  * @tparam E Type of generic collections of length 0
+ * @tparam S Type of generic (mapped) collections of length 1
   * @tparam P Type of generic (mapped) collections of length 2
   * @tparam Repr Type of this specific collection (length 1, type A contents)
   * @author Mikko Hilpinen

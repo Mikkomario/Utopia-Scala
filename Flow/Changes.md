@@ -48,6 +48,7 @@
   - In static constructors, the `prompt` is no longer call-by-name, and `closeCommandName` no longer has a default value
   - `.apply(...)` now requires the `commandsPointer` to be **Changing** instead of **View**
   - The `commandsPointer` parameter is of different type in the `new` constructor
+- **Command**'s `new` constructor now contains `namespace: Seq[String] = Empty`
 - **Constant** is now a trait instead of a class
 - **Path**'s `.isDirectory` and `.isRegularFile` (in **FileExtensions**) no longer require file existence 
   in order to yield `true`. 
@@ -116,10 +117,11 @@
   which initialize their eventful functionality lazily.
 - Added **EmptyInputStream**
 - Added **ConsoleStream** for writing into `System.out` without ever closing it
-- **Console** now supports namespacing
+- **Console** and **Command** now support namespacing
 - **Console** now accepts `listAvailableCommands: Boolean`, 
   which makes it so that the available commands are listed whenever prompting the user for the next command.
 - Added support for lazily initialized **Constant**s
+- Added **LazySingle** class
 - Added **BuildNothing**
 - Added **CompoundingSeqBuilder**
 - Added **TryCatchBuilder**
@@ -190,8 +192,14 @@
   - Added multiple new static values
 - **Seq** (via **CollectionExtensions**)
   - Added various `.popExtreme(...)` functions
+- **SingleView** (object)
+  - Added an `.apply(...)` constructor
 - **StringFrom**
   - Added `.take(Int)`
+- **Tree** (object)
+  - Added `.branches(...)` and `.groupingBranches(...)`
+- **TreeLike**
+  - Added `.follow(...)`
 - **Uncertain**
   - Added `.mightNotBe(...)`
 - **Value**
@@ -206,10 +214,14 @@
   - After-effects generated in `addListenerAndSimulateEvent(...)` are now wrapped in **Try**; 
     Errors are logged.
   - `.addListenerAndSimulateEvent(...)` now contains an optional parameter `alwaysGenerateEvent: Boolean`
+- **Tree**'s `.branch(...)` function now accepts **IterableOnce** instead of **Seq** 
+  and contains a `lazily: Boolean = false` -parameter
 - **GeneratesOnce** no longer performs the mapping lazily, if the original pointer/lazy has already been initialized
 - **OptimizedSeqBuilder**'s `.knownSize` now functions past size 2
+- **LazySeq**'s and **LazyVector**'s `.map(...)` functions now use **Lazy**'s `lightMap(...)`
 - **UncertainBoolean**'s `||(Boolean)` and `&&(Boolean)` parameters are now call-by-name
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
+- Added implicit conversion from **Seq** to **CommandArgumentSchema**
 - Removed **AsyncCollectionExtensions** that was deprecated in v2.5.1
 - Remove **Changing**'s `listenerDebuggingLimit` property, which was deprecated in v2.7
 - Removed **AbstractChanging** functions that were deprecated in v2.2

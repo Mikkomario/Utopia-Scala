@@ -24,7 +24,7 @@ object ConsoleTest extends App
 	
 	val closeCommand = Command.withoutArguments("quit", "q", "Closes this console") {
 		terminatedPointer.value = true }
-	val helloCommand = Command("hello", help = "Prints a greeting")(
+	val helloCommand = Command("test:hello", help = "Prints a greeting")(
 		ArgumentSchema("name", help = "Name of the person to greet")) { args =>
 		args.unrecognized.foreach { arg => println(s"Warning: Unrecognized argument $arg") }
 		args("name").string match
@@ -39,7 +39,7 @@ object ConsoleTest extends App
 		forgottenCommandsPointer.update { _ + commandName }
 		println(s"I forgot how to $commandName...")
 	}
-	val selectManyCommand = Command.withoutArguments("select-many") {
+	val selectManyCommand = Command.withoutArguments("test:select-many") {
 		val selected = StdIn.selectMany(Vector(
 			1 -> "Option 1", 2 -> "Second Option", 3 -> "Option numero tres", 4 -> "One more option"))
 		println(s"Selected options: ${ selected.mkString(", ") }")
@@ -51,6 +51,7 @@ object ConsoleTest extends App
 	}
 	
 	println("Welcome to test console. Command to quit is 'quit' or 'exit'")
-	Console(activeCommandsPointer, "Please type a command", terminatedPointer, "exit").run()
+	Console(activeCommandsPointer, "Please type a command", terminatedPointer, "exit", listAvailableCommands = true)
+		.run()
 	println("Thank you!")
 }

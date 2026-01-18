@@ -59,9 +59,10 @@ object TreeLike
   * @author Mikko Hilpinen
   * @since 1.11.2016
   * @tparam A Type of item used when navigating through this tree. May also be considered the main content of this tree.
-  * @tparam Repr Types of nodes in this tree
+  * @tparam Node Types of nodes in this tree
   */
-trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Extender[A]
+// TODO: We need covariant A and a contravariant N for navigation input
+trait TreeLike[A, +Node <: TreeLike[A, Node]] extends MaybeEmpty[Node] with Extender[A]
 {
 	// ABSTRACT   --------------------
 	
@@ -79,7 +80,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	/**
 	  * The child nodes directly under this node
 	  */
-	def children: Seq[Repr]
+	def children: Seq[Node]
 	
 	/**
 	  * Tests whether this node directly contains the specified content
@@ -94,7 +95,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  * @param content Content for the child node
 	  * @return A new (child) node
 	  */
-	protected def newNode(content: A): Repr
+	protected def newNode(content: A): Node
 	
 	
 	// COMPUTED PROPERTIES    --------
@@ -120,7 +121,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         Each branch is fully traversed before moving to its sibling.
 	  *         Starts with this node.
 	  */
-	def allNodesIterator: Iterator[Repr] = self +: nodesBelowIterator
+	def allNodesIterator: Iterator[Node] = self +: nodesBelowIterator
 	/**
 	 * @return An iterator that returns this node, every child node, their children and so on.
 	 *         With each node, includes the level of depth, starting from 0 (for this node).
@@ -134,24 +135,24 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         Each branch is fully traversed before moving to its sibling.
 	  *         I.e. every child of the first child is returned before the second child of this node is returned.
 	  */
-	def nodesBelowIterator: Iterator[Repr] = children.iterator.flatMap { c => c +: c.nodesBelowIterator }
+	def nodesBelowIterator: Iterator[Node] = children.iterator.flatMap { c => c +: c.nodesBelowIterator }
 	/**
 	 * @return An iterator that goes over all the nodes below this node and includes their depth, starting from 1.
 	 *         Will not include this node.
 	 *         Each branch is fully traversed before moving to its sibling.
 	 *         I.e. every child of the first child is returned before the second child of this node is returned.
 	 */
-	def nodesBelowWithDepthIterator: Iterator[(Repr, Int)] = _nodesBelowWithDepthIterator(1)
-	private def _nodesBelowWithDepthIterator(currentDepth: Int): Iterator[(Repr, Int)] =
+	def nodesBelowWithDepthIterator: Iterator[(Node, Int)] = _nodesBelowWithDepthIterator(1)
+	private def _nodesBelowWithDepthIterator(currentDepth: Int): Iterator[(Node, Int)] =
 		children.iterator.flatMap { c => (c -> currentDepth) +: c._nodesBelowWithDepthIterator(currentDepth + 1) }
 	/**
 	  * @return All nodes that belong to this tree structure, including this node, as an iterable collection.
 	  */
-	def allNodes: Vector[Repr] = allNodesIterator.toVector
+	def allNodes: Vector[Node] = allNodesIterator.toVector
 	/**
 	  * All nodes below this node as an iterable collection
 	  */
-	def nodesBelow: Vector[Repr] = nodesBelowIterator.toVector
+	def nodesBelow: Vector[Node] = nodesBelowIterator.toVector
 	
 	/**
 	  * @return An iterator that goes over all navigation elements within this tree, including this node's nav.
@@ -188,14 +189,14 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         If the ordering of the children is not as important, one should rather call .nodesBelowIterator,
 	  *         as it is more memory-efficient.
 	  */
-	def topDownNodesBelowIterator: Iterator[Repr] = OrderedDepthIterator(children) { _.children }
+	def topDownNodesBelowIterator: Iterator[Node] = OrderedDepthIterator(children) { _.children }
 	/**
 	  * @return An ordered collection that contains all children of this node, all grandchildren
 	  *         of those children, the children of the grandchildren, and so on.
 	  *         The nodes returned are ordered from top to bottom first,
 	  *         and then from left to right within a single "layer".
 	  */
-	def topDownNodesBelow: Vector[Repr] = topDownNodesBelowIterator.toVector
+	def topDownNodesBelow: Vector[Node] = topDownNodesBelowIterator.toVector
 	/**
 	  * @return An iterator that returns this node and all the children of this node,
 	  *         returning leaf nodes before the rest of the branches.
@@ -204,7 +205,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         If the ordering of the items is not important, please call [[nodesBelowIterator]] instead,
 	  *         as that implementation is more more efficient in terms of memory and speed.
 	  */
-	def bottomToTopNodesIterator: Iterator[Repr] = BottomToTopIterator(self) { _.children }
+	def bottomToTopNodesIterator: Iterator[Node] = BottomToTopIterator(self) { _.children }
 	
 	/**
 	  * @return An iterator that returns all leaf nodes that appear within this tree.
@@ -222,7 +223,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         Leaves are nodes that don't have any children, i.e. the "end" nodes.
 	  *         If this node is empty, returns a sequence containing this node only.
 	  */
-	def leaves: IndexedSeq[Repr] = if (isEmpty) Single(self) else leavesBelow
+	def leaves: IndexedSeq[Node] = if (isEmpty) Single(self) else leavesBelow
 	/**
 	  * @return All leaf nodes that appear under this node.
 	  *         This node is never included, even when it is a leaf node.
@@ -240,7 +241,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         If this node had 2 children, that each had 2 children, 4 branches of length 3 would be returned.
 	  *         As the size of the tree increases, the number of resulting branches increases exponentially.
 	  */
-	def branchesIterator: Iterator[IndexedSeq[Repr]] = {
+	def branchesIterator: Iterator[IndexedSeq[Node]] = {
 		if (isEmpty)
 			PollableOnce(Single(self))
 		else
@@ -259,10 +260,10 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	def branchesBelowIterator = children.iterator.flatMap { _.branchesIterator }
 	// Returns branch builders. The branch builders are in reverse order (from leaf to root)
 	// Unchecked variance because only instances of Repr are added to the resulting builders
-	private def _branchesIterator: Iterator[VectorBuilder[Repr @uncheckedVariance]] = {
+	private def _branchesIterator: Iterator[VectorBuilder[Node @uncheckedVariance]] = {
 		// Case: This is a leaf node => Start a new reverse branch builder
 		if (isEmpty) {
-			val builder = new VectorBuilder[Repr]()
+			val builder = new VectorBuilder[Node]()
 			builder += self
 			PollableOnce(builder)
 		}
@@ -298,7 +299,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	 *         A path, in this context, is a sequence of nodes that starts with this node and ends with the
 	 *         targeted node.
 	 */
-	def allPathsIterator: Iterator[Seq[Repr]] = new AllPathsIterator[Repr](Empty, self)
+	def allPathsIterator: Iterator[Seq[Node]] = new AllPathsIterator[Node](Empty, self)
 	
 	
 	// IMPLEMENTED  ----------------
@@ -325,7 +326,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  * @param path A path of navigational steps to take. Ordered.
 	  * @return Node at the end of that path. May be generated.
 	  */
-	def /(path: Seq[A]): Repr = path.foldLeft(self) { _ / _ }
+	def /(path: Seq[A]): Node = path.foldLeft(self) { _ / _ }
 	/**
 	  * Finds or generates a node directly under this one
 	  * @param nav The next navigation "step"
@@ -349,12 +350,26 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	def get(nav: A) = children.find { _.nav ~== nav }
 	
 	/**
+	 * Follows a path to a possible node
+	 * @param path Path to follow, consisting of n items
+	 * @param matches A function which tests whether a nave element (1) matches a path element (2)
+	 * @tparam P Type of path elements used
+	 * @return Node at the end of the specified path. None if the specified path didn't point to an existing node.
+	 */
+	def follow[P](path: IterableOnce[P])(matches: (A, P) => Boolean) =
+		path
+			.foldLeftIterator[Option[Node]](Some(self)) { (node, next) =>
+				node.flatMap { _.children.find { c => matches(c.nav, next) } }
+			}
+			.takeTo { _.isEmpty }.last
+	
+	/**
 	 * @param maxDepth Maximum search depth, where 1 represents the direct children under this node,
 	 *                 2 represents the children of those nodes, and so on.
 	 * @return An iterator that returns all nodes within this tree structure up to a certain depth level.
 	 *         Won't include this node.
 	 */
-	def nodesBelowIteratorUpToDepth(maxDepth: Int): Iterator[Repr] = {
+	def nodesBelowIteratorUpToDepth(maxDepth: Int): Iterator[Node] = {
 		// Case: Maximum depth reached already => Returns no more nodes
 		if (maxDepth <= 0)
 			Iterator.empty
@@ -392,7 +407,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	 *         of all nodes represented with the specified elements.
 	 *         None if one or more of the specified elements could not be found from this tree
 	 */
-	def findCommonParentOf[B](elements: Iterable[B])(contains: (Repr, B) => Boolean) = elements.emptyOneOrMany.flatMap {
+	def findCommonParentOf[B](elements: Iterable[B])(contains: (Node, B) => Boolean) = elements.emptyOneOrMany.flatMap {
 		// Case: Targeting only a single element => Finds that element from this tree
 		case Left(only) => allNodesIterator.find { contains(_, only) }
 		// Case: Targeting multiple elements
@@ -422,7 +437,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	 *         Top level means that children of the returned nodes are not included separately.
 	 *        If this node satisfies the specified predicate, returns this node only.
 	 */
-	def rootsWhereIterator(filter: Repr => Boolean) =
+	def rootsWhereIterator(filter: Node => Boolean) =
 		if (filter(self)) Iterator.single(self) else rootsBelowWhereIterator(filter)
 	/**
 	 * @param filter A filter/search function
@@ -430,7 +445,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	 *         Top level means that children of the returned nodes are not included separately.
 	 *         Will never include this node.
 	 */
-	def rootsBelowWhereIterator(filter: Repr => Boolean): Iterator[Repr] = {
+	def rootsBelowWhereIterator(filter: Node => Boolean): Iterator[Node] = {
 		children.iterator.flatMap { n =>
 			// Case: The child matches the filter function => Accepts it and won't go deeper
 			if (filter(n))
@@ -461,14 +476,14 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         and contains all nodes that need to be traversed in order to reach the target node.
 	  *         The node that first fulfilled the specified search condition always lies at the end of the path.
 	  */
-	def findWithPath(filter: Repr => Boolean): Option[IndexedSeq[Repr]] = {
-		val builder = new VectorBuilder[Repr]()
+	def findWithPath(filter: Node => Boolean): Option[IndexedSeq[Node]] = {
+		val builder = new VectorBuilder[Node]()
 		if (_findWithPath(builder, filter))
 			Some(builder.result().reverse)
 		else
 			None
 	}
-	private def _findWithPath(builder: VectorBuilder[Repr @uncheckedVariance], filter: Repr => Boolean): Boolean = {
+	private def _findWithPath(builder: VectorBuilder[Node @uncheckedVariance], filter: Node => Boolean): Boolean = {
 		val result = filter(self) || children.exists { _._findWithPath(builder, filter) }
 		if (result)
 			builder += self
@@ -484,7 +499,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	 *         Every path will start with this node and end with the node that fulfilled the specified function.
 	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
 	 */
-	def pathsToRootsWhere(filter: Repr => Boolean) = pathsToRootsWhereIterator(filter).caching
+	def pathsToRootsWhere(filter: Node => Boolean) = pathsToRootsWhereIterator(filter).caching
 	/**
 	 * Finds the top nodes within this tree (whether this node, direct children or grandchildren etc.) that satisfy the
 	 * specified filter. Includes the "path" to all the selected nodes as well.
@@ -495,7 +510,7 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	 *         If this node fulfills the specified function, returns a single path consisting only of this node.
 	 *         The result is lazily computed and cached.
 	 */
-	def pathsToRootsWhereIterator(filter: Repr => Boolean) = _filterWithPaths(filter).map { _.result().reverse }
+	def pathsToRootsWhereIterator(filter: Node => Boolean) = _filterWithPaths(filter).map { _.result().reverse }
 	/**
 	  * Finds the top nodes under this node (whether they be direct children or grandchildren etc.) that satisfy the
 	  * specified filter. Includes the "path" to all the selected nodes as well.
@@ -507,11 +522,11 @@ trait TreeLike[A, +Repr <: TreeLike[A, Repr]] extends MaybeEmpty[Repr] with Exte
 	  *         The result is lazily computed and cached.
 	  */
 	@deprecated("Please use .pathsToRootsWhere(...) instead, as the term filter is ambiguous in this setting", "v2.4")
-	def filterWithPaths(filter: Repr => Boolean) = pathsToRootsWhere(filter)
-	private def _filterWithPaths(filter: Repr => Boolean): Iterator[VectorBuilder[Repr @uncheckedVariance]] = {
+	def filterWithPaths(filter: Node => Boolean) = pathsToRootsWhere(filter)
+	private def _filterWithPaths(filter: Node => Boolean): Iterator[VectorBuilder[Node @uncheckedVariance]] = {
 		// Case: This node represents a search result => Starts a new branch to it
 		if (filter(self)) {
-			val builder = new VectorBuilder[Repr]()
+			val builder = new VectorBuilder[Node]()
 			builder += self
 			Iterator.single(builder)
 		}

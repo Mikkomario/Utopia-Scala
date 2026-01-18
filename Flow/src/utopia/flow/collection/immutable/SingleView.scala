@@ -4,6 +4,17 @@ import utopia.flow.view.immutable.View
 
 import scala.collection.{AbstractIndexedSeqView, IndexedSeqView}
 
+object SingleView
+{
+	/**
+	 * Creates a new view into a singular item
+	 * @param value A function which yields the accessed value (call-by-name)
+	 * @tparam A Type of the accessed value
+	 * @return A view which wraps the specified value function
+	 */
+	def apply[A](value: => A) = new SingleView[A](value)
+}
+
 /**
   * Represents a view into a singular item (a Single)
   * @author Mikko Hilpinen

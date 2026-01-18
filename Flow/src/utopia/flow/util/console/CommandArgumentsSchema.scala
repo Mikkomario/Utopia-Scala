@@ -1,14 +1,24 @@
 package utopia.flow.util.console
 
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.operator.MaybeEmpty
+
+import scala.language.implicitConversions
 
 object CommandArgumentsSchema
 {
+	// ATTRIBUTES   ------------------------
+	
 	/**
 	 * An empty schema
 	 */
 	val empty = CommandArgumentsSchema(Empty)
+	
+	
+	// IMPLICIT ---------------------------
+	
+	implicit def from(args: Iterable[ArgumentSchema]): CommandArgumentsSchema =
+		apply(OptimizedIndexedSeq.from(args))
 }
 
 /**

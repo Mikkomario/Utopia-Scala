@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.caching.Lazy
   * @author Mikko Hilpinen
   * @since 24.7.2022, v1.16
   */
-trait LazySeqLike[+A, +Coll[X]]
+trait LazySeqLike[+A, +Coll[_]]
 {
 	// ABSTRACT ------------------------
 	
