@@ -10,14 +10,15 @@ import utopia.vault.model.template.Deprecates
 import utopia.vault.nosql.factory.FromResultFactory
 import utopia.vault.nosql.read.DbReader
 import utopia.vault.nosql.read.parse.ParseResultStream
+import utopia.vault.nosql.targeting.grouped.AccessGrouped
 import utopia.vault.sql.{Condition, OrderBy, SqlSegment, SqlTarget}
 
 object AccessMany
 {
 	// OTHER    ------------------------------
 	
-	def apply[A](factory: DbReader[Seq[A]]): AccessMany[A] =
-		_AccessMany[A](factory.target, factory.table, factory.selectTarget, factory)
+	def apply[A](reader: DbReader[Seq[A]]): AccessMany[A] =
+		_AccessMany[A](reader.target, reader.table, reader.selectTarget, reader)
 	def apply[A](factory: FromResultFactory[A], useDefaultOrdering: Boolean): AccessMany[A] =
 		_AccessMany[A](factory.target, factory.table, factory.selectTarget, factory,
 			ordering = if (useDefaultOrdering) factory.defaultOrdering else None)
@@ -68,4 +69,4 @@ object AccessMany
   * @author Mikko Hilpinen
   * @since 16.05.2025, v1.21
   */
-trait AccessMany[+A] extends TargetingMany[A] with AccessManyLike[A, AccessMany[A]]
+trait AccessMany[+A] extends AccessGrouped[Seq[A]] with TargetingMany[A] with AccessManyLike[A, AccessMany[A]]

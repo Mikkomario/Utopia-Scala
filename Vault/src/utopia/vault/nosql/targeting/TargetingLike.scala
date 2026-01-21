@@ -11,7 +11,10 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy}
 
 /**
   * Common trait for access points that may be filtered and/or extended
-  * @tparam Repr Type of filtered / further targeted access points generated
+  * @tparam A The result type of .pull (i.e. one or multiple items of some kind)
+ * @tparam V Type of values or value-sets pulled when targeting individual columns
+ * @tparam VV Type of value-sets / rows pulled when targeting multiple columns at once
+ * @tparam Repr Type of filtered / further targeted access points generated
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */

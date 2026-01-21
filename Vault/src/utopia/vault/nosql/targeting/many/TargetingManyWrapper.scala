@@ -1,20 +1,23 @@
 package utopia.vault.nosql.targeting.many
 
-import utopia.flow.generic.model.immutable.Value
-import utopia.flow.operator.enumeration.{End, Extreme}
-import utopia.vault.database.Connection
-import utopia.vault.model.immutable.Column
-import utopia.vault.nosql.targeting.TargetingWrapper
-import utopia.vault.sql.{Condition, OrderBy, OrderDirection}
+import utopia.flow.operator.enumeration.End
+import utopia.vault.nosql.targeting.grouped.TargetingGroupedWrapper
+import utopia.vault.sql.{Condition, OrderBy}
 
 /**
   * Common trait for access points that target multiple items at a time by wrapping another targeted access point
-  * @author Mikko Hilpinen
+  * @tparam T The type of the wrapped access point (accessing many items of O)
+ * @tparam OT Type of the wrapped access point's single-access version (accessing one O)
+ * @tparam O Type of the individual accessed items via the wrapped access points (T and OT)
+ * @tparam A Type of individual wrapped / mapped items (O => A)
+ * @tparam Repr Concrete / implementing access point type yielded by various copy functions
+ * @tparam One Type of the access point that yields individual items (of type A);
+ *             The result type of various single-access functions like .head.
+ * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */
 trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +One]
-	extends TargetingManyLike[A, Repr, One]
-		with TargetingWrapper[T, Seq[O], Seq[Value], Seq[Seq[Value]], Seq[A], Seq[Value], Seq[Seq[Value]], Repr]
+	extends TargetingGroupedWrapper[T, Seq[O], Seq[A], Repr] with TargetingManyLike[A, Repr, One]
 {
 	// ABSTRACT ---------------------------
 	
@@ -33,23 +36,7 @@ trait TargetingManyWrapper[T <: TargetingManyLike[O, T, OT], OT, O, +A, +Repr, +
 	// IMPLEMENTED  -----------------------
 	
 	override protected def wrapResult(result: Seq[O]): Seq[A] = result.map(mapResult)
-	override protected def wrapValue(value: Seq[Value]): Seq[Value] = value
-	override protected def wrapValues(values: Seq[Seq[Value]]): Seq[Seq[Value]] = values
 	
 	override def apply(end: End, ordering: Option[OrderBy], filter: Option[Condition]) =
 		wrapUniqueTarget(wrapped(end, ordering, filter))
-	
-	override def apply(column: Column, extreme: Extreme)(implicit connection: Connection): Value =
-		wrapped(column, extreme)
-	
-	override def count(column: Column, distinct: Boolean)(implicit connection: Connection) =
-		wrapped.count(column, distinct)
-	
-	override def streamColumn[B](column: Column, order: Option[OrderDirection], distinct: Boolean)
-	                            (f: Iterator[Value] => B)
-	                            (implicit connection: Connection) =
-		wrapped.streamColumn(column, order, distinct)(f)
-	override def streamColumns[B](columns: Seq[Column])(f: Iterator[Seq[Value]] => B)
-	                             (implicit connection: Connection) =
-		wrapped.streamColumns(columns)(f)
 }

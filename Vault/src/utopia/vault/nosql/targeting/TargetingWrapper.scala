@@ -10,6 +10,17 @@ import utopia.vault.sql.{Condition, JoinType, OrderBy, SqlTarget}
 /**
   * Common trait for instances which implement [[TargetingLike]] by wrapping another such instance
   * (while applying a mapping to its results).
+ * @tparam T Type of the wrapped access point
+ * @tparam O Type of the .pull results in the wrapped access point (T)
+ * @tparam OV Type of values or value-sets pulled using the wrapped access point (T),
+ *            when targeting individual columns.
+ *            I.e. V of T.
+ * @tparam OVV Type of value-sets pulled using the wrapped access point, when targeting multiple columns at once.
+ *             I.e. VV of T.
+ * @tparam R The type of pulled and wrapped items (as a group) (i.e. one or multiple items of some kind)
+ * @tparam RV Type of values or value-sets pulled when targeting individual columns, after wrapping
+ * @tparam RVV Type of value-sets / rows pulled when targeting multiple columns at once, after wrapping
+ * @tparam Repr Type of filtered / further targeted access points generated
   * @author Mikko Hilpinen
   * @since 15.05.2025, v1.21
   */

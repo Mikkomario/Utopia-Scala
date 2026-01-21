@@ -22,6 +22,8 @@
   **LazyDbValue**, **InitializedDbValue**, **LazyDbValueWrapper** and **LazyLookUpDbValue**
 - Added a new **DbMap** class for pulling and caching values from a database table
 - In **Store**, added support for replacing ID -based deprecation
+- Added **TargetingGrouped** -type access traits for use-cases where multiple rows 
+  are combined into types other than **Seq**.
 - **JoiningDbReader** now supports the addition of new join conditions after instance creation
 - Added **StoredId** trait
 - Added **Filterable** trait

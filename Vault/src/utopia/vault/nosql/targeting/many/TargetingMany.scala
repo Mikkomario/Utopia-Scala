@@ -1,7 +1,6 @@
 package utopia.vault.nosql.targeting.many
 
-import utopia.flow.generic.model.immutable.Value
-import utopia.vault.nosql.targeting.Targeting
+import utopia.vault.nosql.targeting.grouped.TargetingGrouped
 import utopia.vault.nosql.targeting.one.TargetingOne
 
 object TargetingMany
@@ -32,8 +31,7 @@ object TargetingMany
   * @since 18.05.2025, v1.21
   */
 trait TargetingMany[+A]
-	extends Targeting[Seq[A], Seq[Value], Seq[Seq[Value]]]
-		with TargetingManyLike[A, TargetingMany[A], TargetingOne[Option[A]]]
+	extends TargetingGrouped[Seq[A]] with TargetingManyLike[A, TargetingMany[A], TargetingOne[Option[A]]]
 {
 	/**
 	  * @param f A mapping function applied to this access point's results

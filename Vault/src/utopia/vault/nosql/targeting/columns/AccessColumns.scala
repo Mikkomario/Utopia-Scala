@@ -16,7 +16,9 @@ object AccessColumns
 
 /**
   * Common trait for interfaces which provide access to database column contents
-  * @author Mikko Hilpinen
+  * @tparam V Type of values / value-sets pulled when targeting individual columns
+ * @tparam Values Type of value-sets / rows pulled when targeting multiple columns at once
+ * @author Mikko Hilpinen
   * @since 19.05.2025, v1.21
   */
 trait AccessColumns[+V, +Values] extends Indexed
