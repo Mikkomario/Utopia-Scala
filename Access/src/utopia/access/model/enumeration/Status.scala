@@ -186,8 +186,7 @@ object Status extends OpenEnumeration[Status, Int]
 }
 
 /**
- * Different statuses are used for signaling different response roles<br>
- * See also: https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html [referenced: 25.11.2017]
+ * Different statuses are used for signaling different response roles.
  * @author Mikko Hilpinen
  * @since 20.8.2017
  * @param name Status name (for human readers)
@@ -199,6 +198,7 @@ object Status extends OpenEnumeration[Status, Int]
  *                    request.
  *                    UncertainBoolean if it is unknown whether the server status may change in time or if this current
  *                    status is only temporary
+ * @see [[https://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html]] [referenced: 25.11.2017]
  */
 class Status(val name: String, val code: Int, val isTemporary: UncertainBoolean = UncertainBoolean,
              val doNotRepeat: UncertainBoolean = UncertainBoolean)

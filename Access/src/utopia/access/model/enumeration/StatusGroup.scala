@@ -3,8 +3,7 @@ package utopia.access.model.enumeration
 import utopia.flow.collection.immutable.Pair
 
 /**
-  * StatusGroups describe a larger type of html statuses which includes multiple more specific
-  * statuses.
+  * StatusGroups describe a larger type of HTML statuses which includes multiple more specific statuses.
   * @author Mikko Hilpinen
   * @since 20.8.2017
   */
