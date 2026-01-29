@@ -9,7 +9,6 @@ import scala.concurrent.Future
 
 /**
  * An implementation of [[OpenAiChatRequest]] which doesn't use streaming
- *
  * @author Mikko Hilpinen
  * @since 02.09.2025, v1.4
  */
@@ -17,7 +16,7 @@ case class BufferedOpenAiChatRequest(params: ChatParams) extends OpenAiChatReque
 {
 	// ATTRIBUTES   -------------------------
 	
-	override lazy val stream: Boolean = false
+	override val stream: Boolean = false
 	
 	
 	// IMPLEMENTED  -------------------------

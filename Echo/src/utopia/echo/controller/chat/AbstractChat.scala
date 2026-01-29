@@ -50,6 +50,7 @@ import scala.util.{Failure, Success, Try}
   * @tparam R Type of (streaming) responses received
  * @tparam BR Type of buffered responses received
  * @tparam Repr Implementing chat type
+ *
  * @param initialLlm The initially assigned LLM
  * @param requestQueue Queue for sending out API requests
  * @param emptyReply An empty reply instance. May be used as a placeholder.
@@ -57,7 +58,7 @@ import scala.util.{Failure, Success, Try}
  * @param log Implicit logging implementation for handling pointer-related failures and for
  *            recording chat request failures
  * @param exc Implicit execution context used in asynchronous processing
- * @param jsonParser Json parser for processing API responses
+ * @param jsonParser JSON parser for processing API responses
   */
 abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: AbstractChat[R, _, _]]
 (requestQueue: RequestQueue, initialLlm: LlmDesignator, emptyReply: R, emptyBufferedReply: BR)

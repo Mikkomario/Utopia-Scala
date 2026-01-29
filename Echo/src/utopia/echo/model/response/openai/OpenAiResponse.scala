@@ -4,7 +4,7 @@ import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.Alive
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.Assistant
-import utopia.echo.model.response.BufferedReply
+import utopia.echo.model.response.{BufferedReply, BufferedReplyLike}
 import utopia.echo.model.response.openai.toolcall.{FileSearchToolCall, OpenAiFunctionToolCall, WebSearchToolCall}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
@@ -21,7 +21,12 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 {
 	// ATTRIBUTES   -------------------
 	
-	private lazy val schema = ModelDeclaration("id" -> StringType)
+	private val schema = ModelDeclaration("id" -> StringType)
+	
+	/**
+	 * An empty Open AI response
+	 */
+	lazy val empty = apply("", OpenAiTokenUsageStatistics.zero)
 	
 	
 	// IMPLEMENTED  -------------------
@@ -81,7 +86,7 @@ case class OpenAiResponse(id: String, tokenUsage: OpenAiTokenUsageStatistics, me
                           fileSearchCalls: Seq[FileSearchToolCall] = Empty, metadata: Model = Model.empty,
                           override val state: SchrodingerState = Alive,
                           whyIncomplete: String = "", error: Option[OpenAiError] = None, created: Instant = Now)
-	extends BufferedReply
+	extends BufferedReply with BufferedReplyLike[OpenAiResponse]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -104,7 +109,7 @@ case class OpenAiResponse(id: String, tokenUsage: OpenAiTokenUsageStatistics, me
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def self: BufferedReply = this
+	override def self = this
 	
 	override def lastUpdated: Instant = created
 }

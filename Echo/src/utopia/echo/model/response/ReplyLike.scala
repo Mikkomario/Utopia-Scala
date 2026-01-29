@@ -1,6 +1,6 @@
 package utopia.echo.model.response
 
-import utopia.annex.model.manifest.HasSchrodingerState
+import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.flow.operator.Identity
 import utopia.flow.util.Mutate
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -8,6 +8,44 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import java.time.Instant
 import scala.concurrent.Future
 import scala.util.Try
+
+object ReplyLike
+{
+	// OTHER    -----------------------------
+	
+	/**
+	 * Prepares a new streaming reply instance
+	 * @param textPointer A pointer that contains this reply's full text
+	 * @param thoughtsPointer A pointer that contains this reply's reflective / thinking content
+	 * @param newTextPointer A pointer that contains the latest text increment
+	 * @param thinkingFlag A flag that contains true while the thinking content may still be generated
+	 * @param lastUpdatedPointer A pointer that contains a timestamp of this reply's latest update
+	 * @param future A future that resolves into a buffered version of this reply
+	 * @return A new streaming reply
+	 */
+	def streaming[B](textPointer: Changing[String], thoughtsPointer: Changing[String], newTextPointer: Changing[String],
+	              thinkingFlag: Flag, lastUpdatedPointer: Changing[Instant], future: Future[Try[B]]): ReplyLike[B] =
+		new StreamingReply(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer, future)
+	
+	
+	// NESTED   -----------------------------
+	
+	private class StreamingReply[+B](override val textPointer: Changing[String],
+	                                 override val thoughtsPointer: Changing[String],
+	                                 override val newTextPointer: Changing[String],
+	                                 override val thinkingFlag: Flag,
+	                                 override val lastUpdatedPointer: Changing[Instant],
+	                                 override val future: Future[Try[B]])
+		extends ReplyLike[B]
+	{
+		override def text: String = textPointer.value
+		override def thoughts: String = thoughtsPointer.value
+		override def lastUpdated: Instant = lastUpdatedPointer.value
+		
+		override def isBuffered: Boolean = future.isCompleted
+		override def state: SchrodingerState = SchrodingerState.of(future)
+	}
+}
 
 /**
   * Common trait / interface for LLM replies, whether they're streamed or buffered.

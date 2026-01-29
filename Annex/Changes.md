@@ -18,6 +18,9 @@
 ### New features
 - **RequestResult** now extends **MayHaveFailed**, and contains a number of new functions
 - **Response** (object) now contains variable: `parseFailureStatus`
+### New methods
+- **SchrodingerState** (object)
+  - Added `.of(Future)`
 
 ## v1.11 - 01.11.2025
 A small update introducing support for path parameters in API requests.

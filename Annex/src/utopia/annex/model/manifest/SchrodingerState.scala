@@ -1,11 +1,14 @@
 package utopia.annex.model.manifest
 
+import utopia.flow.async.AsyncExtensions._
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.operator.sign.UncertainSign.{NotNeutral, UncertainBinarySign}
 import utopia.flow.operator.sign.{BinarySigned, Sign}
 import utopia.flow.util.UncertainBoolean
 
+import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 /**
   * An enumeration for different states a Schrödinger item may be or appear in
@@ -77,6 +80,21 @@ sealed trait SchrodingerState
 
 object SchrodingerState
 {
+	// OTHER    -------------------------
+	
+	/**
+	 * @param process A process whose state is evaluated
+	 * @return The current/immediate state of that process
+	 */
+	def of(process: Future[Try[Any]]): SchrodingerState = process.currentResult match {
+		case None => PositiveFlux
+		case Some(Success(_)) => Alive
+		case Some(Failure(_)) => Dead
+	}
+	
+	
+	// VALUES   -------------------------
+	
 	object Flux
 	{
 		// ATTRIBUTES   -----------------

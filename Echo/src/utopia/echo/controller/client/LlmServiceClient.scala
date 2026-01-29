@@ -18,6 +18,26 @@ import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
+object LlmServiceClient
+{
+	/**
+	 * Prepares an LLM service client to use with DeepSeek ([[https://api.deepseek.com]])
+	 * @param apiKey API key used
+	 * @param gateway Gateway instance used. Default = new instance.
+	 * @param maxParallelRequests Maximum number of parallel request to send out / process.
+	 *                            Default = 8.
+	 * @param log Implicit logging implementation
+	 * @param exc Implicit execution context
+	 * @return a new LLM service client
+	 */
+	def deepSeek(apiKey: String,
+	             gateway: Gateway = Gateway(maxConnectionsPerRoute = 4,
+		             allowBodyParameters = false, allowJsonInUriParameters = false),
+	             maxParallelRequests: Int = 8)
+	            (implicit log: Logger, exc: ExecutionContext) =
+		new LlmServiceClient(gateway, "https://api.deepseek.com", apiKey, maxParallelRequests, 10.minutes)
+}
+
 /**
   * A base class for client-side interfaces for interacting with an LLM server
   * @author Mikko Hilpinen
@@ -34,24 +54,16 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
                       (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
 {
-	/*
-		TODO: Add support for DeepSeek, etc.
-		 Here are some details for DeepSeek:
-		    - Url: https://api.deepseek.com
-		    - Model: DeepSeek-V3 | DeepSeek-R1
-		    - Needs an API key
-	 */
-	
 	// ATTRIBUTES   ------------------------
 	
 	/**
 	  * The wrapped request queue system
 	  */
-	protected lazy val queueSystem = new QueueSystem(LlmApiClient, offlineWaitThreshold, minOfflineDelay = 10.seconds)
+	protected val queueSystem = new QueueSystem(LlmApiClient, offlineWaitThreshold, minOfflineDelay = 10.seconds)
 	/**
 	  * The wrapped request queue
 	  */
-	protected lazy val queue = RequestQueue(queueSystem, maxParallelRequests)
+	protected val queue = RequestQueue(queueSystem, maxParallelRequests)
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -65,20 +77,20 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 	{
 		// ATTRIBUTES   -----------------------
 		
-		override protected def gateway = LlmServiceClient.this.gateway
+		override protected implicit val jsonParser: JsonParser = JsonBunny
 		
-		override lazy val valueResponseParser: ResponseParser[Response[Value]] =
+		override val valueResponseParser: ResponseParser[Response[Value]] =
 			ResponseParser.value.unwrapToResponse { v => v("error", "message").stringOr(v.getString) }
-		override lazy val emptyResponseParser: ResponseParser[Response[Unit]] =
+		override val emptyResponseParser: ResponseParser[Response[Unit]] =
 			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
 		
 		
 		// IMPLEMENTED  -----------------------
 		
-		override protected implicit def jsonParser: JsonParser = JsonBunny
 		override protected implicit def log: Logger = LlmServiceClient.this.log
 		override protected implicit def exc: ExecutionContext = LlmServiceClient.this.exc
 		
+		override protected def gateway = LlmServiceClient.this.gateway
 		override protected def rootPath: String = serverAddress
 		
 		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)

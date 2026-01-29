@@ -11,6 +11,11 @@ object OpenAiTokenUsageStatistics extends FromModelFactoryWithSchema[OpenAiToken
 	
 	override lazy val schema: ModelDeclaration = ModelDeclaration("input_tokens" -> IntType, "output_tokens" -> IntType)
 	
+	/**
+	 * A zero usage -statistics
+	 */
+	lazy val zero = apply(0, 0, 0, 0, 0)
+	
 	
 	// IMPLEMENTED  -----------------
 	

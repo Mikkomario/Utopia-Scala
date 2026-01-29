@@ -56,8 +56,11 @@ object OllamaClient
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
 	          responseInterceptors: Seq[ResponseInterceptor] = Empty)
 	         (implicit log: Logger, exc: ExecutionContext) =
-		using(Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
-			requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors), serverAddress)
+		using(
+			Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes),
+				requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors,
+				allowBodyParameters = false, allowJsonInUriParameters = false),
+			serverAddress)
 }
 
 /**
