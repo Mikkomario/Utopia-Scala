@@ -6,12 +6,15 @@ import utopia.flow.event.model.{ChangeEvent, ChangeResult}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{DoubleType, StringType}
+import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.{Pointer, Settable}
 import utopia.flow.view.mutable.async.{BecomesEventfulVolatile, EventfulVolatile, LockableVolatile}
 import utopia.flow.view.mutable.eventful._
+import utopia.flow.view.template.eventful.Flag
 
 import scala.util.Try
 
@@ -875,6 +878,81 @@ object ChangingTest extends App
 	assert(gaPrev == 3)
 	println("Retrieving GA")
 	assert(ga.value == 4)
+	
+	// Tests OnceFlatteningPointer
+	
+	private var lastOfpValue = -1
+	private val ofp1 = OnceFlatteningPointer(1)
+	private val ofpControl1 = Pointer.lockable(1)
+	
+	ofp1.addListener { e => lastOfpValue = e.newValue }
+	
+	assert(lastOfpValue == -1)
+	assert(ofp1.value == 1)
+	assert(ofp1.mayChange)
+	
+	ofp1.complete(ofpControl1)
+	
+	assert(lastOfpValue == -1)
+	assert(ofp1.value == 1)
+	assert(ofp1.mayChange)
+	
+	ofpControl1.value = 2
+	
+	assert(lastOfpValue == 2)
+	assert(ofp1.value == 2)
+	assert(ofp1.mayChange)
+	
+	ofpControl1.lock()
+	
+	assert(ofp1.isFixed)
+	
+	private val ofp2 = OnceFlatteningPointer(1)
+	
+	lastOfpValue = -1
+	ofp2.addListener { e => lastOfpValue = e.newValue }
+	ofp2.complete(Pointer.eventful(2))
+	
+	assert(lastOfpValue == 2)
+	assert(ofp2.value == 2)
+	
+	// Tests initial event generation in flatMap
+	
+	private val cp1 = Pointer.eventful(0)
+	private val cp2 = Pointer.eventful(1)
+	private val fp1 = cp1.flatMap { v1 =>
+		if (v1 == 0)
+			Fixed(0)
+		else
+			cp2.map { _ * v1 }
+	}
+	private var lastFp1Value = -1
+	fp1.addListener { e => lastFp1Value = e.newValue }
+	
+	assert(lastFp1Value == -1)
+	assert(fp1.value == 0)
+	
+	cp1.value = 2
+	
+	assert(lastFp1Value == 2)
+	assert(fp1.value == 2)
+	
+	cp2.value = 2
+	
+	assert(lastFp1Value == 4)
+	assert(fp1.value == 4)
+	
+	private val flagP = AssignableOnce[Flag]()
+	private val flag = ResettableFlag()
+	private val flatFlagP = flagP.flatMap { _.getOrElse(AlwaysFalse) }
+	private var lastVal = false
+	flatFlagP.addListener { e => lastVal = e.newValue }
+	
+	flagP.set(flag)
+	flag.set()
+	
+	assert(lastVal)
+	assert(flatFlagP.value)
 	
 	println("Done!")
 }

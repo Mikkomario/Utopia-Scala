@@ -1,9 +1,10 @@
 package utopia.reach.component.factory.contextual
 
 import utopia.reach.component.factory.GenericContainerFactories.GCF
+import utopia.reach.component.factory.Mixed
 
 /**
-  * A contextual container factory which in practice is only used for contextual builder creation
+  * A contextual container factory which, in practice, is only used for contextual builder creation
   * @author Mikko Hilpinen
   * @since 16.12.2020, v0.1
   * @tparam N Type of context being used
@@ -28,4 +29,12 @@ trait AnyContextContainerBuilderFactory[N, +CF, +B[_, _[_]], +Repr[_]]
 	  * @return A new builder
 	  */
 	def build[F[_]](contentFactory: GCF[N, F]): B[N, F]
+	
+	
+	// COMPUTED -------------------------------
+	
+	/**
+	 * @return A version of this factory for building mixed content
+	 */
+	def mixed = build(Mixed)
 }

@@ -117,6 +117,12 @@ trait ReplyLike[+Buffered] extends HasSchrodingerState
 	  */
 	def isStreaming = !isBuffered
 	
+	/**
+	 * @return Whether the currently produced response is reflective content.
+	 *         Always false for buffered replies.
+	 */
+	def thinking = thinkingFlag.value
+	
 	
 	// OTHER    ------------------------------
 	

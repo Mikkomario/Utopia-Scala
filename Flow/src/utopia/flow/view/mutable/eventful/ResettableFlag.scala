@@ -50,6 +50,8 @@ object ResettableFlag
 		
 		override implicit def listenerLogger: Logger = wrapped.listenerLogger
 		
+		override def toString = s"$wrapped.flag"
+		
 		override def value_=(newValue: Boolean): Unit = wrapped.value = newValue
 		override def setAndQueueEvent(newValue: Boolean): IterableOnce[AfterEffect] = wrapped.setAndQueueEvent(newValue)
 	}

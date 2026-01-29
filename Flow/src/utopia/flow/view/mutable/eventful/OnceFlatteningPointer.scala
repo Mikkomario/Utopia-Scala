@@ -77,7 +77,10 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 	
 	// IMPLEMENTED  ------------------------
 	
-	override implicit def listenerLogger: Logger = SysErrLogger
+	override implicit def listenerLogger: Logger = pointer match {
+		case Some(p) => p.listenerLogger
+		case None => SysErrLogger
+	}
 	
 	override def value: A = pointer match {
 		case Some(p) => p.value

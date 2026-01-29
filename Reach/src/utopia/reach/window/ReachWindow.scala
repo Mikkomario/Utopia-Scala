@@ -22,7 +22,7 @@ import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer}
+import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer, OnceFlatteningPointer}
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.util.Screen
@@ -138,8 +138,8 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 	  * @param title         Title shown on the OS header of this window, if applicable (default = empty)
 	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
 	  *                                 This concerns bounds updates that occur at two places:
-	  *                                 1) When this window is constructed (once), and
-	  *                                 2) Whenever this window becomes visible.
+	  *                                     1. When this window is constructed (once), and
+	  *                                     1. Whenever this window becomes visible.
 	  *
 	  *                                 Set this to false if you intend to perform your own window bounds optimization
 	  *                                 upon these two cases.
@@ -162,10 +162,9 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 		val windowPointer = AssignableOnce[Window]()
 		val canvasPointer = AssignableOnce[Stackable]()
 		// The attachment status tracking starts once the window has been created
-		val attachmentPointer = windowPointer.flatMap {
-			case Some(window) => window.fullyVisibleFlag
-			case None => AlwaysFalse
-		}
+		// TODO: When I used windowPointer.flatMap { ... }, the attachmentPointer didn't yield the initial event.
+		//  Can't reproduce the issue in another environment, however.
+		val attachmentPointer = OnceFlatteningPointer(false)
 		lazy val absoluteWindowPositionPointer = windowPointer.flatMap {
 			case Some(window) => window.positionPointer
 			case None => Fixed(Point.origin)
@@ -195,6 +194,7 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 			prepareForSizeChange = Some(canvas.parent.prepareForWindowSizeChange),
 			disableAutoBoundsUpdates = disableAutoBoundsUpdates)
 		windowPointer.set(window)
+		attachmentPointer.complete(window.fullyVisibleFlag)
 		
 		// Returns the canvas and the window
 		WindowCreationResult(window, canvas)

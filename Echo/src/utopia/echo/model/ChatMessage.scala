@@ -78,10 +78,10 @@ case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole
 	
 	// IMPLEMENTED  ------------------------
 	
-	// NB: Thoughts are not included in this model
+	// NB: Thoughts are not included in this model (not supported as LLM input)
 	override def toModel: Model =
 		Model.from("role" -> senderRole.name,
-				"content" -> Model.from("text" -> text.replace("\t", "  "), "thinking" -> thoughts.replace("\t", "  ")),
+				"content" -> text.replace("\t", "  "),
 				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls))
 			.withoutEmptyValues
 	
