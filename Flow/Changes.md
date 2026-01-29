@@ -231,6 +231,7 @@
   because the previous version could not be called because of ambiguous implicits.
 - `.groupByUsing(...)` and `.groupMapUsing(...)` in **IterableOnce** now support optional default value -generation
 - **JsonSettingsAccess** now extends **HasPropertiesLike**
+- **LockableVolatile**'s `.lock()` now only declares the changing as stopped once
 - Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
 - Internal refactoring within **Extreme**'s `.by(...)`

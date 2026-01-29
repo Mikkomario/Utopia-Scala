@@ -11,8 +11,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.result.TryExtensions._
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -45,11 +45,6 @@ trait BufferedReplyLike[+Repr] extends ReplyLike[Repr]
 	def self: Repr
 	
 	/**
-	 * @return The reflective / reasoning content produced by the LLM before the final answer.
-	 *         May be empty.
-	 */
-	def thoughts: String
-	/**
 	 * @return Statistics about token usage in this interaction
 	 */
 	def tokenUsage: TokenUsage
@@ -63,19 +58,19 @@ trait BufferedReplyLike[+Repr] extends ReplyLike[Repr]
 	// COMPUTED ------------------------
 	
 	/**
-	 * Finds and parses json contents from a completed response.
-	 * Assumes that the reply is requested as a single json array.
+	 * Finds and parses JSON contents from a completed response.
+	 * Assumes that the reply is requested as a single JSON array.
 	 * Supports situations where the response contains other text, also.
-	 * @return A json array parsed from the contents of this response.
+	 * @return A JSON array parsed from the contents of this response.
 	 */
-	def jsonArray = closedJsonEntity('[', ']', "json array").flatMap { _.tryVector }
+	def jsonArray = closedJsonEntity('[', ']', "JSON array").flatMap { _.tryVector }
 	/**
-	 * Finds and parses json contents from a completed response.
-	 * Assumes that the reply is requested as a single json object.
+	 * Finds and parses JSON contents from a completed response.
+	 * Assumes that the reply is requested as a single JSON object.
 	 * Supports situations where the response contains other text, also.
-	 * @return A json object parsed from the contents of this response.
+	 * @return A JSON object parsed from the contents of this response.
 	 */
-	def jsonObject = closedJsonEntity('{', '}', "json object").flatMap { _.tryModel }
+	def jsonObject = closedJsonEntity('{', '}', "JSON object").flatMap { _.tryModel }
 	
 	
 	// IMPLEMENTED  --------------------
@@ -87,7 +82,9 @@ trait BufferedReplyLike[+Repr] extends ReplyLike[Repr]
 	override def state: SchrodingerState = Alive
 	
 	override def textPointer: Changing[String] = Fixed(text)
+	override def thoughtsPointer: Changing[String] = Fixed(thoughts)
 	override def newTextPointer: Changing[String] = Fixed(text)
+	override def thinkingFlag: Flag = AlwaysFalse
 	override def lastUpdatedPointer: Changing[Instant] = Fixed(lastUpdated)
 	
 	

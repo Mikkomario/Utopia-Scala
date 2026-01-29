@@ -4,6 +4,8 @@
 Supports **Flow v2.8**
 ### Deprecations
 - Deprecated **EchoContext**; Parsing failure **Status** is now defined in `Response.parseFailureStatus` instead.
+### Other changes
+- Added support for Ollama's latest thinking response structuring
 
 ## v1.4 - 01.11.2025
 This update introduces two new integrations:

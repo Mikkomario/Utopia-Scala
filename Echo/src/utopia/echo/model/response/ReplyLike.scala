@@ -3,7 +3,7 @@ package utopia.echo.model.response
 import utopia.annex.model.manifest.HasSchrodingerState
 import utopia.flow.operator.Identity
 import utopia.flow.util.Mutate
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.Future
@@ -39,10 +39,28 @@ trait ReplyLike[+Buffered] extends HasSchrodingerState
 	  * @return A pointer which contains the currently built response text
 	  */
 	def textPointer: Changing[String]
+	
+	/**
+	 * @return The reflective / reasoning content produced by the LLM before the final answer.
+	 *         May be empty.
+	 */
+	def thoughts: String
+	/**
+	 * @return A pointer that contains the reflective / reasoning content produced by the LLM
+	 *         before giving the final answer.
+	 */
+	def thoughtsPointer: Changing[String]
+	
 	/**
 	 * @return A pointer which contains the latest read reply message addition.
+	 *         Note: May reflect either text or thoughts.
 	 */
 	def newTextPointer: Changing[String]
+	/**
+	 * @return A flag that contains true while the LLM is producing "thinking" or reflective content.
+	 *         Note: May be true before the type of the produced text content is known.
+	 */
+	def thinkingFlag: Flag
 	
 	/**
 	  * @return Time when the latest version of this response was originated.

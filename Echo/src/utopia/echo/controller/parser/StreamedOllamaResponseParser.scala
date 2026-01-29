@@ -6,6 +6,7 @@ import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.eventful.SettableFlag
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,20 +40,32 @@ object StreamedOllamaResponseParser
 	                                 override val jsonParser: JsonParser, override val log: Logger)
 		extends StreamedOllamaResponseParser
 	{
-		override protected def textFromResponse(response: Model): String = response("message")("content").getString
+		override protected def textFromResponse(response: Model) = {
+			// response("message")("content").getString
+			response("message").model match {
+				case Some(message) =>
+					message("content").string match {
+						case Some(text) => text -> false
+						case None => message("thinking").getString -> true
+					}
+				case None => "" -> true
+			}
+		}
 	}
 	
 	private class GenerateResponseParser(implicit override val exc: ExecutionContext,
 	                                     override val jsonParser: JsonParser, override val log: Logger)
 		extends StreamedOllamaResponseParser
 	{
-		override protected def textFromResponse(response: Model): String = response("response").getString
+		// NB: This version doesn't support thinking mode, yet
+		override protected def textFromResponse(response: Model) =
+			response("response").getString -> false
 	}
 }
 
 /**
-  * A response parser which parses LLM replies from a streamed json response.
-  * Expects the stream to contain newline-delimited json where each line represents a json object.
+  * A response parser which parses LLM replies from a streamed JSON response.
+  * Expects the stream to contain newline-delimited JSON where each line represents a JSON object.
   * @author Mikko Hilpinen
   * @since 18.07.2024, v1.0
   */
@@ -62,9 +75,10 @@ trait StreamedOllamaResponseParser extends StreamedNdJsonResponseParser[OllamaRe
 	
 	/**
 	  * @param response Response model to read
-	  * @return Incremented text from the specified response
+	  * @return Incremented text from the specified response.
+	 *         Also returns a boolean indicating whether the read text is part of the model's "thinking" output.
 	  */
-	protected def textFromResponse(response: Model): String
+	protected def textFromResponse(response: Model): (String, Boolean)
 	
 	
 	// IMPLEMENTED  -------------------------
@@ -84,25 +98,38 @@ trait StreamedOllamaResponseParser extends StreamedNdJsonResponseParser[OllamaRe
 	{
 		// ATTRIBUTES   ----------------
 		
-		// Prepares a pointer to store the read reply text
+		// Prepares pointers to store the read reply text
 		private val newTextPointer = Volatile.lockable("")
 		private val textPointer = Volatile.lockable("")
+		private val thoughtsPointer = Volatile.lockable("")
+		private val thinkingCompletionFlag = SettableFlag()
 		private val lastUpdatedPointer = Volatile.lockable[Instant](Now)
 		
 		
 		// IMPLEMENTED  ----------------
 		
-		// TODO: Add support for thinking. The model should contain something like "thinking" (in the message section). Also, "thinking" and "content" may be exclusive with each other.
 		override def updateStatus(response: Model): Unit = {
-			val newText = textFromResponse(response)
+			val (newText, thinking) = textFromResponse(response)
+			
+			// Updates the thinking flag
+			if (!thinking && thinkingCompletionFlag.isNotSet) {
+				// Clears the new text -pointer, also,
+				// so that the following content will be clearly in non-thinking mode
+				newTextPointer.value = ""
+				thinkingCompletionFlag.set()
+				thoughtsPointer.lock()
+			}
+			
 			// Checks for edge cases, where the new addition is identical to the latest one
 			// In these cases, clears the new text -value first, so that a change event will be generated
 			// This is not needed if nobody is listening to the new text -pointer
 			if (newTextPointer.hasListeners && newText == newTextPointer.value)
 				newTextPointer.value = ""
 			newTextPointer.value = newText
-			// Appends the read text to the text pointer
-			textPointer.update { _ + newText }
+			
+			// Appends the read text to the text or thoughts -pointer
+			val buildingPointer = if (thinking) thoughtsPointer else textPointer
+			buildingPointer.update { _ + newText }
 			lastUpdatedPointer.value = response("created_at").getInstant
 		}
 		
@@ -114,11 +141,14 @@ trait StreamedOllamaResponseParser extends StreamedNdJsonResponseParser[OllamaRe
 			// Locks the pointers - There shall not be any updates afterwards
 			newTextPointer.lock()
 			textPointer.lock()
+			thoughtsPointer.lock()
 			lastUpdatedPointer.lock()
+			thinkingCompletionFlag.set()
 		}
 		
 		override def responseFrom(future: Future[Try[OllamaResponseStatistics]]): OllamaReply =
-			OllamaReply(textPointer.readOnly, newTextPointer.readOnly, lastUpdatedPointer.readOnly)
+			OllamaReply(textPointer.readOnly, thoughtsPointer.readOnly, newTextPointer.readOnly,
+				!thinkingCompletionFlag, lastUpdatedPointer.readOnly)
 				.futureStatistics(future)
 	}
 }

@@ -15,7 +15,7 @@ import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -106,7 +106,7 @@ object OllamaChat
   * @param exc Implicit execution context used in asynchronous processing
   * @param log Implicit logging implementation for handling pointer-related failures and for
   *            recording chat request failures
-  * @param jsonParser Json parser for interpreting Ollama's responses
+  * @param jsonParser JSON parser for interpreting Ollama's responses
  * @param client Wrapped / utilized Ollama client interface
   */
 class OllamaChat(initialLlm: LlmDesignator)
@@ -123,8 +123,10 @@ class OllamaChat(initialLlm: LlmDesignator)
 	override protected def makeRequest(params: ChatParams, allowStreaming: Boolean): ApiRequest[OllamaReply] =
 		params.toRequest(allowStreaming && params.tools.isEmpty)
 	
-	override protected def streamedReplyFrom(textPointer: Changing[String], newTextPointer: Changing[String],
+	override protected def streamedReplyFrom(textPointer: Changing[String], thoughtsPointer: Changing[String],
+	                                         newTextPointer: Changing[String], thinkingFlag: Flag,
 	                                         lastUpdatedPointer: Changing[Instant],
 	                                         resultFuture: Future[Try[BufferedOllamaReply]]): OllamaReply =
-		OllamaReply(textPointer, newTextPointer, lastUpdatedPointer).futureBuffered(resultFuture)
+		OllamaReply(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer)
+			.futureBuffered(resultFuture)
 }

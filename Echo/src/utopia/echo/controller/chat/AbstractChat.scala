@@ -28,10 +28,10 @@ import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.eventful._
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -83,12 +83,15 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	/**
 	 * Converts a set of pointers into a streamed reply instance
 	 * @param textPointer Text pointer to wrap
+	 * @param thoughtsPointer Thoughts-pointer to wrap
 	 * @param newTextPointer New text pointer to wrap
+	 * @param thinkingFlag Thinking flag to wrap
 	 * @param lastUpdatedPointer A pointer that will contain the last text update time
 	 * @param resultFuture A future that will yield the final buffered reply, if successful
 	 * @return A new streamed reply instance
 	 */
-	protected def streamedReplyFrom(textPointer: Changing[String], newTextPointer: Changing[String],
+	protected def streamedReplyFrom(textPointer: Changing[String], thoughtsPointer: Changing[String],
+	                                newTextPointer: Changing[String], thinkingFlag: Flag,
 	                                lastUpdatedPointer: Changing[Instant], resultFuture: Future[Try[BR]]): R
 	
 	
@@ -177,38 +180,52 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 		// Prepares the text, newText & lastUpdated pointers
 		// These depend on whether streaming or tools are used
 		val finalReplyPromise = Promise[Try[BR]]()
-		val (textPointer, newTextPointer, lastUpdatedPointer, replyIncoming, replyCompleted, handleFailure) = {
+		val (textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer, replyIncoming,
+		replyCompleted, handleFailure) =
+		{
 			// Case: Tools are used or streaming is disabled => Prepares to receive only the final reply
 			if (noStreaming || extraTools.nonEmpty || this.usesTools) {
-				val textPointer = new MutableOnce("")
+				val textPointer = MutableOnce("")
+				val thoughtsPointer = MutableOnce("")
+				val thinkingCompletionFlag = SettableFlag()
 				val lastUpdatedPointer = new MutableOnce(Now.toInstant)
 				
 				def replyCompleted(reply: BR) = {
+					thoughtsPointer.value = reply.thoughts
+					thinkingCompletionFlag.set()
 					textPointer.value = reply.text
 					lastUpdatedPointer.value = reply.lastUpdated
 				}
 				
-				(textPointer, textPointer, lastUpdatedPointer, None, Some[BR => Unit](replyCompleted), None)
+				(textPointer, thoughtsPointer, textPointer, !thinkingCompletionFlag, lastUpdatedPointer, None,
+					Some[BR => Unit](replyCompleted), None)
 			}
 			// Case: Streaming is enabled
 			//       => Prepares to receive the text incrementally, but only expects to receive a single response
 			else {
 				val textPointer = OnceFlatteningPointer("")
+				val thoughtsPointer = OnceFlatteningPointer("")
 				val newTextPointer = OnceFlatteningPointer("")
+				val thinkingPointer = OnceFlatteningPointer(true)
 				val lastUpdatedPointer = OnceFlatteningPointer(Now.toInstant)
 				
 				def replyIncoming(reply: R) = {
-					textPointer.complete(reply.textPointer)
+					thoughtsPointer.complete(reply.thoughtsPointer)
+					thinkingPointer.complete(reply.thinkingFlag)
 					newTextPointer.complete(reply.newTextPointer)
+					textPointer.complete(reply.textPointer)
 					lastUpdatedPointer.complete(reply.lastUpdatedPointer)
 				}
 				def handleFailure() = {
-					textPointer.tryComplete(Fixed(""))
-					newTextPointer.tryComplete(Fixed(""))
+					val alwaysEmpty = Fixed("")
+					thoughtsPointer.tryComplete(alwaysEmpty)
+					thinkingPointer.tryComplete(AlwaysFalse)
+					newTextPointer.tryComplete(alwaysEmpty)
+					textPointer.tryComplete(alwaysEmpty)
 					lastUpdatedPointer.tryComplete(Fixed(Now))
 				}
 				
-				(textPointer, newTextPointer, lastUpdatedPointer,
+				(textPointer, thoughtsPointer, newTextPointer, thinkingPointer: Flag, lastUpdatedPointer,
 					Some[R => Unit](replyIncoming), None, Some[() => Unit](handleFailure))
 			}
 		}
@@ -233,7 +250,8 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 		}
 		
 		// Returns a Schrödinger
-		val reply = streamedReplyFrom(textPointer, newTextPointer, lastUpdatedPointer, finalReplyPromise.future)
+		val reply = streamedReplyFrom(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer,
+			finalReplyPromise.future)
 		Schrodinger.wrap(statePointer.strongMap { case (state, finalReply) => (reply, finalReply, state) })
 	}
 	

@@ -3,14 +3,13 @@ package utopia.echo.model.response.ollama
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState.{Final, PositiveFlux}
 import utopia.echo.model.response.Reply
-import utopia.echo.util.ReplyParseUtils
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.time.Now
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.eventful.OnceFlatteningPointer
-import utopia.flow.view.template.eventful.Changing
+import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,8 +25,11 @@ object OllamaReply
 	 * @param exc Implicit execution context
 	 * @return A failed final reply
 	 */
-	def failure(cause: Throwable)(implicit exc: ExecutionContext) =
-		apply(Fixed(""), Fixed(""), Fixed(Now.toInstant)).futureBuffered(TryFuture.failure(cause))
+	def failure(cause: Throwable)(implicit exc: ExecutionContext) = {
+		val alwaysEmptyString = Fixed("")
+		apply(alwaysEmptyString, alwaysEmptyString, alwaysEmptyString, AlwaysFalse, Fixed(Now.toInstant))
+			.futureBuffered(TryFuture.failure(cause))
+	}
 	/**
 	 * Creates a completed (final) reply
 	 * @param result The acquired buffered response, or a failure
@@ -42,15 +44,19 @@ object OllamaReply
 	/**
 	 * Prepares a new streamed reply
 	 * @param textPointer Pointer that contains the latest version of this reply's text contents
+	 * @param thoughtsPointer A pointer that contains the thinking / reflective content produced by the LLM.
 	 * @param newTextPointer A pointer which contains the latest read reply message addition.
 	 *                       Will stop changing once this reply has been fully read.
+	 * @param thinkingFlag A flag that contains true while the LLM is or may be producing thinking content,
+	 *                     and false once the reply content is being produced.
 	 * @param lastUpdatedPointer Pointer that contains the origin time of the latest version of this reply
 	 * @param exc Implicit execution context
 	 * @return A factory for constructing the streamed reply from the final result future
 	 */
-	def apply(textPointer: Changing[String], newTextPointer: Changing[String], lastUpdatedPointer: Changing[Instant])
+	def apply(textPointer: Changing[String], thoughtsPointer: Changing[String], newTextPointer: Changing[String],
+	          thinkingFlag: Flag, lastUpdatedPointer: Changing[Instant])
 	         (implicit exc: ExecutionContext) =
-		OllamaResponseFactory(textPointer, newTextPointer, lastUpdatedPointer)
+		OllamaResponseFactory(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer)
 	
 	/**
 	 * Creates a new reply message by wrapping another, once it arrives
@@ -67,44 +73,55 @@ object OllamaReply
 			// Case: Unresolved => Forms pointers that are completed once the reply is received
 			case None =>
 				val textPointer = OnceFlatteningPointer("")
+				val thoughtsPointer = OnceFlatteningPointer("")
 				val newTextPointer = OnceFlatteningPointer("")
+				val thinkingPointer = OnceFlatteningPointer(true)
 				val lastUpdatedPointer = OnceFlatteningPointer(Now.toInstant)
 				
 				// Also updates the pointers here
 				val statisticsFuture = replyFuture.flatMap {
 					case Success(reply) =>
-						textPointer.complete(reply.textPointer)
 						newTextPointer.complete(reply.newTextPointer)
+						textPointer.complete(reply.textPointer)
+						thoughtsPointer.complete(reply.thoughtsPointer)
+						thinkingPointer.complete(reply.thinkingFlag)
 						lastUpdatedPointer.complete(reply.lastUpdatedPointer)
 						reply.statisticsFuture
 						
 					case Failure(error) =>
 						val alwaysEmpty = Fixed("")
-						textPointer.complete(alwaysEmpty)
 						newTextPointer.complete(alwaysEmpty)
+						textPointer.complete(alwaysEmpty)
+						thoughtsPointer.complete(alwaysEmpty)
+						thinkingPointer.complete(AlwaysFalse)
 						lastUpdatedPointer.complete(Fixed(Now))
 						TryFuture.failure(error)
 				}
 				
-				apply(textPointer, newTextPointer, lastUpdatedPointer).futureStatistics(statisticsFuture)
+				apply(textPointer, thoughtsPointer, newTextPointer, thinkingPointer, lastUpdatedPointer)
+					.futureStatistics(statisticsFuture)
 		}
 	}
 		
 	
 	// NESTED   --------------------------
 	
-	case class OllamaResponseFactory(textPointer: Changing[String], newTextPointer: Changing[String],
+	case class OllamaResponseFactory(textPointer: Changing[String], thoughtsPointer: Changing[String],
+	                                 newTextPointer: Changing[String], thinkingFlag: Flag,
 	                                 lastUpdatedPointer: Changing[Instant])
 	                                (implicit exc: ExecutionContext)
 	{
 		def futureBuffered(future: Future[Try[BufferedOllamaReply]]): OllamaReply =
-			new Streamed(textPointer, newTextPointer, lastUpdatedPointer, Right(future))
+			new Streamed(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer,
+				Right(future))
 			
 		def futureStatistics(future: Future[Try[OllamaResponseStatistics]]): OllamaReply =
-			new Streamed(textPointer, newTextPointer, lastUpdatedPointer, Left(future))
+			new Streamed(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer,
+				Left(future))
 	}
 	
-	private class Streamed(val textPointer: Changing[String], val newTextPointer: Changing[String],
+	private class Streamed(val textPointer: Changing[String], val thoughtsPointer: Changing[String],
+	                       val newTextPointer: Changing[String], override val thinkingFlag: Flag,
 	                       val lastUpdatedPointer: Changing[Instant],
 	                       val _future: Either[Future[Try[OllamaResponseStatistics]], Future[Try[BufferedOllamaReply]]])
 	                      (implicit exc: ExecutionContext)
@@ -113,10 +130,7 @@ object OllamaReply
 		// ATTRIBUTES   --------------------------
 		
 		override lazy val future: Future[Try[BufferedOllamaReply]] = _future.rightOrMap { statisticsFuture =>
-			statisticsFuture.mapSuccess { statistics =>
-				val (textWithoutThink, thoughts) = ReplyParseUtils.separateThinkFrom(text)
-				BufferedOllamaReply(textWithoutThink, thoughts, statistics, lastUpdated)
-			}
+			statisticsFuture.mapSuccess { statistics => BufferedOllamaReply(text, thoughts, statistics, lastUpdated) }
 		}
 		override lazy val statisticsFuture: Future[Try[OllamaResponseStatistics]] = _future.leftOrMap { replyFuture =>
 			replyFuture.mapSuccess { _.statistics }
@@ -128,6 +142,7 @@ object OllamaReply
 		override def isBuffered: Boolean = statisticsFuture.isCompleted
 		
 		override def text: String = textPointer.value
+		override def thoughts: String = thoughtsPointer.value
 		override def lastUpdated: Instant = lastUpdatedPointer.value
 		
 		override def state: SchrodingerState = statisticsFuture.currentResult match {

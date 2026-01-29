@@ -20,6 +20,7 @@ object ReplyParseUtils
 	  * @param fullText Full text content
 	  * @return Text content without the think element, and the contents of the think element, which may be empty.
 	  */
+	// TODO: This method is likely no longer needed, now that Ollama changed its interface
 	def separateThinkFrom(fullText: String) = {
 		val startIndex = fullText.indexOf(thinkBlockStart)
 		// Case: No (complete) <think> block present => Checks whether a partial block may be found

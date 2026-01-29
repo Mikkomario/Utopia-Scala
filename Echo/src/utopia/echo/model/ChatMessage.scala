@@ -4,7 +4,6 @@ import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.{CanAttachImages, ChatParams}
-import utopia.echo.util.ReplyParseUtils
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
@@ -31,8 +30,9 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	override def apply(model: HasProperties): Try[ChatMessage] =
 		model("role").tryString.flatMap(ChatRole.forName).flatMap { role =>
 			model("tool_calls").getVector.tryMapAll { v => ToolCall(v.getModel) }.map { toolCalls =>
-				val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
-				apply(text, thoughts, role, model("images").getVector.flatMap { _.string }, toolCalls)
+				val content = model("content").getModel
+				apply(content("text").getString, content("thinking").getString, role,
+					model("images").getVector.flatMap { _.string }, toolCalls)
 			}
 		}
 		
@@ -46,8 +46,8 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	  * @return A chat message parsed from the specified model
 	  */
 	def parseFrom(model: HasValues, defaultRole: => ChatRole) = {
-		val (text, thoughts) = ReplyParseUtils.separateThinkFrom(model("content", "text").getString)
-		apply(text, thoughts,
+		val content = model("content").getModel
+		apply(content("text").getString, content("thinking").getString,
 			model("role").string.flatMap(ChatRole.findForName).getOrElse(defaultRole),
 			model("images").getVector.flatMap { _.string },
 			model("tool_calls").getVector.flatMap { v => v.model.flatMap { ToolCall(_).toOption } })
@@ -80,7 +80,8 @@ case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole
 	
 	// NB: Thoughts are not included in this model
 	override def toModel: Model =
-		Model.from("role" -> senderRole.name, "content" -> text.replace("\t", "  "),
+		Model.from("role" -> senderRole.name,
+				"content" -> Model.from("text" -> text.replace("\t", "  "), "thinking" -> thoughts.replace("\t", "  ")),
 				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls))
 			.withoutEmptyValues
 	
