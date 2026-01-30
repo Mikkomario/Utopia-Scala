@@ -6,6 +6,7 @@ Supports **Flow v2.8**
 - Deprecated **EchoContext**; Parsing failure **Status** is now defined in `Response.parseFailureStatus` instead.
 ### New features
 - Adding preliminary (beta) interfaces for Open AI & DeepSeek
+  - Only text-based non-streaming requests are supported at this time
 ### Other changes
 - Added support for Ollama's latest thinking response structuring
 

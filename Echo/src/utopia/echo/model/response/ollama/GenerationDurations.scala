@@ -1,11 +1,10 @@
 package utopia.echo.model.response.ollama
 
-import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
-import utopia.flow.time.TimeExtensions._
-
 import utopia.flow.time.Duration
+import utopia.flow.time.TimeExtensions._
 
 object GenerationDurations
 {
@@ -26,7 +25,7 @@ object GenerationDurations
 	  * @return Parsed durations
 	  */
 	// According to the API docs, all durations are specified in nanoseconds
-	def fromOllamaResponse(responseModel: Model) = apply(
+	def fromOllamaResponse(responseModel: HasProperties) = apply(
 		responseModel("total_duration").getLong.nanos,
 		responseModel("load_duration").getLong.nanos,
 		responseModel("prompt_eval_duration").getLong.nanos)

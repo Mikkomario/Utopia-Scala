@@ -30,6 +30,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful._
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
@@ -188,17 +189,22 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 			if (noStreaming || extraTools.nonEmpty || this.usesTools) {
 				val textPointer = MutableOnce("")
 				val thoughtsPointer = MutableOnce("")
+				val newTextPointer = Volatile.lockable("")
 				val thinkingCompletionFlag = SettableFlag()
 				val lastUpdatedPointer = new MutableOnce(Now.toInstant)
 				
 				def replyCompleted(reply: BR) = {
+					newTextPointer.value = reply.thoughts
 					thoughtsPointer.value = reply.thoughts
+					newTextPointer.value = ""
 					thinkingCompletionFlag.set()
+					
+					newTextPointer.value = reply.text
 					textPointer.value = reply.text
 					lastUpdatedPointer.value = reply.lastUpdated
 				}
 				
-				(textPointer, thoughtsPointer, textPointer, !thinkingCompletionFlag, lastUpdatedPointer, None,
+				(textPointer, thoughtsPointer, newTextPointer, !thinkingCompletionFlag, lastUpdatedPointer, None,
 					Some[BR => Unit](replyCompleted), None)
 			}
 			// Case: Streaming is enabled

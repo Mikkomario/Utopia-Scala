@@ -41,10 +41,14 @@ object EstimateTokenCount
 	  */
 	// Counts the number of words
 	def in(text: String) = {
-		val raw = _in(text)
-		val corrected = (raw * correctionModPointer.value).round.toInt
-		// Handles the edge case where correction would set the token count to 0
-		EstimatedTokenCount(raw, if (corrected == 0 && text.nonEmpty) 1 else corrected)
+		if (text.isEmpty)
+			EstimatedTokenCount.zero
+		else {
+			val raw = _in(text)
+			val corrected = (raw * correctionModPointer.value).round.toInt
+			// Handles the edge case where correction would set the token count to 0
+			EstimatedTokenCount(raw, if (corrected == 0) 1 else corrected)
+		}
 	}
 	
 	/**

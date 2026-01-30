@@ -1,7 +1,8 @@
 package utopia.echo.model.response.ollama
 
 import utopia.echo.model.response.TokenUsage
-import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
 
@@ -23,7 +24,8 @@ object OllamaResponseStatistics
 	  * @param responseModel A json model returned by the Ollama API
 	  * @return Parsed statistics from the specified model
 	  */
-	def fromOllamaResponse(responseModel: Model) = OllamaResponseStatistics(
+	// TODO: Add support for done_reason ("done": true, "done_reason": "stop")
+	def fromOllamaResponse(responseModel: HasProperties) = OllamaResponseStatistics(
 		responseModel("context"),
 		GenerationDurations.fromOllamaResponse(responseModel),
 		TokenUsage(responseModel("prompt_eval_count").getInt, responseModel("eval_count").getInt))

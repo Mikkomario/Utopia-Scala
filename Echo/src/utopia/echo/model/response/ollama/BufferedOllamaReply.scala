@@ -1,13 +1,15 @@
 package utopia.echo.model.response.ollama
 
 import utopia.echo.model.ChatMessage
-import utopia.echo.model.enumeration.ChatRole.Assistant
 import utopia.echo.model.response.BufferedReply
 import utopia.echo.util.ReplyParseUtils
+import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.time.Now
 
 import java.time.Instant
+import scala.util.Try
 
 object BufferedOllamaReply
 {
@@ -17,6 +19,11 @@ object BufferedOllamaReply
 	 * @return An empty response
 	 */
 	def empty = apply("", "", OllamaResponseStatistics.empty, Now)
+	
+	/**
+	 * @return A model parser to use with the chat completion endpoint
+	 */
+	def chatResponseParser: FromModelFactory[BufferedOllamaReply] = ChatResponseParser
 	
 	
 	// OTHER    ----------------------------
@@ -56,16 +63,22 @@ object BufferedOllamaReply
 	 * Expects the whole message to be present in the specified model.
 	 * @param responseModel Response model to parse.
 	 *                      Should include statistical information, also.
-	 * @return A message read from the specified model
+	 * @return A message read from the specified model. Failure if parsing failed.
 	 */
-	def fromOllamaChatResponse(responseModel: Model) = {
-		// TODO: Add logging or return failure for invalid messages
-		wrap(ChatMessage.parseFrom(responseModel("message").getModel, Assistant),
-			OllamaResponseStatistics.fromOllamaResponse(responseModel))
-	}
+	@deprecated("Please use chatResponseParser.apply(HasProperties) instead", "v1.4.1")
+	def fromOllamaChatResponse(responseModel: HasProperties) =
+		chatResponseParser(responseModel)
 	
 	
 	// NESTED   ----------------------------
+	
+	private object ChatResponseParser extends FromModelFactory[BufferedOllamaReply]
+	{
+		override def apply(model: HasProperties): Try[BufferedOllamaReply] = {
+			ChatMessage.ollamaMessageParser(model("message").getModel)
+				.map { wrap(_, OllamaResponseStatistics.fromOllamaResponse(model)) }
+		}
+	}
 	
 	private case class _BufferedOllamaReply(message: ChatMessage, statistics: OllamaResponseStatistics,
 	                                        lastUpdated: Instant)

@@ -98,7 +98,7 @@ object ChatRole
 	  */
 	case object User extends ChatRole
 	{
-		override def id: Int = 1
+		override val id: Int = 1
 		override val name: String = "user"
 		override def opposite = Assistant
 	}
@@ -108,7 +108,7 @@ object ChatRole
 	  */
 	case object System extends ChatRole
 	{
-		override def id: Int = 2
+		override val id: Int = 2
 		override val name: String = "system"
 		override def opposite: ChatRole = this
 	}
@@ -118,7 +118,7 @@ object ChatRole
 	  */
 	case object Assistant extends ChatRole
 	{
-		override def id: Int = 3
+		override val id: Int = 3
 		override val name: String = "assistant"
 		override def opposite = User
 	}
@@ -128,8 +128,8 @@ object ChatRole
 	  */
 	case object Tool extends ChatRole
 	{
-		override def id: Int = 4
-		override def name: String = "tool"
+		override val id: Int = 4
+		override val name: String = "tool"
 		override def opposite: ChatRole = Assistant
 	}
 }

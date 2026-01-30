@@ -17,7 +17,7 @@ object ToolCall extends FromModelFactory[ToolCall]
 		val functionModel = model("function").model.getOrElse(model)
 		functionModel("name").string
 			.toTry { new IllegalArgumentException(s"Tool call model $model did not specify a function name") }
-			.map { name => apply(name, functionModel("arguments").getModel) }
+			.map { name => apply(name, functionModel("arguments").getModel, model("id").getString) }
 	}
 	
 	

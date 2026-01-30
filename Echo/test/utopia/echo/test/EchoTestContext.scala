@@ -5,7 +5,7 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.Timeout
 import utopia.echo.controller.EstimateTokenCount
-import utopia.echo.controller.chat.{Chat, OllamaChat, OpenAiChat}
+import utopia.echo.controller.chat.{Chat, DeepSeekChat, OllamaChat}
 import utopia.echo.controller.client.{LlmServiceClient, OllamaClient}
 import utopia.echo.model.enumeration.DeepSeekModel
 import utopia.echo.model.llm.LlmDesignator
@@ -78,7 +78,7 @@ object EchoTestContext
 					StdIn.readNonEmptyLine("Please write the API key used when accessing DeepSeek").flatMap { apiKey =>
 						println("Please select the LLM to use")
 						StdIn.selectFrom(DeepSeekModel.values.map { m => m -> m.llmName }).map { model =>
-							val chat = new OpenAiChat(
+							val chat = new DeepSeekChat(
 								LlmServiceClient.deepSeek(apiKey, gateway, maxParallelRequests = 1), model)
 								
 							if (StdIn.ask("Do you want to specify a system message?"))

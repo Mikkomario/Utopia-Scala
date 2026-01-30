@@ -1,0 +1,95 @@
+package utopia.echo.model.response.deepseek
+
+import utopia.echo.model.ChatMessage
+import utopia.echo.model.enumeration.MessageStopReason
+import utopia.echo.model.enumeration.MessageStopReason._
+import utopia.echo.model.response.openai.OpenAiTokenUsageStatistics
+import utopia.echo.model.response.{BufferedReply, BufferedReplyLike}
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType}
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.time.Now
+
+import java.time.Instant
+import scala.util.Try
+
+object BufferedDeepSeekReply extends FromModelFactory[BufferedDeepSeekReply]
+{
+	// ATTRIBUTES   -------------------------
+	
+	private lazy val schema = ModelDeclaration("id" -> StringType, "usage" -> ModelType)
+	
+	/**
+	 * An empty reply, that may be used as a placeholder
+	 */
+	lazy val empty = apply("", Empty, OpenAiTokenUsageStatistics.zero)
+	
+	
+	// IMPLEMENTED  -------------------------
+	
+	override def apply(model: HasProperties): Try[BufferedDeepSeekReply] = {
+		// TODO: Remove test print
+		println(model.toJson)
+		schema.validate(model).flatMap { model =>
+			// Parses the "choices" (messages)
+			model("choices").tryVector
+				.flatMap { values =>
+					values.zipWithIndex.tryMapAll { case (value, index) =>
+						value.tryModel.flatMap { choiceModel =>
+							choiceModel.tryGet("message") { _.tryModel.flatMap(ChatMessage.deepSeekMessageParser.apply) }
+								.map { (_, choiceModel, choiceModel("index").intOr(index)) }
+						}
+					}
+				}
+				.flatMap { choices =>
+					// Parses the token usage
+					model.tryGet("usage") {
+							_.tryModel.flatMap(OpenAiTokenUsageStatistics.chatCompletionParser.apply) }
+						.map { tokenUsage =>
+							val orderedChoices = choices.sortBy { _._3 }
+							// Determines the last stop choice
+							val stopChoice = orderedChoices.reverseIterator.findMap { case (_, model, _) =>
+								model("finish_reason").string.flatMap {
+									case "stop" => Some(MessageCompleted)
+									case "length" => Some(LengthLimitReached)
+									case "content_filter" => Some(Censored)
+									case "tool_calls" => Some(ToolCalled)
+									case "insufficient_system_resource" => Some(ServerError)
+									case _ => None
+								}
+							}
+							apply(model("id").getString, orderedChoices.map { _._1 }, tokenUsage,
+								stopChoice.getOrElse(MessageCompleted),
+								model("created").long
+									.flatMap { unixSeconds => Try { Instant.ofEpochSecond(unixSeconds) }.toOption }
+									.getOrElse(Now))
+						}
+				}
+		}
+	}
+}
+
+/**
+ * Represents a buffered response acquired from the DeepSeek API for a chat completion request
+ * @author Mikko Hilpinen
+ * @since 29.01.2026, v1.4.1
+ */
+case class BufferedDeepSeekReply(id: String, messages: Seq[ChatMessage], tokenUsage: OpenAiTokenUsageStatistics,
+                                 stopReason: MessageStopReason = MessageCompleted, lastUpdated: Instant = Now)
+	extends BufferedReply with BufferedReplyLike[BufferedDeepSeekReply]
+{
+	// ATTRIBUTES   ------------------------
+	
+	override lazy val text: String = messages.iterator.map { _.text }.filter { _.nonEmpty }.mkString("\n")
+	override lazy val thoughts: String = messages.iterator.map { _.thoughts }.filter { _.nonEmpty }.mkString("\n")
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def self: BufferedDeepSeekReply = this
+	
+	override def message: ChatMessage = messages.lastOption.getOrElse(ChatMessage.empty.fromAssistant)
+}

@@ -17,5 +17,5 @@ case class BufferedChatRequest(params: ChatParams) extends ChatRequest[BufferedO
 	override def stream: Boolean = false
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[BufferedOllamaReply]] =
-		prepared.mapModel(BufferedOllamaReply.fromOllamaChatResponse)
+		prepared.getOne(BufferedOllamaReply.chatResponseParser)
 }

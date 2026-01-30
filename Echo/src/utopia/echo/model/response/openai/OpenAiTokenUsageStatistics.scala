@@ -1,15 +1,13 @@
 package utopia.echo.model.response.openai
 
 import utopia.echo.model.response.TokenUsage
-import utopia.flow.generic.factory.FromModelFactoryWithSchema
+import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
 
-object OpenAiTokenUsageStatistics extends FromModelFactoryWithSchema[OpenAiTokenUsageStatistics]
+object OpenAiTokenUsageStatistics
 {
 	// ATTRIBUTES   -----------------
-	
-	override lazy val schema: ModelDeclaration = ModelDeclaration("input_tokens" -> IntType, "output_tokens" -> IntType)
 	
 	/**
 	 * A zero usage -statistics
@@ -17,13 +15,57 @@ object OpenAiTokenUsageStatistics extends FromModelFactoryWithSchema[OpenAiToken
 	lazy val zero = apply(0, 0, 0, 0, 0)
 	
 	
-	// IMPLEMENTED  -----------------
+	// COMPUTED ---------------------
 	
-	override protected def fromValidatedModel(model: Model): OpenAiTokenUsageStatistics = {
-		val input = model("input_tokens").getInt
-		val output = model("output_tokens").getInt
-		apply(input, model("input_tokens_details")("cached_tokens").getInt, output,
-			model("output_tokens_details")("reasoning_tokens").getInt, model("total_tokens").intOr { input + output })
+	/**
+	 * @return A JSON parser to use with the /responses API endpoint
+	 */
+	def responsesParser: FromModelFactory[OpenAiTokenUsageStatistics] = ResponsesResponseParser
+	/**
+	 * @return A JSON parser to use with the /chat/completions API endpoint
+	 */
+	def chatCompletionParser: FromModelFactory[OpenAiTokenUsageStatistics] = ChatCompletionResponseParser
+	
+	
+	// NESTED   -------------------------
+	
+	private object ResponsesResponseParser extends FromModelFactoryWithSchema[OpenAiTokenUsageStatistics]
+	{
+		// ATTRIBUTES   -----------------
+		
+		override lazy val schema: ModelDeclaration =
+			ModelDeclaration("input_tokens" -> IntType, "output_tokens" -> IntType)
+		
+		
+		// IMPLEMENTED  ----------------
+		
+		override protected def fromValidatedModel(model: Model): OpenAiTokenUsageStatistics = {
+			val input = model("input_tokens").getInt
+			val output = model("output_tokens").getInt
+			OpenAiTokenUsageStatistics(input, model("input_tokens_details")("cached_tokens").getInt, output,
+				model("output_tokens_details")("reasoning_tokens").getInt,
+				model("total_tokens").intOr { input + output })
+		}
+	}
+	
+	private object ChatCompletionResponseParser extends FromModelFactoryWithSchema[OpenAiTokenUsageStatistics]
+	{
+		// ATTRIBUTES   ------------------------
+		
+		override lazy val schema: ModelDeclaration =
+			ModelDeclaration("completion_tokens" -> IntType, "prompt_tokens" -> IntType)
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override protected def fromValidatedModel(model: Model): OpenAiTokenUsageStatistics = {
+			val input = model("prompt_tokens").getInt
+			val output = model("completion_tokens").getInt
+			OpenAiTokenUsageStatistics(input,
+				model("prompt_cache_hit_tokens").intOr { model("prompt_tokens_details")("cached_tokens").getInt },
+				output, model("completion_tokens_details")("reasoning_tokens").getInt,
+				model("total_tokens").intOr { input + output })
+		}
 	}
 }
 

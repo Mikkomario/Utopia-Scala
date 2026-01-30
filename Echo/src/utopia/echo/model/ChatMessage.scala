@@ -1,21 +1,20 @@
 package utopia.echo.model
 
 import utopia.echo.model.enumeration.ChatRole
-import utopia.echo.model.enumeration.ChatRole.User
+import utopia.echo.model.enumeration.ChatRole.{Assistant, User}
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.{CanAttachImages, ChatParams}
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
-import utopia.flow.generic.model.template.{HasValues, ModelConvertible}
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.util.{Mutate, NotEmpty}
 
 import scala.util.Try
 
-object ChatMessage extends FromModelFactory[ChatMessage]
+object ChatMessage
 {
 	// ATTRIBUTES   ----------------------
 	
@@ -25,32 +24,38 @@ object ChatMessage extends FromModelFactory[ChatMessage]
 	lazy val empty = apply("")
 	
 	
-	// IMPLEMENTED  ----------------------
-	
-	override def apply(model: HasProperties): Try[ChatMessage] =
-		model("role").tryString.flatMap(ChatRole.forName).flatMap { role =>
-			model("tool_calls").getVector.tryMapAll { v => ToolCall(v.getModel) }.map { toolCalls =>
-				val content = model("content").getModel
-				apply(content("text").getString, content("thinking").getString, role,
-					model("images").getVector.flatMap { _.string }, toolCalls)
-			}
-		}
-		
-	
-	// OTHER    -------------------------
+	// COMPUTED --------------------------
 	
 	/**
-	  * Parses a chat message from a model
-	  * @param model Model to parse this message from
-	  * @param defaultRole Role of this message's sender, if not specified in the model
-	  * @return A chat message parsed from the specified model
-	  */
-	def parseFrom(model: HasValues, defaultRole: => ChatRole) = {
-		val content = model("content").getModel
-		apply(content("text").getString, content("thinking").getString,
-			model("role").string.flatMap(ChatRole.findForName).getOrElse(defaultRole),
-			model("images").getVector.flatMap { _.string },
-			model("tool_calls").getVector.flatMap { v => v.model.flatMap { ToolCall(_).toOption } })
+	 * @return A model parser used with responses originating from Ollama
+	 */
+	def ollamaMessageParser: FromModelFactory[ChatMessage] = OllamaMessageParser
+	/**
+	 * @return A model parser used with responses originating from DeepSeek or OpenAI's /chat/completions endpoint.
+	 */
+	def deepSeekMessageParser: FromModelFactory[ChatMessage] = DeepSeekMessageParser
+	
+	
+	// NESTED   -----------------------
+	
+	private object OllamaMessageParser extends FromModelFactory[ChatMessage]
+	{
+		override def apply(model: HasProperties): Try[ChatMessage] =
+			model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
+				ChatMessage(model("content").getString, model("thinking").getString,
+					model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant),
+					model("images").getVector.flatMap { _.string }, toolCalls)
+			}
+	}
+	
+	private object DeepSeekMessageParser extends FromModelFactory[ChatMessage]
+	{
+		override def apply(model: HasProperties): Try[ChatMessage] = {
+			model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
+				ChatMessage(model("content").getString, model("reasoning_content").getString,
+					model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant), toolCalls = toolCalls)
+			}
+		}
 	}
 }
 
@@ -60,14 +65,23 @@ object ChatMessage extends FromModelFactory[ChatMessage]
   * @param senderRole Role of the entity that sent this message (default = user)
   * @param encodedImages Base 64 encoded images attached to this message.
   *                     Empty if no image is attached (default).
-  * @author Mikko Hilpinen
+  * @param toolCalls Tool calls made by this message
+ * @param respondedToolCallId ID of the tool call that was responded to.
+ *                   Specify this only when sender role = Tool.
+ * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
 case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole = User,
-                       encodedImages: Seq[String] = Empty, toolCalls: Seq[ToolCall] = Empty)
+                       encodedImages: Seq[String] = Empty, toolCalls: Seq[ToolCall] = Empty,
+                       respondedToolCallId: String = "")
 	extends ModelConvertible with CanAttachImages[ChatMessage]
 {
 	// COMPUTED ----------------------------
+	
+	/**
+	 * @return A copy of this message where the sender role is set to [[Assistant]]
+	 */
+	def fromAssistant = withSenderRole(Assistant)
 	
 	/**
 	  * @param llm Targeted LLM
@@ -79,10 +93,11 @@ case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole
 	// IMPLEMENTED  ------------------------
 	
 	// NB: Thoughts are not included in this model (not supported as LLM input)
+	// TODO: Divide into request model and regular model that contains all information
 	override def toModel: Model =
-		Model.from("role" -> senderRole.name,
-				"content" -> text.replace("\t", "  "),
-				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls))
+		Model.from("role" -> senderRole.name, "content" -> text.replace("\t", "  "),
+				"images" -> NotEmpty(encodedImages), "tool_calls" -> NotEmpty(toolCalls),
+				"tool_call_id" -> respondedToolCallId)
 			.withoutEmptyValues
 	
 	override def attachImages(base64EncodedImages: Seq[String]): ChatMessage =
@@ -100,6 +115,12 @@ case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole
 	
 	
 	// OTHER    ----------------------------
+	
+	/**
+	 * @param role Role of this message's new sender
+	 * @return Copy of this message with the specified sender role
+	 */
+	def withSenderRole(role: ChatRole) = if (senderRole == role) this else copy(senderRole = role)
 	
 	/**
 	  * @param message Reply message

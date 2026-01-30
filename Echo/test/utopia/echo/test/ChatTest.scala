@@ -29,7 +29,7 @@ object ChatTest extends App
 	// Prompts the user to select the LLM to use
 	setupChat().foreach { case (chat, llms) =>
 		val llmPointer = Pointer.eventful(chat.llm)
-		implicit def llm: LlmDesignator = llmPointer.value
+		// implicit def llm: LlmDesignator = llmPointer.value
 		def llm_=(newLlm: LlmDesignator) = llmPointer.value = newLlm
 		
 		chat.setupAutoSummaries()
@@ -67,6 +67,7 @@ object ChatTest extends App
 		println("\t/save - Saves the current chat to a local file")
 		println(s"You can write multi-line messages if you start and end the message with $multiLineIndicator.")
 		var open = true
+		var streaming = true
 		while (open) {
 			println("Waiting for the next input")
 			val input = requestMultiLineString() match {
@@ -122,7 +123,8 @@ object ChatTest extends App
 						1 -> "LLM", 2 -> "Maximum context size", 3 -> "Minimum context size",
 						4 -> "Expected reply size", 5 -> "Additional context size", 6 -> "System message",
 						7 -> (if (!chat.llm.thinks) "Mark model as thinking" else if (chat.thinkingEnabled) "Disable thinking" else "Enable thinking"),
-						8 -> "Auto summary thresholds"))
+						8 -> "Auto summary thresholds",
+						9 -> (if (streaming) "Disable streaming" else "Enable streaming")))
 					.foreach {
 						case 1 =>
 							println("Select the LLM to use")
@@ -176,6 +178,9 @@ object ChatTest extends App
 									.int
 									.foreach { messageCount => chat.setupAutoSummaries(size, messageCount) }
 							}
+						case 9 =>
+							streaming = !streaming
+							println(s"Streaming is now ${ if (streaming) "enabled" else "disabled" }")
 						case _ => ()
 					}
 			}
@@ -196,9 +201,9 @@ object ChatTest extends App
 			else if (input.startsWith("/"))
 				println("Unrecognized command")
 			else if (input.exists { _.isLetter }) {
-				val schrodinger = chat.push(input)
+				val schrodinger = chat.push(input, noStreaming = !streaming)
 				println("\nWaiting for the response...\n")
-				schrodinger.manifest.newTextPointer.addContinuousListener { e => print(e.newValue) }
+				schrodinger.manifest.newTextPointer.addContinuousListenerAndSimulateEvent("") { e => print(e.newValue) }
 				
 				schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.log.foreach { reply =>
 					Wait(0.2.seconds)

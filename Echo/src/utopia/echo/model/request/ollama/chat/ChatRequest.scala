@@ -74,7 +74,7 @@ object ChatRequest
 				StreamedOllamaResponseParser.chat.toResponse
 			else
 				ResponseParser.value.tryFlatMapToResponse {
-					_.tryModel.map[OllamaReply](BufferedOllamaReply.fromOllamaChatResponse) } {
+					_.tryModel.flatMap[OllamaReply](BufferedOllamaReply.chatResponseParser.apply) } {
 					_.getString }
 		}
 		

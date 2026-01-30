@@ -11,10 +11,9 @@ import utopia.echo.model.tokenization.PartiallyEstimatedTokenCount
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.template.HasValues
-import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import java.time.Instant
@@ -61,7 +60,8 @@ object OllamaChat
 				chat.messageHistoryWithSizes = history.flatMap { v =>
 					v.tryModel
 						.flatMap { model =>
-							ChatMessage(model).flatMap { message =>
+							// TODO: Should use a separate model format here
+							ChatMessage.ollamaMessageParser(model).flatMap { message =>
 								model
 									.tryGet("size") { v =>
 										PartiallyEstimatedTokenCount.fromValue(v)
