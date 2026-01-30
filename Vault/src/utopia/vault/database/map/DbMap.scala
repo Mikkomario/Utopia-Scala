@@ -46,6 +46,8 @@ object DbMap
 	 */
 	trait DbMapValue[+A, -In] extends LazyDbValue[A] with Resettable
 	{
+		// ABSTRACT --------------------
+		
 		/**
 		 * @param newValue A new value to assign for this key
 		 * @param connection Implicit DB connection

@@ -22,6 +22,7 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 29.01.2026, v1.4.1
  */
+// TODO: Make sure the output size is not unncessarily limited
 class DeepSeekChat(client: LlmServiceClient, initialLlm: LlmDesignator)
                   (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends AbstractChat[ReplyLike[BufferedDeepSeekReply], BufferedDeepSeekReply, DeepSeekChat](client, initialLlm,
