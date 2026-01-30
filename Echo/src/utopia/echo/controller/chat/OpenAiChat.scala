@@ -26,6 +26,7 @@ class OpenAiChat(client: LlmServiceClient, initialLlm: LlmDesignator)
                 (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends AbstractChat[ReplyLike[OpenAiResponse], OpenAiResponse, OpenAiChat](client, initialLlm,
 		OpenAiResponse.empty, OpenAiResponse.empty)
+		with Chat
 {
 	override def self: OpenAiChat = this
 	

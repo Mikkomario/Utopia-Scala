@@ -1,6 +1,6 @@
 package utopia.echo.controller.chat
 
-import utopia.echo.model.response.{BufferedReply, Reply}
+import utopia.echo.model.response.{BufferedReply, Reply, ReplyLike}
 
 /**
  * An interface for interactive chat which supports conversation history and tools.
@@ -12,4 +12,4 @@ import utopia.echo.model.response.{BufferedReply, Reply}
  * @author Mikko Hilpinen
  * @since 16.09.2024, v1.1
  */
-trait Chat extends ChatLike[Reply, BufferedReply, Chat]
+trait Chat extends ChatLike[ReplyLike[BufferedReply], BufferedReply, Chat]

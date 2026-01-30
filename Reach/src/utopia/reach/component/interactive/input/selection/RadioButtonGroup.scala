@@ -239,6 +239,7 @@ object RadioButtonGroup extends RadioButtonGroupSetup()
   * @author Mikko Hilpinen
   * @since 9.3.2021, v0.1
   */
+// TODO: Options should be pointer-based
 class RadioButtonGroup[A](override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                           options: Seq[(A, LocalizedString)], override val valuePointer: EventfulPointer[A],
                           settings: RadioButtonGroupSettings = RadioButtonGroupSettings.default,

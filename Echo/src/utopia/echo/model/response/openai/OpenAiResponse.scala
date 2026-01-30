@@ -31,22 +31,26 @@ object OpenAiResponse extends FromModelFactory[OpenAiResponse]
 	
 	// IMPLEMENTED  -------------------
 	
-	override def apply(model: HasProperties): Try[OpenAiResponse] = schema.validate(model).flatMap { model =>
-		model("usage").tryModel.flatMap(OpenAiTokenUsageStatistics.apply).flatMap { tokenUsage =>
-			model("output").getVector.tryMapAll { _.tryModel }.flatMap { outputModels =>
-				val outputByType: Map[String, Seq[(Model, Int)]] = outputModels.zipWithIndex
-					.groupBy { _._1("type").getString }.withDefaultValue(Empty)
-				OpenAiMessage(outputByType).flatMap { messages =>
-					outputByType("reasoning").tryMapAll { case (model, _) => Reasoning(model) }.flatMap { reasoning =>
-						OpenAiFunctionToolCall(outputByType).flatMap { functionCalls =>
-							WebSearchToolCall(outputByType).flatMap { webSearchCalls =>
-								FileSearchToolCall(outputByType).map { fileSearchCalls =>
-									apply(model("id").getString, tokenUsage, messages, reasoning,
-										functionCalls, webSearchCalls, fileSearchCalls,
-										model("metadata").getModel, OpenAiModelParser.parseStatusFrom(model),
-										model("incomplete_details")("reason").getString,
-										model("error").model.map(OpenAiError.parseFrom),
-										model("created_at").getInstant)
+	override def apply(model: HasProperties): Try[OpenAiResponse] = {
+		// TODO: Remove test prints
+		println(model.toJson)
+		schema.validate(model).flatMap { model =>
+			model("usage").tryModel.flatMap(OpenAiTokenUsageStatistics.apply).flatMap { tokenUsage =>
+				model("output").getVector.tryMapAll { _.tryModel }.flatMap { outputModels =>
+					val outputByType: Map[String, Seq[(Model, Int)]] = outputModels.zipWithIndex
+						.groupBy { _._1("type").getString }.withDefaultValue(Empty)
+					OpenAiMessage(outputByType).flatMap { messages =>
+						outputByType("reasoning").tryMapAll { case (model, _) => Reasoning(model) }.flatMap { reasoning =>
+							OpenAiFunctionToolCall(outputByType).flatMap { functionCalls =>
+								WebSearchToolCall(outputByType).flatMap { webSearchCalls =>
+									FileSearchToolCall(outputByType).map { fileSearchCalls =>
+										apply(model("id").getString, tokenUsage, messages, reasoning,
+											functionCalls, webSearchCalls, fileSearchCalls,
+											model("metadata").getModel, OpenAiModelParser.parseStatusFrom(model),
+											model("incomplete_details")("reason").getString,
+											model("error").model.map(OpenAiError.parseFrom),
+											model("created_at").getInstant)
+									}
 								}
 							}
 						}

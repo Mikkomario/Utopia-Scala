@@ -12,7 +12,7 @@ import utopia.flow.util.result.TryExtensions._
 object ShowModelTest extends App
 {
 	selectModel().foreach { implicit llm =>
-		client.showModel.future.waitForResult().toTry.log.foreach { modelInfo =>
+		ollamaClient.showModel.future.waitForResult().toTry.log.foreach { modelInfo =>
 			println(modelInfo)
 			println(s"\n\nParsed system message: \"${ modelInfo.systemMessage }\"")
 		}

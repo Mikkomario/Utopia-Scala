@@ -1,8 +1,5 @@
 package utopia.echo.test
 
-import utopia.annex.util.RequestResultExtensions._
-import utopia.echo.controller.EstimateTokenCount
-import utopia.echo.controller.chat.OllamaChat
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.test.EchoTestContext._
@@ -13,13 +10,12 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.console.ConsoleExtensions._
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.mutable.Pointer
 
 import java.nio.file.Paths
 import scala.io.StdIn
-import scala.util.{Failure, Success}
 
 /**
   * A console-based chat interface
@@ -31,41 +27,11 @@ object ChatTest extends App
 	// APP CODE -----------------------
 	
 	// Prompts the user to select the LLM to use
-	selectModel().foreach { initialLlm =>
-		val llmPointer = Pointer.eventful(initialLlm)
+	setupChat().foreach { case (chat, llms) =>
+		val llmPointer = Pointer.eventful(chat.llm)
 		implicit def llm: LlmDesignator = llmPointer.value
 		def llm_=(newLlm: LlmDesignator) = llmPointer.value = newLlm
 		
-		// Sets up the system message
-		println("Looking up the model's system message...")
-		val currentSystemMessage = client.showModel.future.waitForResult().toTry match {
-			case Success(info) => info.systemMessage
-			case Failure(error) =>
-				log(error, "Failed to acquire model info")
-				""
-		}
-		val (originalSystemMessage, newSystemMessage) = {
-			if (currentSystemMessage.isEmpty) {
-				println("Currently there is no system message defined")
-				val newSystemMessage = {
-					if (StdIn.ask("Do you want to specify a system message for the duration of this session?",
-						default = true))
-						requestSystemMessage()
-					else
-						None
-				}
-				"" -> newSystemMessage
-			}
-			else {
-				println(s"The current system message is: $currentSystemMessage")
-				if (StdIn.ask("\nDo you want to overwrite this message?"))
-					currentSystemMessage -> requestSystemMessage()
-				else
-					currentSystemMessage -> None
-			}
-		}
-		
-		val chat = new OllamaChat(llm)
 		chat.setupAutoSummaries()
 		llmPointer.addContinuousListener { e => chat.llm = e.newValue }
 		
@@ -88,9 +54,6 @@ object ChatTest extends App
 				println()
 			}
 		}
-		
-		chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage).corrected
-		newSystemMessage.foreach(chat.appendSystemMessage)
 		
 		// Starts the interaction loop
 		println("Welcome. Write a message to ask something.")
@@ -161,7 +124,9 @@ object ChatTest extends App
 						7 -> (if (!chat.llm.thinks) "Mark model as thinking" else if (chat.thinkingEnabled) "Disable thinking" else "Enable thinking"),
 						8 -> "Auto summary thresholds"))
 					.foreach {
-						case 1 => selectModel().foreach(llm_=)
+						case 1 =>
+							println("Select the LLM to use")
+							StdIn.selectFrom(llms.map { llm => llm -> llm.llmName }).foreach(llm_=)
 						case 2 =>
 							StdIn.read("Please specify the new maximum context size in tokens").int.foreach { size =>
 								chat.maxContextSize = size
@@ -237,7 +202,7 @@ object ChatTest extends App
 				
 				schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.log.foreach { reply =>
 					Wait(0.2.seconds)
-					println(s"\n\n${ reply.statistics }\n")
+					println(s"\n\n${ reply.tokenUsage }\n")
 				}
 			}
 		}
