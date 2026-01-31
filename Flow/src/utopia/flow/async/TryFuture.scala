@@ -53,7 +53,7 @@ object TryFuture
 	 * @tparam A Type of the successfully acquired value
 	 * @return A new resolved future that contains a successful TryCatch
 	 */
-	def successCatching[A](value: A, errors: IndexedSeq[Throwable] = Empty) =
+	def successCatching[A](value: A, errors: Seq[Throwable] = Empty) =
 		Future.successful(TryCatch.Success(value, errors))
 	/**
 	  * @param error An error / cause of failure

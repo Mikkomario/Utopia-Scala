@@ -222,6 +222,7 @@
 - **UncertainBoolean**'s `||(Boolean)` and `&&(Boolean)` parameters are now call-by-name
 - `.apply(Extreme)` is now available for all **IterableOnce** (via **CollectionExtensions**), not only **Iterable**
 - Added implicit conversion from **Seq** to **CommandArgumentSchema**
+- **TryFuture**'s `.successCatching(...)` no longer requires the failure collection to be **IndexedSeq**
 - Removed **AsyncCollectionExtensions** that was deprecated in v2.5.1
 - Remove **Changing**'s `listenerDebuggingLimit` property, which was deprecated in v2.7
 - Removed **AbstractChanging** functions that were deprecated in v2.2
