@@ -31,8 +31,6 @@ object BufferedDeepSeekReply extends FromModelFactory[BufferedDeepSeekReply]
 	// IMPLEMENTED  -------------------------
 	
 	override def apply(model: HasProperties): Try[BufferedDeepSeekReply] = {
-		// TODO: Remove test print
-		println(model.toJson)
 		schema.validate(model).flatMap { model =>
 			// Parses the "choices" (messages)
 			model("choices").tryVector

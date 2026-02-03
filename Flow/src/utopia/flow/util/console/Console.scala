@@ -215,7 +215,7 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 		}
 		// Case: Not running => succeeds immediately
 		else
-			Future.successful(())
+			Future.unit
 	}
 	
 	override def run() = {

@@ -59,7 +59,7 @@ class SingleThreadExecutionContext(name: String, keepAliveDuration: Duration = D
 	
 	override def stop(): Future[Any] = threadPointer.pop() match {
 		case Some(thread) => thread.end()
-		case None => Future.successful(())
+		case None => Future.unit
 	}
 	
 	

@@ -235,7 +235,7 @@ object CollectionExtensions
 			}
 			// Case: Nothing to process
 			else
-				Future.successful(())
+				Future.unit
 		}
 	}
 	

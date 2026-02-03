@@ -37,7 +37,7 @@ object ResponseParseResult
 	  * @tparam A Type of the wrapped value
 	  * @return A parse result completed with the specified value
 	  */
-	def buffered[A](value: A) = apply(value, Future.successful(()))
+	def buffered[A](value: A) = apply(value, Future.unit)
 	
 	/**
 	  * Completes response-parsing asynchronously.

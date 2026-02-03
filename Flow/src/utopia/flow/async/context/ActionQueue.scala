@@ -158,7 +158,7 @@ object ActionQueue
 		override lazy val statePointer = Fixed(Completed)
 		
 		override lazy val future: Future[A] = Future.successful(result)
-		override lazy val startFuture: Future[Unit] = Future.successful(())
+		override lazy val startFuture: Future[Unit] = Future.unit
 		
 		
 		// IMPLEMENTED  ----------------------------

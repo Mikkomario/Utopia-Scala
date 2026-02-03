@@ -108,7 +108,7 @@ class LightMergeMirror[O1, O2, R](origin1: Changing[O1], origin2: Changing[O2], 
 	override def stop(): Future[Any] = {
 		if (_stop())
 			declareChangingStopped()
-		Future.successful(())
+		Future.unit
 	}
 	
 	override def lockWhile[B](operation: => B): B =

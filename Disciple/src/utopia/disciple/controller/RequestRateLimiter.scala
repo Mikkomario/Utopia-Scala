@@ -47,7 +47,7 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: Duration) extends
 	private lazy val waitLock = new AnyRef()
 	// Each request accepts whether it should be completed (true) or immediately failed (false)
 	private lazy val pendingRequests = Volatile.seq[Boolean => Future[_]]()
-	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.successful(()))
+	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.unit)
 	
 	
 	// COMPUTED ------------------------------------

@@ -69,7 +69,7 @@ class ParallelBuilder[-I, A, +To](accessQueue: AccessQueue[ActionQueue], map: Ma
 	
 	override def clear(): Unit = {
 		lazyBuilder.reset()
-		lastAppendFuture.value = Future.successful(())
+		lastAppendFuture.value = Future.unit
 	}
 	override def result(): Future[TryCatch[To]] = {
 		val builder = _builder

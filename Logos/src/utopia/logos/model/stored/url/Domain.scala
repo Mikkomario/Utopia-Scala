@@ -17,7 +17,10 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	  */
 	val forwardSlashRegex = Regex.escape('/')
 	private val colonRegex = Regex.escape(':')
-	private val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
+	/**
+	 * A regular expression that accepts characters that may appear in a domain name part
+	 */
+	val domainCharacterRegex = (Regex.letterOrDigit || Regex.anyOf("-.")).withinParentheses
 	/**
 	 * A regular expression that identifies "http://" and "https://"
 	 */

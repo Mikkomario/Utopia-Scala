@@ -90,7 +90,7 @@ class ChangingUntil[-O, R](origin: Changing[O], f: O => R, stopCondition: R => B
 	override def stop(): Future[Any] = {
 		if (_stop())
 			declareChangingStopped()
-		Future.successful(())
+		Future.unit
 	}
 	
 	override def viewLocked[B](operation: R => B): B = {
