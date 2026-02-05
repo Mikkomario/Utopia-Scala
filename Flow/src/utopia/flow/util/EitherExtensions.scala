@@ -1,10 +1,10 @@
 package utopia.flow.util
 
+import utopia.flow.collection.CollectionExtensions.RichIterableOnce
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
-
-import scala.collection.immutable.VectorBuilder
 
 /**
   * Adds new functions for [[Either]]s
@@ -189,14 +189,6 @@ object EitherExtensions
 		  * Divides this collection to two separate collections, one for left items and one for right items
 		  * @return The Left items (1) and then the Right items (2)
 		  */
-		def divided = {
-			val lBuilder = new VectorBuilder[L]
-			val rBuilder = new VectorBuilder[R]
-			i.iterator.foreach {
-				case Left(l) => lBuilder += l
-				case Right(r) => rBuilder += r
-			}
-			lBuilder.result() -> rBuilder.result()
-		}
+		def divided = i.divideWith(Identity)
 	}
 }

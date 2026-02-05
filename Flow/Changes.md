@@ -235,6 +235,7 @@
 - **LockableVolatile**'s `.lock()` now only declares the changing as stopped once
 - Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
+- Refactored `.divided` in **IterableOnce** (of **Either**)
 - Internal refactoring within **Extreme**'s `.by(...)`
 - Internal refactoring within **Lazy**
 - Internal refactoring within some collection functions in **CollectionExtensions** and **TryExtensions**

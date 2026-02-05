@@ -3652,6 +3652,15 @@ object CollectionExtensions
 		}
 	}
 	
+	implicit class RichMultiMap[K, V](val m: Map[K, Iterable[V]]) extends AnyVal
+	{
+		/**
+		 * @return An iterator that yields all values, mapped to the keys they're associated with
+		 */
+		def keysAndIndividualValuesIterator =
+			m.iterator.flatMap { case (key, values) => values.iterator.map { key -> _ } }
+	}
+	
 	implicit class RichMapView[K, V](val m: MapView[K, V]) extends AnyVal
 	{
 		/**
