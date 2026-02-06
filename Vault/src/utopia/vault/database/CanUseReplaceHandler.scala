@@ -49,6 +49,21 @@ trait CanUseReplaceHandler[+In, E, +S, +Repr]
 	// OTHER    -----------------------
 	
 	/**
+	 * @param update A function which accepts 3 parameters:
+	 *                      1. A new item
+	 *                      1. Matching existing item
+	 *                      1. A DB connection
+	 *
+	 *               If the new item is a duplicate of the existing item, f should yield None.
+	 *               Otherwise, f should perform a database update and return a modified version of the existing item.
+	 *
+	 *               Note: The new item is not inserted in either case.
+	 *
+	 * @return A copy of this interface which applies the specified update logic
+	 */
+	def updating(update: (In, E, Connection) => Option[E]): Repr = using(ReplaceHandler.update(update))
+	
+	/**
 	 * @param shouldReplace A function that accepts the proposed item and the item that already exists in the DB.
 	 *                          - Yields true if the new item should be considered a new version
 	 *                            and replace the existing item.

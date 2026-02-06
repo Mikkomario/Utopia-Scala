@@ -377,7 +377,7 @@ object Store
 		 * @tparam K Type of keys used
 		 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
 		 */
-		def keyMap[K](itemsToStore: IterableOnce[D], existingItems: IterableOnce[S])(dataToKey: D => K)
+		def keyMap[K](itemsToStore: IterableOnce[D], existingItems: => IterableOnce[S])(dataToKey: D => K)
 		             (implicit connection: Connection) =
 			super.keyMap[K](itemsToStore, existingItems) { dataToKey(_) } { e => dataToKey(e.wrapped) }
 	}
@@ -407,7 +407,7 @@ object Store
 		 * @tparam A Type of accepted items
 		 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
 		 */
-		def keyValueMap[A](itemsToStore: IterableOnce[A], existingItems: IterableOnce[S])
+		def keyValueMap[A](itemsToStore: IterableOnce[A], existingItems: => IterableOnce[S])
 		                  (itemToKey: A => K)(itemToValue: A => V)(existingToKey: S => K)
 		                  (implicit connection: Connection) =
 			apply(itemsToStore.iterator.map { a => itemToKey(a) -> itemToValue(a) }, existingItems)(existingToKey)
@@ -418,7 +418,7 @@ object Store
 		 * @param connection Implicit DB connection
 		 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
 		 */
-		def apply(itemsToStore: IterableOnce[(K, V)], existingItems: IterableOnce[S])(existingToKey: S => K)
+		def apply(itemsToStore: IterableOnce[(K, V)], existingItems: => IterableOnce[S])(existingToKey: S => K)
 		         (implicit connection: Connection) =
 			keyMap(itemsToStore, existingItems) { _._1 }(existingToKey)
 	}
@@ -490,7 +490,7 @@ trait Store[In, E, +S, +R, +Repr] extends CanUseReplaceHandler[In, E, S, Repr]
 	/**
 	 * Stores 0-n items to the database. Checks against existing data and won't insert any duplicate entries.
 	 * @param itemsToStore Items to store
-	 * @param existingItems Matching items from the database.
+	 * @param existingItems Matching items from the database. Call-by-name: Not called if there are no items to store.
 	 * @param itemToKey A function that accepts an item to store and maps it to a unique key
 	 * @param existingToKey A function that accepts an existing database entry and maps it to a unique key similar
 	 *                      to what 'itemToKey' would produce.
@@ -499,7 +499,7 @@ trait Store[In, E, +S, +R, +Repr] extends CanUseReplaceHandler[In, E, S, Repr]
 	 * @return A map where keys are the specified keys and values are store results,
 	 *         either containing a newly inserted item, or one of the existing DB entries.
 	 */
-	def keyMap[K](itemsToStore: IterableOnce[In], existingItems: IterableOnce[E])
+	def keyMap[K](itemsToStore: IterableOnce[In], existingItems: => IterableOnce[E])
 	             (itemToKey: In => K)(existingToKey: E => K)(implicit connection: Connection) =
 		keyMapped[K](itemsToStore.iterator.map { item => itemToKey(item) -> item },
 			existingItems.iterator.map { existing => existingToKey(existing) -> existing }.toMap)
@@ -541,12 +541,12 @@ trait Store[In, E, +S, +R, +Repr] extends CanUseReplaceHandler[In, E, S, Repr]
 	
 	/**
 	 * @param itemsToStore Items to store, including unique keys
-	 * @param existingItems Existing DB entries
+	 * @param existingItems Existing DB entries. Call-by-name: Not called if there are not items to store.
 	 * @param existingToKey A function which converts an existing item into a unique key
 	 * @param connection Implicit DB connection
 	 * @return A map where each encountered key is mapped to the stored item (either existing or inserted)
 	 */
-	def keyMapExisting[K, V](itemsToStore: IterableOnce[In], existingItems: IterableOnce[E])(existingToKey: E => K)
+	def keyMapExisting[K, V](itemsToStore: IterableOnce[In], existingItems: => IterableOnce[E])(existingToKey: E => K)
 	                        (implicit connection: Connection, ev: In <:< (K, V)) =
 		keyMap(itemsToStore, existingItems) { _._1 }(existingToKey)
 }
