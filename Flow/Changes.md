@@ -158,6 +158,7 @@
   - Added `.tryMapEach(...)`, `.tryFlatMapEach(...)`, `.mapCatching(...)` and `.flatMapCatching(...)`
 - **IterableOnce**
   - Added `.findExtreme(Extreme)`, `.extremeBy(...)` and `.findExtremeBy(...)`
+  - Added `.findUnique(...)`
   - Added `.padToFrom(Int)(...)` and `.padToFromIterator(Int)(...)`
   - Added `.divideToBy(...)`, `.divideToSeqsBy(...)` and `.divideToSetsBy(...)`
   - Added `.tryFlatten` for collections of **Try**

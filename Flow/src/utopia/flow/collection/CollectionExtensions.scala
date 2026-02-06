@@ -431,6 +431,16 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * @param p A predicate that yields true for the targeted item
+		 * @return An item that satisfied the specified predicate,
+		 *         but only if it's the only item in this collection that satisfied that predicate.
+		 */
+		def findUnique(p: A => Boolean) = {
+			val iter = i.iterator
+			iter.find(p).filter { _ => iter.forNone(p) }
+		}
+		
+		/**
 		  * Checks whether there exists at least 'requiredCount' items in this collection where the specified
 		  * condition 'f' returns true. Compared to .count -function, this function is more optimized since it stops
 		  * counting once the required amount has been reached.

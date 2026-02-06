@@ -33,8 +33,7 @@ object DomainData extends FromModelFactoryWithSchema[DomainData]
 
 /**
   * Represents the address of an internet service
-  * @param url     This domain as a string, excluding the protocol part. May include a port 
-  *                number.
+  * @param url     This domain as a string, excluding the protocol part. May include a port number.
   * @param created Time when this domain was added to the database
   * @param isHttps Whether to connect using HTTPS instead of HTTP. Uncertain if both forms have 
   *                been encountered.
