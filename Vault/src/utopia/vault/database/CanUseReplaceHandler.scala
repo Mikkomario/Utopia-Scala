@@ -9,7 +9,7 @@ object CanUseReplaceHandler
 {
 	// EXTENSIONS   --------------------
 	
-	implicit class CanUseReplaceHandlerWithIds[+In, +E, +S <: HasId[Int], +A](val user: CanUseReplaceHandler[In, E, S, A])
+	implicit class CanUseReplaceHandlerWithIds[+In, E, +S <: HasId[Int], +A](val user: CanUseReplaceHandler[In, E, S, A])
 		extends AnyVal
 	{
 		/**
@@ -35,7 +35,7 @@ object CanUseReplaceHandler
  * @author Mikko Hilpinen
  * @since 03.08.2025, v2.0
  */
-trait CanUseReplaceHandler[+In, +E, +S, +Repr]
+trait CanUseReplaceHandler[+In, E, +S, +Repr]
 {
 	// ABSTRACT ------------------------
 	

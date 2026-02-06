@@ -48,7 +48,6 @@ object ReplaceHandler
 				replacements.foreach { case (newEntry, existing) => accessReplacingIdColumn(existing).set(newEntry.id) }
 			}
 		}
-		
 	
 	/**
 	 * Creates a new replace-handler, where the replacements are performed after the inserts
@@ -72,6 +71,25 @@ object ReplaceHandler
 	                   (replace: (IndexedSeq[(S, E)], Connection) => Unit): ReplaceHandler[In, E, S] =
 		new _ReplaceHandler[In, E, S](shouldReplace)(replace)
 	
+	/**
+	 * Creates a replace-handler, which only updates matching entries
+	 * @param update A function which accepts 3 parameters:
+	 *                      1. A new item
+	 *                      1. Matching existing item
+	 *                      1. A DB connection
+	 *
+	 *               If the new item is a duplicate of the existing item, f should yield None.
+	 *               Otherwise, f should perform a database update and return a modified version of the existing item.
+	 *
+	 *               Note: The new item is not inserted in either case.
+	 *
+	 * @tparam In Type of the stored items
+	 * @tparam E Type of the existing items
+	 * @return A new update-based replace-handler
+	 */
+	def update[In, E](update: (In, E, Connection) => Option[E]): ReplaceHandler[In, E, Any] =
+		new UpdatingReplaceHandler[In, E](update)
+	
 	
 	// NESTED   -------------------------
 	
@@ -88,7 +106,7 @@ object ReplaceHandler
 		                              (shouldReplace: (In, E) => Boolean) =
 			new DeprecatingReplaceHandler[In, E](rootAccess)(shouldReplace)(_.id)
 	}
-	class DeprecatingReplaceHandler[-In, -E](rootAccess: ViewManyByIntIds[TimeDeprecatableView[_]])
+	class DeprecatingReplaceHandler[-In, E](rootAccess: ViewManyByIntIds[TimeDeprecatableView[_]])
 	                                        (shouldReplace: (In, E) => Boolean)(idOf: E => Int)
 		extends ReplaceHandler[In, E, Any]
 	{
@@ -100,14 +118,16 @@ object ReplaceHandler
 		
 		// IMPLEMENTED  -----------------
 		
-		override def handleMatch(key: Any, newItem: In, existingItem: E): Boolean = {
+		override def handleMatch(key: Any, newItem: In, existingItem: E)
+		                        (implicit connection: Connection): Either[Boolean, E] =
+		{
 			// Case: Replacement => Remembers the old version's ID
 			if (shouldReplace(newItem, existingItem)) {
 				idsToReplaceBuilder += idOf(existingItem)
-				true
+				Left(true)
 			}
 			else
-				false
+				Left(false)
 		}
 		
 		override def replace(inserted: MapAccess[Any, Any])(implicit connection: Connection): Unit = {
@@ -115,6 +135,17 @@ object ReplaceHandler
 			rootAccess(idsToReplaceBuilder.result()).deprecate()
 			idsToReplaceBuilder.clear()
 		}
+	}
+	
+	private class MappingReplaceHandler[-In, M, E, -S](delegate: ReplaceHandler[M, E, S], f: In => M)
+		extends ReplaceHandler[In, E, S]
+	{
+		override def handleMatch(key: Any, newItem: In, existingItem: E)
+		                        (implicit connection: Connection): Either[Boolean, E] =
+			delegate.handleMatch(key, f(newItem), existingItem)
+		
+		override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit =
+			delegate.replace(inserted)
 	}
 	
 	private class _ReplaceHandler[-In, E, S](shouldReplace: (In, E) => Boolean)
@@ -129,14 +160,16 @@ object ReplaceHandler
 		
 		// IMPLEMENTED  -----------------------
 		
-		override def handleMatch(key: Any, newItem: In, existingItem: E): Boolean = {
+		override def handleMatch(key: Any, newItem: In, existingItem: E)
+		                        (implicit connection: Connection): Either[Boolean, E] =
+		{
 			// Case: Replacement => Remembers the old version, as well as its key
 			if (shouldReplace(newItem, existingItem)) {
 				replacementsBuilder += (key -> existingItem)
-				true
+				Left(true)
 			}
 			else
-				false
+				Left(false)
 		}
 		
 		override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit = {
@@ -146,14 +179,16 @@ object ReplaceHandler
 			replacementsBuilder.clear()
 		}
 	}
-	private class MappingReplaceHandler[-In, M, E, -S](delegate: ReplaceHandler[M, E, S], f: In => M)
-		extends ReplaceHandler[In, E, S]
+	
+	private class UpdatingReplaceHandler[-In, E](update: (In, E, Connection) => Option[E])
+		extends ReplaceHandler[In, E, Any]
 	{
-		override def handleMatch(key: Any, newItem: In, existingItem: E): Boolean =
-			delegate.handleMatch(key, f(newItem), existingItem)
+		override def handleMatch(key: Any, newItem: In, existingItem: E)
+		                        (implicit connection: Connection): Either[Boolean, E] =
+			update(newItem, existingItem, connection).toRight(false)
 		
-		override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit =
-			delegate.replace(inserted)
+		// Replacement is never needed when using this approach
+		override def replace(inserted: MapAccess[Any, Any])(implicit connection: Connection): Unit = ()
 	}
 }
 
@@ -165,34 +200,39 @@ object ReplaceHandler
  *
  * @tparam In Type of new items
  * @tparam E Type of existing items
+ * @tparam S Type of inserted / stored items
  * @author Mikko Hilpinen
  * @since 03.08.2025, v2.0
  */
-trait ReplaceHandler[-In, -E, -S]
+trait ReplaceHandler[-In, E, -S]
 {
 	// ABSTRACT --------------------------
 	
 	/**
-	 * Checks whether a new item is to be considered a duplicate or a new version of an existing item.
-	 * Prepares the replacement, if appropriate.
+	 * Checks whether a new item is to be considered a duplicate or a new version of an existing item and either:
+	 *      - Prepares replacement, if appropriate
+	 *      - Updates the existing entry, if needed
 	 * @param key A unique key common to both items
 	 * @param newItem The item proposed to be stored
 	 * @param existingItem The item that already existed in the DB
-	 * @return Whether 'newItem' should be considered an updated version of 'existingItem'.
-	 *         False if 'newItem' should be considered a duplicate and ignored.
+	 * @param connection Implicit DB connection
+	 * @return Returns either:
+	 *              - Left: Whether 'newItem' should be considered an updated version of 'existingItem'.
+	 *                      False if 'newItem' should be considered a duplicate and ignored.
+	 *              - Right: A modified version of the existing item, if an update was preferred over an insert
 	 */
-	def handleMatch(key: Any, newItem: In, existingItem: E): Boolean
+	def handleMatch(key: Any, newItem: In, existingItem: E)(implicit connection: Connection): Either[Boolean, E]
 	
 	/**
 	 * Performs the prepared replacements.
-	 * Only called if replacements have been prepared, i.e. if 'handleMatch' yielded true at least once.
+	 * Only called if replacements have been prepared, i.e. if 'handleMatch' yielded Left(true) at least once.
 	 * @param inserted Access to the inserted items based on their unique keys.
 	 *
 	 *                 Note: If no value is queried, the insert will be performed AFTER this replace function call.
 	 *                       On the other hand, if a value is requested, the insert will be performed immediately.
 	 *                       ReplaceHandler implementations may use this property to control when the inserts
-	 *                       should be performed. Typically, the optimal approach would be not to use this
-	 *                       property, unless necessary.
+	 *                       should be performed. Typically, the optimal approach would be to only use this
+	 *                       property when necessary.
 	 *
 	 * @param connection Implicit DB connection
 	 */

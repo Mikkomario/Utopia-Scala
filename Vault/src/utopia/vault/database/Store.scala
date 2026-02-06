@@ -5,6 +5,7 @@ import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.operator.Identity
 import utopia.flow.operator.MaybeEmpty.collectionMayBeEmpty
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.Extender
 import utopia.vault.store.{HasId, StoreResult}
@@ -168,7 +169,7 @@ object Store
 			new AdvancedPreparedStore[In, E, D, S, R](model)(toData)(insertedToResult)(existingToResult)
 	}
 	
-	trait GenericStoreFactoryLike[+In, +E, +S, -GN, +ST, +Repr] extends CanUseReplaceHandler[In, E, S, Repr]
+	trait GenericStoreFactoryLike[+In, E, +S, -GN, +ST, +Repr] extends CanUseReplaceHandler[In, E, S, Repr]
 	{
 		// ABSTRACT    ----------------------------
 		
@@ -244,16 +245,21 @@ object Store
 					replaceHandler match {
 						// Case: Replacement may be utilized => Checks whether the item is a new version or a duplicate
 						case Some(replacer) =>
-							// Case: The item is a new version => Replaces the old version with it
-							if (replacer.handleMatch(item, item, existing)) {
-								val lazyInserted = Lazy { model.insert(toData(item)) }
-								replacer.replace(MapAccess { _ => lazyInserted.value })
-								insertedResult(item, lazyInserted.value)
+							replacer.handleMatch(item, item, existing) match {
+								case Left(isNewVersion) =>
+									// Case: The item is a new version => Replaces the old version with it
+									if (isNewVersion) {
+										val lazyInserted = Lazy { model.insert(toData(item)) }
+										replacer.replace(MapAccess { _ => lazyInserted.value })
+										insertedResult(item, lazyInserted.value)
+									}
+									// Case: Duplicate => Yields the existing item
+									else
+										existingResult(existing)
+								
+								// Case: An update was performed => Yields the modified version of the existing item
+								case Right(updated) => existingResult(updated)
 							}
-							// Case: Duplicate => Yields the existing item
-							else
-								existingResult(existing)
-						
 						// Case: Replacement is not used
 						//       => Considers the new item a duplicate and yields the existing item
 						case None => existingResult(existing)
@@ -263,31 +269,34 @@ object Store
 			}
 		
 		//noinspection ConvertibleToMethodValue
-		override def keyMapped[K](itemsToStore: IterableOnce[(K, In)], existingItems: Map[K, E])
+		override def keyMapped[K](itemsToStore: IterableOnce[(K, In)], existingItems: => Map[K, E])
 		                         (implicit connection: Connection) =
-		{
-			val existingResultView = existingItems.view.mapValues(existingResult)
 			itemsToStore.nonEmptyIterator match {
 				case Some(itemsIterator) =>
+					val cachedExisting = existingItems
 					// Checks against the existing items,
-					// preparing the non-duplicates as new inserts and handling possible replacements
-					val insertsBuilder = OptimizedIndexedSeq.newBuilder[(K, In)]
-					itemsIterator.foreach { case (key, item) =>
-						existingItems.get(key) match {
-							// Case: Matches an existing item
-							//       => Handles it using the replace-handler, if appropriate.
-							//          If no handler has been specified,
-							//          treats the item as a duplicate and won't insert it.
-							case Some(existing) =>
-								if (replaceHandler.exists { _.handleMatch(key, item, existing) })
-									insertsBuilder += (key -> item)
-							
-							// Case: A non-duplicate item => Prepares to insert it
-							case None => insertsBuilder += (key -> item)
+					// preparing the non-duplicates as new inserts and handling possible replacements & updates
+					val updatedBuilder = OptimizedIndexedSeq.newBuilder[(K, E)]
+					itemsIterator
+						.filter { case (key, item) =>
+							// Checks whether this item matches an existing version
+							cachedExisting.get(key).forall { existing =>
+								// Case: Matches an existing item
+								//       => Handles it using the replace-handler, if appropriate.
+								//          If no handler has been specified,
+								//          treats the item as a duplicate and won't insert it.
+								replaceHandler match {
+									case Some(replaceHandler) =>
+										replaceHandler.handleMatch(key, item, existing).leftOrMap { modified =>
+											updatedBuilder += (key -> modified)
+											false
+										}
+									case None => true
+								}
+							}
 						}
-					}
-					
-					insertsBuilder.result().notEmpty match {
+						.toOptimizedSeq.notEmpty match
+					{
 						// Case: At least one insert is necessary
 						case Some(inserts) =>
 							// Performs the inserts before or after the replacement
@@ -301,24 +310,30 @@ object Store
 									.map { _.iterator.map { case (key, _, inserted) => key -> inserted }.toMap[Any, S] }
 								replacer.replace(MapAccess.wrap[Any, S](lazyInsertedMap))
 							}
+							// Applies the performed updates to the result map, if appropriate
+							val existingResultView = (updatedBuilder.result().notEmpty match {
+								case Some(updated) => (cachedExisting ++ updated).view
+								case None => cachedExisting.view
+							}).mapValues(existingResult)
 							// Converts the insertion results into store-results
 							// If the insert was not performed yet, it is performed here
 							// Combines the existing and inserted results into a map
-							View.concat(
-								existingResultView,
-								lazyInserted.value.view.map { case (key, item, inserted) =>
-									key -> insertedResult(item, inserted)
-								}
-							).toMap
+							View
+								.concat(
+									existingResultView,
+									lazyInserted.value.view.map { case (key, item, inserted) =>
+										key -> insertedResult(item, inserted)
+									}
+								)
+								.toMap
 						
 						// Case: None of the specified items were new => Returns the existing items
-						case None => existingResultView.toMap
+						case None => cachedExisting.view.mapValues(existingResult).toMap
 					}
 				
-				// Case: There were no items to store => Yields the existing items
-				case None => existingResultView.toMap
+				// Case: There were no items to store => Yields an empty map
+				case None => Map[K, R]()
 			}
-		}
 	}
 	
 	abstract class AbstractSimpleStore[In, -D, S <: HasId[Int], +Repr](model: Inserter[D, S],
@@ -449,12 +464,13 @@ trait Store[In, E, +S, +R, +Repr] extends CanUseReplaceHandler[In, E, S, Repr]
 	 *                     Each item is mapped to a unique key,
 	 *                     which is used for matching it with a possible existing DB entry.
 	 * @param existingItems Matching items from the database. These, also, are mapped to unique (matching) keys.
+	 *                      Call-by-name: Not called if there are no items to store.
 	 * @param connection Implicit DB connection
 	 * @tparam K type of keys used
 	 * @return A map where keys are the specified keys and values are store results,
 	 *         either containing a newly inserted item, or one of the existing DB entries.
 	 */
-	def keyMapped[K](itemsToStore: IterableOnce[(K, In)], existingItems: Map[K, E])
+	def keyMapped[K](itemsToStore: IterableOnce[(K, In)], existingItems: => Map[K, E])
 	                (implicit connection: Connection): Map[K, R]
 	
 	

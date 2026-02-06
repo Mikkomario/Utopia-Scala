@@ -6,7 +6,8 @@
   - This will likely cause build errors. However, these should be easily fixed with a simple find-and-replace.
 - Refactored **Store** interface to provide functions which don't require existing and inserted types to match. 
   Had to add new generic type parameters to achieve this, which may cause some build errors.
-- Separated **ReplaceHandler** and **CanUseReplaceHandler** into separate files
+- Separated **ReplaceHandler** and **CanUseReplaceHandler** into separate files. 
+  Also extended the interface to support use-cases where an update is more appropriate than replacement.
 - **SqlTarget** now requires `joinTypes: Seq[JoinType]`
 - `.stream(...)` **AccessManyColumns** now contains an additional optional parameter: `order: Option[OrderDirection]`
 - **AccessColumnValueFactory** is now a trait instead of a class
