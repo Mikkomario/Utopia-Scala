@@ -3541,6 +3541,23 @@ object CollectionExtensions
 	
 	// OTHER    ------------------------------------------
 	
+	implicit class RichSet[A](val s: scala.collection.Set[A]) extends AnyVal
+	{
+		/**
+		 * @param first First item to test
+		 * @param second Second item to test
+		 * @param more More items to test
+		 * @return Whether this set contains any of the specified items
+		 */
+		def containsAny(first: A, second: A, more: A*): Boolean =
+			s.contains(first) || s.contains(second) || containsAny(more)
+		/**
+		 * @param items Items to test
+		 * @return Whether this set contains any of the specified items
+		 */
+		def containsAny(items: IterableOnce[A]) = items.iterator.exists(s.contains)
+	}
+	
 	implicit class RichOption[A](val o: Option[A]) extends AnyVal
 	{
 		/**

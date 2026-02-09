@@ -7,6 +7,7 @@ import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.nexus.model.response.RequestResult
 
 import scala.collection.mutable
+import scala.language.implicitConversions
 
 object ExtendableApiNodeFactory
 {

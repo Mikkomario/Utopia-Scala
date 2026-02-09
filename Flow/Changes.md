@@ -193,6 +193,8 @@
   - Added multiple new static values
 - **Seq** (via **CollectionExtensions**)
   - Added various `.popExtreme(...)` functions
+- **Set** (via **CollectionExtensions**)
+  - Added `.containsAny(IterableOnce)`
 - **SingleView** (object)
   - Added an `.apply(...)` constructor
 - **StringFrom**
