@@ -3649,17 +3649,23 @@ object CollectionExtensions
 		  * @return A map with merged values
 		  */
 		def mergeWith[V2 >: V](another: Map[K, V2])(merge: (V, V2) => V2) = {
-			val myKeys = m.keySet
-			val theirKeys = another.keySet
-			val onlyInMe = myKeys.diff(theirKeys)
-			val onlyInThem = theirKeys.diff(myKeys)
-			val inBoth = myKeys.intersect(theirKeys)
-			
-			val myPart = onlyInMe.map { k => k -> m(k) }.toMap
-			val theirPart = onlyInThem.map { k => k -> another(k) }.toMap
-			val ourPart = inBoth.map { k => k -> merge(m(k), another(k)) }.toMap
-			
-			myPart ++ theirPart ++ ourPart
+			if (m.isEmpty)
+				another
+			else if (another.isEmpty)
+				m
+			else {
+				val myKeys = m.keySet
+				val theirKeys = another.keySet
+				val onlyInMe = myKeys.diff(theirKeys)
+				val onlyInThem = theirKeys.diff(myKeys)
+				val inBoth = myKeys.intersect(theirKeys)
+				
+				View.concat(
+					onlyInMe.view.map { k => k -> m(k) },
+					onlyInThem.view.map { k => k -> another(k) },
+					inBoth.view.map { k => k -> merge(m(k), another(k)) })
+					.toMap
+			}
 		}
 		
 		/**
