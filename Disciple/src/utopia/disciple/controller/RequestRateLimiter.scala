@@ -11,19 +11,10 @@ import utopia.flow.time.Duration
 import utopia.flow.time.TimeUnit.Second
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Random, Success, Try}
 
 object RequestRateLimiter
 {
-	/**
-	  * Creates a new request rate limiter instance
-	  * @param maxRequestAmount Maximum number of request within the specified time period
-	  * @param resetDuration Length of each considered time period
-	  * @tparam A Type of future results
-	  * @return A new request rate limiter instance
-	  */
-	def apply[A](maxRequestAmount: Int, resetDuration: Duration) =
-		new RequestRateLimiter(maxRequestAmount, resetDuration)
 	/**
 	  * Creates a new request rate limiter instance
 	  * @param maxRequestsPerSecond Maximum number of request that can be performed during a single second
@@ -31,6 +22,18 @@ object RequestRateLimiter
 	  * @return A new request rate limiter instance
 	  */
 	def maxPerSecond[A](maxRequestsPerSecond: Int) = new RequestRateLimiter(maxRequestsPerSecond, Second.unit)
+	
+	/**
+	 * Creates a new request rate limiter instance
+	 * @param maxRequestAmount Maximum number of request within the specified time period
+	 * @param resetDuration Length of each considered time period
+	 * @param maxRandomIncrease Maximum randomly applied increment to 'resetDuration'.
+	 *                          Default = 0 = no randomness is applied.
+	 * @tparam A Type of future results
+	 * @return A new request rate limiter instance
+	 */
+	def apply[A](maxRequestAmount: Int, resetDuration: Duration, maxRandomIncrease: Duration = Duration.zero) =
+		new RequestRateLimiter(maxRequestAmount, resetDuration, maxRandomIncrease)
 }
 
 /**
@@ -38,16 +41,26 @@ object RequestRateLimiter
   * @author Mikko Hilpinen
   * @since 17.11.2021, v1.4.4
   */
-class RequestRateLimiter(maxRequestAmount: Int, resetDuration: Duration) extends Breakable
+class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
+                         maxRandomIncrease: Duration = Duration.zero)
+	extends Breakable
 {
 	// ATTRIBUTES   --------------------------------
 	
 	private val requestTimes = Volatile.seq[Instant]()
 	
-	private lazy val waitLock = new AnyRef()
+	private val waitLock = new AnyRef()
 	// Each request accepts whether it should be completed (true) or immediately failed (false)
-	private lazy val pendingRequests = Volatile.seq[Boolean => Future[_]]()
-	private lazy val pendingClearedFuture = Volatile[Future[Unit]](Future.unit)
+	private val pendingRequests = Volatile.seq[Boolean => Future[_]]()
+	private val pendingClearedFuture = Volatile[Future[Unit]](Future.unit)
+	
+	private val randomizesResetDuration = maxRandomIncrease.isPositive
+	private var resetDuration = {
+		if (randomizesResetDuration)
+			baseResetDuration + maxRandomIncrease * Random.nextDouble()
+		else
+			baseResetDuration
+	}
 	
 	
 	// COMPUTED ------------------------------------
@@ -69,6 +82,8 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: Duration) extends
 		else
 			Some(times(times.size - maxRequestAmount) + resetDuration).filter { _.isFuture }
 	}
+	
+	private def randomResetDuration = baseResetDuration + maxRandomIncrease * Random.nextDouble()
 	
 	
 	// IMPLEMENTED  --------------------------------
@@ -124,7 +139,12 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: Duration) extends
 						// Waits the smallest possible time until performing the next request
 						// If the wait is interrupted, stops, cancelling all pending requests
 						val shouldContinue = nextAvailableRequestTime match {
-							case Some(nextWaitTarget) => Wait(nextWaitTarget, waitLock)
+							case Some(nextWaitTarget) =>
+								val waitSucceeded = Wait(nextWaitTarget, waitLock)
+								// Randomizes the next wait duration, if that feature is enabled
+								randomizeResetDuration()
+								waitSucceeded
+								
 							case None => true
 						}
 						// Case: Normal operation => continues
@@ -141,5 +161,10 @@ class RequestRateLimiter(maxRequestAmount: Int, resetDuration: Duration) extends
 			}
 			promise.future
 		}
+	}
+	
+	private def randomizeResetDuration() = {
+		if (randomizesResetDuration)
+			resetDuration = randomResetDuration
 	}
 }

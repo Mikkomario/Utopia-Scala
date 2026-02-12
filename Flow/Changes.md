@@ -189,14 +189,17 @@
   - Added `.hide()` and `.restrictAccess()`
 - **Pointer**
   - Added `.pop(Int)` to **Seq**-based **Pointer**s
-- **Regex** (object)
-  - Added multiple new static values
+- **Regex**
+  - Added multiple new static values to the companion object
+  - Added `.replaceFirst(String, String)`
 - **Seq** (via **CollectionExtensions**)
   - Added various `.popExtreme(...)` functions
 - **Set** (via **CollectionExtensions**)
   - Added `.containsAny(IterableOnce)`
 - **SingleView** (object)
   - Added an `.apply(...)` constructor
+- **String** (via **StringExtensions**)
+  - Added `.replaceFirstMatchOf(Regex, String)`
 - **StringFrom**
   - Added `.take(Int)`
 - **Tree** (object)

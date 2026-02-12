@@ -47,13 +47,23 @@ case class DomainData(url: String, created: Instant = Now, isHttps: UncertainBoo
 	
 	override def toModel = Model(Vector("url" -> url, "created" -> created, "isHttps" -> isHttps.exact))
 	
-	override def toString = {
-		val httpPart = if (isHttps.mayBeTrue) "https://" else "http://"
-		s"$httpPart$url"
-	}
+	override def toString = toHttpUrl(preferHttps = true)
 	
 	override def withCreated(created: Instant) = copy(created = created)
 	override def withIsHttps(isHttps: UncertainBoolean) = copy(isHttps = isHttps)
 	override def withUrl(url: String) = copy(url = url)
+	
+	
+	// OTHER    ----------------------
+	
+	/**
+	 * Converts this domain into a URL, including the http:// or https:// -prefix
+	 * @param preferHttps Whether to prefer HTTPS over HTTP. Default = false.
+	 * @return A URL matching this domain, including the protocol
+	 */
+	def toHttpUrl(preferHttps: Boolean = false) = {
+		val httpPart = if (isHttps.isCertainlyTrue || (preferHttps && isHttps.mayBeTrue)) "https://" else "http://"
+		s"$httpPart$url"
+	}
 }
 

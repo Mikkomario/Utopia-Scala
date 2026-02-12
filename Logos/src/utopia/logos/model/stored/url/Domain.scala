@@ -25,7 +25,10 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	 * A regular expression that identifies "http://" and "https://"
 	 */
 	val httpRegex = (Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2)).withinParentheses
-	private val wwwRegex = ((Regex("w").times(3) || Regex("W").times(3)) + Regex.escape('.')).withinParentheses
+	/**
+	 * A regular expression that finds "www."
+	 */
+	val wwwRegex = ((Regex("w").times(3) || Regex("W").times(3)) + Regex.escape('.')).withinParentheses
 	private val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
 	
 	/**
@@ -46,9 +49,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	// OTHER    ------------------------
 	
 	/**
-	 * Standardizes a URL, so that it includes:
-	 *      - "http://" or "https://"
-	 *      - "www.", unless based on a numeric address
+	 * Standardizes a URL, so that it includes: "http://" or "https://"
 	 * @param url URL to standardize
 	 * @param preferHttps Whether to prepend "https://" instead of "http://". Default = false.
 	 * @return A standardized copy of the specified URL. If the specified URL was empty, returns it as it is.
@@ -60,28 +61,15 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 		// Looks for the http(s) part
 		else {
 			val noControl = url.stripControlCharacters.trim
-			val modified = httpRegex.endIndexIteratorIn(noControl).nextOption() match {
-				// Case: Http(s) found => Looks for www.
-				case Some(httpEndIndex) =>
-					// Case: www also found => Yields the same URL
-					if (wwwRegex.existsIn(noControl))
-						noControl
-					// Case: No www => Checks whether needed (not used on number-based URLs)
-					else {
-						val (toHttp, afterHttp) = noControl.splitAt(httpEndIndex)
-						if (afterHttp.headOption.exists { _.isDigit })
-							noControl
-						else
-							s"${toHttp}www.$afterHttp"
-					}
-					
-				// Case: No http(s) => Adds it and also looks, whether www. should be added
-				case None =>
+			// Case: Http(s) found => Valid
+			val modified = {
+				if (httpRegex.existsIn(noControl))
+					noControl
+				// Case: No http(s) => Adds it
+				else {
 					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
-					if (wwwRegex.existsIn(noControl) || noControl.headOption.exists { _.isDigit })
-						s"$httpPart$noControl"
-					else
-						s"${httpPart}www.$noControl"
+					s"$httpPart$noControl"
+				}
 			}
 			// Removes the trailing forward slash, also
 			if (modified.endsWith("/"))
@@ -89,6 +77,30 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 			else
 				modified
 		}
+	}
+	
+	/**
+	 * Includes www. in the specified URL, unless it's based on a numeric IP address
+	 * @param url URL to process
+	 * @return Copy of the specified URL, including www, if appropriate
+	 */
+	def includeWww(url: String) = {
+		if (wwwRegex.existsIn(url))
+			url
+		else
+			httpRegex.endIndexIteratorIn(url).nextOption() match {
+				case Some(httpEndIndex) =>
+					val (toHttp, afterHttp) = url.splitAt(httpEndIndex)
+					if (afterHttp.headOption.exists { _.isDigit })
+						url
+					else
+						s"${toHttp}www.$afterHttp"
+				case None =>
+					if (url.headOption.exists { _.isDigit })
+						url
+					else
+						s"www.$url"
+			}
 	}
 }
 

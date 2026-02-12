@@ -197,6 +197,33 @@ trait PossiblyFailingFuture[A, T, +R[_]] extends Any
 		}
 	
 	/**
+	 * @param f A mapping function applied to a failure. May yield a success or a failure.
+	 * @param exc Implicit execution context
+	 * @return A future that applies the specified mapping function, if this is a failure.
+	 */
+	def tryMapFailure(f: Throwable => Try[A])(implicit exc: ExecutionContext) =
+		wrapped.map { r =>
+			val result = wrap(r)
+			result.failure match {
+				case Some(error) => unwrap(f(error))
+				case None => unwrap(result)
+			}
+		}
+	/**
+	 * @param f A mapping function applied to a failure. Yields a Future that may yield a success or a failure.
+	 * @param exc Implicit execution context
+	 * @return A future that applies the specified mapping function, if this is a failure.
+	 */
+	def tryFlatMapFailure(f: Throwable => Future[Try[A]])(implicit exc: ExecutionContext) =
+		wrapped.flatMap { r =>
+			val result = wrap(r)
+			result.failure match {
+				case Some(error) => f(error).map { unwrap(_) }
+				case None => Future.successful(unwrap(result))
+			}
+		}
+	
+	/**
 	 * If this future yields a successful result,
 	 * maps that with a mapping function that may fail (fully or partially)
 	 * @param f A mapping function for successful result. May fail.

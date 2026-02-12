@@ -2,6 +2,8 @@
 
 ## v1.9.2 (in development)
 Supports **Access v1.7** and **Flow v2.8**
+### New features
+- **RequestRateLimiter** now supports randomness
 ### New methods
 - **Gateway**
   - Added `.usedConnections` and `.availableConnections`

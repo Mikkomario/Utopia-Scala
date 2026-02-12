@@ -852,6 +852,13 @@ object StringExtensions
 		  */
 		def replaceEachMatchOf(regex: Regex, replacement: => String) = replaceAll(regex, replacement)
 		/**
+		 * @param regex A regular expression for finding the replaced element
+		 * @param replacement A string placed in place of the matching element
+		 * @return A copy of this string where the first match of 'regex' (if applicable) is replaced with 'replacement'
+		 */
+		def replaceFirstMatchOf(regex: Regex, replacement: => String) =
+			regex.replaceFirst(s, replacement)
+		/**
 		 * Replaces all instances within this string where the specified regular expression doesn't match
 		 * string contents.
 		 * @param regex A regular expression used to match the preserved areas

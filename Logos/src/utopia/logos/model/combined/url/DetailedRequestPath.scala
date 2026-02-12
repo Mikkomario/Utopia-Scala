@@ -55,6 +55,15 @@ trait DetailedRequestPath
 	def domain: Domain
 	
 	
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return A full URL formed by this request path
+	 * @see [[toUrl]]
+	 */
+	def url = toUrl(preferHttps = true)
+	
+	
 	// IMPLEMENTED	--------------------
 	
 	/**
@@ -65,6 +74,16 @@ trait DetailedRequestPath
 	override def wrapped = requestPath.data
 	override protected def wrappedFactory = requestPath
 	
-	override def toString = s"$domain${requestPath.path.mapIfNotEmpty { p => s"/$p" }}"
+	override def toString = url
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param preferHttps Whether to prefer HTTPS over HTTP (default = false)
+	 * @return A URL based on this request path
+	 */
+	def toUrl(preferHttps: Boolean = false) =
+		s"${ domain.toHttpUrl(preferHttps) }${requestPath.path.mapIfNotEmpty { p => s"/$p" }}"
 }
 

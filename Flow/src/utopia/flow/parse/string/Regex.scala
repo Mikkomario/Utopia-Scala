@@ -2,7 +2,7 @@ package utopia.flow.parse.string
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.parse.string.Regex.unbracketableChars
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.RangeExtensions._
@@ -434,13 +434,27 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	// The main point of this function is to allow for the lazy initiation of the replacement
 	def replaceAll(str: String, replacement: View[String]) = {
 		val matcher = pattern.matcher(str)
-		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile { r => r }
+		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile(Identity)
 		if (findResultsIterator.hasNext) {
 			val resultBuffer = new StringBuffer()
 			findResultsIterator.foreach { _ => matcher.appendReplacement(resultBuffer, replacement.value) }
 			matcher.appendTail(resultBuffer)
 			resultBuffer.toString
 		}
+		else
+			str
+	}
+	/**
+	 * Replaces the first match of this regular expression within a string
+	 * @param str A string in which the replacement should be made
+	 * @param replacement A string that replaces the first element in 'str' that matches this regular expression
+	 * @return A modified version of the specified string.
+	 *         If this expression didn't match any part of that string, yields that string without any modifications.
+	 */
+	def replaceFirst(str: String, replacement: => String) = {
+		val matcher = pattern.matcher(str)
+		if (matcher.find())
+			s"${ str.take(matcher.start()) }$replacement${ str.drop(matcher.end()) }"
 		else
 			str
 	}
@@ -576,8 +590,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		val builder = new VectorBuilder[Either[String, String]]()
 		
 		var lastEndIndex = 0
-		while (matcher.find())
-		{
+		while (matcher.find()) {
 			val startIndex = matcher.start()
 			val endIndex = matcher.end()
 			if (startIndex > lastEndIndex)
