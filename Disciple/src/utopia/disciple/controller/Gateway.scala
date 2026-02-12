@@ -1,13 +1,12 @@
 package utopia.disciple.controller
 
+import org.apache.hc.client5.http.DnsResolver
 import org.apache.hc.client5.http.classic.methods._
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
 import org.apache.hc.client5.http.impl.classic.{HttpClientBuilder, HttpClients}
-import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
-import org.apache.hc.client5.http.socket.{ConnectionSocketFactory, PlainConnectionSocketFactory}
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory
-import org.apache.hc.core5.http.config.RegistryBuilder
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.net.URIBuilder
@@ -27,8 +26,8 @@ import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 
 import java.io.OutputStream
 import java.net.{URI, URLEncoder}
@@ -53,7 +52,8 @@ object Gateway
 	  *                          None if no encoding should be used (default).
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
-	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	 * @param dnsResolver A custom DNS resolver to use (optional)
+	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
 	  *                            Use false if you wish to force parameters to uri parameters.
 	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
 	  *                                 applying them. False if you want the parameters to be added "as is"
@@ -73,11 +73,11 @@ object Gateway
 	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	          parameterEncoding: Option[Codec] = None,
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
-	          responseInterceptors: Seq[ResponseInterceptor] = Empty,
+	          responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
 	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
 	          disableTrustStoreVerification: Boolean = false) =
 		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
-			requestInterceptors, responseInterceptors, Identity, allowBodyParameters,
+			requestInterceptors, responseInterceptors, dnsResolver, Identity, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 	
 	/**
@@ -90,7 +90,8 @@ object Gateway
 	  *                          None if no encoding should be used (default).
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
-	  * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	 * @param dnsResolver A custom DNS resolver to use (optional)
+	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
 	  *                            Use false if you wish to force parameters to uri parameters.
 	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
 	  *                                 applying them. False if you want the parameters to be added "as is"
@@ -111,12 +112,12 @@ object Gateway
 	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
 	           parameterEncoding: Option[Codec] = None,
 	           requestInterceptors: Seq[RequestInterceptor] = Empty,
-	           responseInterceptors: Seq[ResponseInterceptor] = Empty,
+	           responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
 	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
 	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
 		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
-			requestInterceptors, responseInterceptors, customizeClient, allowBodyParameters,
+			requestInterceptors, responseInterceptors, dnsResolver, customizeClient, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 }
 
@@ -133,7 +134,8 @@ object Gateway
   *                          None if no encoding should be used (default).
   * @param requestInterceptors Interceptors that access and potentially modify all outgoing requests (default = empty)
   * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
-  * @param customizeClient A function for customizing the http client when it is first created (default = identity)
+  * @param dnsResolver A custom DNS resolver to use (optional)
+ * @param customizeClient A function for customizing the http client when it is first created (default = identity)
   * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
   *                            Use false if you wish to force parameters to uri parameters.
   * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
@@ -153,7 +155,7 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
               parameterEncoding: Option[Codec] = None,
               requestInterceptors: Seq[RequestInterceptor] = Empty,
-              responseInterceptors: Seq[ResponseInterceptor] = Empty,
+              responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
               customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
               allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
               disableTrustStoreVerification: Boolean = false)
@@ -162,19 +164,16 @@ class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
 	
     private val connectionManager = {
 	    val manager = {
-		    if (disableTrustStoreVerification) {
-			    // From https://www.baeldung.com/httpclient-ssl
-			    // The tutorial used one function which didn't exist in HttpClient v5
-			    val sslSocketFactory = new SSLConnectionSocketFactory(
-				    SSLContexts.custom().loadTrustMaterial(null, (_: Any, _: Any) => true).build())
-			    val socketFactoryRegistry = RegistryBuilder.create[ConnectionSocketFactory]()
-				    .register("https", sslSocketFactory)
-				    .register("http", new PlainConnectionSocketFactory())
-				    .build()
-			    new PoolingHttpClientConnectionManager(socketFactoryRegistry)
-		    }
-		    else
-			    new PoolingHttpClientConnectionManager()
+		    val builder = PoolingHttpClientConnectionManagerBuilder.create()
+		    
+		    // From https://www.baeldung.com/httpclient-ssl
+		    // The tutorial used one function which didn't exist in HttpClient v5
+		    if (disableTrustStoreVerification)
+		        builder.setSSLSocketFactory(new SSLConnectionSocketFactory(
+			        SSLContexts.custom().loadTrustMaterial(null, (_: Any, _: Any) => true).build()))
+		    
+		    dnsResolver.foreach(builder.setDnsResolver)
+		    builder.build()
 	    }
 	    manager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
 	    manager.setMaxTotal(maxConnectionsTotal)
