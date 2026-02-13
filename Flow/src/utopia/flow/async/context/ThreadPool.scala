@@ -70,6 +70,7 @@ class ThreadPool(val name: String, coreSize: Int = 5, val maxSize: Int = 250, va
 	  * @return The current number of reserved threads
 	  */
 	def currentSize = threads.value.size
+	// TODO: Looks like this function is not necessarily working correctly (keeps yielding 0)
 	/**
 	  * @return The current number of active threads
 	  *         (performing some task, although the task itself may be in a waiting state)

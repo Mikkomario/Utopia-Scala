@@ -17,6 +17,11 @@ object ResettableLazy
 	 */
 	def lazily = GeneratesAgain
 	
+	/**
+	 * @return Access to constructors for volatile (i.e. thread-safe) lazy containers
+	 */
+	def volatile = ResettableVolatileLazy
+	
 	
 	// OTHER    ----------------------
 	

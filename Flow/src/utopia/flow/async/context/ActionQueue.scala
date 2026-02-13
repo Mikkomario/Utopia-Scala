@@ -252,7 +252,7 @@ object ActionQueue
 		/**
 		 * A lazily initialized pointer for tracking action state
 		 */
-		private val lazyStatePointer = Lazy {
+		private val lazyStatePointer = Lazy.volatile {
 			wrappedPointer.value match {
 				// Case: This action has not yet started, but a promise has already been prepared
 				//       => Listens to process start & completion, updating the pointer
@@ -316,7 +316,7 @@ object ActionQueue
 		/**
 		 * A lazily initialized future of this action's completion
 		 */
-		private val lazyFuture = Lazy {
+		private val lazyFuture = Lazy.volatile {
 			// Prepares a future if one hasn't been prepared already
 			wrappedPointer.mutate {
 				// Case: Future already prepared => Returns that
@@ -420,7 +420,7 @@ object ActionQueue
 		 */
 		protected val queue = Volatile.eventful.seq[InteractiveAction[_]]()
 		
-		private val lazyQueueSizeP = Lazy { queue.readOnly.map { _.size } }
+		private val lazyQueueSizeP = Lazy.volatile { queue.readOnly.map { _.size } }
 		// Uses the queue size -pointer, if it has been initialized
 		override lazy val notPendingFlag: Flag = lazyQueueSizeP.current match {
 			case Some(sizeP) => sizeP.lightMap { _ == 0 }: Flag
@@ -654,7 +654,7 @@ object ActionQueue
 		 */
 		private val stateP = Pointer.eventful[BasicProcessState](NotStarted)
 		
-		private val lazyFuture = Lazy {
+		private val lazyFuture = Lazy.volatile {
 			// Updates the state
 			stateP.value = Running
 			// Starts processing the actions asynchronously

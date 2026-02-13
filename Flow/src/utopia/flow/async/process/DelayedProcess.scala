@@ -2,7 +2,7 @@ package utopia.flow.async.process
 
 import utopia.flow.async.process.ShutdownReaction.{Cancel, DelayShutdown, SkipDelay}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.caching.ResettableLazy
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.ExecutionContext
@@ -106,7 +106,7 @@ abstract class DelayedProcess(waitLock: AnyRef = new AnyRef, shutdownReaction: O
 {
 	// ATTRIBUTES   ----------------------
 	
-	private val currentWait = ResettableLazy {
+	private val currentWait = Lazy.volatile.resettable {
 		new Wait(nextDelayTarget, waitLock, shutdownReaction, isRestartable = false)
 	}
 	

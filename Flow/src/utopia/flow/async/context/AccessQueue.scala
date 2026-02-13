@@ -44,7 +44,7 @@ class AccessQueue[+A](value: A)(implicit exc: ExecutionContext)
 	def apply[B](f: A => Future[B]) =
 		_apply[View[Future[B]]] {
 			// Case: Immediately available => 'f' is called lazily, in order to not block access to this queue pointer
-			val lazyFuture = Lazy { f(value) }
+			val lazyFuture = Lazy.volatile { f(value) }
 			lazyFuture -> lazyFuture
 			
 		} { previous =>

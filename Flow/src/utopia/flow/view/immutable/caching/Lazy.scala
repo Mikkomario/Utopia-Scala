@@ -21,6 +21,10 @@ object Lazy
 	 * @return Access to constructing lazy containers that fire change events
 	 */
 	def eventful = GeneratesOnce
+	/**
+	 * @return Access to constructors of volatile (i.e. thread-safe) lazy containers
+	 */
+	def volatile = VolatileLazy
 	
 	
 	// OTHER    ------------------------
@@ -33,12 +37,6 @@ object Lazy
 	  */
 	def apply[A](make: => A): Lazy[A] = new _Lazy[A](make)
 	
-	/**
-	 * @param make A function that generates the value once called
-	 * @tparam A Type of the generated value
-	 * @return A volatile (i.e. thread-safe) lazy container initiliazed with the specified function
-	 */
-	def volatile[A](make: => A): VolatileLazy[A] = VolatileLazy(make)
 	/**
 	  * Creates a new lazy container that fires an event when it is first initialized
 	  * @param make A function for generating the stored value when it is first requested

@@ -1,13 +1,13 @@
 package utopia.flow.async.process
 
 import utopia.flow.async.context.CloseHook
-import utopia.flow.async.process.ProcessState.{Cancelled, Completed, Looping, NotStarted, Running, Stopped}
+import utopia.flow.async.process.ProcessState._
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
-import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -72,7 +72,7 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 	  */
 	lazy val brokenFlag: Flag = _statePointer.lightMap { _.isBroken }
 	
-	private val completionFuturePointer = ResettableLazy { _statePointer.futureWhere { _.isFinal } }
+	private val completionFuturePointer = Lazy.resettable.volatile { _statePointer.futureWhere { _.isFinal } }
 	private val _shutdownFlag = VolatileFlag()
 	
 	/**

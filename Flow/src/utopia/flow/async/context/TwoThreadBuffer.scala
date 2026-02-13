@@ -7,9 +7,9 @@ import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, Certai
 import utopia.flow.util.UncertainNumber.{CertainNumber, UncertainInt, zeroOrMore}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.{NotEmpty, UncertainBoolean}
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.SettableFlag
 import utopia.flow.view.template.eventful.Flag
 
@@ -82,6 +82,11 @@ object TwoThreadBuffer
 		 *                           May be uncertain.
 		 */
 		def declareRemainingInputSize(remainingInputSize: UncertainInt): Unit
+		/**
+		 * Adjusts the remaining input size
+		 * @param adjustment Adjustment to apply
+		 */
+		def adjustRemainingInputSize(adjustment: Int): Unit
 		
 		/**
 		 * Appends 0-n items to this buffer.
@@ -360,13 +365,13 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	}
 	
 	// Reset whenever becomes empty
-	private val _nonEmptyFuture = ResettableLazy { buffer.futureWhere { _.nonEmpty } }
+	private val _nonEmptyFuture = Lazy.volatile.resettable { buffer.futureWhere { _.nonEmpty } }
 	// Reset whenever becomes full
-	private val _nonFullFuture = ResettableLazy { buffer.futureWhere { _.hasSize < capacity } }
+	private val _nonFullFuture = Lazy.volatile.resettable { buffer.futureWhere { _.hasSize < capacity } }
 	// Reset when filled state becomes inexact or changes
-	private val _knownFilledStateFuture = ResettableLazy { _declaredFilledFlag.findMapFuture { _.exact } }
+	private val _knownFilledStateFuture = Lazy.volatile.resettable { _declaredFilledFlag.findMapFuture { _.exact } }
 	// Reset if reopened
-	private val _filledFuture = ResettableLazy {
+	private val _filledFuture = Lazy.volatile.resettable {
 		_declaredFilledFlag.findMapFuture { filled => if (filled.isCertainlyTrue) Some(()) else None }
 	}
 	
@@ -444,7 +449,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 	def hasNotClosed = !hasClosed
 	
 	/**
-	  * @return Future that resolves once this buffer will not receive new input any more
+	  * @return Future that resolves once this buffer will not receive new input anymore
 	  */
 	def noLongerFillingFuture = _filledFuture.value
 	/**
@@ -469,6 +474,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		remainingInputSizeP.once { _.isCertainlyNotPositive } { _ => close() }
 		
 		// Once closed, locks the remaining input size and declares this output as no longer filling
+		// FIXME: It looks like this doesn't happen
 		closedFlag.onceSet {
 			_declaredFilledFlag.value = true
 			remainingInputSizeP.value = 0
@@ -497,6 +503,8 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		
 		override def declareRemainingInputSize(remainingInputSize: UncertainInt) =
 			remainingInputSizeP.value = remainingInputSize
+		override def adjustRemainingInputSize(adjustment: Int): Unit =
+			remainingInputSizeP.update { n => (n + adjustment).nonNegative }
 		
 		@tailrec
 		override final def push(items: Iterable[A]): Unit = {
@@ -508,8 +516,12 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 					val immediatelyAvailableCapacity = immediately.availableCapacity
 					val wasFull = immediatelyAvailableCapacity <= 0
 					// Waits until there is space within the buffer for at least one item
-					val availableCapacity =
-						if (wasFull) capacity - _nonFullFuture.value.waitFor().get.size else immediatelyAvailableCapacity
+					val availableCapacity = {
+						if (wasFull)
+							capacity - _nonFullFuture.value.waitFor().get.size
+						else
+							immediatelyAvailableCapacity
+					}
 					
 					// Appends as many items as possible to the buffer
 					val (nextAppend, remaining) = items.splitAt(availableCapacity)
@@ -596,7 +608,7 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 					// Case: It is still uncertain whether iteration has finished or not
 					//       => Waits until it is no longer uncertain
 					// Uncertainty ends when filledPointer is updated or when buffer acquires a value
-					_nonEmptyFuture.value.or(_knownFilledStateFuture.value).waitFor().get match {
+					_nonEmptyFuture.value.or { _knownFilledStateFuture.value }.waitFor().get match {
 						// Case: Buffer acquired a value => Has more elements
 						case Left(_) => true
 						// Case: Filled status updated => Continues if not yet filled
@@ -612,13 +624,14 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 				if (isNoLongerFilling.isCertainlyTrue)
 					noMoreItems()
 				// Case: Items may be available => Waits
-				else
+				else {
 					_nonEmptyFuture.value.or(noLongerFillingFuture).waitFor().get match {
 						// Case: Next item is now available => Recursively acquires that item
 						case Left(_) => next()
 						// Case: Filled without items available => Throws
 						case Right(_) => noMoreItems()
 					}
+				}
 			}
 		}
 		

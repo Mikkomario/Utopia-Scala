@@ -1,7 +1,19 @@
 package utopia.flow.view.immutable.caching
 
+import utopia.flow.view.mutable.caching.ResettableVolatileLazy
+
 object VolatileLazy
 {
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Access to constructors for resettable versions of this Lazy
+	 */
+	def resettable = ResettableVolatileLazy
+	
+	
+	// OTHER    ------------------------
+	
 	/**
 	  * @param make A function for creating the value when it is first requested (only called once)
 	  * @tparam A Type of wrapped value
