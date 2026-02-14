@@ -220,7 +220,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	 *         Specifies an empty default value.
 	  */
 	def groupBy[B](column: TableColumn)(map: Value => B)(implicit connection: Connection) =
-		pullWith(column)(map).groupMap { _._2 } { _._1 }.withDefaultValue(Empty)
+		pullWith(column)(map).groupMapToSeqs { _._2 } { _._1 }.withDefaultValue(Empty)
 	/**
 	  * Pulls all accessible data, grouping it by values read from additional columns.
 	  * If any of the specified columns are not included in this access point's [[target]], joins them.
@@ -233,7 +233,7 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	  * @return All accessible items, grouped by parsed column values. Specifies an empty default value.
 	  */
 	def groupBy[B](columns: Seq[TableColumn])(map: Seq[Value] => B)(implicit connection: Connection) =
-		pullWith(columns)(map).groupMap { _._2 } { _._1 }.withDefaultValue(Empty)
+		pullWith(columns)(map).groupMapToSeqs { _._2 } { _._1 }.withDefaultValue(Empty)
 	/**
 	  * Pulls all accessible data, grouping it by values read from additional columns.
 	  * If any of the specified columns are not included in this access point's [[target]], joins them.
