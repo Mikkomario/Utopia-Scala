@@ -291,7 +291,7 @@ object Store
 											updatedBuilder += (key -> modified)
 											false
 										}
-									case None => true
+									case None => false
 								}
 							}
 						}

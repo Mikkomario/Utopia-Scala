@@ -64,6 +64,7 @@ trait AccessGroupedLike[+A, +Repr] extends TargetingGroupedLike[A, Repr]
 	/**
 	  * @return A SELECT statement executed by default when pulling data
 	  */
+	// TODO: Apply distinct requirement
 	protected def toSelect = selectTarget.toSelect(target)
 	
 	/**
