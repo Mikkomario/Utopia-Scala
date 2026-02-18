@@ -213,7 +213,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 {
 	// ATTRIBUTES   ------------------------
 	
-	private val lazySize = Lazy { ranges.view.map { _.length }.sum }
+	private val lazySize = Lazy { ranges.iterator.map { _.length }.sum }
 	
 	
 	// IMPLEMENTED  ------------------------
