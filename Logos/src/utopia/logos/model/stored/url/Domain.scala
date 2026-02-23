@@ -60,7 +60,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 			url
 		// Looks for the http(s) part
 		else {
-			val noControl = url.stripControlCharacters.trim
+			val noControl = url.stripControlCharacters.trim.toLowerCase
 			// Case: Http(s) found => Valid
 			val modified = {
 				if (httpRegex.existsIn(noControl))

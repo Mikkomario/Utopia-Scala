@@ -29,8 +29,7 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 	// IMPLEMENTED  -------------------------
 	
 	// Removes the http:// and https://
-	// Assumes that the strings are already in lower case
-	override protected def standardize(value: String): String = removeHttp(value)
+	override protected def standardize(value: String): String = removeHttp(value).toLowerCase
 	
 	override protected def diff(proposed: Set[String], existing: Set[String]): Set[String] = {
 		if (existing.isEmpty)
