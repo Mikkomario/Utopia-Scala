@@ -22,6 +22,7 @@ import scala.util.Try
  * @author Mikko Hilpinen
  * @since 29.01.2026, v1.4.1
  */
+@deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.4.1")
 class OpenAiChat(client: LlmServiceClient, initialLlm: LlmDesignator)
                 (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends AbstractChat[ReplyLike[OpenAiResponse], OpenAiResponse, OpenAiChat](client, initialLlm,

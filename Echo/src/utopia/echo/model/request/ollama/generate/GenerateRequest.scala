@@ -5,7 +5,8 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.echo.controller.parser.StreamedOllamaResponseParser
-import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
+import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ollama.OllamaRequest
 import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply}
 import utopia.flow.generic.casting.ValueConversions._

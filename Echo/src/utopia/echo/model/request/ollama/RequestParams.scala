@@ -1,6 +1,7 @@
 package utopia.echo.model.request.ollama
 
-import utopia.echo.model.llm.{HasImmutableModelSettings, LlmDesignator}
+import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.settings.HasImmutableModelSettings
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse

@@ -1,12 +1,12 @@
-package utopia.echo.model.llm
+package utopia.echo.model.settings
 
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.util.Mutate
 
 import scala.language.implicitConversions

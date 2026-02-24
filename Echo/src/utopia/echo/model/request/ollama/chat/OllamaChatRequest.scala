@@ -5,7 +5,8 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.echo.controller.parser.StreamedOllamaResponseParser
-import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
+import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.ollama.OllamaRequest
 import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply}
@@ -18,7 +19,7 @@ import utopia.flow.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object ChatRequest
+object OllamaChatRequest
 {
 	// OTHER    -----------------------------
 	
@@ -26,19 +27,19 @@ object ChatRequest
 	  * @param params Request parameters to apply
 	  * @return A factory for converting the specified parameters into a request
 	  */
-	def apply(params: ChatParams) = ChatRequestFactory(params)
+	def apply(params: ChatParams) = OllamaChatRequestFactory(params)
 	
 	
 	// NESTED   -----------------------------
 	
-	case class ChatRequestFactory(params: ChatParams)
+	case class OllamaChatRequestFactory(params: ChatParams)
 	{
 		// COMPUTED -------------------------
 		
 		/**
 		  * @return A chat request which requests the whole response to be provided at once, without streaming.
 		  */
-		def buffered = BufferedChatRequest(params)
+		def buffered = BufferedOllamaChatRequest(params)
 		/**
 		  * @param exc Implicit execution context
 		  * @param jsonParser Implicit json parser
@@ -59,13 +60,13 @@ object ChatRequest
 		  * @return A chat request which requests the response to be either streamed (word-by-word) or buffered
 		  */
 		def apply(stream: Boolean)
-		         (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger): ChatRequest[OllamaReply] =
-			_StreamedChatRequest(params, stream)
+		         (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger): OllamaChatRequest[OllamaReply] =
+			_StreamedOllamaChatRequest(params, stream)
 	}
 	
-	private case class _StreamedChatRequest(params: ChatParams, stream: Boolean = false)
-	                                       (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
-		extends ChatRequest[OllamaReply]
+	private case class _StreamedOllamaChatRequest(params: ChatParams, stream: Boolean = false)
+	                                             (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
+		extends OllamaChatRequest[OllamaReply]
 	{
 		// ATTRIBUTES   ------------------------
 		
@@ -92,7 +93,7 @@ object ChatRequest
   * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
-trait ChatRequest[+R] extends OllamaRequest[R]
+trait OllamaChatRequest[+R] extends OllamaRequest[R]
 {
 	// ABSTRACT -----------------------------
 	

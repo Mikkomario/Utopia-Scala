@@ -5,7 +5,7 @@ import utopia.access.model.enumeration.Method.Post
 import utopia.annex.model.request.ApiRequest
 import utopia.disciple.model.request.Body
 import utopia.echo.model.enumeration.ModelParameter.{PredictTokens, Temperature, TopP}
-import utopia.echo.model.llm.{HasModelSettings, ModelSettings}
+import utopia.echo.model.settings.{HasModelSettings, ModelSettings}
 import utopia.echo.model.request.ChatParams
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.generic.casting.ValueConversions._

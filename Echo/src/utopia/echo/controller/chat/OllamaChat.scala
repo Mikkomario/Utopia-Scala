@@ -3,10 +3,11 @@ package utopia.echo.controller.chat
 import utopia.annex.model.request.ApiRequest
 import utopia.echo.controller.client.OllamaClient
 import utopia.echo.model.ChatMessage
-import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.tool.ToolFactory
 import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply}
+import utopia.echo.model.settings.{ContextSizeLimits, ModelSettings}
 import utopia.echo.model.tokenization.PartiallyEstimatedTokenCount
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
@@ -44,12 +45,8 @@ object OllamaChat
 		model("llm").string.toTry { new NoSuchElementException("Required parameter \"llm\" is missing") }.map { llm =>
 			val chat = new OllamaChat(LlmDesignator(llm, thinks = model("llmThinks").getBoolean))
 			
-			model("maxContextSize").int.foreach { chat.maxContextSize = _ }
-			model("minContextSize").int.foreach { chat.minContextSize = _ }
 			model("expectedReplySize").int.foreach { chat.expectedReplySize = _ }
-			model("additionalContextSize").int.foreach { chat.additionalContextSize = _ }
-			model("thinkingContextSize").int.foreach { chat.thinkingContextSize = _ }
-			model("additionalThinkingContextSize").int.foreach { chat.additionalThinkingContextSize = _ }
+			model("expectedThinkSize").int.foreach { chat.expectedThinkSize = _ }
 			model("thinkingEnabled").boolean.foreach { chat.thinkingEnabled = _ }
 			
 			model("systemMessages").vector.filter { _.nonEmpty }.foreach { messages =>
@@ -77,6 +74,10 @@ object OllamaChat
 			model("settings").model.foreach { settingsModel =>
 				ModelSettings(settingsModel).logWithMessage("Failed to parse chat settings")
 					.foreach { chat.settings = _ }
+			}
+			model("contextSizeLimits").model.foreach { limitsModel =>
+				ContextSizeLimits(limitsModel).logWithMessage("Failed to parse context size limits")
+					.foreach { chat.contextSizeLimits = _ }
 			}
 			model("tools").tryVectorWith { _.tryModel.flatMap(toolFactory.apply) }
 				.logWithMessage("Failed to parse chat tools")

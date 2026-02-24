@@ -12,7 +12,7 @@ import scala.concurrent.Future
   * @author Mikko Hilpinen
   * @since 21.07.2024, v1.0
   */
-case class BufferedChatRequest(params: ChatParams) extends ChatRequest[BufferedOllamaReply]
+case class BufferedOllamaChatRequest(params: ChatParams) extends OllamaChatRequest[BufferedOllamaReply]
 {
 	override def stream: Boolean = false
 	

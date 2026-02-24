@@ -1,4 +1,4 @@
-package utopia.echo.model.llm
+package utopia.echo.model.settings
 
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.flow.collection.immutable.Pair

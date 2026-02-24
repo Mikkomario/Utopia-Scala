@@ -9,20 +9,17 @@ import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.EstimateTokenCount
 import utopia.echo.model.ChatMessage
+import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.System
-import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
-import utopia.echo.model.enumeration.{ChatRole, ModelParameter}
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.response.{BufferedReply, ReplyLike}
-import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCounts}
+import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
@@ -138,12 +135,9 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	def copy = {
 		val copy = copyWithoutState
 		
-		copy.maxContextSize = maxContextSize
-		copy.minContextSize = minContextSize
+		copy.contextSizeLimits = contextSizeLimits
 		copy.expectedReplySize = expectedReplySize
-		copy.additionalContextSize = additionalContextSize
-		copy.thinkingContextSize = thinkingContextSize
-		copy.additionalThinkingContextSize = additionalThinkingContextSize
+		copy.expectedThinkSize = expectedThinkSize
 		
 		copy.thinkingEnabled = thinkingEnabled
 		copy.messageHistoryWithSizes = messageHistoryWithSizes
@@ -154,6 +148,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 		copy.defaultSystemMessageTokensPointer.value = defaultSystemMessageTokensPointer.value
 		copy.knownLastPromptAndReplySizePointer.value = knownLastPromptAndReplySizePointer.value
 		copy.largestReplySize = largestReplySize
+		copy.largestThinkSize = largestThinkSize
 		copy.autoSummarizeAtTokensPointer.value = autoSummarizeAtTokensPointer.value
 		copy.summarizing = summarizing
 		
@@ -278,44 +273,12 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	                 (replyIncoming: R => Unit)(replyCompleted: BR => Unit)
 	                 (handleFailure: Throwable => Unit): Unit =
 	{
-		updateQueueSize { _ + 1 }
-		
 		// Calculates and applies the context size & max response size, unless these are user-defined
-		val defaultSettings = settings
-		lazy val tokenCounts = countContextSize(messages.view.map { _.text }, defaultSettings.get(PredictTokens).int)
-		val appliedSettings = {
-			defaultSettings.get(ContextTokens).int match {
-				// Case: Custom context size specified
-				case Some(customContextSize) =>
-					// Case: Custom max response size also specified => Won't modify settings
-					if (defaultSettings.contains(PredictTokens))
-						Success(defaultSettings)
-					else {
-						val contextSizeReduction = (tokenCounts.context - customContextSize) max 0
-						// Case: The custom context size is too small to fit any response => Fails
-						if (contextSizeReduction >= tokenCounts.maxResponse)
-							Failure(new IllegalArgumentException(
-								s"Specified context size of $customContextSize is too small to contain this request"))
-						else
-							Success(defaultSettings + (PredictTokens -> (tokenCounts.maxResponse - contextSizeReduction)))
-					}
-				case None =>
-					if (tokenCounts.maxResponse > 0) {
-						// Case: Custom max response size specified => Won't override it
-						if (defaultSettings.contains(PredictTokens))
-							Success(defaultSettings + (ContextTokens -> tokenCounts.context))
-						else
-							Success(defaultSettings ++ Pair[(ModelParameter, Value)](
-								ContextTokens -> tokenCounts.context, PredictTokens -> tokenCounts.maxResponse))
-					}
-					// Case: Context size can't be increased enough to fit a response (max context size exceeded)
-					//       => Fails
-					else
-						Failure(new IllegalStateException("Context size is not large enough to fit this request"))
-			}
-		}
+		val (appliedSettings, lazyTokenCounts) = applyLimitsTo(settings, messages.iterator.map { _.text },
+			expectedReplySize, expectedThinkSize, lastContextSize)
 		appliedSettings match {
 			case Success(settings) =>
+				updateQueueSize { _ + 1 }
 				// At this time, streaming is not supported with tools
 				// TODO: Implement tools support for streams
 				val defaultTools = this.tools
@@ -341,80 +304,93 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 							if (reply.isStreaming)
 								replyIncoming(reply)
 							// Handles the reply completion asynchronously
+							// TODO: Move this part to a separate function
 							reply.future.forResult {
 								// Case: Reply fully parsed
 								//       => Updates message history & finishes state (unless tools are called)
 								case Success(reply) =>
-									val totalPromptSize = reply.tokenUsage.input
-									// If a <think> block was present, the reply size can't be known for certain
-									val totalResponseSize = reply.tokenUsage.output
-									val responseSize = {
-										if (reply.thoughts.nonEmpty) {
-											// Checks whether to reserve more tokens for the <think> block next time
-											val thinkTokens = EstimateTokenCount.in(reply.thoughts).corrected
-											if (thinkTokens > additionalThinkingContextSize)
-												additionalThinkingContextSize = thinkTokens
-											
-											// Also, if the LLM was not described to think, modifies it accordingly
-											llmPointer.updateIf { !_.thinks } { _.thinking }
-											None
-										}
-										else
-											Some(totalResponseSize)
-									}
-									// Updates the context size pointers and uses the known information to deduct the
-									// size of the latest message
-									val (messageSize, previousContextSize) = knownLastPromptAndReplySizePointer
-										.mutate { previous =>
-											// Current total prompt & latest reply sizes are known from the response
-											val current = Pair(Some(totalPromptSize), responseSize)
-											val previousContextSize = previous.second.map { totalPromptSize - _ }
-											// If previous prompt & reply sizes are also known,
-											// the size of the latest message may also be deducted
-											val messageSize = previous.first.flatMap { previousPromptSize =>
-												previous.second.map { previousReplySize =>
-													totalPromptSize - previousPromptSize - previousReplySize
+									onReplyReceived(reply, messages, lazyTokenCounts.value.newMessages)
+									reply.message.toolCalls.notEmpty match {
+										// Case: Tool-calls => Applies the tools and forms a new request
+										case Some(toolCalls) =>
+											val toolMessages = toolCalls.map { call =>
+												// TODO: Add OpenAI support: https://platform.openai.com/docs/guides/function-calling
+												val text = tools.find { _.name ~== call.name } match {
+													case Some(tool) => tool(call.args)
+													case None =>
+														s"\"${ call.name }\" doesn't match any of the available tools"
 												}
+												ChatRole.Tool(text)
 											}
+											// Sends the new request next (recursively)
+											_push(toolMessages, extraTools, allowStreaming)(replyIncoming)(
+												replyCompleted)(handleFailure)
 											
-											(messageSize, previousContextSize) -> current
-										}
-									updateLargestReplySize { _ max totalResponseSize }
-									
-									val replyMessage = reply.message
-									appendMessageHistory(messages, tokenCounts.newMessages, messageSize,
-										replyMessage, responseSize, previousContextSize)
-									
-									// Case: No tool-calls => Finishes
-									if (replyMessage.toolCalls.isEmpty)
-										replyCompleted(reply)
-									// Case: Tool-calls => Applies the tools and forms a new request
-									else {
-										val toolMessages = replyMessage.toolCalls.map { call =>
-											// TODO: Add OpenAI support: https://platform.openai.com/docs/guides/function-calling
-											val text = tools.find { _.name ~== call.name } match {
-												case Some(tool) => tool(call.args)
-												case None => s"\"${ call.name }\" doesn't match any of the available tools"
-											}
-											ChatRole.Tool(text)
-										}
-										// Sends the new request next (recursively)
-										_push(toolMessages, extraTools, allowStreaming)(
-											replyIncoming)(replyCompleted)(handleFailure)
+										// Case: No tool-calls => Finishes
+										case None => replyCompleted(reply)
 									}
-								
 								// Case: Reply parsing failed => Fails
 								case Failure(error) => handleFailure(error)
 							}
-						
 						// Case: Failed to acquire a response => Fails
 						case f: RequestFailure => handleFailure(f.cause)
 					}
 				}
-			
 			// Case: Suitable settings couldn't be specified (max context size exceeded) => Fails
 			case Failure(error) => handleFailure(error)
 		}
+	}
+	
+	private def onReplyReceived(reply: BufferedReply, outgoingMessages: Seq[ChatMessage],
+	                            estimatedMessageTokenCount: EstimatedTokenCount) =
+	{
+		// If think output was present, the reply size can't be known for certain
+		val totalResponseSize = reply.tokenUsage.output
+		val replySize = {
+			if (reply.thoughts.nonEmpty) {
+				// Checks whether to reserve more tokens for the think output next time
+				// TODO: Add handling for situations where think size is known
+				//  (which is the case for providers other than Ollama)
+				val thinkTokens = EstimateTokenCount.in(reply.thoughts).corrected
+				updateLargestThinkSize { _ max thinkTokens }
+				updateLargestReplySize { _ max (totalResponseSize - thinkTokens) }
+				
+				// Also, if the LLM was not described to think, modifies it accordingly
+				llmPointer.updateIf { !_.thinks } { _.thinking }
+				
+				// Provides feedback for the estimator
+				EstimateTokenCount.train(s"${reply.thoughts}${reply.text}", totalResponseSize)
+				
+				None
+			}
+			else {
+				EstimateTokenCount.train(reply.text, totalResponseSize)
+				updateLargestReplySize { _ max totalResponseSize }
+				Some(totalResponseSize)
+			}
+		}
+		
+		// Updates the context size pointers and uses the known information to deduct the
+		// size of the latest message
+		val totalPromptSize = reply.tokenUsage.input
+		val (messageSize, previousContextSize) = knownLastPromptAndReplySizePointer.mutate { previous =>
+			// Current total prompt & latest reply sizes are known from the response
+			val current = Pair(Some(totalPromptSize), replySize)
+			val previousContextSize = previous.second.map { totalPromptSize - _ }
+			// If previous prompt & reply sizes are also known,
+			// the size of the latest message may also be deducted
+			val messageSize = previous.first.flatMap { previousPromptSize =>
+				previous.second.map { previousReplySize =>
+					totalPromptSize - previousPromptSize - previousReplySize
+				}
+			}
+			(messageSize, previousContextSize) -> current
+		}
+		// Provides feedback for the token estimator
+		messageSize.foreach { EstimateTokenCount.feedback(estimatedMessageTokenCount.raw, _) }
+		
+		appendMessageHistory(outgoingMessages, estimatedMessageTokenCount, messageSize, reply.message, replySize,
+			previousContextSize)
 	}
 	
 	private def appendMessageHistory(sentMessages: Seq[ChatMessage],
@@ -422,10 +398,6 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	                                 receivedReply: ChatMessage, replySize: Option[Int],
 	                                 previousContextSize: Option[Int]) =
 	{
-		// Provides feedback for the token estimator
-		deducedMessageSize.foreach { EstimateTokenCount.feedback(messageSizeEstimate.raw, _) }
-		replySize.foreach { EstimateTokenCount.train(receivedReply.text, _) }
-		
 		updateMessageHistory { history =>
 			// Modifies the message history sizes or system message size to match the captured context size, if possible
 			val modifiedSizeHistory = previousContextSize match {
@@ -500,33 +472,5 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				case None => EstimateTokenCount.in(receivedReply.text)
 			}
 			modifiedSizeHistory ++ newPromptMessages :+ (receivedReply -> replySizeEstimate)		}
-	}
-	
-	private def countContextSize(nextMessages: Iterable[String], numPredict: Option[Int]) = {
-		// Estimates the number of tokens in the message and in the reply
-		val messageSize = {
-			if (nextMessages.isEmpty)
-				EstimatedTokenCount.zero
-			else
-				nextMessages.iterator.map(EstimateTokenCount.in).reduce { _ + _ }
-		}
-		val expectedReplySize = numPredict.getOrElse { this.expectedReplySize max largestReplySize }
-		val used = lastContextSize
-		
-		val total = {
-			// Attempts to estimate the reply size. Limits the result to the current limits.
-			val raw = used.corrected + messageSize.corrected + expectedReplySize + additionalContextSize
-			val includingThink = if (thinks) raw + additionalThinkingContextSize else raw
-			
-			if (includingThink >= maxContextSize)
-				maxContextSize
-			else if (thinks && includingThink < thinkingContextSize)
-				thinkingContextSize
-			else if (includingThink <= minContextSize)
-				minContextSize
-			else
-				includingThink
-		}
-		TokenCounts(messageSize, used, total)
 	}
 }

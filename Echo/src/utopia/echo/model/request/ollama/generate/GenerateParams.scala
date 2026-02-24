@@ -1,6 +1,7 @@
 package utopia.echo.model.request.ollama.generate
 
-import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
+import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ollama.RequestParams
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.util.{Mutate, UncertainBoolean}

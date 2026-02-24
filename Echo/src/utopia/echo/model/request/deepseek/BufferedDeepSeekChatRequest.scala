@@ -8,7 +8,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.disciple.model.request.Body
 import utopia.echo.model.enumeration.ModelParameter.{FrequencyPenalty, PredictTokens, PresencePenalty, Stop, Temperature, TopP}
-import utopia.echo.model.llm.{HasImmutableModelSettings, ModelSettings}
+import utopia.echo.model.settings.{HasImmutableModelSettings, ModelSettings}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.deepseek.BufferedDeepSeekReply
 import utopia.flow.generic.model.immutable.{Model, Value}

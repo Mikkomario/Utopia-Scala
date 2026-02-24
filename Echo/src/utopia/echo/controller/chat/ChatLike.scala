@@ -8,9 +8,10 @@ import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.Assistant
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
-import utopia.echo.model.llm.{HasMutableModelSettings, LlmDesignator, ModelSettings}
+import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.response.ReplyLike
+import utopia.echo.model.settings.{ContextSizeLimits, HasMutableContextSizeLimits, HasMutableModelSettings, ModelSettings}
 import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
@@ -28,7 +29,7 @@ import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful._
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 /**
@@ -48,7 +49,8 @@ import scala.util.Try
  * @tparam Repr Implementing chat type
   */
 trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
-	extends HasSchrodingerState with HasMutableModelSettings with ModelConvertible with ScopeUsable[Repr]
+	extends HasSchrodingerState with HasMutableModelSettings with HasMutableContextSizeLimits with ModelConvertible
+		with ScopeUsable[Repr] with BufferedReplyGenerator[BR]
 {
 	// ABSTRACT -------------------------------
 	
@@ -105,40 +107,16 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	// ATTRIBUTES   ---------------------------
 	
 	/**
-	  * Maximum number of tokens allowed for automatic context size management. Mutable.
-	  * One token is about 1/2 a word.
-	  * If the conversation context becomes larger than this value, the LLM may not apply it fully.
-	  * Larger values may lead to larger (V-RAM) memory use
-	  */
-	var maxContextSize = 4096
-	/**
-	  * Smallest context size that may be requested from the LLM, in number of tokens.
-	  * One token is about 1/2 a word.
-	  */
-	var minContextSize = 1024
-	/**
-	 * Context size assigned by default in thinking mode, where the LLM produces reflective content.
-	 * Context size may be increased up to [[maxContextSize]], based on other parameters, however.
-	 */
-	var thinkingContextSize = 4096
-	/**
-	 * Additional context size reserved for the `<think>` response element, when thinking is utilized.
-	 * May push the context size past [[thinkingContextSize]] (the default), when combined with other factors,
-	 * such as a high [[expectedReplySize]].
-	 *
-	 * This value is automatically adjusted based on received replies, but may be set manually as well.
-	 */
-	var additionalThinkingContextSize = 800
-	/**
-	  * Number of tokens expected within a reply.
-	  * Used when no appropriate statistical information has been collected yet.
-	  * One token is about 1/2 a word.
+	  * Number of tokens expected to appear in replies.
+	 * The actual expectation depends on this value, as well as the largest received reply (in the message history).
 	  */
 	var expectedReplySize = 512
 	/**
-	  * Number of tokens added to the estimated required context size
-	  */
-	var additionalContextSize = 256
+	 * Context size reserved for the thinking output by default, in cases where thinking is utilized.
+	 * The actual expectation depends on this value,
+	 * as well as the largest received think output (in the message history).
+	 */
+	var expectedThinkSize = 800
 	
 	/**
 	  * A flag that is set when the LLM should be allowed to think.
@@ -148,7 +126,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	/**
 	  * A flag that contains true while LLM thinking is used
 	  */
-	lazy val thinksFlag = llmPointer.mergeWith(thinkingEnabledFlag) { _.thinks && _ }
+	val thinksFlag = llmPointer.mergeWith(thinkingEnabledFlag) { _.thinks && _ }
 	
 	/**
 	 * A mutable pointer containing the current message history.
@@ -168,7 +146,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  * A pointer that contains the number of current outbound messages that have not received any reply yet.
 	  * Once even a streaming reply is received, a message no longer counts as queued.
 	  */
-	lazy val queueSizePointer = _queueSizePointer.readOnly
+	val queueSizePointer = _queueSizePointer.readOnly
 	
 	private val lazyPendingFlag = Lazy[Flag] {
 		queueSizePointer.mergeWith(lastResultCompletionPointer) { (queueSize, completion) =>
@@ -183,6 +161,10 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  * that overrides / disables the automatic context size management -feature.
 	  */
 	val settingsPointer = EventfulPointer(ModelSettings.empty)
+	/**
+	 * @return A mutable pointer that contains the applied context size limits
+	 */
+	val contextSizeLimitsPointer: EventfulPointer[ContextSizeLimits] = Pointer.eventful(ContextSizeLimits.default)
 	/**
 	  * A mutable pointer that contains the tools that are currently made available for the LLM
 	  * (besides possible request-specific tools).
@@ -305,7 +287,16 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  * A pointer that contains the largest encountered reply size during the current conversation.
 	  * May contain an estimate, depending on the context (e.g. when message history has been manually modified).
 	  */
-	lazy val largestReplySizePointer = _largestReplySizePointer.readOnly
+	val largestReplySizePointer = _largestReplySizePointer.readOnly
+	/**
+	 * A mutable pointer that contains the largest think output within the message history. May be an estimate.
+	 */
+	private val _largestThinkSizePointer = Pointer.eventful(0)
+	/**
+	 * A pointer that contains the largest encountered think output size during the current conversation.
+	 * May contain an estimate, depending on the context.
+	 */
+	val largestThinkSizePointer = _largestThinkSizePointer.readOnly
 	/**
 	  * A pointer that contains the measured or estimated context size of the most recent completed query,
 	  * i.e. the size of the system message, plus the conversation history.
@@ -387,7 +378,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  * A flag that contains true while this interface is forming a conversation summary.
 	  * While true, no chat messages will be sent.
 	  */
-	lazy val summarizingFlag = _summarizingFlag.view
+	val summarizingFlag = _summarizingFlag.view
 	private lazy val testAutoSummaryListener = ChangeListener.continuousOnAnyChange { summarizeIfAppropriate() }
 	
 	/**
@@ -441,15 +432,6 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  */
 	implicit def llm: LlmDesignator = llmPointer.value
 	def llm_=(newLlm: LlmDesignator) = llmPointer.value = newLlm
-	
-	/**
-	 * @return Whether thinking mode is currently active.
-	 *         This is based on two factors:
-	 *              1. Whether the used LLM supports thinking
-	 *              1. Whether thinking is enabled in this interface
-	 * @see [[thinkingEnabled]]
-	 */
-	def thinks = thinksFlag.value
 	
 	/**
 	 * @return Whether the LLM should be allowed to enter thinking mode.
@@ -547,6 +529,11 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 */
 	def largestReplySize = _largestReplySizePointer.value
 	protected def largestReplySize_=(replySize: Int) = _largestReplySizePointer.value = replySize
+	/**
+	 * @return The largest think output encountered during the current conversation. May be an estimate.
+	 */
+	def largestThinkSize = _largestThinkSizePointer.value
+	protected def largestThinkSize_=(thinkSize: Int) = _largestThinkSizePointer.value = thinkSize
 	
 	/**
 	  * @return Whether this interface is currently performing a summary of the current conversation history
@@ -613,28 +600,52 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 		case _ => None
 	}
 	
+	/**
+	 * Context size assigned by default in thinking mode, where the LLM produces reflective content.
+	 * Context size may be increased up to [[maxContextSize]], based on other parameters, however.
+	 */
+	@deprecated("Deprecated for removal", "v1.4.1")
+	def thinkingContextSize = contextSizeLimits.minWithThink
+	@deprecated("Please use setMinthinkingContextSize(Int) instead", "v1.4.1")
+	def thinkingContextSize_=(tokens: Int) = setMinThinkingContextSize(tokens)
+	
+	@deprecated("Renamed to expectedThinkSize", "v1.4.1")
+	def additionalThinkingContextSize = expectedThinkSize
+	@deprecated("Renamed to expectedThinkSize", "v1.4.1")
+	def additionalThinkingContextSize_=(tokens: Int) = expectedThinkSize = tokens
+	
 	
 	// IMPLEMENTED  ---------------------------
+	
+	/**
+	 * @return Whether thinking mode is currently active.
+	 *         This is based on two factors:
+	 *              1. Whether the used LLM supports thinking
+	 *              1. Whether thinking is enabled in this interface
+	 * @see [[thinkingEnabled]]
+	 */
+	override def thinks = thinksFlag.value
 	
 	override def state: SchrodingerState = statePointer.value
 	
 	override def settings: ModelSettings = settingsPointer.value
 	override def settings_=(newSettings: ModelSettings): Unit = settingsPointer.value = newSettings
 	
+	override def contextSizeLimits: ContextSizeLimits = contextSizeLimitsPointer.value
+	override def contextSizeLimits_=(newLimits: ContextSizeLimits): Unit = contextSizeLimitsPointer.value = newLimits
+	
 	override def toModel: Model = {
 		val lastPromptAndReplySize = knownLastPromptAndReplySizePointer.value
 		Model.from(
-			"llm" -> llm.llmName, "llmThinks" -> llm.thinks, "maxContextSize" -> maxContextSize,
-			"minContextSize" -> minContextSize,
-			"expectedReplySize" -> expectedReplySize, "additionalContextSize" -> additionalContextSize,
-			"thinkingContextSize" -> thinkingContextSize,
-			"additionalThinkingContextSize" -> additionalThinkingContextSize, "thinkingEnabled" -> thinkingEnabled,
+			"llm" -> llm.llmName, "llmThinks" -> llm.thinks,
+			"expectedReplySize" -> expectedReplySize, "expectedThinkSize" -> expectedThinkSize,
+			"thinkingEnabled" -> thinkingEnabled,
 			"systemMessages" -> systemMessagesPointer.value,
 			"messageHistory" -> _messageHistoryPointer.value.map { case (message, size) =>
 				message.toModel + Constant("size", size)
 			},
 			"lastPromptSize" -> lastPromptAndReplySize.first, "lastReplySize" -> lastPromptAndReplySize.second,
-			"settings" -> settings, "tools" -> tools,
+			"settings" -> settings, "contextSizeLimits" -> contextSizeLimits, "tools" -> tools,
 			"autoSummarizeAt" -> autoSummarizeAtTokensPointer.value
 				.map { case (contextSize, messageCount, preserveCount) =>
 					Model.from("tokens" -> contextSize, "messages" -> messageCount, "preserve" -> preserveCount)
@@ -642,7 +653,11 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 		)
 	}
 	
+	override def bufferedReplyFor(message: String): Future[Try[BR]] =
+		push(message, noStreaming = true).finalResultFuture.map { _.wrapped }
+	
 	override def mapSettings(f: Mutate[ModelSettings]) = settingsPointer.update(f)
+	override def updateContextSizeLimits(f: Mutate[ContextSizeLimits]) = contextSizeLimitsPointer.update(f)
 	
 	
 	// OTHER    -------------------------------
@@ -807,6 +822,11 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 * @param f A mapping function applied to the current largest reply size -value
 	 */
 	protected def updateLargestReplySize(f: Mutate[Int]) = _largestReplySizePointer.update(f)
+	/**
+	 * Alters the largest think size -pointer
+	 * @param f A mapping function applied to the current largest think size -value
+	 */
+	protected def updateLargestThinkSize(f: Mutate[Int]) = _largestThinkSizePointer.update(f)
 	/**
 	 * Alters the message history
 	 * @param f A mapping function applied to the current message history (also controlling message sizes)

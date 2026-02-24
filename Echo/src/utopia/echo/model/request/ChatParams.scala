@@ -1,9 +1,10 @@
 package utopia.echo.model.request
 
 import utopia.echo.model.ChatMessage
-import utopia.echo.model.llm.{LlmDesignator, ModelSettings}
+import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ollama.RequestParams
-import utopia.echo.model.request.ollama.chat.ChatRequest
+import utopia.echo.model.request.ollama.chat.OllamaChatRequest
 import utopia.echo.model.request.openai.BufferedOpenAiChatRequest
 import utopia.echo.model.request.tool.Tool
 import utopia.flow.collection.CollectionExtensions._
@@ -21,7 +22,9 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @param deprecationView A view which contains true if the request gets deprecated.
   *                        Only tacked until a request is sent.
   *                        Default = never deprecated.
-  * @param llm Targeted LLM (implicit)
+  * @param think Whether thinking should be enabled (true), disabled (false) or left untouched (uncertain).
+ *              Default = left untouched.
+ * @param llm Targeted LLM (implicit)
   * @author Mikko Hilpinen
   * @since 31.08.2024, v1.1
   */
@@ -42,7 +45,7 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	  * @return A request based on these parameters.
 	  *         The streaming option must be specified before this request may be sent out.
 	  */
-	def toRequest = ChatRequest(this)
+	def toRequest = OllamaChatRequest(this)
 	/**
 	 * @return A buffered Open AI request based on these parameters.
 	 */

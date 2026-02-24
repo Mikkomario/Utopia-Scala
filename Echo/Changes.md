@@ -1,14 +1,27 @@
 # Utopia Echo - List of Changes
 
 ## v1.4.1 (in development)
-Supports **Flow v2.8**
+### Breaking changes
+- **ChatLike** now tracks `largestReplySize` and `largestThinkSize` separately
 ### Deprecations
 - Deprecated **EchoContext**; Parsing failure **Status** is now defined in `Response.parseFailureStatus` instead.
+- **ChatRequest** and **BufferedChatRequest** are now named **OllamaChatRequest** and **BufferedOllamaChatRequest**
+- Deprecated `.thinkingContextSize` in **ChatLike**
+- In **ChatLike**, `.additionalThinkingContextSize` is now named `.expectedThinkSize`
+### Bugfixes
+- Fixed a bug where **AbstractChat**'s `queueSize` would never reset after failing to start a chat request 
+  (on context overflow) 
 ### New features
 - Adding preliminary (beta) interfaces for Open AI & DeepSeek
   - Only text-based non-streaming requests are supported at this time
+- Added **BufferedReplyGenerator** and **StatelessBufferedReplyGenerator** traits for streamlining buffered reply 
+  -acquisition.
+- Added **ContextSizeLimits**, **HasContextSizeLimits**, etc. for standardizing context size calculation
 ### Other changes
 - Added support for Ollama's latest thinking response structuring
+- **EstimateTokenCount** is now also trained in situations where thinking is enabled
+- **ChatLike** now extends **HasMutableContextSizeLimits**
+- Modified **ChatLike**'s `.toModel` implementation
 
 ## v1.4 - 01.11.2025
 This update introduces two new integrations:

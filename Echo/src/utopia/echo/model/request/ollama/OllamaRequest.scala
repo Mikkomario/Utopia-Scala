@@ -4,7 +4,8 @@ import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.Post
 import utopia.annex.model.request.ApiRequest
 import utopia.disciple.model.request.Body
-import utopia.echo.model.llm.{HasModelSettings, LlmDesignator}
+import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.model.settings.HasModelSettings
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.util.UncertainBoolean
