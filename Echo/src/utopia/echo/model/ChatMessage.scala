@@ -31,9 +31,9 @@ object ChatMessage
 	 */
 	def ollamaMessageParser: FromModelFactory[ChatMessage] = OllamaMessageParser
 	/**
-	 * @return A model parser used with responses originating from DeepSeek or OpenAI's /chat/completions endpoint.
+	 * @return A model parser used with responses originating from Open AI's or DeepSeek's /chat/completions endpoint.
 	 */
-	def deepSeekMessageParser: FromModelFactory[ChatMessage] = DeepSeekMessageParser
+	def openAiMessageParser: FromModelFactory[ChatMessage] = OpenAiMessageParser
 	
 	
 	// NESTED   -----------------------
@@ -48,10 +48,12 @@ object ChatMessage
 			}
 	}
 	
-	private object DeepSeekMessageParser extends FromModelFactory[ChatMessage]
+	private object OpenAiMessageParser extends FromModelFactory[ChatMessage]
 	{
+		// TODO: Add support for refusals
 		override def apply(model: HasProperties): Try[ChatMessage] = {
 			model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
+				// NB: Open AI doesn't provide reasoning_content, but DeepSeek does
 				ChatMessage(model("content").getString, model("reasoning_content").getString,
 					model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant), toolCalls = toolCalls)
 			}

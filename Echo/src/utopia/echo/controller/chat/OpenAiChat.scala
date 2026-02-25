@@ -3,7 +3,7 @@ package utopia.echo.controller.chat
 import utopia.echo.controller.client.LlmServiceClient
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
-import utopia.echo.model.request.openai.BufferedOpenAiChatRequest
+import utopia.echo.model.request.openai.GetBufferedOpenAiResponse
 import utopia.echo.model.response.ReplyLike
 import utopia.echo.model.response.openai.OpenAiResponse
 import utopia.flow.parse.json.JsonParser
@@ -34,7 +34,7 @@ class OpenAiChat(client: LlmServiceClient, initialLlm: LlmDesignator)
 	override protected def copyWithoutState: OpenAiChat = new OpenAiChat(client, llm)
 	
 	override protected def makeRequest(params: ChatParams, allowStreaming: Boolean) =
-		BufferedOpenAiChatRequest(params)
+		GetBufferedOpenAiResponse(params)
 	
 	override protected def streamedReplyFrom(textPointer: Changing[String], thoughtsPointer: Changing[String],
 	                                         newTextPointer: Changing[String], thinkingFlag: Flag,

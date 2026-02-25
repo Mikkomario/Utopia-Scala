@@ -12,7 +12,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 
 /**
-  * A request implementation for sending a chat message to the Open AI
+  * A request implementation for sending a chat message to the Open AI using the /responses endpoint
   * @author Mikko Hilpinen
   * @since 07.04.2025, v1.3
   */
@@ -23,7 +23,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 // TODO: Add support for "service_tier": https://platform.openai.com/docs/api-reference/responses/create#responses_create-service_tier
 // TODO: May add support for "tool_choice" to force the model to use tools: https://platform.openai.com/docs/api-reference/responses/create#responses_create-tool_choice
 // TODO: May add support for truncation: https://platform.openai.com/docs/api-reference/responses/create#responses_create-truncation
-trait OpenAiChatRequest[+A] extends ApiRequest[A] with HasModelSettings
+trait GetOpenAiResponse[+A] extends ApiRequest[A] with HasModelSettings
 {
 	// ABSTRACT -------------------------
 	

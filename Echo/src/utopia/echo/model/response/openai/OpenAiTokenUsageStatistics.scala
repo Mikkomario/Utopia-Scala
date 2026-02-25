@@ -61,6 +61,7 @@ object OpenAiTokenUsageStatistics
 		override protected def fromValidatedModel(model: Model): OpenAiTokenUsageStatistics = {
 			val input = model("prompt_tokens").getInt
 			val output = model("completion_tokens").getInt
+			// TODO: Could add support for prompt_tokens_details|completion_tokens_details/audio_tokens
 			OpenAiTokenUsageStatistics(input,
 				model("prompt_cache_hit_tokens").intOr { model("prompt_tokens_details")("cached_tokens").getInt },
 				output, model("completion_tokens_details")("reasoning_tokens").getInt,

@@ -1,9 +1,8 @@
-package utopia.echo.model.response.deepseek
+package utopia.echo.model.response.openai
 
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.MessageStopReason
 import utopia.echo.model.enumeration.MessageStopReason._
-import utopia.echo.model.response.openai.OpenAiTokenUsageStatistics
 import utopia.echo.model.response.{BufferedReply, BufferedReplyLike}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
@@ -16,7 +15,7 @@ import utopia.flow.time.Now
 import java.time.Instant
 import scala.util.Try
 
-object BufferedDeepSeekReply extends FromModelFactory[BufferedDeepSeekReply]
+object BufferedOpenAiReply extends FromModelFactory[BufferedOpenAiReply]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -30,14 +29,14 @@ object BufferedDeepSeekReply extends FromModelFactory[BufferedDeepSeekReply]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: HasProperties): Try[BufferedDeepSeekReply] = {
+	override def apply(model: HasProperties): Try[BufferedOpenAiReply] = {
 		schema.validate(model).flatMap { model =>
 			// Parses the "choices" (messages)
 			model("choices").tryVector
 				.flatMap { values =>
 					values.zipWithIndex.tryMapAll { case (value, index) =>
 						value.tryModel.flatMap { choiceModel =>
-							choiceModel.tryGet("message") { _.tryModel.flatMap(ChatMessage.deepSeekMessageParser.apply) }
+							choiceModel.tryGet("message") { _.tryModel.flatMap(ChatMessage.openAiMessageParser.apply) }
 								.map { (_, choiceModel, choiceModel("index").intOr(index)) }
 						}
 					}
@@ -54,7 +53,7 @@ object BufferedDeepSeekReply extends FromModelFactory[BufferedDeepSeekReply]
 									case "stop" => Some(MessageCompleted)
 									case "length" => Some(LengthLimitReached)
 									case "content_filter" => Some(Censored)
-									case "tool_calls" => Some(ToolCalled)
+									case "tool_calls" | "function_call" => Some(ToolCalled)
 									case "insufficient_system_resource" => Some(ServerError)
 									case _ => None
 								}
@@ -71,13 +70,18 @@ object BufferedDeepSeekReply extends FromModelFactory[BufferedDeepSeekReply]
 }
 
 /**
- * Represents a buffered response acquired from the DeepSeek API for a chat completion request
+ * Represents a buffered response acquired from a chat/completions API request
+ * @param id ID of this reply
+ * @param messages Returned chat messages
+ * @param tokenUsage Statistics about the token usage
+ * @param stopReason Reason why generation was stopped (default = message completed)
+ * @param lastUpdated Time when this reply was created / finished (default = now)
  * @author Mikko Hilpinen
  * @since 29.01.2026, v1.4.1
  */
-case class BufferedDeepSeekReply(id: String, messages: Seq[ChatMessage], tokenUsage: OpenAiTokenUsageStatistics,
-                                 stopReason: MessageStopReason = MessageCompleted, lastUpdated: Instant = Now)
-	extends BufferedReply with BufferedReplyLike[BufferedDeepSeekReply]
+case class BufferedOpenAiReply(id: String, messages: Seq[ChatMessage], tokenUsage: OpenAiTokenUsageStatistics,
+                               stopReason: MessageStopReason = MessageCompleted, lastUpdated: Instant = Now)
+	extends BufferedReply with BufferedReplyLike[BufferedOpenAiReply]
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -87,7 +91,7 @@ case class BufferedDeepSeekReply(id: String, messages: Seq[ChatMessage], tokenUs
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def self: BufferedDeepSeekReply = this
+	override def self: BufferedOpenAiReply = this
 	
 	override def message: ChatMessage = messages.lastOption.getOrElse(ChatMessage.empty.fromAssistant)
 }

@@ -8,11 +8,11 @@ import utopia.echo.model.response.openai.OpenAiResponse
 import scala.concurrent.Future
 
 /**
- * An implementation of [[OpenAiChatRequest]] which doesn't use streaming
+ * An implementation of [[GetOpenAiResponse]] which doesn't use streaming
  * @author Mikko Hilpinen
  * @since 02.09.2025, v1.4
  */
-case class BufferedOpenAiChatRequest(params: ChatParams) extends OpenAiChatRequest[OpenAiResponse]
+case class GetBufferedOpenAiResponse(params: ChatParams) extends GetOpenAiResponse[OpenAiResponse]
 {
 	// ATTRIBUTES   -------------------------
 	

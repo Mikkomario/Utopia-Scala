@@ -5,7 +5,7 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.deepseek.BufferedDeepSeekChatRequest
 import utopia.echo.model.response.ReplyLike
-import utopia.echo.model.response.deepseek.BufferedDeepSeekReply
+import utopia.echo.model.response.openai.BufferedOpenAiReply
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.template.eventful.{Changing, Flag}
@@ -26,8 +26,8 @@ import scala.util.Try
 @deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.4.1")
 class DeepSeekChat(client: LlmServiceClient, initialLlm: LlmDesignator)
                   (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
-	extends AbstractChat[ReplyLike[BufferedDeepSeekReply], BufferedDeepSeekReply, DeepSeekChat](client, initialLlm,
-		BufferedDeepSeekReply.empty, BufferedDeepSeekReply.empty)
+	extends AbstractChat[ReplyLike[BufferedOpenAiReply], BufferedOpenAiReply, DeepSeekChat](client, initialLlm,
+		BufferedOpenAiReply.empty, BufferedOpenAiReply.empty)
 		with Chat
 {
 	override def self: DeepSeekChat = this
@@ -40,7 +40,7 @@ class DeepSeekChat(client: LlmServiceClient, initialLlm: LlmDesignator)
 	override protected def streamedReplyFrom(textPointer: Changing[String], thoughtsPointer: Changing[String],
 	                                         newTextPointer: Changing[String], thinkingFlag: Flag,
 	                                         lastUpdatedPointer: Changing[Instant],
-	                                         resultFuture: Future[Try[BufferedDeepSeekReply]]) =
+	                                         resultFuture: Future[Try[BufferedOpenAiReply]]) =
 		ReplyLike.streaming(textPointer, thoughtsPointer, newTextPointer, thinkingFlag, lastUpdatedPointer,
 			resultFuture)
 }

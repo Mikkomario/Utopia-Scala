@@ -5,7 +5,7 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ollama.RequestParams
 import utopia.echo.model.request.ollama.chat.OllamaChatRequest
-import utopia.echo.model.request.openai.BufferedOpenAiChatRequest
+import utopia.echo.model.request.openai.GetBufferedOpenAiResponse
 import utopia.echo.model.request.tool.Tool
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
@@ -49,7 +49,7 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	/**
 	 * @return A buffered Open AI request based on these parameters.
 	 */
-	def toOpenAiRequest = BufferedOpenAiChatRequest(this)
+	def toOpenAiRequest = GetBufferedOpenAiResponse(this)
 	
 	
 	// IMPLEMENTED  --------------------------
