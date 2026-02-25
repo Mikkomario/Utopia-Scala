@@ -342,6 +342,13 @@ case class Value(content: Option[Any], dataType: DataType)
 	def tryIntOrString = tryLeftOrRight { _.tryInt } { _.string }
 	
 	/**
+	 * @return Either:
+	 *              - Left: This value as a Model, if possible
+	 *              - Right This value as a Vector
+	 */
+	def getModelOrVector = getLeftOrRight { _.model } { _.getVector }
+	
+	/**
 	 * Attempts to cast this value to a left value. And if that doesn't work, tries to cast this to a right value.
 	 * @param toLeft A function for casting this value into a left type. Yields None if casting was not possible.
 	 * @param toRight A function for casting this value into a right type. Yields None if casting was not possible.

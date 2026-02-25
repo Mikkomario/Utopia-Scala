@@ -26,5 +26,8 @@ object SearchFilter
  */
 case class SearchFilter(property: OfferProperty[_], operator: FilterOperator, value: Value)
 {
+	/**
+	 * @return Converts this filter into a constant that may be added to an offer search query
+	 */
 	def toConstant = Constant(property.key, Model.withConstants(Constant(operator.name, value)))
 }

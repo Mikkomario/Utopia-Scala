@@ -19,7 +19,7 @@ object Offer extends FromModelFactory[Offer]
 {
 	// ATTRIBUTES   ----------------------
 	
-	private val schema = ModelDeclaration("id" -> LongType, "machine_id" -> LongType, "host_id" -> LongType,
+	private val schema = ModelDeclaration("ask_contract_id" -> LongType, "machine_id" -> LongType, "host_id" -> LongType,
 		"reliability" -> DoubleType, "score" -> DoubleType, "geolocation" -> StringType,
 		"duration" -> DoubleType, "end_date" -> LongType, "start_date" -> LongType, "verification" -> StringType)
 	
@@ -36,11 +36,11 @@ object Offer extends FromModelFactory[Offer]
 								.flatMap { verification =>
 									Try { Pair("start_date", "end_date").map { key => Instant.ofEpochSecond(model(key)) } }
 										.map { timespan =>
-											apply(model("id"), model("machine_id"), model("host_id"), cost, gpu,
-												network.toMap, performance, model("reliability"), model("score"),
-												model("geolocation"), model("duration").getDouble.seconds, Span(timespan),
-												verification, model("rentable").booleanOr(true), model("rented"),
-												model("static_ip"))
+											apply(model("ask_contract_id"), model("machine_id"), model("host_id"),
+												cost, gpu, network.toMap, performance, model("reliability"),
+												model("score"), model("geolocation"),
+												model("duration").getDouble.seconds, Span(timespan), verification,
+												model("rentable").booleanOr(true), model("rented"), model("static_ip"))
 										}
 								}
 						}
