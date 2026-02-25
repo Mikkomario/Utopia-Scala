@@ -1,4 +1,4 @@
-package utopia.echo.model.vastai.offer
+package utopia.echo.model.vastai.instance.offer
 
 import utopia.echo.model.enumeration.NetworkTrafficDirection
 import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}

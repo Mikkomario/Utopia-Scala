@@ -6,8 +6,8 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
-import utopia.echo.model.vastai.offer.{Offer, OfferProperty, OfferType, SearchFilter}
-import utopia.echo.model.vastai.offer.OfferType.OnDemand
+import utopia.echo.model.vastai.instance.offer.OfferType.OnDemand
+import utopia.echo.model.vastai.instance.offer.{Offer, OfferProperty, OfferType, SearchFilter}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.{Model, Value}

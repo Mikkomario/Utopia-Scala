@@ -1,4 +1,4 @@
-package utopia.echo.model.vastai.offer
+package utopia.echo.model.vastai.instance.offer
 
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}

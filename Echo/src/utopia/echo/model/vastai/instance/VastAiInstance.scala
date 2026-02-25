@@ -1,116 +1,102 @@
 package utopia.echo.model.vastai.instance
 
+import utopia.echo.model.unit.ByteCount
+import utopia.echo.model.vastai.instance.offer.Offer
+import utopia.echo.model.unit.ByteCountExtensions._
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.range.NumericSpan
+import utopia.flow.collection.immutable.range.NumericSpan.IntSpan
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.model.mutable.DataType.DoubleType
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.casting.ValueUnwraps._
+import utopia.flow.parse.string.Regex
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
+import utopia.flow.util.StringExtensions._
+import utopia.flow.view.template.Extender
+
+import scala.util.Try
+
+object VastAiInstance extends FromModelFactory[VastAiInstance]
+{
+	// ATTRIBUTES   ----------------------
+	
+	private val schema = ModelDeclaration("client_run_time" -> DoubleType, "host_run_time" -> DoubleType)
+	
+	
+	// IMPLEMENTED  ----------------------
+	
+	override def apply(model: HasProperties): Try[VastAiInstance] = schema.validate(model).flatMap { model =>
+		Offer(model).flatMap { offer =>
+			InstanceStatus(model).map { status =>
+				val template = model("template_id").int.map { templateId =>
+					TemplateIdentifier(templateId, model("template_hash_id"), model("template_name"))
+				}
+				val directPortRange = model("direct_port_start").int.filter { _ > 0 }.flatMap { start =>
+					model("direct_port_end").int.filter { _ >= start }.map { NumericSpan(start, _) }
+				}
+				val ssh = model("ssh_host").string.flatMap { host =>
+					model("ssh_port").int.map { port =>
+						SshConnection(host, port, model("machine_dir_ssh_port").intOr(-1), model("ssh_idx"))
+					}
+				}
+				
+				apply(model("id"), offer, status, model("client_run_time").getDouble.hours,
+					model("host_run_time").getDouble.hours, model("credit_balance"),
+					model("uptime_mins").double.map { _.minutes }, model("label"), template, model("cpu_util"),
+					model("mem_limit").int.map { _.mb }, model("mem_usage").int.map { _.mb }, model("gpu_util"),
+					model("vmem_usage").int.map { _.mb }, model("gpu_temp"), model("disk_usage").double.map { _ / 100 },
+					model("local_ipaddrs").getString.splitIterator(Regex.comma).map { _.stripControlCharacters.trim }
+						.filter { _.nonEmpty }.toOptimizedSeq,
+					model("public_ipaddr"), directPortRange, model("ports").getVector.map { _.getInt }, ssh,
+					model("jupyter_token"))
+			}
+		}
+	}
+}
+
 /**
  * Represents a rented machine / accepted contract
+ * @param id ID of this instance
+ * @param offer Information about this instance, which is also present in its offer
+ * @param status Information about this instance's current status
+ * @param clientRunTime How long this client has been on
+ * @param hostRunTime How long this host has been active
+ * @param creditBalance User's credit balance in $, if available
+ * @param uptime Up-time for this instance
+ * @param label Custom label/name given to this instance
+ * @param template Information about the template used to create this instance
+ * @param cpuUtilization Ratio of CPU resources currently utilized (0,1)
+ * @param ramLimit RAM usage limit, if known & applicable
+ * @param ramUsage Currently used RAM, if known
+ * @param gpuUtilization Ratio of available GPU resources currently utilized (0,1), if known
+ * @param vramUsage VRAM currently used, if known
+ * @param gpuTempCelsius Current temperature of the GPU, if known
+ * @param diskUsageRatio Ratio of the available disk space used (0,1), if known
+ * @param localIpAddresses Local IP addresses for this instance
+ * @param publicIpAddress Public IP address of this instance
+ * @param directPortRange Range of direct port numbers available. None if no ports are available or known.
+ * @param otherPorts Other ports that are available
+ * @param ssh Information for forming an SSH connection, if applicable
+ * @param jupyterToken Token for Jupyter, if applicable
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.4.1
  */
-case class VastAiInstance(id: Int, status: InstanceStatus, label: String = "",
-                          template: Option[TemplateIdentifier] = None)
+case class VastAiInstance(id: Int, offer: Offer, status: InstanceStatus,
+                          clientRunTime: Duration, hostRunTime: Duration, creditBalance: Option[Double] = None,
+                          uptime: Option[Duration] = None, label: String = "",
+                          template: Option[TemplateIdentifier] = None,
+                          cpuUtilization: Double = 0.0, ramLimit: Option[ByteCount] = None,
+                          ramUsage: Option[ByteCount] = None, gpuUtilization: Option[Double] = None,
+                          vramUsage: Option[ByteCount] = None, gpuTempCelsius: Option[Double] = None,
+                          diskUsageRatio: Option[Double] = None,
+                          localIpAddresses: Seq[String] = Empty, publicIpAddress: String = "",
+                          directPortRange: Option[IntSpan] = None, otherPorts: Seq[Int] = Empty,
+                          ssh: Option[SshConnection] = None, jupyterToken: String = "")
+	extends Extender[Offer]
 {
-	/*
-	 *{
-  "instances": {
-    "id": 883,
-    "label": null,
-    "template_id": null,
-    "template_hash_id": null,
-    "template_name": null,
-    "extra_env": [],
-    "onstart": null,
-    "jupyter_token": "53fc448d6644aa7535c6fa5498cdbedc782753e88d81b44090e54dcf1332ed30",
-    "local_ipaddrs": "10.2.202.31 172.17.0.1 \n",
-    "ssh_host": "ssh2281.vast.ai",
-    "ssh_idx": "2281",
-    "ssh_port": 10882,
-    "machine_dir_ssh_port": 5300,
-    "machine_id": 178,
-    "bundle_id": 617,
-    "start_date": 1761008618.225083,
-    "end_date": 2034617753,
-    "uptime_mins": null,
-    "duration": 273608757.18784523,
-    "cpu_arch": "amd64",
-    "cpu_cores": 32,
-    "cpu_cores_effective": 4,
-    "cpu_name": "Xeon® Silver 4110",
-    "cpu_ram": 128576,
-    "cpu_util": 0,
-    "mem_limit": null,
-    "mem_usage": null,
-    "vmem_usage": null,
-    "gpu_name": "RTX A5000",
-    "gpu_arch": "nvidia",
-    "gpu_totalram": 24564,
-    "gpu_ram": 24564,
-    "gpu_util": null,
-    "gpu_temp": null,
-    "gpu_frac": 0.125,
-    "gpu_lanes": 16,
-    "gpu_mem_bw": 628.8,
-    "bw_nvlink": 0,
-    "disk_name": "Samsung SSD 860",
-    "disk_space": 10,
-    "disk_bw": 500.55,
-    "disk_util": -1,
-    "disk_usage": -1,
-    "direct_port_count": 12,
-    "direct_port_start": -1,
-    "direct_port_end": -1,
-    "ports": [
-      8080,
-      8081
-    ],
-    "static_ip": true,
-    "public_ipaddr": "63.135.50.11",
-    "geolocation": "Washington, US",
-    "verification": "verified",
-    "rentable": true,
-    "host_id": 2,
-    "hosting_type": 1,
-    "min_bid": 0.02,
-    "is_bid": false,
-    "dph_base": 1,
-    "dph_total": 1.0020740740740741,
-    "dlperf": 22.229415,
-    "dlperf_per_dphtotal": 22.183404974866942,
-    "flops_per_dphtotal": 27.46814902424601,
-    "total_flops": 27.52512,
-    "score": 22.043656178546772,
-    "reliability2": 0.9993661,
-    "os_version": 18.04,
-    "mobo_name": "S7109GM2NR",
-    "pci_gen": 3,
-    "pcie_bw": 11.7,
-    "num_gpus": 1,
-    "logo": "/static/logos/vastai_small2.png",
-    "webpage": null,
-    "search": {
-      "gpuCostPerHour": 1,
-      "diskHour": 0.002074074074074074,
-      "totalHour": 1.0020740740740741,
-      "discountTotalHour": 0,
-      "discountedTotalPerHour": 1.0020740740740741
-    },
-    "instance": {
-      "gpuCostPerHour": 0,
-      "diskHour": 0.002074074074074074,
-      "totalHour": 0.002074074074074074,
-      "discountTotalHour": 0,
-      "discountedTotalPerHour": 0.002074074074074074
-    },
-    "storage_cost": 0.14933333333333335,
-    "storage_total_cost": 0.002074074074074074,
-    "vram_costperhour": 0.00004079441760601181,
-    "credit_balance": null,
-    "credit_discount": null,
-    "credit_discount_max": 0.4,
-    "client_run_time": 1.1,
-    "host_run_time": 2592000,
-    "external": false,
-    "time_remaining": "",
-    "time_remaining_isbid": ""
-  }
-}
-	 */
+	override def wrapped: Offer = offer
 }

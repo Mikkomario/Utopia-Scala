@@ -1,8 +1,10 @@
-package utopia.echo.model.vastai.offer
+package utopia.echo.model.vastai.instance.offer
 
-import utopia.echo.model.enumeration.NetworkTrafficDirection
+import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes, TeraBytes}
 import utopia.echo.model.enumeration.NetworkTrafficDirection.{Download, Upload}
-import utopia.echo.model.vastai.offer.FilterOperator.{EqualTo, GreaterThan, In, LessThan, NotEqualTo, NotIn}
+import utopia.echo.model.enumeration.{ByteCountUnit, NetworkTrafficDirection}
+import utopia.echo.model.unit.ByteCount
+import FilterOperator._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
@@ -124,14 +126,27 @@ object OfferProperty
 		override def toValue(value: String): Value = value
 	}
 	
-	sealed trait ScalingOfferProperty extends OfferProperty[Int]
+	sealed trait ByteCountProperty extends OfferProperty[ByteCount]
 	{
-		/**
-		 * @return Multiplier applied to accepted values
-		 */
-		protected def multiplier: Int
+		// ABSTRACT --------------------
 		
-		override def toValue(value: Int): Value = value * multiplier
+		/**
+		 * @return Unit to which the values are converted
+		 */
+		protected def targetUnit: ByteCountUnit
+		
+		/**
+		 * @return Whether values of this property should be rounded to the nearest integer
+		 */
+		protected def rounds: Boolean
+		
+		
+		// IMPLEMENTED  ----------------
+		
+		override def toValue(value: ByteCount): Value = {
+			val precise = value.to(targetUnit)
+			if (rounds) precise.round else precise
+		}
 	}
 	
 	
@@ -197,46 +212,30 @@ object OfferProperty
 		override val key: String = "num_gpus"
 	}
 	
-	object GpuRam
-	{
-		/**
-		 * GPU RAM in MB
-		 */
-		val megas = apply(1)
-		/**
-		 * GPU RAM in GB
-		 */
-		val gigas = apply(1000)
-	}
 	/**
 	 * GPU RAM
-	 * @param megaMultiplier A multiplier applied to the accepted value, in order to convert it to MB
 	 */
-	case class GpuRam(megaMultiplier: Int) extends ScalingOfferProperty
+	case object GpuRam extends ByteCountProperty
 	{
 		// ATTRIBUTES   -------------------
 		
 		override val key: String = "gpu_ram"
+		override protected val targetUnit: ByteCountUnit = MegaBytes
+		override protected val rounds: Boolean = true
 		
 		
 		// COMPUTED -----------------------
 		
-		def acrossAllGpus = GpuTotalRam(megaMultiplier)
-		
-		
-		// IMPLEMENTED  -------------------
-		
-		override protected def multiplier: Int = megaMultiplier
+		def acrossAllGpus = GpuTotalRam
 	}
 	/**
 	 * Total GPU RAM across all GPUs
-	 * @param megaMultiplier A multiplier applied to the accepted value, in order to convert it to MB
 	 */
-	case class GpuTotalRam(megaMultiplier: Int) extends ScalingOfferProperty
+	case object GpuTotalRam extends ByteCountProperty
 	{
 		override val key: String = "gpu_total_ram"
-		
-		override protected def multiplier: Int = megaMultiplier
+		override protected val targetUnit: ByteCountUnit = MegaBytes
+		override protected val rounds: Boolean = true
 	}
 	case object GpuFraction extends DoubleOfferProperty
 	{
@@ -277,44 +276,39 @@ object OfferProperty
 	
 	object NetworkSpeed
 	{
-		val megas = NetworkSpeedFactory(1)
-		val gigas = NetworkSpeedFactory(1000)
-	}
-	case class NetworkSpeedFactory(megaMultiplier: Int) extends NetworkPropertyFactory[NetworkSpeed]
-	{
-		override def apply(direction: NetworkTrafficDirection): NetworkSpeed = NetworkSpeed(megaMultiplier, direction)
+		/**
+		 * Download bandwidth (/s)
+		 */
+		val download = apply(Download)
+		/**
+		 * Upload bandwidth (/s)
+		 */
+		val upload = apply(Upload)
 	}
 	/**
-	 * Download or upload bandwidth
-	 * @param megaMultiplier Multiplier applied to accepted values, in order to get MB
-	 * @param direction Direction of traffic to which this speed applies (default = download)
+	 * Download or upload bandwidth (/s)
+	 * @param direction Direction of traffic to which this speed applies
 	 */
-	case class NetworkSpeed(megaMultiplier: Int, direction: NetworkTrafficDirection = Download)
-		extends ScalingOfferProperty
+	case class NetworkSpeed(direction: NetworkTrafficDirection) extends ByteCountProperty
 	{
 		override val key: String = s"inet_${ direction.key }"
-		
-		override protected def multiplier: Int = megaMultiplier
+		override protected val targetUnit: ByteCountUnit = MegaBytes
+		override protected val rounds: Boolean = true
 	}
 	object NetworkCost
 	{
-		val perGiga = NetworkCostFactory(1)
-		val perTera = NetworkCostFactory(1000)
-	}
-	case class NetworkCostFactory(perGigaMultiplier: Int) extends NetworkPropertyFactory[NetworkCost]
-	{
-		override def apply(direction: NetworkTrafficDirection): NetworkCost = NetworkCost(perGigaMultiplier, direction)
+		val download = apply(Download)
+		val upload = apply(Upload)
 	}
 	/**
-	 * @param perGigaMultiplier Multiplier applied to accepted values in order to convert them to /GB
-	 * @param direction Direction of traffic to which this cost applies (default = download)
+	 * Network usage cost, in $/ByteCount/s
+	 * @param direction Direction of traffic to which this cost applies
 	 */
-	case class NetworkCost(perGigaMultiplier: Int, direction: NetworkTrafficDirection = Download)
-		extends ScalingOfferProperty
+	case class NetworkCost(direction: NetworkTrafficDirection) extends ByteCountProperty
 	{
 		override val key: String = s"inet_${direction.key}_cost"
-		
-		override protected def multiplier: Int = perGigaMultiplier
+		override protected val targetUnit: ByteCountUnit = GigaBytes
+		override protected val rounds: Boolean = false
 	}
 
 	/**
@@ -348,25 +342,27 @@ object OfferProperty
 	}
 	object StorageCost
 	{
-		val perTera = StorageCostFactory(1000)
-		val perGiga = StorageCostFactory(1)
-		val perMega = StorageCostFactory(0.001)
+		val perTera = per(TeraBytes)
+		val perGiga = per(GigaBytes)
+		val perMega = per(MegaBytes)
+		
+		def per(unit: ByteCountUnit) = StorageCostFactory(unit)
 	}
-	case class StorageCostFactory(perGigaMultiplier: Double)
+	case class StorageCostFactory(perUnit: ByteCountUnit)
 	{
-		val perMonth = StorageCost(1, perGigaMultiplier)
+		val perMonth = StorageCost(1, perUnit)
 		
 		def perDay = per(1.days)
 		def perHour = per(1.hours)
 		def perMinute = per(1.minutes)
 		
-		def per(duration: Duration) = StorageCost(duration / 1.months.toApproximateDuration, perGigaMultiplier)
+		def per(duration: Duration) = StorageCost(duration / 1.months.toApproximateDuration, perUnit)
 	}
-	case class StorageCost(perMonthMultiplier: Double, perGigaMultiplier: Double) extends OfferProperty[Double]
+	case class StorageCost(perMonthMultiplier: Double, perUnit: ByteCountUnit) extends OfferProperty[Double]
 	{
 		override val key: String = "storage_cost"
 		
-		override def toValue(value: Double): Value = value * perMonthMultiplier * perGigaMultiplier
+		override def toValue(value: Double): Value = value * perMonthMultiplier * perUnit.toGigaMultiplier
 	}
 	
 	/**

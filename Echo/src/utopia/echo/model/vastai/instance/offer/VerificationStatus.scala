@@ -1,4 +1,4 @@
-package utopia.echo.model.vastai.offer
+package utopia.echo.model.vastai.instance.offer
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.ordering.SelfComparable

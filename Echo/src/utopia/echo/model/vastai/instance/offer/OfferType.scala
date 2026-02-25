@@ -1,4 +1,4 @@
-package utopia.echo.model.vastai.offer
+package utopia.echo.model.vastai.instance.offer
 
 /**
  * An enumeration for different types of offers

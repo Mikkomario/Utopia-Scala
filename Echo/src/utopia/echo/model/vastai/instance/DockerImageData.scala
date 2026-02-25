@@ -1,7 +1,7 @@
 package utopia.echo.model.vastai.instance
 
-import utopia.echo.model.vastai.offer.RunType
-import utopia.echo.model.vastai.offer.RunType.Ssh
+import utopia.echo.model.vastai.instance.offer.RunType
+import RunType.Ssh
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelDeclaration

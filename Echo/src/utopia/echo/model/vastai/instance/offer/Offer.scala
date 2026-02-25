@@ -1,6 +1,8 @@
-package utopia.echo.model.vastai.offer
+package utopia.echo.model.vastai.instance.offer
 
 import utopia.echo.model.enumeration.NetworkTrafficDirection
+import utopia.echo.model.vastai.instance.{Cpu, Gpu}
+import VerificationStatus.Unverified
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.Span
@@ -28,27 +30,29 @@ object Offer extends FromModelFactory[Offer]
 	
 	override def apply(model: HasProperties): Try[Offer] = schema.validate(model).flatMap { model =>
 		MachineCost(model).flatMap { cost =>
-			Gpu(model).flatMap { gpu =>
-				MachinePerformance(model).flatMap { performance =>
-					NetworkTrafficDirection.values.tryMapAll { dir => NetworkStats(dir)(model).map { dir -> _ } }
-						.flatMap { network =>
-							model.tryGet("verification") { v => VerificationStatus.forKey(v.getString) }
-								.flatMap { verification =>
-									Try { Pair("start_date", "end_date").map { key => Instant.ofEpochSecond(model(key)) } }
-										.map { timespan =>
-											apply(model("ask_contract_id"), model("machine_id"), model("host_id"),
-												cost, gpu, network.toMap, performance, model("reliability"),
-												model("score"), model("geolocation"),
-												model("duration").getDouble.seconds, Span(timespan), verification,
-												model("rentable").booleanOr(true), model("rented"), model("static_ip"))
-										}
-								}
-						}
+			Cpu(model).flatMap { cpu =>
+				Gpu(model).flatMap { gpu =>
+					MachinePerformance(model).flatMap { performance =>
+						NetworkTrafficDirection.values.tryMapAll { dir => NetworkStats(dir)(model).map { dir -> _ } }
+							.flatMap { network =>
+								model.tryGet("verification") { v => VerificationStatus.forKey(v.getString) }
+									.flatMap { verification =>
+										Try { Pair("start_date", "end_date").map { key => Instant.ofEpochSecond(model(key)) } }
+											.map { timespan =>
+												apply(model("ask_contract_id"), model("machine_id"), model("host_id"),
+													cost, cpu, gpu, network.toMap, performance, model("reliability"),
+													model("score"), model("geolocation"),
+													model("duration").getDouble.seconds, Span(timespan), verification,
+													model("bundle_id"), model("rentable").booleanOr(true),
+													model("rented"), model("static_ip"))
+											}
+									}
+							}
+					}
 				}
 			}
 		}
 	}
-	
 }
 
 /**
@@ -57,6 +61,7 @@ object Offer extends FromModelFactory[Offer]
  * @param machineId ID of this machine
  * @param hostId ID of the machine's host
  * @param cost Information about this offer's costs
+ * @param cpu Information about the CPU
  * @param gpu Information about the GPU(s)
  * @param network Information about network usage
  * @param performance Information about this machine's performance
@@ -72,9 +77,9 @@ object Offer extends FromModelFactory[Offer]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.4.1
  */
-case class Offer(id: Long, machineId: Long, hostId: Long, cost: MachineCost, gpu: Gpu,
+case class Offer(id: Long, machineId: Int, hostId: Long, cost: MachineCost, cpu: Cpu, gpu: Gpu,
                  network: Map[NetworkTrafficDirection, NetworkStats],
                  performance: MachinePerformance, reliability: Double, score: Double, location: String,
                  duration: Duration, timespan: Span[Instant],
-                 verification: VerificationStatus, rentable: Boolean, rented: Boolean,
-                 hasStaticIp: Boolean)
+                 verification: VerificationStatus = Unverified, bundleId: Option[Int] = None, rentable: Boolean = true,
+                 rented: Boolean = false, hasStaticIp: Boolean = false)

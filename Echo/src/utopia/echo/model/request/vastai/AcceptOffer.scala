@@ -8,8 +8,8 @@ import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.model.request.Body
 import utopia.echo.model.request.vastai.AcceptOffer.AcceptOfferResponseParser
-import utopia.echo.model.vastai.offer.RunType
-import utopia.echo.model.vastai.offer.RunType.Ssh
+import utopia.echo.model.vastai.instance.offer.RunType
+import RunType.Ssh
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
