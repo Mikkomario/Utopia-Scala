@@ -1,10 +1,9 @@
 package utopia.echo.controller.client
 
 import utopia.access.model.Headers
-import utopia.annex.controller.{ApiClient, PreparingResponseParser, QueueSystem, RequestQueue}
+import utopia.annex.controller.{ApiClient, QueueSystem, RequestQueue}
 import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.{RequestResult, Response}
-import utopia.annex.util.ResponseParseExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.Gateway
 import utopia.disciple.controller.parse.ResponseParser
@@ -79,10 +78,8 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		
 		override protected implicit val jsonParser: JsonParser = JsonBunny
 		
-		override val valueResponseParser: ResponseParser[Response[Value]] =
-			ResponseParser.value.unwrapToResponse { v => v("error", "message").stringOr(v.getString) }
-		override val emptyResponseParser: ResponseParser[Response[Unit]] =
-			PreparingResponseParser.onlyRecordFailures(ResponseParser.stringOrLog)
+		override val valueResponseParser: ResponseParser[Response[Value]] = newValueResponseParser
+		override val emptyResponseParser: ResponseParser[Response[Unit]] = newEmptyResponseParser
 		
 		
 		// IMPLEMENTED  -----------------------
