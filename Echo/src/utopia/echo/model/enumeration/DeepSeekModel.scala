@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.Pair
 /**
  * An enumeration for the different models used by DeepSeek
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
 sealed trait DeepSeekModel extends LlmDesignator
 

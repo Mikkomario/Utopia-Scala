@@ -14,7 +14,7 @@ import utopia.flow.time.TimeExtensions._
 /**
  * An enumeration for different offer-filtering keys
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait OfferProperty[-V]
 {

@@ -5,6 +5,7 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.echo.controller.parser.StreamedOllamaResponseParser
+import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ChatParams
@@ -111,7 +112,11 @@ trait OllamaChatRequest[+R] extends OllamaRequest[R]
 	override def settings: ModelSettings = params.settings
 	
 	override def deprecated: Boolean = params.deprecationView.value
-	override def think: UncertainBoolean = params.think
+	override def think: UncertainBoolean = params.reasoningEffort match {
+		case Some(SkipReasoning) => false
+		case None => UncertainBoolean
+		case _ => true
+	}
 	
 	override def customProperties: Seq[Constant] =
 		Pair(Constant("messages", params.messages), Constant("tools", NotEmpty(params.tools)))

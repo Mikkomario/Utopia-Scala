@@ -6,7 +6,7 @@ import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes}
 /**
  * Common trait for factories that accept byte count units
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 trait FromByteCountUnitFactory[+A]
 {

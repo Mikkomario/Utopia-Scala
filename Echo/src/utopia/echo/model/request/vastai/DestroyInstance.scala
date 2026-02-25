@@ -17,7 +17,7 @@ import scala.util.{Failure, Success}
 /**
  * Ends the rent by deleting the instance and all associated data. Irreversible.
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 case class DestroyInstance(instanceId: Int, deprecationView: View[Boolean] = AlwaysFalse) extends ApiRequest[String]
 {

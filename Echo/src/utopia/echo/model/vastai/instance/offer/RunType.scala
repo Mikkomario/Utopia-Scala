@@ -5,7 +5,7 @@ import utopia.flow.collection.CollectionExtensions._
 /**
  * An enumeration for different ways to run a Vast AI instance
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait RunType
 {

@@ -20,10 +20,10 @@ import scala.util.Try
  * @param client LLM service -client utilized
  * @param initialLlm Initially used LLM
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
 // TODO: Make sure the output size is not unnecessarily limited
-@deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.4.1")
+@deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.5")
 class DeepSeekChat(client: LlmServiceClient, initialLlm: LlmDesignator)
                   (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends AbstractChat[ReplyLike[BufferedOpenAiReply], BufferedOpenAiReply, DeepSeekChat](client, initialLlm,

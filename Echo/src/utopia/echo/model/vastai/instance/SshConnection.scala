@@ -7,6 +7,6 @@ package utopia.echo.model.vastai.instance
  * @param machineDirectoryPort Calculated SSH port for accessing the machine directory
  * @param user Identifier for the SSH forwarder used
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 case class SshConnection(host: String, port: Int, machineDirectoryPort: Int, user: String)

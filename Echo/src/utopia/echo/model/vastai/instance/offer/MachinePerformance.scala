@@ -22,7 +22,7 @@ object MachinePerformance extends FromModelFactoryWithSchema[MachinePerformance]
  * @param totalFlops Total theoretical GPU compute performance (TFLOPs) across all GPUs.
  * @param flopsPerDph TFLOPs per $/hour
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class MachinePerformance(deepLearning: Double, deepLearningPerDph: Double,
                               totalFlops: Double, flopsPerDph: Double)

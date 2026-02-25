@@ -32,7 +32,7 @@ object MachineCost extends FromModelFactoryWithSchema[MachineCost]
  * @param minBid Minimum bid ($/h) that is required to take this device
  * @param isBid Whether this device is open for bidding
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class MachineCost(total: Double, base: Double, storagePerGbPerMonth: Double, vramPerMega: Double,
                        minBid: Double, isBid: Boolean)

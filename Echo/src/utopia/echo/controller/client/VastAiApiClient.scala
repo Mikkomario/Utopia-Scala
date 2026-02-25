@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext
  * @param apiKey API key used for authorizing requests
  * @param apiVersion Used API version. Default = v0.
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 class VastAiApiClient(override protected val gateway: Gateway, apiKey: String, apiVersion: Int = 0)
                      (implicit override protected val exc: ExecutionContext, override protected val log: Logger,

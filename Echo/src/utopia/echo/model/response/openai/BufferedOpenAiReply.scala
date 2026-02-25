@@ -77,7 +77,7 @@ object BufferedOpenAiReply extends FromModelFactory[BufferedOpenAiReply]
  * @param stopReason Reason why generation was stopped (default = message completed)
  * @param lastUpdated Time when this reply was created / finished (default = now)
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
 case class BufferedOpenAiReply(id: String, messages: Seq[ChatMessage], tokenUsage: OpenAiTokenUsageStatistics,
                                stopReason: MessageStopReason = MessageCompleted, lastUpdated: Instant = Now)

@@ -7,7 +7,7 @@ import utopia.echo.model.enumeration.ByteCountUnit
  * @param amount Amount on bytes in 'unit'
  * @param unit Unit in which 'amount' is given
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 case class ByteCount(amount: Int, unit: ByteCountUnit)
 {

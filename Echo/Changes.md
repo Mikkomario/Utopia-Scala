@@ -1,7 +1,9 @@
 # Utopia Echo - List of Changes
 
-## v1.4.1 (in development)
+## v1.5 (in development)
+TODO: Document Vast AI integration
 ### Breaking changes
+- Thinking is now controlled using a reasoning effort property, instead of a thinking enabled / thinks property 
 - **ChatLike** now tracks `largestReplySize` and `largestThinkSize` separately
 ### Deprecations
 - Deprecated **EchoContext**; Parsing failure **Status** is now defined in `Response.parseFailureStatus` instead.
@@ -12,7 +14,7 @@
 - Fixed a bug where **AbstractChat**'s `queueSize` would never reset after failing to start a chat request 
   (on context overflow) 
 ### New features
-- Adding preliminary (beta) interfaces for Open AI & DeepSeek
+- Adding preliminary (beta) interfaces for sending buffered chat requests using Open AI, DeepSeek and vLLM
   - Only text-based non-streaming requests are supported at this time
 - Added **BufferedReplyGenerator** and **StatelessBufferedReplyGenerator** traits for streamlining buffered reply 
   -acquisition.

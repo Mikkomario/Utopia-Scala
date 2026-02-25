@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.{Pair, Single}
 /**
  * An enumeration for different instance states
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait InstanceState
 {

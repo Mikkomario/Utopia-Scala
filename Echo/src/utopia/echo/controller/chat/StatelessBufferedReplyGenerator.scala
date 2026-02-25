@@ -1,5 +1,6 @@
 package utopia.echo.controller.chat
 
+import utopia.echo.model.enumeration.ReasoningEffort
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.response.BufferedReply
 import utopia.echo.model.settings.{ContextSizeLimits, ModelSettings}
@@ -20,8 +21,8 @@ object StatelessBufferedReplyGenerator
 	 */
 	def apply[R <: BufferedReply](executor: BufferingChatRequestExecutor[R])
 	                             (implicit llm: LlmDesignator, exc: ExecutionContext): StatelessBufferedReplyGenerator[R] =
-		new _StatelessBufferedReplyGenerator[R](ModelSettings.empty, ContextSizeLimits.default, 800, 800, executor,
-			thinkingEnabled = true)
+		new _StatelessBufferedReplyGenerator[R](ModelSettings.empty, ContextSizeLimits.default, 800, 800, None,
+			executor)
 	
 	
 	// NESTED   ----------------------------
@@ -29,8 +30,8 @@ object StatelessBufferedReplyGenerator
 	private class _StatelessBufferedReplyGenerator[+R <: BufferedReply]
 	(override val settings: ModelSettings, override val contextSizeLimits: ContextSizeLimits,
 	 override val expectedReplySize: Int, override val expectedThinkSize: Int,
-	 override protected val requestExecutor: BufferingChatRequestExecutor[R],
-	 override val thinkingEnabled: Boolean = true)
+	 override val reasoningEffort: Option[ReasoningEffort],
+	 override protected val requestExecutor: BufferingChatRequestExecutor[R])
 	(implicit override val llm: LlmDesignator, override protected val exc: ExecutionContext)
 		extends StatelessBufferedReplyGenerator[R]
 	{
@@ -38,7 +39,7 @@ object StatelessBufferedReplyGenerator
 		
 		override def withLlm(llm: LlmDesignator): StatelessBufferedReplyGenerator[R] =
 			new _StatelessBufferedReplyGenerator[R](settings, contextSizeLimits, expectedReplySize, expectedThinkSize,
-				requestExecutor, thinkingEnabled)(llm, exc)
+				reasoningEffort, requestExecutor)(llm, exc)
 		
 		override def withExpectedReplySize(replySize: Int): StatelessBufferedReplyGenerator[R] = {
 			if (expectedReplySize == replySize)
@@ -58,21 +59,17 @@ object StatelessBufferedReplyGenerator
 		override def withContextSizeLimits(limits: ContextSizeLimits): StatelessBufferedReplyGenerator[R] =
 			copy(contextSizeLimits = limits)
 		
-		override def withThinkingEnabled(enabled: Boolean): StatelessBufferedReplyGenerator[R] = {
-			if (thinkingEnabled == enabled)
-				this
-			else
-				copy(thinkingEnabled = enabled)
-		}
+		override def withReasoningEffort(effort: Option[ReasoningEffort]): StatelessBufferedReplyGenerator[R] =
+			copy(reasoningEffort = effort)
 		
 		
 		// OTHER    ---------------------------
 		
 		private def copy(settings: ModelSettings = settings, contextSizeLimits: ContextSizeLimits = contextSizeLimits,
 		                 expectedReplySize: Int = expectedReplySize, expectedThinkSize: Int = expectedThinkSize,
-		                 thinkingEnabled: Boolean = thinkingEnabled) =
+		                 reasoningEffort: Option[ReasoningEffort] = reasoningEffort) =
 			new _StatelessBufferedReplyGenerator[R](settings, contextSizeLimits, expectedReplySize, expectedThinkSize,
-				requestExecutor, thinkingEnabled)
+				reasoningEffort, requestExecutor)
 	}
 }
 
@@ -80,7 +77,7 @@ object StatelessBufferedReplyGenerator
  * Common trait for interfaces that convert prompts to buffered replies, without using a mutable state.
  * @tparam R Type of the generated replies
  * @author Mikko Hilpinen
- * @since 23.02.2026, v1.4.1
+ * @since 23.02.2026, v1.5
  */
 trait StatelessBufferedReplyGenerator[+R <: BufferedReply]
 	extends StatelessBufferedReplyGeneratorLike[R, StatelessBufferedReplyGenerator[R]]

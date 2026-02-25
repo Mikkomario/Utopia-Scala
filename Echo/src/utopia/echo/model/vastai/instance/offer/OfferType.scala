@@ -3,7 +3,7 @@ package utopia.echo.model.vastai.instance.offer
 /**
  * An enumeration for different types of offers
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait OfferType
 {

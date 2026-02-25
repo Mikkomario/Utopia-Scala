@@ -32,6 +32,6 @@ object DockerImageData extends FromModelFactory[DockerImageData]
  * @param runType How the container is launched (ssh, jupyter, etc.)
  * @param args Arguments passed to the container
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class DockerImageData(uuid: String, runType: RunType = Ssh, args: Seq[String] = Empty)

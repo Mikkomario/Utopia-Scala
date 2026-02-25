@@ -12,7 +12,7 @@ import scala.concurrent.Future
 /**
  * A request used for showing all reserved instances for the user
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 object ShowInstances extends GetRequest[Seq[VastAiInstance]]
 {

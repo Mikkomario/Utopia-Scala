@@ -1,8 +1,9 @@
 package utopia.echo.model.request.ollama
 
+import utopia.echo.model.enumeration.ReasoningEffort
+import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.settings.HasImmutableModelSettings
-import utopia.flow.util.UncertainBoolean
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -25,13 +26,9 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	  */
 	def deprecationView: View[Boolean]
 	/**
-	 * @return Whether to enable thinking / reflection features for LLMs that support it.
-	 *              - true if thinking should be enabled => Yields a separate thinking and text output
-	 *              - false if thinking should be disabled => The LLM should not enter thinking mode
-	 *              - Uncertain if no adjustment should be made =>
-	 *                The LLM may enter thinking mode. Output will be generated as normal text.
+	 * @return Requested reasoning effort. Use SkipReasoning to prevent thinking. None applies the model's default.
 	 */
-	def think: UncertainBoolean
+	def reasoningEffort: Option[ReasoningEffort]
 	
 	/**
 	  * @param llm Targeted LLM
@@ -46,10 +43,10 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	  */
 	def withDeprecationView(condition: View[Boolean]): Repr
 	/**
-	 * @param think Whether to allow, disallow, or not affect LLM thinking
-	 * @return A copy of these parameters with the specified think setting
+	 * @param effort Reasoning effort apply
+	 * @return A copy of these parameters with the specified reasoning effort
 	 */
-	def withThink(think: UncertainBoolean): Repr
+	def withReasoningEffort(effort: ReasoningEffort): Repr
 	
 	
 	// COMPUTED -------------------------
@@ -60,13 +57,9 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	def neverDeprecating = withDeprecationView(AlwaysFalse)
 	
 	/**
-	 * @return A copy of these parameters with thinking explicitly enabled
-	 */
-	def thinking = withThink(true)
-	/**
 	 * @return A copy of these parameters with thinking disabled
 	 */
-	def notThinking = withThink(false)
+	def notThinking = withReasoningEffort(SkipReasoning)
 	
 	
 	// OTHER    -------------------------

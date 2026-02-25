@@ -1,8 +1,8 @@
 package utopia.echo.model.enumeration
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.Steppable
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
@@ -12,7 +12,7 @@ import utopia.flow.operator.sign.Sign
 /**
  * An enumeration for different reasoning effort levels, based on Open AI's system.
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 sealed trait ReasoningEffort
 	extends SelfComparable[ReasoningEffort] with Steppable[ReasoningEffort] with ValueConvertible
@@ -28,6 +28,14 @@ sealed trait ReasoningEffort
 	 * @return 0-based index of this reasoning effort, from least to most
 	 */
 	protected def orderIndex: Int
+	
+	
+	// COMPUTED ------------------------
+	
+	/**
+	 * @return Whether reasoning is enabled when using this effort level
+	 */
+	def reasons = orderIndex >= 0
 	
 	
 	// IMPLEMENTED  --------------------
@@ -54,6 +62,18 @@ object ReasoningEffort
 	// ATTRIBUTES   -----------------
 	
 	val values = Vector[ReasoningEffort](SkipReasoning, Minimal, Low, Medium, High, ExtraHigh)
+	
+	
+	// OTHER    ---------------------
+	
+	/**
+	 * @param key Searched reasoning effort key
+	 * @return A value that matches the specified key. None if no value matched.
+	 */
+	def findForKey(key: String) = {
+		val lower = key.toLowerCase
+		values.find { _.key == lower }
+	}
 	
 	
 	// VALUES   ---------------------

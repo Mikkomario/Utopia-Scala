@@ -13,7 +13,7 @@ import scala.util.{Failure, Success}
 /**
  * Common trait for instances which specify context size limits
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 trait HasContextSizeLimits
 {

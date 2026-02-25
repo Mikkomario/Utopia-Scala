@@ -65,7 +65,7 @@ object BufferedOllamaReply
 	 *                      Should include statistical information, also.
 	 * @return A message read from the specified model. Failure if parsing failed.
 	 */
-	@deprecated("Please use chatResponseParser.apply(HasProperties) instead", "v1.4.1")
+	@deprecated("Please use chatResponseParser.apply(HasProperties) instead", "v1.5")
 	def fromOllamaChatResponse(responseModel: HasProperties) =
 		chatResponseParser(responseModel)
 	

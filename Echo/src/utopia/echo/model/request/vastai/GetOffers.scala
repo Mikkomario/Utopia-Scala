@@ -30,7 +30,7 @@ import scala.concurrent.Future
  * @param deprecationView A view that contains true if this request should be retracted (default = always false)
  * @param noBundling Whether to disable offer bundling
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class GetOffers(allocatedStorageGigas: Int = 8, filters: Seq[SearchFilter] = Empty,
                      order: Seq[(OfferProperty[_], Sign)] = Empty, limit: Option[Int] = None,

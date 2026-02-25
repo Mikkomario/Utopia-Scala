@@ -40,7 +40,7 @@ object Gpu extends FromModelFactoryWithSchema[Gpu]
  * @param availableFraction Fraction of the total GPU resources being offered
  * @param hasActiveDisplay Whether the GPU has an attached display
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class Gpu(architecture: String, name: String, nvidiaDriverVersion: String, computeCapability: Double,
                cudaMaxVersion: Double, ram: ByteCount, ramTotal: ByteCount,

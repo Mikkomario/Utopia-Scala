@@ -3,7 +3,7 @@ package utopia.echo.model.enumeration
 /**
  * An enumeration for different causes of a message completion or end
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
 sealed trait MessageStopReason
 

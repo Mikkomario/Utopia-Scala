@@ -6,8 +6,9 @@ import utopia.annex.schrodinger.Schrodinger
 import utopia.echo.controller.EstimateTokenCount
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.Assistant
-import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
+import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
+import utopia.echo.model.enumeration.{ModelParameter, ReasoningEffort}
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.response.ReplyLike
@@ -119,14 +120,21 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	var expectedThinkSize = 800
 	
 	/**
-	  * A flag that is set when the LLM should be allowed to think.
+	 * A mutable pointer that contains the reasoning effort to request.
+	 * May contain None, in which case the model's default behavior is applied.
+	 *
+	 * Note: Only applies to LLMs that support reasoning / thinking.
+	 */
+	val reasoningEffortPointer = Pointer.eventful.empty[ReasoningEffort]
+	/**
+	  * A flag that is set when the LLM is allowed to think.
 	  * Note: Non-thinking LLMs will ignore this flag.
 	  */
-	val thinkingEnabledFlag = ResettableFlag(initialValue = true)
+	val thinkingEnabledFlag: Flag = reasoningEffortPointer.lightMap { !_.contains(SkipReasoning) }
 	/**
 	  * A flag that contains true while LLM thinking is used
 	  */
-	val thinksFlag = llmPointer.mergeWith(thinkingEnabledFlag) { _.thinks && _ }
+	val thinksFlag: Flag = llmPointer.mergeWith(thinkingEnabledFlag) { _.thinks && _ }
 	
 	/**
 	 * A mutable pointer containing the current message history.
@@ -434,17 +442,21 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	def llm_=(newLlm: LlmDesignator) = llmPointer.value = newLlm
 	
 	/**
+	 * @return Requested reasoning effort. None if model default should be used.
+	 */
+	def reasoningEffort = reasoningEffortPointer.value
+	def reasoningEffort_=(effort: Option[ReasoningEffort]): Unit = reasoningEffortPointer.value = effort
+	def reasoningEffort_=(effort: ReasoningEffort): Unit = reasoningEffortPointer.setOne(effort)
+	/**
 	 * @return Whether the LLM should be allowed to enter thinking mode.
 	 *         Only applies to thinking LLMs.
 	 */
 	def thinkingEnabled = thinkingEnabledFlag.value
-	def thinkingEnabled_=(enabled: Boolean) = thinkingEnabledFlag.value = enabled
 	/**
 	 * @return Whether the LLM should be prevented from entering thinking mode.
 	 *         Only affects thinking LLMs.
 	 */
 	def thinkingDisabled = !thinkingEnabled
-	def thinkingDisabled_=(disabled: Boolean) = thinkingEnabled = !disabled
 	
 	/**
 	  * @return Currently applied system messages
@@ -604,14 +616,14 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 * Context size assigned by default in thinking mode, where the LLM produces reflective content.
 	 * Context size may be increased up to [[maxContextSize]], based on other parameters, however.
 	 */
-	@deprecated("Deprecated for removal", "v1.4.1")
+	@deprecated("Deprecated for removal", "v1.5")
 	def thinkingContextSize = contextSizeLimits.minWithThink
-	@deprecated("Please use setMinthinkingContextSize(Int) instead", "v1.4.1")
+	@deprecated("Please use setMinthinkingContextSize(Int) instead", "v1.5")
 	def thinkingContextSize_=(tokens: Int) = setMinThinkingContextSize(tokens)
 	
-	@deprecated("Renamed to expectedThinkSize", "v1.4.1")
+	@deprecated("Renamed to expectedThinkSize", "v1.5")
 	def additionalThinkingContextSize = expectedThinkSize
-	@deprecated("Renamed to expectedThinkSize", "v1.4.1")
+	@deprecated("Renamed to expectedThinkSize", "v1.5")
 	def additionalThinkingContextSize_=(tokens: Int) = expectedThinkSize = tokens
 	
 	
@@ -639,7 +651,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 		Model.from(
 			"llm" -> llm.llmName, "llmThinks" -> llm.thinks,
 			"expectedReplySize" -> expectedReplySize, "expectedThinkSize" -> expectedThinkSize,
-			"thinkingEnabled" -> thinkingEnabled,
+			"reasoningEffort" -> reasoningEffort,
 			"systemMessages" -> systemMessagesPointer.value,
 			"messageHistory" -> _messageHistoryPointer.value.map { case (message, size) =>
 				message.toModel + Constant("size", size)
@@ -661,6 +673,11 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	
 	
 	// OTHER    -------------------------------
+	
+	/**
+	 * Instructs the model not to enter reasoning mode
+	 */
+	def disableThinking(): Unit = reasoningEffort = SkipReasoning
 	
 	/**
 	  * Adds a new system message at the end of existing custom messages

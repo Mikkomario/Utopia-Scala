@@ -23,8 +23,8 @@ import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Now
+import utopia.flow.util.NotEmpty
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
@@ -139,7 +139,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 		copy.expectedReplySize = expectedReplySize
 		copy.expectedThinkSize = expectedThinkSize
 		
-		copy.thinkingEnabled = thinkingEnabled
+		copy.reasoningEffort = reasoningEffort
 		copy.messageHistoryWithSizes = messageHistoryWithSizes
 		copy.systemMessagesPointer.value = systemMessagesPointer.value
 		copy._lastResultPointer.value = _lastResultPointer.value
@@ -289,7 +289,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 					makeRequest(
 						ChatParams(messages.last,
 							systemMessage.emptyOrSingle ++ messageHistory ++ messages.dropRight(1), tools, settings,
-							think = if (thinkingDisabled && llm.thinks) false else UncertainBoolean),
+							if (llm.thinks) reasoningEffort else None),
 						allowStreaming))
 					.future
 				

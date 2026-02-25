@@ -32,7 +32,7 @@ object ShowInstance
  * @param instanceId ID of the targeted instance
  * @param deprecationView A view that contains true if this request should be retracted. Default = always false.
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class ShowInstance(instanceId: Int, deprecationView: View[Boolean] = AlwaysFalse)
 	extends GetRequest[VastAiInstance]

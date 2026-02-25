@@ -6,6 +6,6 @@ package utopia.echo.model.vastai.instance
  * @param hashId Hash-based ID of this template
  * @param name Name of this template
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class TemplateIdentifier(id: Long, hashId: String, name: String)

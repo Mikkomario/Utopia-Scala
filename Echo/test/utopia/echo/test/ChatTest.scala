@@ -1,6 +1,7 @@
 package utopia.echo.test
 
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.enumeration.ReasoningEffort.Medium
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.test.EchoTestContext._
 import utopia.flow.async.AsyncExtensions._
@@ -167,8 +168,13 @@ object ChatTest extends App
 									}
 							}
 						case 7 =>
-							if (chat.llm.thinks)
-								chat.thinkingEnabledFlag.switch()
+							// TODO: Support different reasoning efforts
+							if (chat.llm.thinks) {
+								if (chat.thinkingEnabled)
+									chat.disableThinking()
+								else
+									chat.reasoningEffort = Medium
+							}
 							else
 								chat.llmPointer.update { _.thinking }
 							println("Settings updated")

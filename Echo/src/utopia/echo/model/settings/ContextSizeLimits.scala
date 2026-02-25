@@ -50,7 +50,7 @@ object ContextSizeLimits extends FromModelFactory[ContextSizeLimits]
  * @param min Smallest used context size. Default = 1024.
  * @param minWithThink Smallest used context size when thinking mode is enabled. Default = 2048.
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class ContextSizeLimits(max: Int = 8192, additional: Int = 256, min: Int = 1024, minWithThink: Int = 2048)
 	extends ModelConvertible

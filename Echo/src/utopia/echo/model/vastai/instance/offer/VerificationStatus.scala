@@ -7,7 +7,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 /**
  * An enumeration for machine verification
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait VerificationStatus extends SelfComparable[VerificationStatus]
 {

@@ -22,7 +22,7 @@ object SearchFilter
  * @param operator Applied operator
  * @param value Value applied to the operator
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class SearchFilter(property: OfferProperty[_], operator: FilterOperator, value: Value)
 {

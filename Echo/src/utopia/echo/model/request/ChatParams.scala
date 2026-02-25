@@ -1,15 +1,16 @@
 package utopia.echo.model.request
 
 import utopia.echo.model.ChatMessage
+import utopia.echo.model.enumeration.ReasoningEffort
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ollama.RequestParams
 import utopia.echo.model.request.ollama.chat.OllamaChatRequest
 import utopia.echo.model.request.openai.GetBufferedOpenAiResponse
 import utopia.echo.model.request.tool.Tool
+import utopia.echo.model.settings.ModelSettings
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.util.{Mutate, UncertainBoolean}
+import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -19,18 +20,17 @@ import utopia.flow.view.immutable.eventful.AlwaysFalse
   * @param conversationHistory Conversation history displayed for the LLM (default = empty)
   * @param tools Tools made available to the LLM (default = empty)
   * @param settings Behavioral settings (default = empty)
-  * @param deprecationView A view which contains true if the request gets deprecated.
+  * @param reasoningEffort Requested reasoning effort. None if the model's default should be used.
+ * @param deprecationView A view which contains true if the request gets deprecated.
   *                        Only tacked until a request is sent.
   *                        Default = never deprecated.
-  * @param think Whether thinking should be enabled (true), disabled (false) or left untouched (uncertain).
- *              Default = left untouched.
  * @param llm Targeted LLM (implicit)
   * @author Mikko Hilpinen
   * @since 31.08.2024, v1.1
   */
 case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage] = Empty, tools: Seq[Tool] = Empty,
-                      settings: ModelSettings = ModelSettings.empty, deprecationView: View[Boolean] = AlwaysFalse,
-                      think: UncertainBoolean = UncertainBoolean)
+                      settings: ModelSettings = ModelSettings.empty, reasoningEffort: Option[ReasoningEffort] = None,
+                      deprecationView: View[Boolean] = AlwaysFalse)
                      (implicit override val llm: LlmDesignator)
 	extends RequestParams[ChatParams]
 {
@@ -57,7 +57,7 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	override def toLlm(llm: LlmDesignator): ChatParams = copy()(llm = llm)
 	override def withSettings(settings: ModelSettings): ChatParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]): ChatParams = copy(deprecationView = condition)
-	override def withThink(think: UncertainBoolean): ChatParams = copy(think = think)
+	override def withReasoningEffort(effort: ReasoningEffort): ChatParams = copy(reasoningEffort = Some(effort))
 	
 	
 	// OTHER    ------------------------------

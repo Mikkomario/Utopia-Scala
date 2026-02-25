@@ -5,7 +5,7 @@ import utopia.flow.util.Mutate
 /**
  * Common trait for immutable, yet copyable interfaces that specify context size limits
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 trait HasImmutableContextSizeLimits[+Repr] extends HasContextSizeLimits
 {

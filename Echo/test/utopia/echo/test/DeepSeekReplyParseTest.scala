@@ -5,7 +5,7 @@ import utopia.echo.model.response.openai.BufferedOpenAiReply
 
 /**
  * @author Mikko Hilpinen
- * @since 30.01.2026, v1.4.1
+ * @since 30.01.2026, v1.5
  */
 object DeepSeekReplyParseTest extends App
 {

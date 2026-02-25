@@ -6,6 +6,8 @@ import utopia.echo.controller.client.{LlmServiceClient, OllamaClient}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.deepseek.BufferedDeepSeekChatRequest
 import utopia.echo.model.request.ollama.chat.BufferedOllamaChatRequest
+import utopia.echo.model.request.openai.BufferedOpenAiChatCompletionRequest
+import utopia.echo.model.request.vllm.BufferedVllmChatCompletionRequest
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -26,12 +28,26 @@ object BufferingChatRequestExecutor
 	// OTHER    ---------------------------
 	
 	/**
+	 * @param client Open AI client instance
+	 * @param exc Implicit execution context
+	 * @return An interface for executing buffered chat completion requests
+	 */
+	def openAi(client: LlmServiceClient)(implicit exc: ExecutionContext) =
+		queueing(client)(BufferedOpenAiChatCompletionRequest.apply)
+	/**
 	 * @param client DeepSeek client instance
 	 * @param exc Implicit execution context
 	 * @return A new interface for executing buffered DeepSeek requests
 	 */
 	def deepSeek(client: LlmServiceClient)(implicit exc: ExecutionContext) =
 		queueing(client)(BufferedDeepSeekChatRequest.apply)
+	/**
+	 * @param client A client instance for connecting to a vLLM server
+	 * @param exc Implicit execution context
+	 * @return A new interface for executing buffered requests using vLLM
+	 */
+	def vllm(client: LlmServiceClient)(implicit exc: ExecutionContext) =
+		queueing(client)(BufferedVllmChatCompletionRequest.apply)
 	
 	/**
 	 * @param queue Request queue to use
@@ -103,7 +119,7 @@ object BufferingChatRequestExecutor
 /**
  * Common trait for interfaces which perform some kind of chat requests
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 trait BufferingChatRequestExecutor[+R]
 {

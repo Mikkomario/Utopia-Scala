@@ -30,6 +30,6 @@ object Cpu extends FromModelFactoryWithSchema[Cpu]
  * @param effectiveCoreCount Number of CPU cores offered / available for utilization
  * @param ram Amount of available RAM
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 case class Cpu(architecture: String, name: String, coreCount: Int, effectiveCoreCount: Double, ram: ByteCount)

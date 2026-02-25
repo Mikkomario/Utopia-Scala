@@ -8,7 +8,7 @@ import scala.language.implicitConversions
 /**
  * An enumeration for different filter operators supported by Vast AI
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait FilterOperator
 {

@@ -3,6 +3,7 @@ package utopia.echo.controller.chat
 import utopia.annex.model.request.ApiRequest
 import utopia.echo.controller.client.OllamaClient
 import utopia.echo.model.ChatMessage
+import utopia.echo.model.enumeration.ReasoningEffort
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.tool.ToolFactory
@@ -47,7 +48,7 @@ object OllamaChat
 			
 			model("expectedReplySize").int.foreach { chat.expectedReplySize = _ }
 			model("expectedThinkSize").int.foreach { chat.expectedThinkSize = _ }
-			model("thinkingEnabled").boolean.foreach { chat.thinkingEnabled = _ }
+			model("reasoningEffort").string.flatMap(ReasoningEffort.findForKey).foreach { chat.reasoningEffort = _ }
 			
 			model("systemMessages").vector.filter { _.nonEmpty }.foreach { messages =>
 				chat.systemMessages = messages.flatMap { _.string }

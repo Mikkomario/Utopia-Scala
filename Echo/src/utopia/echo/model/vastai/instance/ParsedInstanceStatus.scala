@@ -14,7 +14,7 @@ object ParsedInstanceStatus
  * @param value The interpreted / parsed status value
  * @param raw The raw status value
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class ParsedInstanceStatus(value: InstanceState, raw: String)
 {

@@ -8,7 +8,7 @@ import utopia.flow.util.logging.Logger
 
 /**
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 package object client
 {

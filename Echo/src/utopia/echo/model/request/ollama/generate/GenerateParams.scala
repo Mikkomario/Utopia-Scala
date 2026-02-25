@@ -1,9 +1,12 @@
 package utopia.echo.model.request.ollama.generate
 
+import utopia.echo.model.enumeration.ReasoningEffort
+import utopia.echo.model.enumeration.ReasoningEffort.{Medium, SkipReasoning}
 import utopia.echo.model.llm.LlmDesignator
-import utopia.echo.model.settings.ModelSettings
 import utopia.echo.model.request.ollama.RequestParams
+import utopia.echo.model.settings.ModelSettings
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.UncertainBoolean.{CertainlyFalse, CertainlyTrue}
 import utopia.flow.util.{Mutate, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -44,14 +47,25 @@ case class GenerateParams(query: Query, settings: ModelSettings = ModelSettings.
 	
 	// IMPLEMENTED  ---------------------
 	
+	override def reasoningEffort: Option[ReasoningEffort] = think match {
+		case UncertainBoolean => None
+		case CertainlyTrue => Some(Medium)
+		case CertainlyFalse => Some(SkipReasoning)
+	}
+	
 	override def toLlm(llm: LlmDesignator) = copy()(llm = llm)
 	override def withSettings(settings: ModelSettings): GenerateParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]) = copy(deprecationView = condition)
-	override def withThink(think: UncertainBoolean): GenerateParams = copy(think = think)
+	override def withReasoningEffort(effort: ReasoningEffort): GenerateParams = withThink(effort != SkipReasoning)
 	
 	
 	// OTHER    -------------------------
 	
+	/**
+	 * @param think Whether thinking should be enabled
+	 * @return A copy of these parameters with the specified setting
+	 */
+	def withThink(think: UncertainBoolean): GenerateParams = copy(think = think)
 	/**
 	  * @param context New conversation context to assign
 	  * @return Copy of these parameters with the specified context

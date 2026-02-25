@@ -83,7 +83,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
  * @param ssh Information for forming an SSH connection, if applicable
  * @param jupyterToken Token for Jupyter, if applicable
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class VastAiInstance(id: Int, offer: Offer, status: InstanceStatus,
                           clientRunTime: Duration, hostRunTime: Duration, creditBalance: Option[Double] = None,

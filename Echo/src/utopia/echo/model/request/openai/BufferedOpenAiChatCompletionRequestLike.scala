@@ -5,8 +5,6 @@ import utopia.access.model.enumeration.Method.Post
 import utopia.annex.model.request.ApiRequest
 import utopia.disciple.model.request.Body
 import utopia.echo.model.enumeration.ModelParameter._
-import utopia.echo.model.enumeration.ReasoningEffort
-import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.settings.{HasImmutableModelSettings, ModelSettings}
 import utopia.flow.generic.casting.ValueConversions._
@@ -15,7 +13,7 @@ import utopia.flow.generic.model.immutable.{Model, Value}
 /**
  * Common trait for requests for a buffered chat message response using the /chat/completions API endpoint
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
 // TODO: Add support for tool_choice (see: https://api-docs.deepseek.com/api/create-chat-completion)
 trait BufferedOpenAiChatCompletionRequestLike[+Reply, +Repr]
@@ -27,12 +25,6 @@ trait BufferedOpenAiChatCompletionRequestLike[+Reply, +Repr]
 	 * @return Applied request parameters
 	 */
 	def params: ChatParams
-	
-	/**
-	 * @return Applied reasoning effort.
-	 *         NB: Overridden with "none" if thinking is expressly disabled.
-	 */
-	def reasoningEffort: Option[ReasoningEffort]
 	
 	/**
 	 * Allows the implementing class to modify the request body before sending it
@@ -47,13 +39,13 @@ trait BufferedOpenAiChatCompletionRequestLike[+Reply, +Repr]
 	override def method: Method = Post
 	override def path: String = "chat/completions"
 	override def pathParams: Model = Model.empty
+	override def deprecated: Boolean = params.deprecationView.value
 	
 	override def body: Either[Value, Body] = {
-		val appliedReasoningEffort = if (params.think.isCertainlyFalse) Some(SkipReasoning) else reasoningEffort
 		Left(finalizeBody(Model
 			.from(
 				"messages" -> params.messages, "model" -> params.llm.llmName,
-				"reasoning_effort" -> appliedReasoningEffort,
+				"reasoning_effort" -> params.reasoningEffort,
 				"frequency_penalty" -> params.get(FrequencyPenalty), "max_tokens" -> params.get(PredictTokens),
 				"presence_penalty" -> params.get(PresencePenalty), "stop" -> params.get(Stop), "stream" -> false,
 				"temperature" -> params.get(Temperature), "top_p" -> params.get(TopP), "tools" -> params.tools

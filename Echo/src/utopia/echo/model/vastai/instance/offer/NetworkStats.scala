@@ -47,6 +47,6 @@ object NetworkStats
  * @param speedMBs Network speed in MB/s
  * @param costPerGbPerS Network usage cost in $/GB/s
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class NetworkStats(speedMBs: Double, costPerGbPerS: Double)

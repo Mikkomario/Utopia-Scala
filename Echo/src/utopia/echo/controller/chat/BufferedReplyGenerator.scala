@@ -23,7 +23,7 @@ object BufferedReplyGenerator
  * A common interface for chat interfaces that convert prompts into responses in a non-streaming manner
  * @tparam R Type of the generated replies
  * @author Mikko Hilpinen
- * @since 23.02.2026, v1.4.1
+ * @since 23.02.2026, v1.5
  */
 trait BufferedReplyGenerator[+R]
 {

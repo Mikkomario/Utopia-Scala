@@ -68,7 +68,7 @@ object AcceptOffer
  * @param useJupyterLab Whether to launch instance with jupyter lab instead of notebook
  * @param targetStopped Whether the desired initial state of the instance is "stopped". Default = false.
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class AcceptOffer(offerId: Int, templateHashId: String, image: String = "", runType: RunType = Ssh,
                        env: Model = Model.empty, label: String = "", bidPrice: Option[Double] = None,

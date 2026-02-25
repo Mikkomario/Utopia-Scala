@@ -20,9 +20,9 @@ import scala.util.Try
  * @param client LLM service -client utilized
  * @param initialLlm Initially used LLM
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
-@deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.4.1")
+@deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.5")
 class OpenAiChat(client: LlmServiceClient, initialLlm: LlmDesignator)
                 (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
 	extends AbstractChat[ReplyLike[OpenAiResponse], OpenAiResponse, OpenAiChat](client, initialLlm,

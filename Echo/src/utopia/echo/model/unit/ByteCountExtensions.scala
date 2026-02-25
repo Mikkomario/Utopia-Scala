@@ -5,7 +5,7 @@ import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes, TeraBy
 /**
  * Provides utility functions for constructing byte counts
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 object ByteCountExtensions
 {

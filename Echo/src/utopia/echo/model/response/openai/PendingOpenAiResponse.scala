@@ -16,7 +16,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Represents a pending Open AI response. Does not implement streaming at this time.
  * @author Mikko Hilpinen
- * @since 29.01.2026, v1.4.1
+ * @since 29.01.2026, v1.5
  */
 // TODO: Possibly remove this class
 class PendingOpenAiResponse(override val future: Future[Try[OpenAiResponse]])

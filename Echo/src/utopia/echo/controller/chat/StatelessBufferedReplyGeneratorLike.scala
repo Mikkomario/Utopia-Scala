@@ -3,6 +3,8 @@ package utopia.echo.controller.chat
 import utopia.echo.controller.EstimateTokenCount
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.User
+import utopia.echo.model.enumeration.ReasoningEffort
+import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.BufferedReply
@@ -10,7 +12,6 @@ import utopia.echo.model.settings.{HasImmutableContextSizeLimits, HasImmutableMo
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.util.UncertainBoolean
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -20,7 +21,7 @@ import scala.util.{Failure, Success, Try}
  * @tparam R Type of the generated replies
  * @tparam Repr Implementing type
  * @author Mikko Hilpinen
- * @since 23.02.2026, v1.4.1
+ * @since 23.02.2026, v1.5
  */
 trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	extends BufferedReplyGenerator[R] with HasImmutableModelSettings[Repr] with HasImmutableContextSizeLimits[Repr]
@@ -52,9 +53,9 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	protected def requestExecutor: BufferingChatRequestExecutor[R]
 	
 	/**
-	 * @return Whether the LLM should be allowed to enter thinking / reflecting mode, if such feature is present
+	 * @return Requested reasoning effort. None if model default should be used.
 	 */
-	def thinkingEnabled: Boolean
+	def reasoningEffort: Option[ReasoningEffort]
 	
 	/**
 	 * @param llm Identifier of the LLM to use
@@ -72,22 +73,27 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 */
 	def withExpectedThinkSize(thinkSize: Int): Repr
 	/**
-	 * @param enabled Whether the LLM should be allowed to enter into thinking / reflective mode
-	 * @return A copy of this generator using the specified setting
+	 * @param effort Reasoning effort to request. None if model default should be applied.
+	 * @return A copy of this generator requesting the specified reasoning effort.
 	 */
-	def withThinkingEnabled(enabled: Boolean): Repr
+	def withReasoningEffort(effort: Option[ReasoningEffort]): Repr
 	
 	
 	// COMPUTED --------------------------
 	
 	/**
+	 * @return Whether the LLM is explicitly requested to skip thinking / reflecting mode, if such feature is present
+	 */
+	def thinkingDisabled: Boolean = reasoningEffort.contains(SkipReasoning)
+	/**
+	 * @return Whether the LLM should be allowed to enter thinking / reflecting mode, if such feature is present
+	 */
+	def thinkingEnabled = !thinkingDisabled
+	
+	/**
 	 * @return A copy of this interface with thinking mode explicitly disabled
 	 */
-	def notThinking = withThinkingEnabled(false)
-	/**
-	 * @return A copy of this interface with thinking mode enabled
-	 */
-	def thinking = withThinkingEnabled(true)
+	def notThinking = withReasoningEffort(SkipReasoning)
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -101,6 +107,12 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	
 	
 	// OTHER    --------------------------
+	
+	/**
+	 * @param effort Reasoning effort to request.
+	 * @return A copy of this generator requesting the specified reasoning effort.
+	 */
+	def withReasoningEffort(effort: ReasoningEffort): Repr = withReasoningEffort(Some(effort))
 	
 	/**
 	 * @param message A message / prompt to send out
@@ -122,7 +134,7 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 		appliedSettings match {
 			case Success(settings) =>
 				val resultFuture = requestExecutor(ChatParams(User(message), conversationHistory = history,
-					settings = settings, think = if (llm.thinks) thinkingEnabled else UncertainBoolean))
+					settings = settings, reasoningEffort = if (llm.thinks) reasoningEffort else None))
 				// Updates the token count estimator based on the acquired reply
 				resultFuture.forSuccess { reply =>
 					EstimateTokenCount.feedback(lazyTokenUsage.value.newMessages, reply.tokenUsage.input)

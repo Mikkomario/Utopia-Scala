@@ -6,7 +6,7 @@ import utopia.flow.operator.enumeration.Binary
 /**
  * An enumeration for different network traffic directions (i.e. download & upload)
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 sealed trait NetworkTrafficDirection extends Binary[NetworkTrafficDirection]
 {

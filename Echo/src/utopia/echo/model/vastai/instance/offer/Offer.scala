@@ -75,7 +75,7 @@ object Offer extends FromModelFactory[Offer]
  * @param rented Whether you've already rented this machine
  * @param hasStaticIp Whether this machine has a static IP address
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class Offer(id: Long, machineId: Int, hostId: Long, cost: MachineCost, cpu: Cpu, gpu: Gpu,
                  network: Map[NetworkTrafficDirection, NetworkStats],

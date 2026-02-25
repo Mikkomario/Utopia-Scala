@@ -20,7 +20,7 @@ object InstanceStatus extends SureFromModelFactory[InstanceStatus]
  * @param next Next scheduled state for the machine contract
  * @param message Status message for the instance
  * @author Mikko Hilpinen
- * @since 24.02.2026, v1.4.1
+ * @since 24.02.2026, v1.5
  */
 case class InstanceStatus(actual: ParsedInstanceStatus, intended: ParsedInstanceStatus,
                           current: ParsedInstanceStatus, next: ParsedInstanceStatus, message: String = "")

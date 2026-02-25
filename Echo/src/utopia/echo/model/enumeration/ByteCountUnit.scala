@@ -6,7 +6,7 @@ import utopia.flow.operator.ordering.SelfComparable
 /**
  * An enumeration for different byte count units (MB, GB, etc.)
  * @author Mikko Hilpinen
- * @since 25.02.2026, v1.4.1
+ * @since 25.02.2026, v1.5
  */
 sealed trait ByteCountUnit extends SelfComparable[ByteCountUnit]
 {
