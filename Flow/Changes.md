@@ -139,6 +139,7 @@
   - Added `.opposite`, `.onlyIf(...)` and `.unless(...)`
   - Added `++`
 - **Changing**
+  - Added `.finalValueFuture`
   - Added `.addLowPriorityListener(...)`
 - **Constant** (object)
   - Added `.lazily(...)`
@@ -169,6 +170,8 @@
   - Added `.resettable` and `.volatile(...)` for constructing different **Lazy** types
 - **Lockable**
   - Added `.failIfLocked(...)` and `.ifUnlocked(...)`
+- **LockableFlag**
+  - Added `.trySet()`
 - **Map** (via **CollectionExtensions**)
   - Added `.mapInputView(...)` and `.flatMapInputView(...)`
 - **MapAccess** (object)

@@ -104,6 +104,11 @@ class OnceFlatteningPointer[A](placeholderValue: A) extends Changing[A]
 			}
 	}
 	
+	override def finalValueFuture: Future[A] = pointer match {
+		case Some(p) => p.finalValueFuture
+		case None => super.finalValueFuture
+	}
+	
 	override def toString = pointer match {
 		case Some(p) => p.toString
 		case None => s"Flattening.once.from($placeholderValue)"

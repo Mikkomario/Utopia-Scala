@@ -13,6 +13,16 @@ sealed trait InstanceState
 	 * @return Keys used for this status by Vast AI
 	 */
 	def keys: Seq[String]
+	
+	/**
+	 * @return Whether the instance is (technically) usable in this state
+	 */
+	def instanceIsUsable: Boolean
+	/**
+	 * @return Whether the instance should be continued to be used in this state.
+	 *         False if the instance is unusable OR if the instance may become unusable in the near future.
+	 */
+	def instanceShouldBeUsed: Boolean
 }
 
 object InstanceState
@@ -45,6 +55,8 @@ object InstanceState
 	case object Loading extends InstanceState
 	{
 		override val keys: Seq[String] = Pair("creating", "loading")
+		override val instanceIsUsable: Boolean = false
+		override val instanceShouldBeUsed: Boolean = false
 	}
 	/**
 	 * State when the instance is usable
@@ -52,6 +64,8 @@ object InstanceState
 	case object Active extends InstanceState
 	{
 		override val keys: Seq[String] = Vector("running", "open", "connect")
+		override val instanceIsUsable: Boolean = true
+		override val instanceShouldBeUsed: Boolean = true
 	}
 	/**
 	 * State once the instance has been stopped / deactivated. Still preserves data & incurs costs.
@@ -59,6 +73,8 @@ object InstanceState
 	case object Stopped extends InstanceState
 	{
 		override val keys: Seq[String] = Pair("stopped", "inactive")
+		override val instanceIsUsable: Boolean = false
+		override val instanceShouldBeUsed: Boolean = false
 	}
 	
 	/**
@@ -67,6 +83,8 @@ object InstanceState
 	case object Disconnected extends InstanceState
 	{
 		override val keys: Seq[String] = Pair("offline", "connecting")
+		override val instanceIsUsable: Boolean = false
+		override val instanceShouldBeUsed: Boolean = false
 	}
 	
 	/**
@@ -75,6 +93,8 @@ object InstanceState
 	case object Restarting extends InstanceState
 	{
 		override val keys: Seq[String] = Vector("scheduling", "rebooting", "recycling")
+		override val instanceIsUsable: Boolean = true
+		override val instanceShouldBeUsed: Boolean = false
 	}
 	
 	/**
@@ -84,5 +104,7 @@ object InstanceState
 	case class Unknown(status: String) extends InstanceState
 	{
 		override def keys: Seq[String] = Single(status)
+		override val instanceIsUsable: Boolean = true
+		override val instanceShouldBeUsed: Boolean = false
 	}
 }

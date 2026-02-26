@@ -5,7 +5,7 @@ import utopia.flow.event.model.{ChangeEvent, ChangeResponsePriority, Destiny}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 object ChangingWrapper
 {
@@ -50,6 +50,8 @@ trait ChangingWrapper[+A] extends Changing[A]
 	
 	override def hasListeners: Boolean = wrapped.hasListeners
 	override def numberOfListeners: Int = wrapped.numberOfListeners
+	
+	override def finalValueFuture: Future[A] = wrapped.finalValueFuture
 	
 	override def lockWhile[B](operation: => B): B = wrapped.lockWhile(operation)
 	override def viewLocked[B](operation: A => B): B = wrapped.viewLocked(operation)

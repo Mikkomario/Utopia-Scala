@@ -17,6 +17,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
+import utopia.flow.view.mutable.eventful.AssignableOnce
 import utopia.flow.view.template.SynchronizedView
 import utopia.flow.view.template.eventful.Flag.wrap
 
@@ -627,6 +628,20 @@ trait Changing[+A] extends SynchronizedView[A]
 		// Case: It's impossible for this pointer to change anymore => Returns a future that never resolves
 		else
 			Future.never
+	}
+	/**
+	 * @return A future that resolves once/if this pointer stops changing,
+	 *         and will contain the final value of this pointer.
+	 *
+	 *         Note: If this pointer's destiny is [[ForeverFlux]], this future will never resolve.
+	 */
+	def finalValueFuture = destiny match {
+		case Sealed => Future.successful(value)
+		case MaySeal =>
+			val pointer = AssignableOnce[A]()
+			addChangingStoppedListener { pointer.set(value) }
+			pointer.future
+		case ForeverFlux => Future.never
 	}
 	
 	/**

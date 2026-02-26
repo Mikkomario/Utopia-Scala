@@ -3,6 +3,12 @@ package utopia.echo.model.vastai.instance
 object ParsedInstanceStatus
 {
 	/**
+	 * @param state An instance state
+	 * @return Instance status based on that state
+	 */
+	def apply(state: InstanceState): ParsedInstanceStatus = apply(state, state.keys.head)
+	
+	/**
 	 * @param raw An instance status as a String
 	 * @return Parsed instance status
 	 */

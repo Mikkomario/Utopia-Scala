@@ -6,6 +6,8 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.{Fixed, FlagView}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Flag}
 
+import scala.concurrent.Future
+
 object LockableFlag
 {
 	// COMPUTED -----------------------------
@@ -38,6 +40,8 @@ object LockableFlag
 		private var _locked = false
 		
 		override lazy val view: Flag = new FlagView(this)
+		
+		override lazy val finalValueFuture: Future[Boolean] = super.finalValueFuture
 		
 		
 		// IMPLEMENTED  ---------------------
@@ -107,3 +111,14 @@ object LockableFlag
   * @since 30.03.2025, v2.6
   */
 trait LockableFlag extends SettableFlag with Lockable[Boolean]
+{
+	/**
+	 * Attempts to set this flag, but only if it's unlocked.
+	 * @return True if this flag was not locked and not set.
+	 */
+	def trySet() = {
+		var wasModified = false
+		ifUnlocked { wasModified = set() }
+		wasModified
+	}
+}

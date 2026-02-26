@@ -2,6 +2,7 @@ package utopia.echo.model.vastai.instance
 
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.view.template.Extender
 
 object InstanceStatus extends SureFromModelFactory[InstanceStatus]
 {
@@ -24,6 +25,9 @@ object InstanceStatus extends SureFromModelFactory[InstanceStatus]
  */
 case class InstanceStatus(actual: ParsedInstanceStatus, intended: ParsedInstanceStatus,
                           current: ParsedInstanceStatus, next: ParsedInstanceStatus, message: String = "")
+	extends Extender[InstanceState]
 {
+	override def wrapped: InstanceState = actual.value
+	
 	override def toString: String = if (message.isEmpty) actual.toString else s"$actual: $message"
 }

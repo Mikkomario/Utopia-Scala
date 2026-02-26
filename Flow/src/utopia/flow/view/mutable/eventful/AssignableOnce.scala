@@ -11,7 +11,7 @@ import utopia.flow.view.mutable.MaybeAssignable
 import utopia.flow.view.template.MaybeSet
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, MayStopChanging}
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 
 object AssignableOnce
 {
@@ -159,6 +159,18 @@ trait AssignableOnce[A]
 	
 	override def isSet: Boolean = value.isDefined
 	override def destiny: Destiny = if (isSet) Sealed else MaySeal
+	
+	override def finalValueFuture: Future[Option[A]] = {
+		value match {
+			case Some(value) => Future.successful(Some(value))
+			case None =>
+				val promise = Promise[Option[A]]()
+				addListenerAndSimulateEvent(None) { e =>
+					e.newValue.foreach { value => promise.trySuccess(Some(value)) }
+				}
+				promise.future
+		}
+	}
 	
 	@throws[IllegalStateException]("If this pointer has already been set")
 	override def value_=(newValue: Option[A]) = newValue match {

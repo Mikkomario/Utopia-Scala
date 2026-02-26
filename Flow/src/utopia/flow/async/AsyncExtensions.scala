@@ -210,37 +210,39 @@ object AsyncExtensions
 		  *         The resulting future will fail if both of these futures fail.
 		 */
 		def raceWith[B >: A](other: => Future[B])(implicit exc: ExecutionContext): Future[B] = {
-			lazy val o = other
 			// Case: This already completed => Returns this
 			if (wrapped.hasSucceeded)
 				wrapped
-			// Case: Other already completed => Returns the other
-			else if (o.hasSucceeded)
-				o
-			// Case: Neither completed => Waits
 			else {
-				_mergeWith(o) { (a, b) =>
-					a match {
-						case Some(resultA) =>
-							resultA match {
-								// Case: This succeeded => Returns this
-								case Success(a) => Some(a)
-								case Failure(error) =>
-									b.map {
-										// Case: This failed but other succeeded => Returns other
-										case Success(b) => b
-										// Case: Both failed => Throws
-										case Failure(_) => throw error
-									}
-							}
-						case None =>
-							b match {
-								// Case: Other succeeded => Returns other
-								case Some(Success(b)) => Some(b)
-								case _ => None
-							}
+				val _other = other
+				// Case: Other already completed => Returns the other
+				if (_other.hasSucceeded)
+					_other
+				// Case: Neither completed => Waits
+				else
+					_mergeWith(_other) { (a, b) =>
+						a match {
+							case Some(resultA) =>
+								resultA match {
+									// Case: This succeeded => Returns this
+									case Success(a) => Some(a)
+									case Failure(error) =>
+										b.map {
+											// Case: This failed but other succeeded => Returns other
+											case Success(b) => b
+											// Case: Both failed => Throws
+											case Failure(_) => throw error
+										}
+								}
+							case None =>
+								b match {
+									// Case: Other succeeded => Returns other
+									case Some(Success(b)) => Some(b)
+									// Case: Neither completed yet
+									case _ => None
+								}
+						}
 					}
-				}
 			}
 		}
 		

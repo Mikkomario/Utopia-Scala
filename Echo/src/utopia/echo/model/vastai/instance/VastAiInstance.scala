@@ -14,10 +14,11 @@ import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.Duration
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.view.template.Extender
 
+import java.time.Instant
 import scala.util.Try
 
 object VastAiInstance extends FromModelFactory[VastAiInstance]
@@ -82,6 +83,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
  * @param otherPorts Other ports that are available
  * @param ssh Information for forming an SSH connection, if applicable
  * @param jupyterToken Token for Jupyter, if applicable
+ * @param timestamp Timestamp of when this instance state was acquired. Default = now.
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
@@ -95,7 +97,7 @@ case class VastAiInstance(id: Int, offer: Offer, status: InstanceStatus,
                           diskUsageRatio: Option[Double] = None,
                           localIpAddresses: Seq[String] = Empty, publicIpAddress: String = "",
                           directPortRange: Option[IntSpan] = None, otherPorts: Seq[Int] = Empty,
-                          ssh: Option[SshConnection] = None, jupyterToken: String = "")
+                          ssh: Option[SshConnection] = None, jupyterToken: String = "", timestamp: Instant = Now)
 	extends Extender[Offer]
 {
 	override def wrapped: Offer = offer

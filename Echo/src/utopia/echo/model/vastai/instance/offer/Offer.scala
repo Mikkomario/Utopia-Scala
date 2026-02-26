@@ -83,3 +83,13 @@ case class Offer(id: Long, machineId: Int, hostId: Long, cost: MachineCost, cpu:
                  duration: Duration, timespan: Span[Instant],
                  verification: VerificationStatus = Unverified, bundleId: Option[Int] = None, rentable: Boolean = true,
                  rented: Boolean = false, hasStaticIp: Boolean = false)
+{
+	/**
+	 * @return Time when this offer started or was published
+	 */
+	def started: Instant = timespan.start
+	/**
+	 * @return Time when this offer expires / ends
+	 */
+	def ends: Instant = timespan.end
+}
