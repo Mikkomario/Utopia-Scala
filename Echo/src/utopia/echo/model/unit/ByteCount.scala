@@ -1,6 +1,7 @@
 package utopia.echo.model.unit
 
 import utopia.echo.model.enumeration.ByteCountUnit
+import utopia.flow.operator.combine.Combinable.SelfCombinable
 
 /**
  * Used for measuring volume or traffic in bytes
@@ -9,7 +10,7 @@ import utopia.echo.model.enumeration.ByteCountUnit
  * @author Mikko Hilpinen
  * @since 25.02.2026, v1.5
  */
-case class ByteCount(amount: Int, unit: ByteCountUnit)
+case class ByteCount(amount: Int, unit: ByteCountUnit) extends SelfCombinable[ByteCount]
 {
 	// COMPUTED --------------------
 	
@@ -23,11 +24,24 @@ case class ByteCount(amount: Int, unit: ByteCountUnit)
 	def gigas = amount * unit.toGigaMultiplier
 	
 	
+	// IMPLEMENTED  ---------------
+	
+	override def +(other: ByteCount): ByteCount = {
+		val appliedUnit = unit min other.unit
+		ByteCount((to(appliedUnit) + other.to(appliedUnit)).round.toInt, appliedUnit)
+	}
+	
+	
 	// OTHER    -------------------
 	
 	/**
 	 * @param unit Targeted unit
 	 * @return This amount in that unit
 	 */
-	def to(unit: ByteCountUnit) = amount * this.unit.multiplierTo(unit)
+	def to(unit: ByteCountUnit) = {
+		if (unit == this.unit)
+			amount
+		else
+			amount * this.unit.multiplierTo(unit)
+	}
 }

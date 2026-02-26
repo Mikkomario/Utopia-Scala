@@ -25,6 +25,31 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
+object VastAiProcess
+{
+	/**
+	 * Creates a new process for managing Vast AI.
+	 * Note: This process is not started automatically.
+	 * @param statusUpdateInterval Interval between instance pointer / instance state updates.
+	 *                             Default = 10 seconds.
+	 * @param maxConsecutiveStatusCheckFailures Maximum number of consecutive GET instance request failures,
+	 *                                          the instance is automatically destroyed.
+	 *                                          Default = None = No limit on request failures.
+	 * @param acquireInstance A function called when this process starts.
+	 *                        Accepts a flag that is set to true if stop() is called for this process.
+	 *                        Acquires an instance (ID) to use.
+	 *                        May yield a failure, in which case this process terminates in state [[Failed]].
+	 * @param exc Implicit execution context
+	 * @param log Implicit logging implementation
+	 * @param client Implicit Vast AI client interface
+	 * @return A new process
+	 */
+	def apply(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveStatusCheckFailures: Option[Int] = None)
+	         (acquireInstance: Flag => Future[Try[Int]])
+	         (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient) =
+		new VastAiProcess(statusUpdateInterval, maxConsecutiveStatusCheckFailures)(acquireInstance)
+}
+
 /**
  * Represents the process of temporarily renting and utilizing a machine / GPU.
  * This process is single-use only. Unless a failure is encountered, it will remain active until [[stop]] is called.
@@ -32,15 +57,15 @@ import scala.util.{Failure, Success, Try}
  * @param maxConsecutiveStatusCheckFailures Maximum number of consecutive GET instance request failures,
  *                                          the instance is automatically destroyed.
  *                                          Default = None = No limit on request failures.
- * @param rentNewInstance A function called when this process starts.
+ * @param acquireInstance A function called when this process starts.
  *                        Accepts a flag that is set to true if stop() is called for this process.
- *                        Acquires an instance (ID) to use.
+ *                        Yields the ID of the instance to use.
  *                        May yield a failure, in which case this process terminates in state [[Failed]].
  * @author Mikko Hilpinen
  * @since 25.02.2026, v1.5
  */
 class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveStatusCheckFailures: Option[Int] = None)
-                   (rentNewInstance: Flag => Future[Try[Int]])
+                   (acquireInstance: Flag => Future[Try[Int]])
                    (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
@@ -91,7 +116,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 		startTime = Now
 		// Acquires a new instance (blocks extensively)
 		_stateP.value = Starting
-		instanceIdFutureP.setOne(rentNewInstance(hurryFlag)).waitForResult() match {
+		instanceIdFutureP.setOne(acquireInstance(hurryFlag)).waitForResult() match {
 			case Success(instanceId) =>
 				// Prepares to terminate the contract once this process completes or is requested to stop,
 				// or if the instance becomes inaccessible

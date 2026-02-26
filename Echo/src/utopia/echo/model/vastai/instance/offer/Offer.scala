@@ -77,7 +77,7 @@ object Offer extends FromModelFactory[Offer]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class Offer(id: Long, machineId: Int, hostId: Long, cost: MachineCost, cpu: Cpu, gpu: Gpu,
+case class Offer(id: Int, machineId: Int, hostId: Long, cost: MachineCost, cpu: Cpu, gpu: Gpu,
                  network: Map[NetworkTrafficDirection, NetworkStats],
                  performance: MachinePerformance, reliability: Double, score: Double, location: String,
                  duration: Duration, timespan: Span[Instant],
