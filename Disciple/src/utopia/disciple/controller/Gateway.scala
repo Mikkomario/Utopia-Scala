@@ -151,7 +151,7 @@ object Gateway
   *                                      If you wish to fix these errors properly instead, please check:
   *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 **/
-class Gateway(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
+class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
               maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
               parameterEncoding: Option[Codec] = None,
               requestInterceptors: Seq[RequestInterceptor] = Empty,

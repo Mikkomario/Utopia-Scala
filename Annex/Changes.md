@@ -16,6 +16,7 @@
   in **RequestResultExtensions**
 - Renamed parse function variants in **RequestResult** of type **Value**, and deprecated the try function variants
 ### New features
+- Added **LockingRequestQueue**
 - **RequestResult** now extends **MayHaveFailed**, and contains a number of new functions
 - **Response** (object) now contains variable: `parseFailureStatus`
 ### New methods

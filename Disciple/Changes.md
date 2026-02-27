@@ -7,6 +7,7 @@ Supports **Access v1.7** and **Flow v2.8**
 ### New methods
 - **Gateway**
   - Added `.usedConnections` and `.availableConnections`
+  - `maxConnectionsPerRoute` is now a public value
 - **ResponseParseResult** (object)
   - Added `.failedFuture(Throwable)`
 

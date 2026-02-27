@@ -6,6 +6,7 @@ import utopia.annex.model.response.RequestResult
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -52,6 +53,18 @@ trait RequestQueue
 	  * @return Asynchronous final request result
 	  */
 	def push[A](request: RequestQueueable[A]): QueuedAction[RequestResult[A]]
+	
+	
+	// COMPUTED ------------------------
+	
+	/**
+	 * @param lockFlag A flag that, if set, causes this queue to become locked
+	 * @param exc Implicit execution context
+	 * @param log Implicit logging implementation
+	 * @return A new locking interface to this queue
+	 */
+	def lockedWith(lockFlag: Flag)(implicit exc: ExecutionContext, log: Logger) =
+		LockingRequestQueue.wrap(this, lockFlag)
 	
 	
 	// OTHER    ------------------------

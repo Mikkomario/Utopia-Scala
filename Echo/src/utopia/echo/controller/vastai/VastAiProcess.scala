@@ -96,13 +96,13 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	 * Yields a failure if no instance could be acquired,
 	 * or if [[stop]] was called while the instance was being acquired.
 	 */
-	val instanceFuture = instancePointerP.future
+	val instancePointerFuture = instancePointerP.future
 	/**
 	 * A future that resolves into a regularly updated instance once it becomes available.
 	 * Yields a failure if no instance could be acquired,
 	 * or if [[stop]] was called while the instance was being acquired.
 	 */
-	lazy val liveInstanceFuture = instanceFuture.mapSuccess { new LiveInstance(_, vastAiStatePointer, startTime) }
+	lazy val liveInstanceFuture = instancePointerFuture.mapSuccess { new LiveInstance(_, vastAiStatePointer, startTime) }
 	
 	
 	// INITIAL CODE -------------------------
