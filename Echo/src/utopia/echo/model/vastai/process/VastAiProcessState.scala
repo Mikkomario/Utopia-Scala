@@ -1,4 +1,4 @@
-package utopia.echo.model.vastai
+package utopia.echo.model.vastai.process
 
 import utopia.echo.model.vastai.instance.InstanceState.Active
 import utopia.echo.model.vastai.instance.InstanceStatus

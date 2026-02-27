@@ -1,6 +1,6 @@
 package utopia.echo.model.vastai.instance
 
-import utopia.echo.model.vastai.VastAiProcessState
+import utopia.echo.model.vastai.process.VastAiProcessState
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.time.Now
 import utopia.flow.util.logging.Logger
@@ -60,6 +60,15 @@ class LiveInstance(val instancePointer: Changing[VastAiInstance], val processSta
 	 * @return The current state of this instance's managing process
 	 */
 	def processState = processStatePointer.value
+	
+	/**
+	 * @return Whether the instance has completed loading
+	 */
+	def hasLoaded = loadedFlag.value
+	/**
+	 * @return Whether the instance is still loading
+	 */
+	def loading = !hasLoaded
 	
 	
 	// IMPLEMENTED  ---------------------

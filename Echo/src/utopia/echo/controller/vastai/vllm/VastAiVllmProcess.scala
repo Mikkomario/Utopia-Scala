@@ -5,30 +5,30 @@ import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.Timeout
 import utopia.echo.controller.client.{LlmServiceClient, VastAiApiClient}
-import utopia.echo.controller.vastai.VastAiProcess
-import utopia.echo.model.llm.LlmDesignator
+import utopia.echo.controller.vastai.{SelectOffer, VastAiProcess}
 import utopia.echo.model.request.openai.ListOpenAiModels
 import utopia.echo.model.request.vastai.{AcceptOffer, GetOffers}
+import utopia.echo.model.response.openai.OpenAiModelInfo
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
-import utopia.echo.model.vastai.instance.SshConnection
-import utopia.echo.model.vastai.instance.offer.OfferType.OnDemand
 import utopia.echo.model.vastai.instance.offer.RunType.DirectSsh
-import utopia.echo.model.vastai.instance.offer.{Offer, OfferProperty, OfferType, SearchFilter}
+import utopia.echo.model.vastai.instance.{InstanceStatus, SshConnection, VastAiInstance}
+import utopia.echo.model.vastai.process.VastAiVllmProcessState._
+import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessState}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
-import utopia.flow.async.process.{Delay, Process}
+import utopia.flow.async.process.{Delay, Loop, Process}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.operator.sign.Sign
-import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
-import utopia.flow.view.mutable.eventful.AssignableOnce
+import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.mutable.eventful.{AssignableOnce, MayBeAssignedOnce}
 
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 import scala.sys.process
@@ -36,60 +36,69 @@ import scala.util.{Failure, Success, Try}
 
 /**
  * A process for setting up and managing a vLLM server on a rented Vast AI instance
+ * @param vllmTemplateHashId Hash ID of the used template, which handles vLLM hosting
+ * @param env Applied environment variables (such as maximum context length)
+ * @param selectOffer Logic for selecting a Vast AI instance offer
+ * @param modelSize Size of the used model. Used for calculating the reserved disk space.
+ * @param additionalReservedDisk Additional disk space to reserve, beyond the model size. Default = 5 GB.
+ * @param startCommands Commands to run once the instance is set up. Default = empty.
+ * @param gateway Gateway instance to use for connecting to the rented instance.
+ *                Default = new Gateway with 12 max connections.
+ * @param localPort Port used for accessing the vLLM API locally. Default = 18000.
+ * @param setupTimeout Timeout for the setup process.
+ *                     If the API doesn't become usable before this timeout, the instance is destroyed.
+ *                     Default = infinite (not recommended).
+ * @param noResponseTimeout Timeout for started API requests.
+ *                          If this timeout is reached, the request queue is closed
+ *                          and the underlying Vast AI instance is destroyed.
+ *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
+ * @param statusCheckInterval Interval between instance pointer / check updates. Default = 30 seconds.
+ * @param instanceLabel Custom label given to the rented Vast AI instance. Default = empty.
+ * @param imageCredentials Credentials for authorizing the use of the selected Docker image. Default = empty.
+ * @param useHttps Whether to use HTTPS when connecting to the instance. Default = false.
  * @author Mikko Hilpinen
  * @since 26.02.2026, v1.5
  */
-// Template doc: https://cloud.vast.ai/template/readme/728eda674fd3c3810d227c9668d899bd
-// Use the full model path (e.g., meta-llama/Llama-3.1-8B-Instruct)
-class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additionalReservedDisk: ByteCount = 8.gb,
-                        offerSearchFilters: Seq[SearchFilter] = Empty,
-                        offerOrdering: Seq[(OfferProperty[_], Sign)] = Empty,
-                        offerLimit: Option[Int] = None, offerType: OfferType = OnDemand,
+class VastAiVllmProcess(vllmTemplateHashId: String, env: Model, selectOffer: SelectOffer, modelSize: ByteCount,
+                        additionalReservedDisk: ByteCount = 5.gb, startCommands: Seq[String] = Empty,
                         gateway: => Gateway = Gateway(maxConnectionsPerRoute = 12, maxConnectionsTotal = 12,
 	                        maximumTimeout = Timeout(connection = 60.seconds, read = 10.minutes, manager = 15.minutes),
 	                        allowBodyParameters = false, allowJsonInUriParameters = false,
 	                        disableTrustStoreVerification = true),
-                        maxContextSize: Int = 8192,
-                        gpuUtilizationRate: Double = 0.8, localPort: Int = 18000,
-                        setupTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 15.seconds,
+                        localPort: Int = 18000, setupTimeout: Duration = Duration.infinite,
+                        noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
                         instanceLabel: String = "", imageCredentials: String = "", useHttps: Boolean = false)
-                       (selectOffer: Seq[Offer] => Future[Try[Offer]])
-                       (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient, llm: LlmDesignator)
+                       (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
-	// TODO: Add state tracking
-	
 	// ATTRIBUTES   ------------------------
 	
 	override protected val isRestartable: Boolean = false
 	
+	private val stateP = Volatile.lockable[VastAiVllmProcessState](NotStarted)
+	/**
+	 * A pointer that contains [[VastAiVllmProcessState]] of this process
+	 */
+	val detailedStatePointer = stateP.readOnly
+	
 	/**
 	 * A pointer that will store the hosted vLLM API client, if one is successfully created.
 	 */
-	private val clientP = AssignableOnce[Try[LockingRequestQueue]]()
+	private val clientP = AssignableOnce[Try[(LockingRequestQueue, OpenAiModelInfo)]]()
+	private val requestTimedOutStateP = MayBeAssignedOnce[InstanceStatus]()
 	
 	private val vastAiProcess = VastAiProcess(statusCheckInterval) { hurryFlag =>
 		// Requests for offers
-		client.send(GetOffers(modelSize + additionalReservedDisk,
-				offerSearchFilters, offerOrdering, offerLimit, offerType))
+		client.send(GetOffers(modelSize + additionalReservedDisk, selectOffer.filters, selectOffer.ordering,
+				selectOffer.limit, selectOffer.offerType))
 			// Selects one offer
-			.tryFlatMap(selectOffer)
+			.tryFlatMap(selectOffer.apply)
 			.flatMapOrFail { offer =>
+				stateP.value = AcquiringInstance(offer)
 				// Accepts the offer, requesting a new instance
-				// Assumes that vLLM template (or similar) is used
-				val quantizationParam = {
-					if (llm.llmName.contains("AWQ"))
-						" --quantization awq_marlin"
-					else
-						""
-				}
 				client.send(AcceptOffer(offer.id, vllmTemplateHashId, runType = DirectSsh,
-					env = Model.from(
-						"VLLM_MODEL" -> llm.llmName,
-						"VLLM_ARGS" -> s"--max-model-len $maxContextSize --gpu-memory-utilization $gpuUtilizationRate$quantizationParam"
-					),
-					label = instanceLabel, imageCredentials = imageCredentials, deprecatedView = hurryFlag,
-					cancelIfUnavailable = true))
+					env = env, startCommands = startCommands, label = instanceLabel,
+					imageCredentials = imageCredentials, deprecatedView = hurryFlag, cancelIfUnavailable = true))
 			}
 			.toTryFuture
 	}
@@ -102,10 +111,33 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 	val clientFuture = clientP.future
 	
 	
+	// COMPUTED --------------------------
+	
+	/**
+	 * @return The current (detailed) state of this process
+	 */
+	def detailedState = stateP.value
+	
+	/**
+	 * @return The current state of the utilized Vast AI instance
+	 */
+	def vastAiState = vastAiProcess.detailedState
+	/**
+	 * @return A pointer that contains the current state of the utilized Vast AI instance
+	 */
+	def vastAiStatePointer = vastAiProcess.detailedStatePointer
+	
+	/**
+	 * @return Whether the queued requests have timed out, causing this process to enter the stopping state.
+	 */
+	def hasTimedOut = requestTimedOutStateP.value.isDefined
+	
+	
 	// IMPLEMENTED  ----------------------
 	
 	override protected def runOnce(): Unit = {
-		try {
+		val runResult = Try {
+			stateP.value = SelectingOffer
 			// Sets up a Vast AI instance and waits for it to load (or for timeout or stop() call)
 			vastAiProcess.runAsync()
 			val stopFuture = hurryFlag.future.map { _ => false }
@@ -117,7 +149,15 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 			}
 			val instanceLoadedFuture = vastAiProcess.liveInstanceFuture.flatMap {
 				// Case: Instance-acquisition succeeded => Checks when it's fully loaded
-				case Success(instance) => instance.loadedFuture
+				case Success(instance) =>
+					stateP.value = InstanceLoading(instance)
+					// Starts tracking the instance state
+					instance.instancePointer.addListener { e =>
+						stateP.update { _.atInstanceState(e.newValue) }
+						Continue.onlyIf(state.isRunning)
+					}
+					instance.loadedFuture
+				
 				// Case: Instance-acquisition failed => Won't proceed
 				case Failure(error) =>
 					clientP.set(Failure(error))
@@ -134,7 +174,7 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 							.toTry {
 								new IllegalStateException("SSH connection is not available on the rented instance")
 							}
-							.flatMap { hostApi(_, timeoutOrStopFuture) }
+							.flatMap { hostApi(_, timeoutOrStopFuture, instancePointer) }
 					}
 					// Logs failures and ensures that clientP receives a value
 					.failure.foreach { error =>
@@ -145,10 +185,34 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 			else
 				clientP.trySet(Failure(new IllegalStateException("The Vast AI instance failed to load")))
 		}
+		runResult.failure.foreach { error => clientP.trySet(Failure(error)) }
+		try {
+			val clientResult = clientP.getOrElseUpdate {
+				Failure(new IllegalStateException("No API was hosted - reason unknown"))
+			}
+			stateP.value = DestroyingInstance(clientResult match {
+				case Success(_) =>
+					requestTimedOutStateP.value match {
+						case Some(timeoutState) => ApiHostingResult.Disconnected(timeoutState)
+						case None => ApiHostingResult.Stopped
+					}
+				case Failure(error) => ApiHostingResult.Failed(error)
+			})
+		}
 		finally {
 			// Destroys the Vast AI instance
 			vastAiProcess.stop().waitFor()
 				.logWithMessage("Failure while waiting for the Vast AI instance to be destroyed")
+			// Finalizes the state
+			stateP.update {
+				case DestroyingInstance(hostingResult) => Stopped(hostingResult, vastAiProcess.detailedState)
+				case state =>
+					log(s"Unexpected state after instance-destruction: $state")
+					Stopped(
+						ApiHostingResult.Failed(new IllegalStateException("Unexpected state at instance destruction")),
+						vastAiProcess.detailedState)
+			}
+			stateP.lock()
 		}
 	}
 	
@@ -160,12 +224,19 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 	 * Blocks extensively. Only returns on failure, or once stop() has been called and all pending requests completed.
 	 * @param ssh Settings for the SSH connection
 	 * @param setupTimeoutOrStopFuture A future that resolves if setup timeout is reached, or if stop() is called.
+	 * @param instancePointer A pointer that contains the latest Vast AI instance status
 	 * @return Whether API-hosting (fully) succeeded
 	 */
-	private def hostApi(ssh: SshConnection, setupTimeoutOrStopFuture: Future[_]) = {
+	private def hostApi(ssh: SshConnection, setupTimeoutOrStopFuture: Future[_], instancePointer: View[VastAiInstance]) =
+	{
+		stateP.value = WaitingForApi(instancePointer.value)
 		// SSH port-forwarding is kept active as long as the API is used
 		// TODO: Pass a ProcessLogger instance to run()
-		val sshProcess = process.Process(s"ssh -N -L $localPort:localhost:18000 root@${ ssh.host } -p ${ ssh.port }")
+		// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
+		// TODO: May need to enable user interaction somehow (if asks for verification, etc.)
+		val sshProcess = process.Process(
+				s"ssh -N -L $localPort:localhost:18000 root@${ ssh.host } -p ${
+					ssh.port } -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
 			.run()
 		try {
 			// Creates the API client and waits until it's responsive (or until timeout is reached)
@@ -174,10 +245,30 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 				s"http${ if (useHttps) "s" else "" }://localhost:$localPort/v1",
 				maxParallelRequests = _gateway.maxConnectionsPerRoute)
 			waitUntilGetModelsSucceeds(vllmClient, setupTimeoutOrStopFuture) match {
-				case Success(_) =>
+				case Success(model) =>
 					// The client is now usable. Stores it in a pointer, enabling external use.
 					val exposedClient = LockingRequestQueue.wrap(vllmClient, hurryFlag)
-					clientP.set(Success(exposedClient))
+					clientP.set(Success(exposedClient -> model))
+					stateP.value = HostingApi(instancePointer.value, exposedClient, model)
+					
+					// Updates the state once requested to stop
+					hurryFlag.onceSet {
+						// Timeout is not possible at this point, anymore
+						requestTimedOutStateP.lock()
+						
+						stateP.value = StoppingApi(instancePointer.value, exposedClient.pendingRequestCount,
+							timedOut = hasTimedOut)
+						// Includes the pending request count in the state during this phase
+						exposedClient.pendingRequestCountPointer.addListener { e =>
+							stateP.mutate {
+								case stopping: StoppingApi => Continue -> stopping.withRequestsPending(e.newValue)
+								case other => Detach -> other
+							}
+						}
+					}
+					
+					// Checks for request timeouts in order to automatically shut down this service, if necessary
+					monitorRequestTimeouts(exposedClient, instancePointer.value.status)
 					
 					// Keeps the SSH connection open, and the API exposed, until stop() is called
 					// and until all pending requests complete
@@ -196,7 +287,7 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 	}
 	
 	private def waitUntilGetModelsSucceeds(vllmClient: LlmServiceClient, setupTimeoutFuture: Future[_]) = {
-		val resultPromise = Promise[Try[Unit]]()
+		val resultPromise = Promise[Try[OpenAiModelInfo]]()
 		// Completes the promise on timeout
 		setupTimeoutFuture.onComplete { _ =>
 			if (!resultPromise.isCompleted)
@@ -220,7 +311,7 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 	 * @return A future that resolves once this process completes
 	 */
 	private def tryCompletePromiseWhenModelsAreAvailable(vllmClient: LlmServiceClient,
-	                                                     resultPromise: Promise[Try[Unit]],
+	                                                     resultPromise: Promise[Try[OpenAiModelInfo]],
 	                                                     completionView: View[Boolean]): Future[Unit] =
 	{
 		// Case: Promise was already completed => Finishes
@@ -229,16 +320,53 @@ class VastAiVllmProcess(vllmTemplateHashId: String, modelSize: ByteCount, additi
 		// Case: Process is still pending => Sends a GET /models request
 		else
 			vllmClient.push(ListOpenAiModels.withDeprecationView(completionView)).flatMap { result =>
-				// Case: Models are available => Finishes successfully
-				if (result.success.exists { _.nonEmpty }) {
-					resultPromise.trySuccess(Success(()))
-					Future.unit
+				result.success.flatMap { _.headOption } match {
+					// Case: Models are available => Finishes successfully
+					case Some(model) =>
+						resultPromise.trySuccess(Success(model))
+						Future.unit
+						
+					// Case: No models are available yet => Attempts again after a while
+					case None =>
+						Delay(statusCheckInterval) {
+							tryCompletePromiseWhenModelsAreAvailable(vllmClient, resultPromise, completionView)
+						}
 				}
-				// Case: No models are available yet => Attempts again after a while
-				else
-					Delay(statusCheckInterval) {
-						tryCompletePromiseWhenModelsAreAvailable(vllmClient, resultPromise, completionView)
-					}
 			}
+	}
+	
+	private def monitorRequestTimeouts(queue: LockingRequestQueue, getInstanceStatus: => InstanceStatus) = {
+		if (noResponseTimeout.isFinite) {
+			// Compares timeout against the earliest request queue time, or the earliest recorded request start time
+			// This is in order to avoid timeouts for requests that have been queued (but not running) for a long time
+			val lastRecordedStartTimeP = Volatile(Now.toInstant)
+			val process = Loop.after(noResponseTimeout) {
+				queue.pendingRequests.notEmpty match {
+					// Case: One or more requests are being executed => Checks if any of them are too old
+					case Some(requests) =>
+						val earliestRequestTime = requests.iterator.map { _.queueTime }.min max
+							lastRecordedStartTimeP.value
+						// Case: At least one request has timed out
+						//       => Remembers the instance state & requests the API to stop
+						if (earliestRequestTime <= Now - noResponseTimeout) {
+							if (requestTimedOutStateP.trySet(getInstanceStatus))
+								stop()
+							None
+						}
+						// Case: No request has timed out => Updates the start time
+						else {
+							requests.findMap { request => Some(request.result.startFuture).filterNot { _.isCompleted } }
+								.foreach { _.onComplete { _ => lastRecordedStartTimeP.value = Now } }
+							
+							// Schedules the next check
+							Some(earliestRequestTime + noResponseTimeout)
+						}
+					// Case: No pending requests => No timeout is possible
+					case None => Some(noResponseTimeout)
+				}
+			}
+			// Once this process is requested to stop, timeouts are not needed anymore
+			hurryFlag.onceSet { process.stop() }
+		}
 	}
 }

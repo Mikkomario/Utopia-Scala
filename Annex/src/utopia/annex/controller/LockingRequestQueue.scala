@@ -1,17 +1,19 @@
 package utopia.annex.controller
 
 import utopia.access.model.enumeration.Method
-import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, RequestQueueable}
+import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, QueuedRequest, RequestQueueable}
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.time.Now
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.caching.Lazy
@@ -71,6 +73,7 @@ object LockingRequestQueue
 		// ATTRIBUTES   ----------------------
 		
 		override val lockedFlag: Flag = AlwaysTrue
+		override val pendingRequests: Seq[QueuedRequest[_]] = Empty
 		override val pendingRequestCountPointer: Changing[Int] = Fixed(0)
 		
 		
@@ -89,18 +92,23 @@ object LockingRequestQueue
 		
 		override val lockedFlag: Flag = AlwaysFalse
 		
-		private val pendingRequestCountP = Volatile.eventful(0)
-		override val pendingRequestCountPointer: Changing[Int] = pendingRequestCountP.readOnly
+		private val pendingRequestsP = Volatile.eventful.emptySeq[QueuedRequest[_]]
+		override val pendingRequestCountPointer: Changing[Int] = pendingRequestsP.lightMap { _.size }
 		
 		
 		// IMPLEMENTED  ----------------------
 		
+		override def pendingRequests: Seq[QueuedRequest[_]] = pendingRequestsP.value
+		
 		override def stopFuture: Future[Unit] = Future.never
 		
 		override def push[A](request: RequestQueueable[A]): QueuedAction[RequestResult[A]] = {
-			pendingRequestCountP.update { _ + 1 }
+			// Queues the request
+			val queueTime = Now.toInstant
 			val result = wrapped.push(request)
-			result.future.onComplete { _ => pendingRequestCountP.update { _ - 1 } }
+			// Updates the pending requests -pointer now and once the request resolves
+			pendingRequestsP :+= QueuedRequest(request, result, queueTime)
+			result.future.onComplete { _ => pendingRequestsP.update { _.filterNot { _.request == request } } }
 			
 			result
 		}
@@ -112,15 +120,13 @@ object LockingRequestQueue
 	{
 		// ATTRIBUTES   ------------------------
 		
-		private val pendingRequestCountP = Volatile.lockable(0)
-		override val pendingRequestCountPointer = pendingRequestCountP.readOnly
+		private val pendingRequestsP = Volatile.lockable.emptySeq[QueuedRequest[_]]
+		override val pendingRequestCountPointer = pendingRequestsP.lightMap { _.size }
 		
 		// Just in case someone resets the lock, we'll respond by resetting this future
 		private val lazyStopFuture = Lazy.resettable {
 			queueStopFutureReset()
-			lockedFlag.future.flatMap { _ =>
-				pendingRequestCountP.findMapFuture { remaining => if (remaining > 0) None else Some(()) }
-			}
+			lockedFlag.future.flatMap { _ => pendingRequestsP.emptyFuture }
 		}
 		private val resetStopFutureListener = ChangeListener[Boolean] { e =>
 			if (e.newValue)
@@ -134,18 +140,35 @@ object LockingRequestQueue
 		
 		// IMPLEMENTED  ------------------------
 		
+		override def pendingRequests: Seq[QueuedRequest[_]] = pendingRequestsP.value
+		
 		override def stopFuture = lazyStopFuture.value
 		
 		override def push[A](request: RequestQueueable[A]): ActionQueue.QueuedAction[RequestResult[A]] = {
+			// Case: Locked => Request fails automatically
 			if (locked)
 				QueuedAction.completed(RequestSendingFailed(new IllegalStateException("This queue has been locked")))
 			else {
-				pendingRequestCountP.update { _ + 1 }
-				val result = wrapped.push(request.mapBoth { new RequestSeedWrapper[A](_) } { new RequestWrapper[A](_) })
+				// Queues the request and records it
+				val result = pendingRequestsP.lockWhile {
+					// Uses a special wrapper class in order to apply deprecation on locking
+					val queueTime = Now.toInstant
+					val result = wrapped.push(
+						request.mapBoth { new RequestSeedWrapper[A](_) } { new RequestWrapper[A](_) })
+					pendingRequestsP :+= QueuedRequest(request, result, queueTime)
+					result
+				}
+				// Once the request resolves, updates the record of pending requests
 				result.future.onComplete { _ =>
-					val remaining = pendingRequestCountP.updateAndGet { _ - 1 }
-					if (remaining <= 0 && locked)
-						pendingRequestCountP.lock()
+					pendingRequestsP.lockWhile {
+						val isEmpty = pendingRequestsP.mutate { requests =>
+							val remaining = requests.filterNot { _.request == request }
+							remaining.isEmpty -> remaining
+						}
+						// Case: This queue was cleared after stop => Locks the pending requests -pointer
+						if (isEmpty && locked)
+							pendingRequestsP.lock()
+					}
 				}
 				result
 			}
@@ -195,6 +218,10 @@ trait LockingRequestQueue extends RequestQueue with MaybeEmpty[LockingRequestQue
 	 */
 	def lockedFlag: Flag
 	
+	/**
+	 * @return Requests that are currently waiting to be executed, or being executed
+	 */
+	def pendingRequests: Seq[QueuedRequest[_]]
 	/**
 	 * A pointer that contains the number of requests that are currently queued,
 	 * whether active (i.e. being executed) or waiting.

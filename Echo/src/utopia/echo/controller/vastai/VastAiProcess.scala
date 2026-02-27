@@ -4,8 +4,8 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.client.VastAiApiClient
 import utopia.echo.model.request.vastai.{DestroyInstance, ShowInstance}
-import utopia.echo.model.vastai.VastAiProcessState
-import utopia.echo.model.vastai.VastAiProcessState._
+import utopia.echo.model.vastai.process.VastAiProcessState
+import utopia.echo.model.vastai.process.VastAiProcessState._
 import utopia.echo.model.vastai.instance.{LiveInstance, VastAiInstance}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
@@ -82,10 +82,10 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	/**
 	 * A pointer that contains the [[VastAiProcessState]] of this process
 	 */
-	val vastAiStatePointer = _stateP.readOnly
+	val detailedStatePointer = _stateP.readOnly
 	
 	private val instanceIdFutureP = AssignableOnce[Future[Try[Int]]]()
-	private val instancePointerP = AssignableOnce[Try[Changing[VastAiInstance]]]
+	private val instancePointerP = AssignableOnce[Try[Changing[VastAiInstance]]]()
 	
 	/**
 	 * A future that resolves into the ID of the utilized instance. Yields a failure if no instance could be acquired.
@@ -102,12 +102,21 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	 * Yields a failure if no instance could be acquired,
 	 * or if [[stop]] was called while the instance was being acquired.
 	 */
-	lazy val liveInstanceFuture = instancePointerFuture.mapSuccess { new LiveInstance(_, vastAiStatePointer, startTime) }
+	lazy val liveInstanceFuture =
+		instancePointerFuture.mapSuccess { new LiveInstance(_, detailedStatePointer, startTime) }
 	
 	
 	// INITIAL CODE -------------------------
 	
 	registerToStopOnceJVMCloses()
+	
+	
+	// COMPUTED -----------------------------
+	
+	/**
+	 * @return The current detailed state of this process
+	 */
+	def detailedState = detailedStatePointer.value
 	
 	
 	// IMPLEMENTED  -------------------------
