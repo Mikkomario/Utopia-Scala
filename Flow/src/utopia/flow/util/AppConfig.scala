@@ -170,6 +170,12 @@ class AppConfig private(path: Path, initialState: Model)(implicit exc: Execution
 		}
 	}
 	
+	/**
+	 * Removes a value from this config
+	 * @param key Key of the value to remove
+	 */
+	def clear(key: String) = update(key, Value.empty)
+	
 	private def _map(model: Model, keysIter: Iterator[String], lastKey: String)(f: Mutate[Value]): Model = {
 		keysIter.nextOption() match {
 			case Some(nextKey) =>

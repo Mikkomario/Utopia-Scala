@@ -24,6 +24,7 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
+import utopia.flow.util.EitherExtensions.Sided
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
@@ -36,7 +37,11 @@ import scala.util.{Failure, Success, Try}
 
 /**
  * A process for setting up and managing a vLLM server on a rented Vast AI instance
- * @param vllmTemplateHashId Hash ID of the used template, which handles vLLM hosting
+ * @param imageOrVllmTemplateHashId Either:
+ *                                      - Left: Used image
+ *                                      - Right: Hash ID of the used template
+ *
+ *                                  Whichever is used, the implementation must handle vLLM hosting.
  * @param env Applied environment variables (such as maximum context length)
  * @param selectOffer Logic for selecting a Vast AI instance offer
  * @param modelSize Size of the used model. Used for calculating the reserved disk space.
@@ -59,8 +64,9 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 26.02.2026, v1.5
  */
-class VastAiVllmProcess(vllmTemplateHashId: String, env: Model, selectOffer: SelectOffer, modelSize: ByteCount,
-                        additionalReservedDisk: ByteCount = 5.gb, startCommands: Seq[String] = Empty,
+class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, selectOffer: SelectOffer,
+                        modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
+                        startCommands: Seq[String] = Empty,
                         gateway: => Gateway = Gateway(maxConnectionsPerRoute = 12, maxConnectionsTotal = 12,
 	                        maximumTimeout = Timeout(connection = 60.seconds, read = 10.minutes, manager = 15.minutes),
 	                        allowBodyParameters = false, allowJsonInUriParameters = false,
@@ -95,8 +101,12 @@ class VastAiVllmProcess(vllmTemplateHashId: String, env: Model, selectOffer: Sel
 			.tryFlatMap(selectOffer.apply)
 			.flatMapOrFail { offer =>
 				stateP.value = AcquiringInstance(offer)
+				val (image, templateHashId) = imageOrVllmTemplateHashId match {
+					case Left(image) => image -> ""
+					case Right(hashId) => "" -> hashId
+				}
 				// Accepts the offer, requesting a new instance
-				client.send(AcceptOffer(offer.id, vllmTemplateHashId, runType = DirectSsh,
+				client.send(AcceptOffer(offer.id, templateHashId = templateHashId, image = image, runType = DirectSsh,
 					env = env, startCommands = startCommands, label = instanceLabel,
 					imageCredentials = imageCredentials, deprecatedView = hurryFlag, cancelIfUnavailable = true))
 			}
