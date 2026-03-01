@@ -22,15 +22,19 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.FileUtils
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.EitherExtensions.Sided
+import utopia.flow.util.Env
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.{AssignableOnce, MayBeAssignedOnce}
 
+import java.nio.file.Path
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 import scala.sys.process
 import scala.util.{Failure, Success, Try}
@@ -255,29 +259,12 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 		// SSH port-forwarding is kept active as long as the API is used
 		// TODO: Pass a ProcessLogger instance to run()
 		// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
-		// TODO: May need to enable user interaction somehow (if asks for verification, etc.)
-		/*
-			java.lang.System
-				System.getenv(name: String): String
-				System.getenv(): java.util.Map[String, String]
-			 */
-		/*
+		println(s"Activating SSH port forwarding for root@${ ssh.host } from port ${ ssh.port } to port $localPort")
 		val sshProcess = process.Process(
-		  s"""
-		  ssh -N \
-			-i /path/to/id_ed25519 \
-			-L $localPort:localhost:18000 \
-			root@${ssh.host} \
-			-p ${ssh.port} \
-			-o BatchMode=yes \
-			-o StrictHostKeyChecking=no \
-			-o UserKnownHostsFile=/dev/null
-		  """.stripMargin.replaceAll("\n", " ")
-		).run()
-		 */
-		val sshProcess = process.Process(
-				s"ssh -N -L $localPort:localhost:18000 root@${ ssh.host } -p ${
-					ssh.port } -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
+				s"ssh -N -i ${
+					Env.home.getOrElse(FileUtils.workingDirectory)/".ssh/id_ed25519" } -L $localPort:localhost:18000 root@${
+					ssh.host } -p ${
+					ssh.port } -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ServerAliveInterval=60 -o ServerAliveCountMax=5")
 			.run()
 		try {
 			// Creates the API client and waits until it's responsive (or until timeout is reached)
