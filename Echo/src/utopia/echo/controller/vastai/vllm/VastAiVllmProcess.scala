@@ -1,13 +1,14 @@
 package utopia.echo.controller.vastai.vllm
 
 import utopia.annex.controller.LockingRequestQueue
+import utopia.annex.model.response.Response
 import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.Timeout
 import utopia.echo.controller.client.{LlmServiceClient, VastAiApiClient}
 import utopia.echo.controller.vastai.{SelectOffer, VastAiProcess}
 import utopia.echo.model.request.openai.ListOpenAiModels
-import utopia.echo.model.request.vastai.{AcceptOffer, GetOffers}
+import utopia.echo.model.request.vastai.{AcceptOffer, AttachSshKey, GetOffers, GetSshKeys}
 import utopia.echo.model.response.openai.OpenAiModelInfo
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
@@ -24,6 +25,7 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
+import utopia.flow.parse.string.StringFrom
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.EitherExtensions.Sided
@@ -99,6 +101,7 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 	
 	private val vastAiProcess = VastAiProcess(statusCheckInterval) { hurryFlag =>
 		// Requests for offers
+		// TODO: Instance shows available space 10 GB. Mistake somewhere?
 		client.send(GetOffers(modelSize + additionalReservedDisk, selectOffer.filters, selectOffer.ordering,
 				selectOffer.limit, selectOffer.offerType))
 			// Selects one offer
@@ -257,61 +260,87 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 	{
 		stateP.value = WaitingForApi(instancePointer.value)
 		// SSH port-forwarding is kept active as long as the API is used
-		// TODO: Pass a ProcessLogger instance to run()
-		// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
 		println(s"Activating SSH port forwarding for root@${ ssh.host } from port ${ ssh.port } to port $localPort")
-		val sshProcess = process.Process(
-				s"ssh -N -i ${
-					Env.home.getOrElse(FileUtils.workingDirectory)/".ssh/id_ed25519" } -L $localPort:localhost:18000 root@${
-					ssh.host } -p ${
-					ssh.port } -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ServerAliveInterval=60 -o ServerAliveCountMax=5")
-			.run()
-		try {
-			// Creates the API client and waits until it's responsive (or until timeout is reached)
-			val _gateway = gateway
-			val vllmClient = new LlmServiceClient(_gateway,
-				s"http${ if (useHttps) "s" else "" }://localhost:$localPort/v1",
-				maxParallelRequests = _gateway.maxConnectionsPerRoute)
-			waitUntilGetModelsSucceeds(vllmClient, setupTimeoutOrStopFuture) match {
-				case Success(model) =>
-					// The client is now usable. Stores it in a pointer, enabling external use.
-					val exposedClient = LockingRequestQueue.wrap(vllmClient, hurryFlag)
-					clientP.set(Success(exposedClient -> model))
-					stateP.value = HostingApi(instancePointer.value, exposedClient, model)
-					
-					// Updates the state once requested to stop
-					hurryFlag.onceSet {
-						// Timeout is not possible at this point, anymore
-						requestTimedOutStateP.lock()
+		startSshPortForwarding(instancePointer.value.id, ssh, setupTimeoutOrStopFuture).flatMap { sshProcess =>
+			try {
+				// Creates the API client and waits until it's responsive (or until timeout is reached)
+				val _gateway = gateway
+				val vllmClient = new LlmServiceClient(_gateway,
+					s"http${ if (useHttps) "s" else "" }://localhost:$localPort/v1",
+					maxParallelRequests = _gateway.maxConnectionsPerRoute)
+				waitUntilGetModelsSucceeds(vllmClient, setupTimeoutOrStopFuture) match {
+					case Success(model) =>
+						// The client is now usable. Stores it in a pointer, enabling external use.
+						val exposedClient = LockingRequestQueue.wrap(vllmClient, hurryFlag)
+						clientP.set(Success(exposedClient -> model))
+						stateP.value = HostingApi(instancePointer.value, exposedClient, model)
 						
-						stateP.value = StoppingApi(instancePointer.value, exposedClient.pendingRequestCount,
-							timedOut = hasTimedOut)
-						// Includes the pending request count in the state during this phase
-						exposedClient.pendingRequestCountPointer.addListener { e =>
-							stateP.mutate {
-								case stopping: StoppingApi => Continue -> stopping.withRequestsPending(e.newValue)
-								case other => Detach -> other
+						// Updates the state once requested to stop
+						hurryFlag.onceSet {
+							// Timeout is not possible at this point, anymore
+							requestTimedOutStateP.lock()
+							
+							stateP.value = StoppingApi(instancePointer.value, exposedClient.pendingRequestCount,
+								timedOut = hasTimedOut)
+							// Includes the pending request count in the state during this phase
+							exposedClient.pendingRequestCountPointer.addListener { e =>
+								stateP.mutate {
+									case stopping: StoppingApi => Continue -> stopping.withRequestsPending(e.newValue)
+									case other => Detach -> other
+								}
 							}
 						}
-					}
+						
+						// Checks for request timeouts in order to automatically shut down this service, if necessary
+						monitorRequestTimeouts(exposedClient, instancePointer.value.status)
+						
+						// Keeps the SSH connection open, and the API exposed, until stop() is called
+						// and until all pending requests complete
+						exposedClient.stopFuture.waitForResult()
 					
-					// Checks for request timeouts in order to automatically shut down this service, if necessary
-					monitorRequestTimeouts(exposedClient, instancePointer.value.status)
-					
-					// Keeps the SSH connection open, and the API exposed, until stop() is called
-					// and until all pending requests complete
-					exposedClient.stopFuture.waitForResult()
-					
-				// Case: Failed to acquire a working client
-				case Failure(error) =>
-					clientP.set(Failure(error))
-					Failure(error)
+					// Case: Failed to acquire a working client
+					case Failure(error) =>
+						clientP.set(Failure(error))
+						Failure(error)
+				}
+			}
+			finally {
+				// Stops the port-forwarding
+				sshProcess.destroy()
 			}
 		}
-		finally {
-			// Stops the port-forwarding
-			sshProcess.destroy()
-		}
+	}
+	
+	private def startSshPortForwarding(instanceId: Int, ssh: SshConnection, setupTimeoutOrStopFuture: Future[_]) = {
+		// Makes sure we have a local SSH key
+		val sshKeyPath = Env.home.getOrElse(FileUtils.workingDirectory)/".ssh/id_ed25519"
+		StringFrom.path(sshKeyPath)
+			.flatMap { sshKey =>
+				// Makes sure that key is attached to the rented instance
+				val requestDeprecationView = View { setupTimeoutOrStopFuture.isCompleted }
+				client.send(GetSshKeys(instanceId, requestDeprecationView)).waitForResult()
+					.mapOrFail { keysOnInstance =>
+						if (keysOnInstance.exists { _.publicKey == sshKey }) {
+							println("SSH key already attached")
+							Success("")
+						}
+						else {
+							println(s"The instance had ${
+								keysOnInstance.size } SSH keys; None matched id_ed25519 => Attaches the SSH key to the remote device")
+							client.send(AttachSshKey(instanceId, sshKey, requestDeprecationView)).waitForResult()
+						}
+					}
+					.toTry
+			}
+			.map { _ =>
+				// Starts SSH port forwarding
+				println("Starts the port forwarding")
+				// TODO: Pass a ProcessLogger instance to run()
+				// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
+				process.Process(s"ssh -N -i $sshKeyPath -L $localPort:localhost:18000 root@${ ssh.host } -p ${
+						ssh.port } -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ServerAliveInterval=60 -o ServerAliveCountMax=5")
+					.run()
+			}
 	}
 	
 	private def waitUntilGetModelsSucceeds(vllmClient: LlmServiceClient, setupTimeoutFuture: Future[_]) = {
@@ -356,6 +385,11 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 						
 					// Case: No models are available yet => Attempts again after a while
 					case None =>
+						if (result.isSuccess)
+							println("No models are available yet")
+						else
+							result.failure.foreach { log(_, "GET /models failed") }
+						
 						Delay(statusCheckInterval) {
 							tryCompletePromiseWhenModelsAreAvailable(vllmClient, resultPromise, completionView)
 						}
