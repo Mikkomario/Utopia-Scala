@@ -1,6 +1,7 @@
 package utopia.echo.model.vastai.instance.offer
 
 import utopia.echo.model.enumeration.NetworkTrafficDirection
+import utopia.echo.model.unit.ByteCount
 import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.DoubleType
@@ -31,8 +32,7 @@ object NetworkStats
 		private val baseKey = s"inet_${direction.key}"
 		private val costKey = s"${baseKey}_cost"
 		
-		override val schema: ModelDeclaration =
-			ModelDeclaration(baseKey -> DoubleType, costKey -> DoubleType)
+		override val schema: ModelDeclaration = ModelDeclaration(baseKey -> DoubleType)
 		
 		
 		// IMPLEMENTED  -------------
@@ -45,8 +45,15 @@ object NetworkStats
 /**
  * Contains information about a machine's network speed & cost
  * @param speedMBs Network speed in MB/s
- * @param costPerGbPerS Network usage cost in $/GB/s
+ * @param costPerGb Network usage cost in $/GB
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class NetworkStats(speedMBs: Double, costPerGbPerS: Double)
+case class NetworkStats(speedMBs: Double, costPerGb: Double)
+{
+	/**
+	 * @param downloadSize Size of the download/upload
+	 * @return Cost of that download/upload, in $
+	 */
+	def costOf(downloadSize: ByteCount) = downloadSize.gigas * costPerGb
+}

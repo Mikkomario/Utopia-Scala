@@ -54,7 +54,7 @@ object InstanceState
 	 */
 	case object Loading extends InstanceState
 	{
-		override val keys: Seq[String] = Pair("creating", "loading")
+		override val keys: Seq[String] = Vector("loading", "creating", "")
 		override val instanceIsUsable: Boolean = false
 		override val instanceShouldBeUsed: Boolean = false
 	}

@@ -58,6 +58,24 @@ object DbMap
 		 * @param connection Implicit DB connection.
 		 */
 		def clear()(implicit connection: Connection): Unit
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		 * Acquires this value, or if it's not available, may assign a new value
+		 * @param newValue A function that yields the new value to assign, or a failure
+		 * @param connection Implicit DB connection
+		 * @param ev Implicit evidence that this value is of type Try
+		 * @tparam B Type of the placed value
+		 * @return Acquired or set value
+		 */
+		def getOrTryUpdate[B <: In](newValue: => Try[B])(implicit connection: Connection, ev: A <:< Try[B]) =
+			connectedValue.orElse {
+				val value = newValue
+				value.toOption.foreach { set(_) }
+				value
+			}
 	}
 	
 	case class DbMapFactory[+A <: AccessColumn with Filterable[A], C](access: A, valueColumn: Column,

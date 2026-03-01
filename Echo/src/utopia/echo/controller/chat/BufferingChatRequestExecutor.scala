@@ -46,7 +46,7 @@ object BufferingChatRequestExecutor
 	 * @param exc Implicit execution context
 	 * @return A new interface for executing buffered requests using vLLM
 	 */
-	def vllm(client: LlmServiceClient)(implicit exc: ExecutionContext) =
+	def vllm(client: RequestQueue)(implicit exc: ExecutionContext) =
 		queueing(client)(BufferedVllmChatCompletionRequest.apply)
 	
 	/**

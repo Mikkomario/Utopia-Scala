@@ -11,6 +11,8 @@ import utopia.flow.generic.model.immutable.Value
 import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 
+import scala.language.implicitConversions
+
 /**
  * An enumeration for different offer-filtering keys
  * @author Mikko Hilpinen

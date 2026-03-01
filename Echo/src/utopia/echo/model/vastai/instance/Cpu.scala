@@ -12,8 +12,7 @@ object Cpu extends FromModelFactoryWithSchema[Cpu]
 	// ATTRIBUTES   ----------------------
 	
 	override val schema: ModelDeclaration = ModelDeclaration(
-		"cpu_arch" -> StringType, "cpu_cores" -> IntType, "cpu_cores_effective" -> DoubleType, "cpu_name" -> StringType,
-		"cpu_ram" -> IntType)
+		"cpu_arch" -> StringType, "cpu_cores" -> IntType, "cpu_cores_effective" -> DoubleType, "cpu_ram" -> IntType)
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -25,7 +24,7 @@ object Cpu extends FromModelFactoryWithSchema[Cpu]
 /**
  * Contains information about a machine's CPU
  * @param architecture Name of this CPU's manufacturer / architecture (e.g. "amd64")
- * @param name Name of this CPU model
+ * @param name Name of this CPU model. May be empty.
  * @param coreCount Total number of CPU cores
  * @param effectiveCoreCount Number of CPU cores offered / available for utilization
  * @param ram Amount of available RAM

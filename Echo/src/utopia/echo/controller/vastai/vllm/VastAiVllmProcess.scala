@@ -138,6 +138,18 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 	def vastAiStatePointer = vastAiProcess.detailedStatePointer
 	
 	/**
+	 * @return Currently usable client interface, along with the model to use
+	 */
+	def usableClient = detailedState match {
+		case HostingApi(instance, client, model) =>
+			if (instance.status.instanceIsUsable)
+				Some(client -> model)
+			else
+				None
+		case _ => None
+	}
+	
+	/**
 	 * @return Whether the queued requests have timed out, causing this process to enter the stopping state.
 	 */
 	def hasTimedOut = requestTimedOutStateP.value.isDefined

@@ -1,17 +1,16 @@
 package utopia.echo.model.vastai.instance
 
 import utopia.echo.model.unit.ByteCount
-import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.range.NumericSpan.IntSpan
+import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.ModelDeclaration
 import utopia.flow.generic.model.mutable.DataType.DoubleType
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
-import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
@@ -31,7 +30,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
 	// IMPLEMENTED  ----------------------
 	
 	override def apply(model: HasProperties): Try[VastAiInstance] = schema.validate(model).flatMap { model =>
-		Offer(model).flatMap { offer =>
+		BasicInstanceInfo(model).flatMap { info =>
 			InstanceStatus(model).map { status =>
 				val template = model("template_id").int.map { templateId =>
 					TemplateIdentifier(templateId, model("template_hash_id"), model("template_name"))
@@ -45,7 +44,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
 					}
 				}
 				
-				apply(model("id"), offer, status, model("client_run_time").getDouble.hours,
+				apply(model("id"), info, status, model("client_run_time").getDouble.hours,
 					model("host_run_time").getDouble.hours, model("credit_balance"),
 					model("uptime_mins").double.map { _.minutes }, model("label"), template, model("cpu_util"),
 					model("mem_limit").int.map { _.mb }, model("mem_usage").int.map { _.mb }, model("gpu_util"),
@@ -62,7 +61,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
 /**
  * Represents a rented machine / accepted contract
  * @param id ID of this instance
- * @param offer Information about this instance, which is also present in its offer
+ * @param details Static information about this instance, which is also present in its offer
  * @param status Information about this instance's current status
  * @param clientRunTime How long this client has been on
  * @param hostRunTime How long this host has been active
@@ -87,7 +86,8 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class VastAiInstance(id: Int, offer: Offer, status: InstanceStatus,
+// TODO: We also have "inet_down_billed": null & "inet_up_billed": null & "inet_up_cost": 0.0000013020833333333333
+case class VastAiInstance(id: Int, details: BasicInstanceInfo, status: InstanceStatus,
                           clientRunTime: Duration, hostRunTime: Duration, creditBalance: Option[Double] = None,
                           uptime: Option[Duration] = None, label: String = "",
                           template: Option[TemplateIdentifier] = None,
@@ -98,7 +98,7 @@ case class VastAiInstance(id: Int, offer: Offer, status: InstanceStatus,
                           localIpAddresses: Seq[String] = Empty, publicIpAddress: String = "",
                           directPortRange: Option[IntSpan] = None, otherPorts: Seq[Int] = Empty,
                           ssh: Option[SshConnection] = None, jupyterToken: String = "", timestamp: Instant = Now)
-	extends Extender[Offer]
+	extends Extender[BasicInstanceInfo]
 {
-	override def wrapped: Offer = offer
+	override def wrapped = details
 }

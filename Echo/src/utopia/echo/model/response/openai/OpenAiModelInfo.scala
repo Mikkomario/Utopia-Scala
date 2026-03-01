@@ -33,3 +33,6 @@ object OpenAiModelInfo extends FromModelFactoryWithSchema[OpenAiModelInfo]
  * @since 26.02.2026, v1.5
  */
 case class OpenAiModelInfo(name: String, owner: String = "", created: Instant = Now)
+{
+	override def toString = name
+}
