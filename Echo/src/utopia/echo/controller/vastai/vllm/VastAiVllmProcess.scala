@@ -256,6 +256,25 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 		// TODO: Pass a ProcessLogger instance to run()
 		// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
 		// TODO: May need to enable user interaction somehow (if asks for verification, etc.)
+		/*
+			java.lang.System
+				System.getenv(name: String): String
+				System.getenv(): java.util.Map[String, String]
+			 */
+		/*
+		val sshProcess = process.Process(
+		  s"""
+		  ssh -N \
+			-i /path/to/id_ed25519 \
+			-L $localPort:localhost:18000 \
+			root@${ssh.host} \
+			-p ${ssh.port} \
+			-o BatchMode=yes \
+			-o StrictHostKeyChecking=no \
+			-o UserKnownHostsFile=/dev/null
+		  """.stripMargin.replaceAll("\n", " ")
+		).run()
+		 */
 		val sshProcess = process.Process(
 				s"ssh -N -L $localPort:localhost:18000 root@${ ssh.host } -p ${
 					ssh.port } -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
