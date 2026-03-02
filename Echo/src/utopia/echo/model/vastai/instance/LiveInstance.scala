@@ -36,6 +36,11 @@ class LiveInstance(val instancePointer: Changing[VastAiInstance], val processSta
 	 */
 	val loadedFuture = loadedFlag.finalValueFuture
 	
+	/**
+	 * A pointer that contains the instance's current status
+	 */
+	lazy val statusPointer = instancePointer.lightMap { _.status }
+	
 	
 	// INITIAL CODE ---------------------
 	

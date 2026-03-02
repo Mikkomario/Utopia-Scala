@@ -86,6 +86,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
+// TODO: Add disk & disk usage info
 // TODO: We also have "inet_down_billed": null & "inet_up_billed": null & "inet_up_cost": 0.0000013020833333333333
 case class VastAiInstance(id: Int, details: BasicInstanceInfo, status: InstanceStatus,
                           clientRunTime: Duration, hostRunTime: Duration, creditBalance: Option[Double] = None,

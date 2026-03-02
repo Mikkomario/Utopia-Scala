@@ -3,6 +3,7 @@ package utopia.echo.model.request.vastai
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.RequestResult
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.model.error.RequestFailedException
 import utopia.echo.model.request.vastai.GetSshKeys.GetSshKeysResponseParser
 import utopia.echo.model.vastai.instance.SshKey
@@ -19,11 +20,15 @@ object GetSshKeys
 {
 	// NESTED   --------------------------
 	
-	private object GetSshKeysResponseParser extends FromModelFactory[Seq[SshKey]]
+	object GetSshKeysResponseParser extends FromModelFactory[Seq[SshKey]]
 	{
 		override def apply(model: HasProperties): Try[Seq[SshKey]] = {
+			// The ssh_keys property is a string value, representing an array of JSON objects
 			if (model("success").booleanOr(true))
-				model.tryGet("ssh_keys") { _.tryVectorWith { _.tryModel.flatMap(SshKey.apply) } }
+				model.tryGet("ssh_keys") {
+					_.tryString.flatMap { JsonBunny(_) }
+						.flatMap { _.tryVectorWith { _.tryModel.flatMap(SshKey.apply) } }
+				}
 			else
 				Failure(new RequestFailedException(s"Server responded with: $model"))
 		}

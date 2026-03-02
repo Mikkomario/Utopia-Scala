@@ -29,19 +29,22 @@ object BasicInstanceInfo extends FromModelFactory[BasicInstanceInfo]
 		MachineCost(model).flatMap { cost =>
 			Cpu(model).flatMap { cpu =>
 				Gpu(model).flatMap { gpu =>
-					MachinePerformance(model).flatMap { performance =>
-						NetworkTrafficDirection.values.tryMapAll { dir => NetworkStats(dir)(model).map { dir -> _ } }
-							.flatMap { network =>
-								model.tryGet("end_date") { v => Try { Instant.ofEpochSecond(v.getLong) } }
-									.map { ends =>
-										val started = model("start_date").long.flatMap { start =>
-											Try { Instant.ofEpochSecond(start) }.toOption
+					Disk(model).flatMap { disk =>
+						MachinePerformance(model).flatMap { performance =>
+							NetworkTrafficDirection.values
+								.tryMapAll { dir => NetworkStats(dir)(model).map { dir -> _ } }
+								.flatMap { network =>
+									model.tryGet("end_date") { v => Try { Instant.ofEpochSecond(v.getLong) } }
+										.map { ends =>
+											val started = model("start_date").long.flatMap { start =>
+												Try { Instant.ofEpochSecond(start) }.toOption
+											}
+											apply(model("machine_id"), model("host_id"), cost, cpu, gpu, disk,
+												network.toMap, performance, model("geolocation"),
+												ends, started, model("static_ip"))
 										}
-										apply(model("machine_id"), model("host_id"), cost, cpu, gpu,
-											network.toMap, performance, model("geolocation"),
-											ends, started, model("static_ip"))
-									}
-							}
+								}
+						}
 					}
 				}
 			}
@@ -56,6 +59,7 @@ object BasicInstanceInfo extends FromModelFactory[BasicInstanceInfo]
  * @param cost Information about this offer's costs
  * @param cpu Information about the CPU
  * @param gpu Information about the GPU(s)
+ * @param disk Information about the disk
  * @param network Information about network usage
  * @param performance Information about this machine's performance
  * @param location This machine's location, as a String
@@ -65,7 +69,7 @@ object BasicInstanceInfo extends FromModelFactory[BasicInstanceInfo]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class BasicInstanceInfo(machineId: Int, hostId: Int, cost: MachineCost, cpu: Cpu, gpu: Gpu,
+case class BasicInstanceInfo(machineId: Int, hostId: Int, cost: MachineCost, cpu: Cpu, gpu: Gpu, disk: Disk,
                              network: Map[NetworkTrafficDirection, NetworkStats],
                              performance: MachinePerformance, location: String,
                              ends: Instant, started: Option[Instant] = None,

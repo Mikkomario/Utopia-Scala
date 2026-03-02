@@ -10,6 +10,8 @@ import utopia.disciple.model.request.Body
 import utopia.echo.model.request.vastai.AcceptOffer.AcceptOfferResponseParser
 import utopia.echo.model.vastai.instance.offer.RunType
 import RunType.Ssh
+import utopia.echo.model.unit.ByteCount
+import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -52,6 +54,7 @@ object AcceptOffer
  * @param env Environment variables and port mappings to apply.
  *            When using a template, request env is merged with template env -
  *            existing keys are retained, new keys are appended, conflicting keys use the request value.
+ * @param reservedDiskSpace The amount of disk space to reserve. This cannot be adjusted later! Default = 10 GB.
  * @param label Custom name for the instance (optional)
  * @param bidPrice Bid price per machine (in $/hour). Only for interruptible instances.
  * @param args Arguments to pass to the image entrypoint. Specified either as a string (Left) or as an array (Right).
@@ -71,9 +74,9 @@ object AcceptOffer
  * @since 24.02.2026, v1.5
  */
 case class AcceptOffer(offerId: Int, templateHashId: String, image: String = "", runType: RunType = Ssh,
-                       env: Model = Model.empty, label: String = "", bidPrice: Option[Double] = None,
-                       args: Either[String, Seq[String]] = Right(Empty), startCommands: Seq[String] = Empty,
-                       imageCredentials: String = "", jupyterDirectory: String = "",
+                       env: Model = Model.empty, reservedDiskSpace: ByteCount = 10.gb, label: String = "",
+                       bidPrice: Option[Double] = None, args: Either[String, Seq[String]] = Right(Empty),
+                       startCommands: Seq[String] = Empty, imageCredentials: String = "", jupyterDirectory: String = "",
                        deprecatedView: View[Boolean] = AlwaysFalse,
                        cancelIfUnavailable: UncertainBoolean = UncertainBoolean,
                        isVirtualMachine: UncertainBoolean = UncertainBoolean,
@@ -98,7 +101,8 @@ case class AcceptOffer(offerId: Int, templateHashId: String, image: String = "",
 		}
 		Left(Model
 			.from(
-				"image" -> image, "template_hash_id" -> templateHashId, "label" -> label, "runtype" -> runType.key,
+				"image" -> image, "template_hash_id" -> templateHashId, "disk" -> reservedDiskSpace.gigas.ceil.toInt,
+				"label" -> label, "runtype" -> runType.key,
 				"target_state" -> (if (targetStopped) "stopped" else "running"),
 				"price" -> bidPrice.map { p => (p max 0.001) min 128 }, "env" -> env,
 				"cancel_unavail" -> cancelIfUnavailable, "vm" -> isVirtualMachine,

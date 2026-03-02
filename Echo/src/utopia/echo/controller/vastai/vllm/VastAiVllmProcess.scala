@@ -18,7 +18,7 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState._
 import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessState}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
-import utopia.flow.async.process.{Delay, Loop, Process}
+import utopia.flow.async.process.{Delay, Loop, Process, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
@@ -70,6 +70,8 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 26.02.2026, v1.5
  */
+// TODO: Add separate timeout for individual status phases (i.e. if keeps at same status for >X minutes, fail)
+// FIXME: vLLM port might be 8000 and not 18000?
 class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, selectOffer: SelectOffer,
                         modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
                         startCommands: Seq[String] = Empty,
@@ -101,8 +103,8 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 	
 	private val vastAiProcess = VastAiProcess(statusCheckInterval) { hurryFlag =>
 		// Requests for offers
-		// TODO: Instance shows available space 10 GB. Mistake somewhere?
-		client.send(GetOffers(modelSize + additionalReservedDisk, selectOffer.filters, selectOffer.ordering,
+		val requiredDiskSpace = modelSize + additionalReservedDisk
+		client.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering,
 				selectOffer.limit, selectOffer.offerType))
 			// Selects one offer
 			.tryFlatMap(selectOffer.apply)
@@ -113,9 +115,14 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 					case Right(hashId) => "" -> hashId
 				}
 				// Accepts the offer, requesting a new instance
-				client.send(AcceptOffer(offer.id, templateHashId = templateHashId, image = image, runType = DirectSsh,
-					env = env, startCommands = startCommands, label = instanceLabel,
-					imageCredentials = imageCredentials, deprecatedView = hurryFlag, cancelIfUnavailable = true))
+				// TODO: Remove test
+				val request = AcceptOffer(offer.id, templateHashId = templateHashId, image = image, runType = DirectSsh,
+					reservedDiskSpace = requiredDiskSpace, env = env, startCommands = startCommands,
+					label = instanceLabel, imageCredentials = imageCredentials, deprecatedView = hurryFlag,
+					cancelIfUnavailable = true)
+				println(request.path)
+				println(request.body)
+				client.send(request)
 			}
 			.toTryFuture
 	}
@@ -266,7 +273,7 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 				// Creates the API client and waits until it's responsive (or until timeout is reached)
 				val _gateway = gateway
 				val vllmClient = new LlmServiceClient(_gateway,
-					s"http${ if (useHttps) "s" else "" }://localhost:$localPort/v1",
+					s"http${ if (useHttps) "s" else "" }://127.0.0.1:$localPort/v1",
 					maxParallelRequests = _gateway.maxConnectionsPerRoute)
 				waitUntilGetModelsSucceeds(vllmClient, setupTimeoutOrStopFuture) match {
 					case Success(model) =>
@@ -313,34 +320,43 @@ class VastAiVllmProcess(imageOrVllmTemplateHashId: Sided[String], env: Model, se
 	
 	private def startSshPortForwarding(instanceId: Int, ssh: SshConnection, setupTimeoutOrStopFuture: Future[_]) = {
 		// Makes sure we have a local SSH key
-		val sshKeyPath = Env.home.getOrElse(FileUtils.workingDirectory)/".ssh/id_ed25519"
-		StringFrom.path(sshKeyPath)
-			.flatMap { sshKey =>
-				// Makes sure that key is attached to the rented instance
-				val requestDeprecationView = View { setupTimeoutOrStopFuture.isCompleted }
-				client.send(GetSshKeys(instanceId, requestDeprecationView)).waitForResult()
-					.mapOrFail { keysOnInstance =>
-						if (keysOnInstance.exists { _.publicKey == sshKey }) {
-							println("SSH key already attached")
-							Success("")
+		Env.home.toTry { new NoSuchElementException("HOME environment variable is not available") }.flatMap { home =>
+			val sshDirPath = home/".ssh"
+			StringFrom.path(sshDirPath/"id_ed25519.pub")
+				.flatMap { sshKey =>
+					// Makes sure that key is attached to the rented instance
+					val requestDeprecationView = View { setupTimeoutOrStopFuture.isCompleted }
+					client.send(GetSshKeys(instanceId, requestDeprecationView)).waitForResult()
+						.mapOrFail { keysOnInstance =>
+							println(s"${ keysOnInstance.size } SSH keys attached:")
+							keysOnInstance.foreach { key => println(s"- $key") }
+							if (keysOnInstance.exists { _.publicKey == sshKey }) {
+								println("SSH key already attached")
+								Success("")
+							}
+							else {
+								println(s"The instance had ${
+									keysOnInstance.size } SSH keys; None matched id_ed25519 => Attaches the SSH key ($sshKey) to the remote device")
+								val result = client.send(AttachSshKey(instanceId, sshKey, requestDeprecationView)).waitForResult()
+								println("Waiting 30 more seconds in order for the SSH key to be registered on the remote device")
+								// TODO: We need a more dynamic approach
+								Wait(30.seconds)
+								result
+							}
 						}
-						else {
-							println(s"The instance had ${
-								keysOnInstance.size } SSH keys; None matched id_ed25519 => Attaches the SSH key to the remote device")
-							client.send(AttachSshKey(instanceId, sshKey, requestDeprecationView)).waitForResult()
-						}
-					}
-					.toTry
-			}
-			.map { _ =>
-				// Starts SSH port forwarding
-				println("Starts the port forwarding")
-				// TODO: Pass a ProcessLogger instance to run()
-				// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
-				process.Process(s"ssh -N -i $sshKeyPath -L $localPort:localhost:18000 root@${ ssh.host } -p ${
-						ssh.port } -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ServerAliveInterval=60 -o ServerAliveCountMax=5")
-					.run()
-			}
+						.toTry
+				}
+				.map { _ =>
+					// Starts SSH port forwarding
+					println("Starts the port forwarding")
+					// TODO: Pass a ProcessLogger instance to run()
+					// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
+					process.Process(s"ssh -N -i ${ sshDirPath/"id_ed25519" } -L $localPort:127.0.0.1:18000 root@${
+							ssh.host } -p ${
+							ssh.port } -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
+						.run()
+				}
+		}
 	}
 	
 	private def waitUntilGetModelsSucceeds(vllmClient: LlmServiceClient, setupTimeoutFuture: Future[_]) = {
