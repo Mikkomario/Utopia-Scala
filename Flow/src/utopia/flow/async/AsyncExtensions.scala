@@ -1,6 +1,6 @@
 package utopia.flow.async
 
-import utopia.flow.async.process.{Wait, WaitUtils}
+import utopia.flow.async.process.{AsyncSystemProcess, Wait, WaitUtils}
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.TryCatchBuilder
 import utopia.flow.operator.MaybeEmpty
@@ -619,5 +619,14 @@ object AsyncExtensions
 			case Success(result) => Future.successful(result)
 			case Failure(e) => Future.failed(e)
 		}
+	}
+	
+	implicit class RichProcess(val p: scala.sys.process.Process) extends AnyVal
+	{
+		/**
+		 * @param exc Implicit execution context
+		 * @return An interface for managing this process asynchronously
+		 */
+		def async(implicit exc: ExecutionContext) = new AsyncSystemProcess(p)
 	}
 }

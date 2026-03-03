@@ -22,6 +22,40 @@ object OpenAiModelInfo extends FromModelFactoryWithSchema[OpenAiModelInfo]
 			case Some(value) => Try { Instant.ofEpochSecond(value) }.getOrElse(Now)
 			case None => Now
 		})
+		
+	// TODO: vLLM returns the following data. Add support at some point:
+	/*
+	{
+	  "data": [
+	    {
+	      "created": 1772506693,
+	      "id": "/models/Qwen3-14B-AWQ",
+	      "max_model_len": 4096,
+	      "object": "model",
+	      "owned_by": "vllm",
+	      "parent": null,
+	      "permission": [
+	        {
+	          "allow_create_engine": false,
+	          "allow_fine_tuning": false,
+	          "allow_logprobs": true,
+	          "allow_sampling": true,
+	          "allow_search_indices": false,
+	          "allow_view": true,
+	          "created": 1772506693,
+	          "group": null,
+	          "id": "modelperm-bf0143dd698234b6",
+	          "is_blocking": false,
+	          "object": "model_permission",
+	          "organization": "*"
+	        }
+	      ],
+	      "root": "/models/Qwen3-14B-AWQ"
+	    }
+	  ],
+	  "object": "list"
+	}
+	 */
 }
 
 /**

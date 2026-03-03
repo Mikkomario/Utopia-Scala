@@ -4,6 +4,7 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.GetRequest
 import utopia.annex.model.response.RequestResult
 import utopia.echo.model.response.openai.OpenAiModelInfo
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -49,6 +50,14 @@ class ListOpenAiModels(deprecationView: View[Boolean] = AlwaysFalse) extends Get
 	
 	override def deprecated: Boolean = deprecationView.value
 	
+	// Expects the response to be either:
+	//      - A JSON object containing "data": [...]
+	//      - A JSON object array
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Seq[OpenAiModelInfo]]] =
-		prepared.getMany(OpenAiModelInfo)
+		prepared.parseValue { body =>
+			body.getModelOrVector match {
+				case Left(model) => model.tryGet("data") { _.tryParseModelsWith(OpenAiModelInfo) }
+				case Right(values) => values.tryMapAll { _.tryModel.flatMap(OpenAiModelInfo.apply) }
+			}
+		}
 }

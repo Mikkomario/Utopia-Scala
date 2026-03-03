@@ -58,7 +58,9 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 	/**
 	  * The wrapped request queue system
 	  */
-	protected val queueSystem = new QueueSystem(LlmApiClient, offlineWaitThreshold, minOfflineDelay = 10.seconds)
+	protected val queueSystem =
+		new QueueSystem(LlmApiClient, offlineWaitThreshold, minOfflineDelay = 10.seconds, maxOfflineDelay = 30.seconds,
+			increaseOfflineDelay = _ + 2.5.seconds)
 	/**
 	  * The wrapped request queue
 	  */

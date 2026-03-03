@@ -63,17 +63,46 @@ object DbMap
 		// OTHER    ----------------------
 		
 		/**
+		 * Acquires this value, or if it's not available, assigns a new value
+		 * @param newValue New value to assign, if this value is not defined
+		 * @param connection Implicit DB connection
+		 * @param ev Implicit evidence that this value is of type Option
+		 * @tparam B Type of the placed value
+		 * @return Acquired or set value
+		 */
+		def getOrElseUpdate[B <: In](newValue: => B)(implicit connection: Connection, ev: A <:< Option[B]) =
+			connectedValue.getOrElse {
+				val value = newValue
+				set(newValue)
+				value
+			}
+		/**
+		 * Acquires this value, or if it's not available, possibly assigns a new value
+		 * @param newValue New value to assign, if this value is not defined
+		 * @param connection Implicit DB connection
+		 * @param ev Implicit evidence that this value is of type Option
+		 * @tparam B Type of the placed value
+		 * @return Acquired or set value. None if no value was available, nor set.
+		 */
+		def getOrElsePossiblyUpdate[B <: In](newValue: => Option[B])
+		                                    (implicit connection: Connection, ev: A <:< Option[B]) =
+			connectedValue.orElse {
+				val value = newValue
+				newValue.foreach(set)
+				value
+			}
+		/**
 		 * Acquires this value, or if it's not available, may assign a new value
 		 * @param newValue A function that yields the new value to assign, or a failure
 		 * @param connection Implicit DB connection
 		 * @param ev Implicit evidence that this value is of type Try
 		 * @tparam B Type of the placed value
-		 * @return Acquired or set value
+		 * @return Acquired or set value. Failure if no value was available, and 'newValue' yielded a failure.
 		 */
 		def getOrTryUpdate[B <: In](newValue: => Try[B])(implicit connection: Connection, ev: A <:< Try[B]) =
 			connectedValue.orElse {
 				val value = newValue
-				value.toOption.foreach { set(_) }
+				value.toOption.foreach(set)
 				value
 			}
 	}

@@ -112,6 +112,7 @@
   - Immediate support is added for **Try** (via **TryExtensions**) and **TryCatch**
   - Also added **PossiblyFailingFuture**, **PossiblyFailingFutures** and **Attempts** traits for facilitating 
     extension-creation for classes that will extend **MayHaveFailed**
+- Added **AsyncSystemProcess**, a wrapper for **scala.sys.process.Process**
 - Added **GeneratesAgain** (an eventful **ResettableLazy**)
 - Added **BecomesEventfulPointer** and **BecomesEventfulVolatile**, 
   which initialize their eventful functionality lazily.
@@ -214,6 +215,7 @@
 - **Value**
   - Added `.leftOrRight(...)`, `.getLeftOrRight(...)`, `.tryLeftOrRight(...)`, 
     `.intOrString`, `.getIntOrString` and `.tryIntOrString`
+  - Added `.tryParseModelsWith(FromModelFactory)`
 ### Other changes
 - **TimeLogger** now supports auto-flushing
 - Various changes to **Changing**:

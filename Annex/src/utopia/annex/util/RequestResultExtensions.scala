@@ -200,4 +200,15 @@ object RequestResultExtensions
 				}
 			}
 	}
+	
+	implicit class AsyncRequestResultTry[+A](val t: Try[Future[RequestResult[A]]]) extends AnyVal
+	{
+		/**
+		 * @return The wrapped future, or, if this is a failure, a failed request result
+		 */
+		def flattenToFuture = t match {
+			case Success(result) => result
+			case Failure(error) => Future.successful(RequestSendingFailed(error))
+		}
+	}
 }

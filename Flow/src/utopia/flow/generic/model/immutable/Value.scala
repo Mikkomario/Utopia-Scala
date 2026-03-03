@@ -4,6 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ConversionHandler
+import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.operator.MaybeEmpty
@@ -315,6 +316,17 @@ case class Value(content: Option[Any], dataType: DataType)
     def tryModel = getTry(ModelType) { _.getModel }
     
     def tryVectorWith[A](f: Value => Try[A]) = tryVector.flatMap { _.tryMapAll(f) }
+	/**
+	 * @param f A factory for parsing models
+	 * @tparam A Type of successfully parsed models
+	 * @return This value, converted into a model vector, parsed using 'f'.
+	 *         Failure if:
+	 *              - This value couldn't be converted into a Vector
+	 *              - The values in this Vector couldn't be converted into Model
+	 *              - The Models in this Vector couldn't be parsed using 'f'
+	 */
+	def tryParseModelsWith[A](f: FromModelFactory[A]) = tryVectorWith { _.tryModel.flatMap(f.apply) }
+	
     def tryPairWith[A](f: Value => Try[A]) =
         tryPair.flatMap { p => f(p.first).flatMap { first => f(p.second).map { Pair(first, _) } } }
     def tryTupleWith[F, S](first: Value => Try[F])(second: Value => Try[S]): Try[(F, S)] =

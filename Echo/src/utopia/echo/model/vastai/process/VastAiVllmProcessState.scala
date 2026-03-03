@@ -79,16 +79,31 @@ object VastAiVllmProcessState
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = InstanceLoading(instance)
 	}
 	/**
-	 * State at which the wrapped instance has technically loaded, but the vLLM API is not yet ready.
-	 * May include waiting for the model to load.
+	 * State at which the wrapped instance has loaded, but SSH and vLLM may still need to be set up.
 	 * @param instance The latest state of the acquired instance
 	 */
-	case class WaitingForApi(instance: VastAiInstance) extends VastAiVllmProcessState
+	case class SettingUpApi(instance: VastAiInstance) extends VastAiVllmProcessState
 	{
+		// ATTRIBUTES   ---------------------
+		
 		override val phaseIndex: Int = 4
 		override val isUsable: Boolean = false
 		
-		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = WaitingForApi(instance)
+		
+		// IMPLEMENTED  ----------------------
+		
+		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = SettingUpApi(instance)
+	}
+	/**
+	 * State at which the vLLM is being started, or is loading model data, and is not yet responsive.
+	 * @param instance The latest state of the acquired instance
+	 */
+	case class StartingApi(instance: VastAiInstance) extends VastAiVllmProcessState
+	{
+		override val phaseIndex: Int = 5
+		override val isUsable: Boolean = false
+		
+		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = StartingApi(instance)
 	}
 	/**
 	 * State at which the vLLM API is fully functional and usable
@@ -99,7 +114,7 @@ object VastAiVllmProcessState
 	case class HostingApi(instance: VastAiInstance, apiClient: LockingRequestQueue, model: OpenAiModelInfo)
 		extends VastAiVllmProcessState
 	{
-		override val phaseIndex: Int = 5
+		override val phaseIndex: Int = 6
 		override def isUsable: Boolean = instance.status.instanceIsUsable
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = copy(instance = instance)
@@ -116,7 +131,7 @@ object VastAiVllmProcessState
 	{
 		// ATTRIBUTES   ----------------------
 		
-		override val phaseIndex: Int = 6
+		override val phaseIndex: Int = 7
 		override val isUsable: Boolean = false
 		
 		
@@ -139,7 +154,7 @@ object VastAiVllmProcessState
 	 */
 	case class DestroyingInstance(apiStatus: ApiHostingResult) extends VastAiVllmProcessState
 	{
-		override val phaseIndex: Int = 7
+		override val phaseIndex: Int = 8
 		override val isUsable: Boolean = false
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
@@ -152,7 +167,7 @@ object VastAiVllmProcessState
 	case class Stopped(apiStatus: ApiHostingResult, finalInstanceProcessState: VastAiProcessState)
 		extends VastAiVllmProcessState
 	{
-		override val phaseIndex: Int = 8
+		override val phaseIndex: Int = 9
 		override val isUsable: Boolean = false
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
