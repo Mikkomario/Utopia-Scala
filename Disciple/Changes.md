@@ -2,6 +2,9 @@
 
 ## v1.9.2 (in development)
 Supports **Access v1.7** and **Flow v2.8**
+### Breaking changes
+- **Gateway**'s `allowBodyParameters` and `allowJsonInUriParameters` 
+  now have the default value of `false` instead of `true`
 ### New features
 - **RequestRateLimiter** now supports randomness
 ### New methods

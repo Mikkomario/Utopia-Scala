@@ -53,12 +53,12 @@ object Gateway
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	 * @param dnsResolver A custom DNS resolver to use (optional)
-	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = false).
 	  *                            Use false if you wish to force parameters to uri parameters.
-	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
+	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to JSON values before
 	  *                                 applying them. False if you want the parameters to be added "as is"
 	  *                                 (using .toString). This mostly affects string values, whether they should be
-	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  *                                 wrapped in quotation marks or not. (default = false)
 	  * @param disableTrustStoreVerification Whether the SSL trust store verification process should be disabled entirely.
 	  *                                      Setting this to true may compromise data security, but will work around
 	  *                                      Java's "trustAnchors parameter must be non-empty" -error.
@@ -74,7 +74,7 @@ object Gateway
 	          parameterEncoding: Option[Codec] = None,
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
 	          responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
-	          allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
+	          allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
 	          disableTrustStoreVerification: Boolean = false) =
 		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
 			requestInterceptors, responseInterceptors, dnsResolver, Identity, allowBodyParameters,
@@ -91,12 +91,12 @@ object Gateway
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	 * @param dnsResolver A custom DNS resolver to use (optional)
-	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
+	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = false).
 	  *                            Use false if you wish to force parameters to uri parameters.
-	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to json values before
+	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to JSON values before
 	  *                                 applying them. False if you want the parameters to be added "as is"
 	  *                                 (using .toString). This mostly affects string values, whether they should be
-	  *                                 wrapped in quotation marks or not. (default = true = use json value format)
+	  *                                 wrapped in quotation marks or not. (default = false)
 	  * @param disableTrustStoreVerification Whether the SSL trust store verification process should be disabled entirely.
 	  *                                      Setting this to true may compromise data security, but will work around
 	  *                                      Java's "trustAnchors parameter must be non-empty" -error.
@@ -113,7 +113,7 @@ object Gateway
 	           parameterEncoding: Option[Codec] = None,
 	           requestInterceptors: Seq[RequestInterceptor] = Empty,
 	           responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
-	           allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
+	           allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
 	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
 		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
@@ -157,7 +157,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
               requestInterceptors: Seq[RequestInterceptor] = Empty,
               responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
               customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
-              allowBodyParameters: Boolean = true, allowJsonInUriParameters: Boolean = true,
+              allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
               disableTrustStoreVerification: Boolean = false)
 {
     // ATTRIBUTES    -------------------------

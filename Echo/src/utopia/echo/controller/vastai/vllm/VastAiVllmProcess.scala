@@ -17,6 +17,7 @@ import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.vastai.instance.offer.RunType.DirectSsh
 import utopia.echo.model.vastai.instance.{InstanceStatus, NewInstanceFoundation, SshConnection, VastAiInstance}
+import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.NotStarted
 import utopia.echo.model.vastai.process.VastAiVllmProcessState._
 import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessState}
 import utopia.flow.async.AsyncExtensions._
@@ -144,6 +145,7 @@ object VastAiVllmProcess
  * @since 26.02.2026, v1.5
  */
 // TODO: Add separate timeout for individual status phases (i.e. if keeps at same status for >X minutes, fail)
+// TODO: Add support for blacklisting offers (and remember which offer was taken)
 class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
                         gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
                         localPort: Int = 18000, remotePort: Int = 18000, maxGpuUtil: Double = 0.9,
@@ -163,6 +165,10 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 * A pointer that contains [[VastAiVllmProcessState]] of this process
 	 */
 	val detailedStatePointer = stateP.readOnly
+	/**
+	 * A pointer that contains [[VastAiVllmProcessPhase]] of this process
+	 */
+	val phasePointer = stateP.lightMap { _.phase }
 	
 	/**
 	 * A pointer that will store the hosted vLLM API client, if one is successfully created.
@@ -258,12 +264,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	def vastAiStatePointer = vastAiProcess.detailedStatePointer
 	
 	/**
-	 * @return Currently usable client interface, along with the model to use
+	 * @return Currently usable client interface, along with the model to use and the maximum context size
 	 */
 	def usableClient = detailedState match {
-		case HostingApi(instance, client, model) =>
+		case HostingApi(instance, client, model, maxContextSize) =>
 			if (instance.status.instanceIsUsable)
-				Some(client -> model)
+				Some((client, model, maxContextSize))
 			else
 				None
 		case _ => None
@@ -401,7 +407,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 					// The client is now usable. Stores it in a pointer, enabling external use.
 					val publicClient = lazyPublicClient.value
 					clientP.set(Success((publicClient, model, maxContextSize)))
-					stateP.value = HostingApi(instancePointer.value, publicClient, model)
+					stateP.value = HostingApi(instancePointer.value, publicClient, model, maxContextSize)
 					
 					// Updates the state once requested to stop
 					hurryFlag.onceSet {
