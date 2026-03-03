@@ -3,6 +3,8 @@ package utopia.flow.view.immutable.caching
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.LazySeq
 import utopia.flow.collection.mutable.iterator.{LazyInitIterator, PollableOnce}
+import utopia.flow.time.{Duration, Now}
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
@@ -59,6 +61,21 @@ object Lazy
 	  * @return A new lazy container
 	  */
 	def deprecating[A](make: => A)(testValidity: A => Boolean) = DeprecatingLazy(make)(testValidity)
+	/**
+	 * @param keepDuration Duration of how long the value should be used before generating a new one
+	 * @param make A function for generating a new value
+	 * @tparam A Type of the cached value
+	 * @return A lazily initialized container
+	 *         that automatically updates its contents after the specified duration has passed.
+	 */
+	def updating[A](keepDuration: Duration)(make: => A) = {
+		if (keepDuration.isInfinite)
+			apply(make)
+		else if (keepDuration.isPositive)
+			deprecating { make -> Now.toInstant } { _._2 >= Now - keepDuration }.lightMap { _._1 }
+		else
+			ViewAsLazy(make)
+	}
 	/**
 	  * @param make A function for creating an item when it is requested
 	  * @param test A function that returns whether a generated value (accepted as a parameter) should be stored (true)
