@@ -16,6 +16,7 @@ import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.NewInstanceFoundation
 import utopia.echo.model.vastai.instance.offer.Offer
+import utopia.echo.model.vastai.process.VastAiVllmProcessRecord
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{NotStarted, Stopping}
 import utopia.flow.async.AsyncExtensions._
@@ -33,6 +34,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.result.TryCatch
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.CopyOnDemand
@@ -41,21 +43,147 @@ import java.nio.file.Path
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
+object VastAiVllmChatExecutor
+{
+	/**
+	 * Creates a new chat executor that utilizes multiple parallel Vast AI instances when executing requests
+	 * @param selectOffer Logic for selecting Vast AI offers to take
+	 * @param modelSize Size of the used model.
+	 *                  If multiple models are used, the size of the largest model should be returned.
+	 * @param additionalReservedDisk Disk space reserved in addition to the model size. Default = 5 GB.
+	 * @param instanceCounts Numbers of Vast AI instances to run. Each entry contains the following 4 values:
+	 *                          1. Applied maximum context size
+	 *                          1. Number of clients run in parallel
+	 *                          1. Number of parallel requests per client
+	 *                          1. Number of requests that may be queued per client,
+	 *                             without bleeding to another context size category
+	 *
+	 *                       The default value is:
+	 *                          1. 4 clients with context size of 4096 and 8 parallel requests
+	 *                          1. 3 clients with context size of 8192 and 4 parallel requests
+	 *                          1. 2 clients with context size of 16384 and 2 parallel requests
+	 * @param defaultContextSize Context size to assume when no context size is specified in the request.
+	 *                           Default = None = no context size is assumed,
+	 *                           but the backup solution is used instead (if applicable)
+	 *
+	 *                           NB: It is always recommended to specify the context size for the requests.
+	 *                               This can be done, for example, by utilizing a StatelessBufferedReplyGenerator.
+	 * @param backupExecutor Request executor used for requests that exceed the largest allowed context size,
+	 *                       and for those which don't have a context size specified (if 'defaultContextSize' is None).
+	 *
+	 *                       If left empty (default), such requests will be immediately failed.
+	 * @param recorder An interface which receives records of completed Vast AI processes.
+	 *                 None (default) if no recording should be performed.
+	 * @param installScriptPath Path to a script for installing vLLM on the rented device.
+	 *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
+	 *                          Default = None.
+	 * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM. Default = 0.9.
+	 * @param setupTimeout Timeout for the setup process.
+	 *                     If the API doesn't become usable before this timeout, the instance is destroyed.
+	 *                     Default = infinite (not recommended).
+	 * @param recoveryTimeout Timeout for recovering from SSH and/or vLLM failures. Default = 60 seconds.
+	 * @param noResponseTimeout Timeout for started API requests.
+	 *                          If this timeout is reached, the request queue is closed
+	 *                          and the underlying Vast AI instance is destroyed.
+	 *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
+	 * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
+	 *              This label will be appended by the applied max context size.
+	 * @param startLazily Whether this executor should only start when the first request is received.
+	 *                     Default = false = instances are acquired immediately.
+	 * @param chooseImage A function for choosing the image or Vast AI template to use.
+	 *                    Accepts the selected offer and the applied maximum context size, yields:
+	 *                          1. Instance-creation settings
+	 *                          1. Expected initial vLLM service state at the remote instance
+	 *                          1. Name of the model to start vLLM with.
+	 *                             Optional if vLLM is started automatically by the image / template.
+	 * @param thinks A function used for determining, which of the used models should be marked as "thinking"
+	 * @param exc Implicit execution context
+	 * @param vastAiClient Implicit Vast AI -interfacing client
+	 * @param log Implicit logging implementation
+	 * @return a new executor interface
+	 */
+	def apply(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
+	          instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 4, 8, 8), (8192, 3, 4, 4), (16384, 2, 2, 2)),
+	          defaultContextSize: Option[Int] = None,
+	          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
+	          recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
+	          maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
+	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
+	          label: String = "chat-executor", startLazily: Boolean = false)
+	         (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
+	         (thinks: String => Boolean)
+	         (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger) =
+		new VastAiVllmChatExecutor(selectOffer, modelSize, additionalReservedDisk, instanceCounts, defaultContextSize,
+			backupExecutor, recorder, installScriptPath, maxGpuUtil, setupTimeout, recoveryTimeout, noResponseTimeout,
+			label, startLazily)(chooseImage)(thinks)
+}
+
 /**
  * Executes buffered chat requests using multiple Vast AI instances + vLLM servers.
+ * @param selectOffer Logic for selecting Vast AI offers to take
+ * @param modelSize Size of the used model.
+ *                  If multiple models are used, the size of the largest model should be returned.
+ * @param additionalReservedDisk Disk space reserved in addition to the model size. Default = 5 GB.
+ * @param instanceCounts Numbers of Vast AI instances to run. Each entry contains the following 4 values:
+ *                          1. Applied maximum context size
+ *                          1. Number of clients run in parallel
+ *                          1. Number of parallel requests per client
+ *                          1. Number of requests that may be queued per client,
+ *                             without bleeding to another context size category
+ *
+ *                       The default value is:
+ *                          1. 4 clients with context size of 4096 and 8 parallel requests
+ *                          1. 3 clients with context size of 8192 and 4 parallel requests
+ *                          1. 2 clients with context size of 16384 and 2 parallel requests
+ * @param defaultContextSize Context size to assume when no context size is specified in the request.
+ *                           Default = None = no context size is assumed,
+ *                           but the backup solution is used instead (if applicable)
+ *
+ *                           NB: It is always recommended to specify the context size for the requests.
+ *                               This can be done, for example, by utilizing a StatelessBufferedReplyGenerator.
+ * @param backupExecutor Request executor used for requests that exceed the largest allowed context size,
+ *                       and for those which don't have a context size specified (if 'defaultContextSize' is None).
+ *
+ *                       If left empty (default), such requests will be immediately failed.
+ * @param recorder An interface which receives records of completed Vast AI processes.
+ *                 None (default) if no recording should be performed.
+ * @param installScriptPath Path to a script for installing vLLM on the rented device.
+ *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
+ *                          Default = None.
+ * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM. Default = 0.9.
+ * @param setupTimeout Timeout for the setup process.
+ *                     If the API doesn't become usable before this timeout, the instance is destroyed.
+ *                     Default = infinite (not recommended).
+ * @param recoveryTimeout Timeout for recovering from SSH and/or vLLM failures. Default = 60 seconds.
+ * @param noResponseTimeout Timeout for started API requests.
+ *                          If this timeout is reached, the request queue is closed
+ *                          and the underlying Vast AI instance is destroyed.
+ *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
+ * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
+ *              This label will be appended by the applied max context size.
+ * @param startsLazily Whether this executor should only start when the first request is received.
+ *                     Default = false = instances are acquired immediately.
+ * @param chooseImage A function for choosing the image or Vast AI template to use.
+ *                    Accepts the selected offer and the applied maximum context size, yields:
+ *                          1. Instance-creation settings
+ *                          1. Expected initial vLLM service state at the remote instance
+ *                          1. Name of the model to start vLLM with.
+ *                             Optional if vLLM is started automatically by the image / template.
+ * @param thinks A function used for determining, which of the used models should be marked as "thinking"
+ * @param exc Implicit execution context
+ * @param vastAiClient Implicit Vast AI -interfacing client
+ * @param log Implicit logging implementation
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
-// TODO: Remember to mark instances as either usable or unusable
-// (chooseImage: Offer => (NewInstanceFoundation, ServiceState, Int, String))
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
-                             instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 3, 8, 8), (8192, 2, 4, 4), (16384, 1, 2, 2)),
+                             instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 4, 8, 8), (8192, 3, 4, 4), (16384, 2, 2, 2)),
                              defaultContextSize: Option[Int] = None,
                              backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
-                             installScriptPath: Option[Path] = None,
+                             recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
                              maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
                              recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
-                             label: String = "chat-executor")
+                             label: String = "chat-executor", startsLazily: Boolean = false)
                             (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
                             (thinks: String => Boolean)
                             (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger)
@@ -94,6 +222,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		}
 	
 	
+	// INITIAL CODE -----------------------
+	
+	registerToStopOnceJVMCloses()
+	
+	
 	// IMPLEMENTED  -----------------------
 	
 	override def apply(params: ChatParams): Future[Try[BufferedOpenAiReply]] = {
@@ -117,7 +250,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	override def stop(): Future[Any] = {
 		if (stopFlag.set())
 			processPool.foreach { _.stopAll() }
-		processPool.iterator.map { _.completionFuture }.future
+		processPool.iterator.flatMap { _.lazyCompletionFuture.current }.future
 	}
 	
 	
@@ -164,9 +297,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		
 		private val processesP = Volatile.emptySeq[VastAiVllmProcess]
 		
-		// Immediately starts filling the instance pool
-		// TODO: Should we start immediately or lazily?
-		val completionFuture = regenerate()
+		// Starts filling the instance pool either lazily or immediately
+		val lazyCompletionFuture = if (startsLazily) Lazy { regenerate() } else Lazy.initialized(regenerate())
 		
 		private val usableClientsP = CopyOnDemand { processesP.value.flatMap { _.usableClient } }
 		
@@ -222,6 +354,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		// OTHER    -----------------------
 		
 		def tryPush(request: ChatParams, force: Boolean = false) = {
+			// Starts this processor, if not started already
+			if (startsLazily && lazyCompletionFuture.nonInitialized)
+				lazyCompletionFuture.value
+			
 			// Finds a client that has capacity (or the one with most capacity, if 'force' is enabled)
 			clients.iterator.map { case (client, model, _) => (client, model, client.pendingRequestCount) }
 				.minByOption { _._3 }.filter { force || _._3 < queuedLayers }
@@ -355,6 +491,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 				else
 					Continue
 			}
+			
+			// Informs the "recorder" once this process finishes
+			recorder.foreach { recorder => process.recordFuture.foreach(recorder) }
 			
 			// The next instance may be acquired once the process is in loading state / instance has been acquired
 			process.detailedStatePointer.findMapFuture { state =>

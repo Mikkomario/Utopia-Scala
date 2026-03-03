@@ -19,7 +19,7 @@ import utopia.echo.model.vastai.instance.offer.RunType.DirectSsh
 import utopia.echo.model.vastai.instance.{InstanceStatus, NewInstanceFoundation, SshConnection, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.NotStarted
 import utopia.echo.model.vastai.process.VastAiVllmProcessState._
-import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessState}
+import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessRecord, VastAiVllmProcessState}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
@@ -41,6 +41,7 @@ import utopia.flow.view.mutable.eventful.{AssignableOnce, MayBeAssignedOnce}
 
 import java.io.FileNotFoundException
 import java.nio.file.Path
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 import scala.sys.process
 import scala.util.{Failure, Success, Try}
@@ -170,6 +171,10 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 */
 	val phasePointer = stateP.lightMap { _.phase }
 	
+	// Collects timestamps of various events, for the final result
+	private var hostingStartTime: Option[Instant] = None
+	private var stopTime: Option[Instant] = None
+	
 	private val offerP = MayBeAssignedOnce[Offer]()
 	/**
 	 * A pointer that contains the selected offer, once known
@@ -189,6 +194,17 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 * Causes this process to stop (more or less gracefully).
 	 */
 	private val requestTimedOutStateP = MayBeAssignedOnce[InstanceStatus]()
+	
+	private val recordP = AssignableOnce[VastAiVllmProcessRecord]()
+	/**
+	 * A pointer that contains a record of this process, once completed
+	 */
+	val recordPointer = recordP.readOnly
+	/**
+	 * A future that resolves once this process completes.
+	 * Contains a record of this process' data.
+	 */
+	lazy val recordFuture = recordP.future
 	
 	/**
 	 * Determines whether vLLM should be installed, and whether it is expected to run by itself.
@@ -250,6 +266,9 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	
 	registerToStopOnceJVMCloses()
 	
+	// Records a timestamp of when stop() was called
+	hurryFlag.onceSet { stopTime = Some(Now) }
+	
 	// If requests start timing out, starts the shutdown process
 	requestTimedOutStateP.onceSet { _ => stop() }
 	
@@ -294,6 +313,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	// IMPLEMENTED  ----------------------
 	
 	override protected def runOnce(): Unit = {
+		val startTime = Now
 		val runResult = Try {
 			stateP.value = SelectingOffer
 			// Sets up a Vast AI instance and waits for it to load (or for timeout or stop() call)
@@ -363,16 +383,21 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			vastAiProcess.stop().waitFor()
 				.logWithMessage("Failure while waiting for the Vast AI instance to be destroyed")
 			// Finalizes the state
-			stateP.update {
-				case DestroyingInstance(hostingResult) => Stopped(hostingResult, vastAiProcess.detailedState)
-				case state =>
-					log(s"Unexpected state after instance-destruction: $state")
-					Stopped(
-						ApiHostingResult.Failed(new IllegalStateException("Unexpected state at instance destruction")),
-						vastAiProcess.detailedState)
+			val hostingResult = stateP.mutate { state =>
+				val hostingResult = state match {
+					case DestroyingInstance(hostingResult) => hostingResult
+					case state =>
+						log(s"Unexpected state after instance-destruction: $state")
+						ApiHostingResult.Failed(new IllegalStateException("Unexpected state at instance destruction"))
+				}
+				hostingResult -> Stopped(hostingResult, vastAiProcess.detailedState)
 			}
 			stateP.lock()
 			offerP.lock()
+			
+			// Records the completion of this process
+			recordP.set(VastAiVllmProcessRecord(
+				hostingResult, startTime, Now, hostingStartTime, stopTime, offerP.value))
 		}
 	}
 	
@@ -414,6 +439,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 				case Success(model) =>
 					// The client is now usable. Stores it in a pointer, enabling external use.
 					val publicClient = lazyPublicClient.value
+					hostingStartTime = Some(Now)
 					clientP.set(Success((publicClient, model, maxContextSize)))
 					stateP.value = HostingApi(instancePointer.value, publicClient, model, maxContextSize)
 					

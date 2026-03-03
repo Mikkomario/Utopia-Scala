@@ -3,6 +3,7 @@ package utopia.echo.model.request.vllm
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.RequestResult
 import utopia.echo.model.enumeration.ModelParameter.{MinP, RepeatPenalty, TopK}
+import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.openai.BufferedOpenAiChatCompletionRequest
 import utopia.echo.model.response.openai.BufferedOpenAiReply
@@ -25,10 +26,16 @@ case class BufferedVllmChatCompletionRequest(params: ChatParams)
 		copy(params = params.withSettings(settings))
 	
 	override protected def finalizeBody(body: Model): Model = {
+		// Disables thinking for QWEN models with a separate parameter
+		val noThink = params.reasoningEffort match {
+			case Some(SkipReasoning) => Some(Constant("chat_template_kwargs", Model.from("enable_thinking" -> false)))
+			case _ => None
+		}
+		val extraParams = Model.from("top_k" -> params(TopK), "min_p" -> params(MinP),
+			"repetition_penalty" -> params(RepeatPenalty))
+			.withoutEmptyValues ++ noThink
 		// TODO: Add "length_penalty", "min_tokens"
-		Model.from("top_k" -> params(TopK), "min_p" -> params(MinP), "repetition_penalty" -> params(RepeatPenalty))
-			.withoutEmptyValues.notEmpty match
-		{
+		extraParams.notEmpty match {
 			case Some(extraParams) => body + Constant("extra_body", extraParams)
 			case None => body
 		}
