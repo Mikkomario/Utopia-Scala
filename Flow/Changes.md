@@ -91,6 +91,7 @@
 - Renamed **Try**'s `.handleFailure(...)` to `.forFailure(...)` (in **TryExtensions**)
 - Renamed **JsonSettingsAccess**'s `.accessible` to `.isAccessible`
 ### Bugfixes
+- Bugfix to `.bestMatch(...)` in **CollectionExtensions** which was broken when used with multiple filter functions
 - Bugfix to `.appendAllIfDistinct(IterableOnce)` in **CollectionExtensions**, 
   which previously discarded all existing values
 - JSON conversion now preserves **LocalDate** type instead of converting it into **Instant**

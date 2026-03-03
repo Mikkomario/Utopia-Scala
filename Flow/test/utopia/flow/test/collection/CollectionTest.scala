@@ -30,8 +30,11 @@ object CollectionTest extends App
 	private val conditions2 = Vector[String => Boolean](_.length <= 3, _.contains('n'))
 	private val conditions3 = Vector[String => Boolean](_.nonEmpty)
 	
+	println("Conditions 1")
 	private val result1: Vector[String] = words.bestMatch(conditions1)
+	println("Conditions 2")
 	private val result2: Vector[String] = words.bestMatch(conditions2)
+	println("Conditions 3")
 	private val result3: Vector[String] = words.bestMatch(conditions3)
 	
 	assert(result1 == Vector("Apina", "Banaani"))

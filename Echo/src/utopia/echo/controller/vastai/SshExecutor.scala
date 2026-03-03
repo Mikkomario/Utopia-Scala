@@ -1,7 +1,7 @@
 package utopia.echo.controller.vastai
 
 import utopia.echo.model.vastai.instance.SshConnection
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.Empty
 
 import java.nio.file.Path
 import scala.sys.process.Process
@@ -13,19 +13,17 @@ import scala.sys.process.Process
  * @author Mikko Hilpinen
  * @since 02.03.2026, v1.5
  */
-class SshExecutor(config: SshConnection, privateKeyPath: Path)
+case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 {
 	// ATTRIBUTES   ------------------------
 	
-	private val baseArgs = Vector(
-		"-i", privateKeyPath.toString,
-		"-p", config.port.toString,
-		"-o", "BatchMode=yes",
-		"-o", "StrictHostKeyChecking=no",
-		"-o", "UserKnownHostsFile=/dev/null",
-	)
-	private val sshBase = Vector.concat(Single("ssh"), baseArgs, Single(s"root@${config.host}"))
-	private lazy val scpBase = "scp" +: baseArgs
+	private val address = s"root@${ config.host }"
+	
+	private val prefixArgs = s"-i $privateKeyPath -p ${ config.port }"
+	private val suffixArgs =
+		s"-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+	
+	private val sshBase = s"ssh $prefixArgs $address $suffixArgs"
 	
 	
 	// OTHER    ---------------------------
@@ -35,7 +33,7 @@ class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	 * @param command Command to execute
 	 * @return Process representing that command
 	 */
-	def apply(command: String) = Process(sshBase :+ command)
+	def apply(command: String) = _apply(s"$sshBase $command")
 	
 	/**
 	 * Prepares a command for transferring a file to a remote device using SCP
@@ -44,7 +42,7 @@ class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	 * @return Process for executing the transfer
 	 */
 	def transfer(file: Path, toRemotePath: String) =
-		Process(scpBase ++ Pair(file.toString, s"root@${ config.host }:$toRemotePath"))
+		_apply(s"scp $prefixArgs $file $address:$toRemotePath $suffixArgs")
 	/**
 	 * Prepares a command for executing a file over SSH
 	 * @param remoteScriptPath Path to the script / file on the remote instance, which should be executed
@@ -62,5 +60,11 @@ class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	 * @return A process for starting / running the port-forwarding (will run as long as forwarding is active)
 	 */
 	def portForwarding(localPort: Int, remotePort: Int, remoteHost: String = "127.0.0.1") =
-		apply(s"-N -L $localPort:$remoteHost:$remotePort -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
+		_apply(s"ssh -N $prefixArgs -L $localPort:$remoteHost:$remotePort $address $suffixArgs -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
+	
+	// TODO: Remove test prints
+	private def _apply(command: String) = {
+		println(command)
+		Process(command)
+	}
 }

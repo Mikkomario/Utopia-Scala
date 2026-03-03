@@ -197,8 +197,11 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	private val vastAiProcess = VastAiProcess(statusCheckInterval) { hurryFlag =>
 		// Requests for offers
 		val requiredDiskSpace = modelSize + additionalReservedDisk
-		client.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering,
-				selectOffer.limit, selectOffer.offerType))
+		// TODO: Remove test prints
+		val getOffers = GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
+			selectOffer.offerType)
+		println(getOffers.body)
+		client.send(getOffers)
 			// Selects one offer
 			.tryFlatMap(selectOffer.apply)
 			.flatMapOrFail { offer =>
@@ -208,7 +211,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 				modelToServe = model
 				maxContextSize = contextSize
 				// Accepts the offer, requesting a new instance
-				// TODO: Remove test
+				// TODO: Remove test prints
 				val request = AcceptOffer(offer.id, base, runType = DirectSsh, reservedDiskSpace = requiredDiskSpace,
 					label = instanceLabel, deprecatedView = hurryFlag, cancelIfUnavailable = true)
 				println(request.path)
@@ -511,22 +514,16 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			if (vllmAutoRuns)
 				None
 			else {
-				val commandPrefix = {
-					if (installScriptPath.isDefined)
-						"source ~/miniconda/etc/profile.d/conda.sh && conda activate vllm-env && "
+				// Uses either python or vllm, depending on how vLLM was installed
+				val baseCommand = {
+					if (shouldInstallVllm)
+						s"source ~/miniconda/etc/profile.d/conda.sh && conda activate vllm-env && exec python -m vllm.entrypoints.openai.api_server${
+							modelToServe.mapIfNotEmpty { model => s" --model '$model'" } }"
 					else
-						""
+						s"exec vllm serve \"$modelToServe\""
 				}
-				/*
-				  OR
-				  exec vllm serve "$MODEL" \
-				  --max-model-len "$MAX_CONTEXT" \
-				  --host 0.0.0.0 \
-				  --port 8000
-				 */
 				// TODO: Add --tensor-parallel-size N
-				Some(ssh(s"${ commandPrefix }exec python -m vllm.entrypoints.openai.api_server${
-					modelToServe.mapIfNotEmpty { model => s" -- model '$model'" } } --max-model-len '$maxContextSize' --host 127.0.0.1 --port '$remotePort' --gpu-memory-utilization $maxGpuUtil")
+				Some(ssh(s"$baseCommand --max-model-len \"$maxContextSize\" --host 127.0.0.1 --port $remotePort --gpu-memory-utilization $maxGpuUtil")
 					.run().async)
 			}
 		}
@@ -629,7 +626,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			.map { home =>
 				val sshDir = home/".ssh"
 				registerSshKey(instanceId, sshDir/"id_ed25519.pub", deprecationView).mapSuccess { _ =>
-					new SshExecutor(sshConfig, sshDir/"id_ed25519")
+					SshExecutor(sshConfig, sshDir/"id_ed25519")
 				}
 			}
 			.flattenToFuture

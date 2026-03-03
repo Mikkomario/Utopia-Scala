@@ -1474,6 +1474,7 @@ object CollectionExtensions
 			_bestMatch(coll, matcher)
 		
 		private def _bestMatch(coll: Repr, matcher: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, Repr]) = {
+			val ops = iter(coll)
 			// Case: 1 or 0 items => Result will always be the best match
 			if (ops.sizeCompare(2) < 0)
 				coll
