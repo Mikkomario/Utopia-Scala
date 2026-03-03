@@ -117,6 +117,7 @@
 - Added **GeneratesAgain** (an eventful **ResettableLazy**)
 - Added **BecomesEventfulPointer** and **BecomesEventfulVolatile**, 
   which initialize their eventful functionality lazily.
+- Added **ViewAsLazy**, a class which wraps a **View** and substitutes it as **Lazy**
 - Added **EmptyInputStream**
 - Added **ConsoleStream** for writing into `System.out` without ever closing it
 - **Console** and **Command** now support namespacing
@@ -170,6 +171,7 @@
   - Added `.toModel: Try[Model]`
 - **Lazy** (object)
   - Added `.resettable` and `.volatile(...)` for constructing different **Lazy** types
+  - Added `.updating(...)`
 - **Lockable**
   - Added `.failIfLocked(...)` and `.ifUnlocked(...)`
 - **LockableFlag**

@@ -28,8 +28,7 @@ object ShowInstances extends GetRequest[Seq[VastAiInstance]]
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Seq[VastAiInstance]]] =
 		prepared.parseValue { body =>
 			body.getModelOrVector match {
-				case Left(body) =>
-					body.tryGet("instances") { _.tryVectorWith { _.tryModel.flatMap(VastAiInstance.apply) } }
+				case Left(body) => body.tryGet("instances") { _.tryParseModelsWith(VastAiInstance) }
 				case Right(values) => values.tryMapAll { _.tryModel.flatMap(VastAiInstance.apply) }
 			}
 		}

@@ -11,6 +11,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.{Body, Request, Timeout}
+import utopia.flow.async.process.Delay
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
@@ -342,6 +343,24 @@ trait ApiClient
 	  */
 	def apply(request: Request) = new PreparedRequest(this,
 		request.copy(requestUri = uri(request.requestUri), headers = modifyOutgoingHeaders(request.headers)))
+	
+	/**
+	 * Attempts to send a request n times, if necessary
+	 * @param request Request to send
+	 * @param maxAttempts Maximum send attempts
+	 * @param intervalBetweenRequests Wait duration between repeated attempts
+	 * @tparam A Type of the request results, when successful
+	 * @return Result of the last attempt (Future)
+	 */
+	def attempt[A](request: ApiRequest[A], maxAttempts: Int, intervalBetweenRequests: Duration): Future[RequestResult[A]] =
+		send(request).flatMap { result =>
+			// Case: Succeeded, not allowed to fail anymore, or request deprecated => Returns
+			if (result.isSuccess || maxAttempts <= 1 || request.deprecated)
+				Future.successful(result)
+			// Case: Should retry => Waits a while and performs another attempt (recursive)
+			else
+				Delay.future(intervalBetweenRequests) { attempt(request, maxAttempts - 1, intervalBetweenRequests) }
+		}
 	
 	/**
 	  * Converts a from model factory into a response parser.

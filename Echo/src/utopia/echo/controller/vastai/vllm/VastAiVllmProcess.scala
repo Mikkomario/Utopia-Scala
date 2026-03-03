@@ -170,6 +170,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 */
 	val phasePointer = stateP.lightMap { _.phase }
 	
+	private val offerP = MayBeAssignedOnce[Offer]()
+	/**
+	 * A pointer that contains the selected offer, once known
+	 */
+	val offerPointer = offerP.readOnly
+	
 	/**
 	 * A pointer that will store the hosted vLLM API client, if one is successfully created.
 	 * If successful, will contain 3 values:
@@ -200,7 +206,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	/**
 	 * The process used for managing the Vast AI instance
 	 */
-	private val vastAiProcess = VastAiProcess(statusCheckInterval) { hurryFlag =>
+	private val vastAiProcess = VastAiProcess(statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5)) { hurryFlag =>
 		// Requests for offers
 		val requiredDiskSpace = modelSize + additionalReservedDisk
 		// TODO: Remove test prints
@@ -211,6 +217,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			// Selects one offer
 			.tryFlatMap(selectOffer.apply)
 			.flatMapOrFail { offer =>
+				offerP.trySet(offer)
 				stateP.value = AcquiringInstance(offer)
 				val (base, vllmDefaultState, contextSize, model) = chooseImage(offer)
 				assumedVllmState = vllmDefaultState
@@ -365,6 +372,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						vastAiProcess.detailedState)
 			}
 			stateP.lock()
+			offerP.lock()
 		}
 	}
 	

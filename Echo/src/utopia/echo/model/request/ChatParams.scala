@@ -42,6 +42,11 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	def messages = conversationHistory :+ message
 	
 	/**
+	 * @return Whether this request has deprecated and should not be sent
+	 */
+	def deprecated = deprecationView.value
+	
+	/**
 	  * @return A request based on these parameters.
 	  *         The streaming option must be specified before this request may be sent out.
 	  */

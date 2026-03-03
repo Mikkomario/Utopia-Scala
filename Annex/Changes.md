@@ -20,6 +20,8 @@
 - **RequestResult** now extends **MayHaveFailed**, and contains a number of new functions
 - **Response** (object) now contains variable: `parseFailureStatus`
 ### New methods
+- **ApiClient**
+  - Added `.attempt(...)`
 - **SchrodingerState** (object)
   - Added `.of(Future)`
 
