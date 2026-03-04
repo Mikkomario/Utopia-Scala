@@ -56,7 +56,8 @@ case class GenerateParams(query: Query, settings: ModelSettings = ModelSettings.
 	override def toLlm(llm: LlmDesignator) = copy()(llm = llm)
 	override def withSettings(settings: ModelSettings): GenerateParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]) = copy(deprecationView = condition)
-	override def withReasoningEffort(effort: ReasoningEffort): GenerateParams = withThink(effort != SkipReasoning)
+	override def withReasoningEffort(effort: Option[ReasoningEffort]): GenerateParams =
+		withThink(effort.map { _ != SkipReasoning })
 	
 	
 	// OTHER    -------------------------

@@ -4,6 +4,7 @@ import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.{Assistant, User}
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.{CanAttachImages, ChatParams}
+import utopia.echo.util.ReplyParseUtils
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
@@ -53,8 +54,10 @@ object ChatMessage
 		// TODO: Add support for refusals
 		override def apply(model: HasProperties): Try[ChatMessage] = {
 			model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
-				// NB: Open AI doesn't provide reasoning_content, but DeepSeek does
-				ChatMessage(model("content").getString, model("reasoning_content").getString,
+				// NB: Open AI doesn't provide reasoning_content, but DeepSeek does.
+				// We're also preparing for the possible <think> element, in case of QWEN models
+				val (text, thoughtsFromContent) = ReplyParseUtils.separateThinkFrom(model("content").getString)
+				ChatMessage(text, model("reasoning_content").getString + thoughtsFromContent,
 					model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant), toolCalls = toolCalls)
 			}
 		}

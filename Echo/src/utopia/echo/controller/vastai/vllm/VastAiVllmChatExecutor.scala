@@ -29,6 +29,7 @@ import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.After
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
@@ -406,7 +407,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		}
 		
 		private def push(request: ChatParams, client: RequestQueue, model: String) =
-			client.push(BufferedOpenAiChatCompletionRequest(request.toLlm(llmCache(model)))).future
+			client.push(BufferedOpenAiChatCompletionRequest(
+				request.toLlm(llmCache(model)).mapSetting(ContextTokens) { _.int match {
+					case Some(maxTokens) => maxTokens min maxContextSize
+					case None => maxContextSize
+				} })).future
 		
 		/**
 		 * Fills the process pool with new processes, until 'maxInstances' is reached.

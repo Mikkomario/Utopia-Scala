@@ -62,7 +62,7 @@ case class ChatParams(message: ChatMessage, conversationHistory: Seq[ChatMessage
 	override def toLlm(llm: LlmDesignator): ChatParams = copy()(llm = llm)
 	override def withSettings(settings: ModelSettings): ChatParams = copy(settings = settings)
 	override def withDeprecationView(condition: View[Boolean]): ChatParams = copy(deprecationView = condition)
-	override def withReasoningEffort(effort: ReasoningEffort): ChatParams = copy(reasoningEffort = Some(effort))
+	override def withReasoningEffort(effort: Option[ReasoningEffort]): ChatParams = copy(reasoningEffort = effort)
 	
 	
 	// OTHER    ------------------------------

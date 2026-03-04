@@ -36,17 +36,17 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	  */
 	def toLlm(llm: LlmDesignator): Repr
 	/**
+	 * @param effort Reasoning effort apply. None if the model default should be used.
+	 * @return A copy of these parameters with the specified reasoning effort
+	 */
+	def withReasoningEffort(effort: Option[ReasoningEffort]): Repr
+	/**
 	  * Replaces the deprecation view listed in these parameters
 	  * @param condition A view which contains true once or if this request deprecates.
 	  *                  Deprecations are only applied until this request is sent.
 	  * @return Copy of these parameters with the specified deprecation condition
 	  */
 	def withDeprecationView(condition: View[Boolean]): Repr
-	/**
-	 * @param effort Reasoning effort apply
-	 * @return A copy of these parameters with the specified reasoning effort
-	 */
-	def withReasoningEffort(effort: ReasoningEffort): Repr
 	
 	
 	// COMPUTED -------------------------
@@ -64,6 +64,11 @@ trait RequestParams[+Repr] extends HasImmutableModelSettings[Repr]
 	
 	// OTHER    -------------------------
 	
+	/**
+	 * @param effort Reasoning effort apply
+	 * @return A copy of these parameters with the specified reasoning effort
+	 */
+	def withReasoningEffort(effort: ReasoningEffort): Repr = withReasoningEffort(Some(effort))
 	/**
 	  * @param condition A call-by-name function used for testing whether this request is deprecated.
 	  *                  Deprecations are only applied until this request is sent.

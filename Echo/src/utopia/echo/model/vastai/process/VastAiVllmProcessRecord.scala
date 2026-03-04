@@ -1,6 +1,8 @@
 package utopia.echo.model.vastai.process
 
 import utopia.echo.model.vastai.instance.offer.Offer
+import utopia.flow.time.Duration
+import utopia.flow.time.TimeExtensions._
 
 import java.time.Instant
 
@@ -19,3 +21,29 @@ import java.time.Instant
 case class VastAiVllmProcessRecord(hostingResult: ApiHostingResult, started: Instant, terminated: Instant,
                                    apiStarted: Option[Instant] = None, stopped: Option[Instant] = None,
                                    offer: Option[Offer] = None)
+{
+	// ATTRIBUTES   --------------------------
+	
+	/**
+	 * Duration how long the instance & API were being loaded / set up
+	 */
+	lazy val loadDuration = apiStarted match {
+		case Some(apiStart) => apiStart - started
+		case None => stopped.getOrElse(terminated) - started
+	}
+	/**
+	 * Duration how long the API was hosted
+	 */
+	lazy val hostDuration = apiStarted match {
+		case Some(hostingStarted) => stopped.getOrElse(terminated) - hostingStarted
+		case None => Duration.zero
+	}
+	
+	
+	// COMPUTED -----------------------------
+	
+	/**
+	 * @return Whether the API was hosted for some time
+	 */
+	def hostedApi = hostingResult.wasHosted
+}
