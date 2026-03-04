@@ -8,6 +8,7 @@ import utopia.echo.model.request.deepseek.BufferedDeepSeekChatRequest
 import utopia.echo.model.request.ollama.chat.BufferedOllamaChatRequest
 import utopia.echo.model.request.openai.BufferedOpenAiChatCompletionRequest
 import utopia.echo.model.request.vllm.BufferedVllmChatCompletionRequest
+import utopia.echo.model.response.BufferedReply
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -68,6 +69,21 @@ object BufferingChatRequestExecutor
 	 */
 	def apply[R](f: ChatParams => Future[Try[R]]): BufferingChatRequestExecutor[R] =
 		new _BufferingChatRequestExecutor[R](f)
+		
+	
+	// EXTENSIONS   -----------------------
+	
+	implicit class ToBufferedReplyExecutor[+R <: BufferedReply](val e: BufferingChatRequestExecutor[R]) extends AnyVal
+	{
+		/**
+		 * @param exc Implicit execution context
+		 * @return A wrapper of this executor which counts the processed requests
+		 */
+		def counting(implicit exc: ExecutionContext) = e match {
+			case counting: CountingBufferingChatRequestExecutorWrapper[R] => counting
+			case e => new CountingBufferingChatRequestExecutorWrapper[R](e)
+		}
+	}
 	
 	
 	// NESTED   ---------------------------

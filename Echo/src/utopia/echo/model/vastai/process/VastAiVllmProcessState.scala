@@ -2,7 +2,8 @@ package utopia.echo.model.vastai.process
 
 import utopia.annex.controller.LockingRequestQueue
 import utopia.echo.model.response.openai.OpenAiModelInfo
-import utopia.echo.model.vastai.instance.VastAiInstance
+import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading}
+import utopia.echo.model.vastai.instance.{InstanceState, VastAiInstance}
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, ApiSetup, InstanceAcquisition, Stopping}
@@ -60,10 +61,22 @@ object VastAiVllmProcessState
 		 */
 		def index: Int
 		
+		/**
+		 * @return A short name of this phase in human-readable form
+		 */
+		def name: String
+		
+		/**
+		 * @return Expected state of the utilized Vast AI instance.
+		 *         None if no instance is expected to be present.
+		 */
+		def expectedInstanceState: Option[InstanceState]
+		
 		
 		// IMPLEMENTED  ------------------
 		
 		override def self = this
+		override def toString = name
 		
 		override def compareTo(o: VastAiVllmProcessPhase) = index - o.index
 	}
@@ -77,9 +90,11 @@ object VastAiVllmProcessState
 		 */
 		case object NotStarted extends VastAiVllmProcessPhase with VastAiVllmProcessState
 		{
+			override val name: String = "not started"
 			override val index: Int = 0
 			override val isUsable: Boolean = false
 			override val availableInstance: Option[VastAiInstance] = None
+			override val expectedInstanceState: Option[InstanceState] = None
 			
 			override def phase: VastAiVllmProcessPhase = this
 			
@@ -90,35 +105,45 @@ object VastAiVllmProcessState
 		 */
 		case object InstanceAcquisition extends VastAiVllmProcessPhase
 		{
+			override val name: String = "acquiring instance"
 			override val index: Int = 1
+			override val expectedInstanceState: Option[InstanceState] = Some(Loading)
 		}
 		/**
 		 * Phase where the instance is ready, but the vLLM API is being set up
 		 */
 		case object ApiSetup extends VastAiVllmProcessPhase
 		{
+			override val name: String = "setting up API"
 			override val index: Int = 2
+			override val expectedInstanceState: Option[InstanceState] = Some(Active)
 		}
 		/**
 		 * Phase where the vLLM API has become usable
 		 */
 		case object ApiHosting extends VastAiVllmProcessPhase
 		{
+			override val name: String = "hosting API"
 			override val index: Int = 3
+			override val expectedInstanceState: Option[InstanceState] = Some(Active)
 		}
 		/**
 		 * Phase where the API and the instance are being torn down
 		 */
 		case object Stopping extends VastAiVllmProcessPhase
 		{
+			override val name: String = "stopping API"
 			override val index: Int = 4
+			override val expectedInstanceState: Option[InstanceState] = Some(Active)
 		}
 		/**
 		 * Phase after the process has completed
 		 */
 		case object Stopped extends VastAiVllmProcessPhase
 		{
+			override val name: String = "stopped"
 			override val index: Int = 5
+			override val expectedInstanceState: Option[InstanceState] = None
 		}
 	}
 	

@@ -1,5 +1,7 @@
 package utopia.echo.model.vastai.instance
 
+import utopia.flow.util.StringExtensions._
+
 object ParsedInstanceStatus
 {
 	/**
@@ -24,5 +26,5 @@ object ParsedInstanceStatus
  */
 case class ParsedInstanceStatus(value: InstanceState, raw: String)
 {
-	override def toString: String = raw
+	override def toString: String = raw.nonEmptyOrElse(value.toString)
 }
