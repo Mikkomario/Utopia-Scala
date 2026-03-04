@@ -1,12 +1,13 @@
 package utopia.echo.model.settings
 
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.enumeration.ModelParameter.Temperature
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.Mutate
 
 import scala.language.implicitConversions
-
 
 /**
   * Common trait for read-accesses to model parameter -assignments
@@ -38,6 +39,12 @@ trait HasImmutableModelSettings[+Repr] extends HasModelSettings
 	
 	
 	// OTHER    -------------------------
+	
+	/**
+	 * @param temperature New temperature parameter to use [0,2]
+	 * @return Copy of this instance with the specified temperature
+	 */
+	def withTemperature(temperature: Double) = withSetting(Temperature, temperature)
 	
 	/**
 	  * @param f A mapping function for model settings
