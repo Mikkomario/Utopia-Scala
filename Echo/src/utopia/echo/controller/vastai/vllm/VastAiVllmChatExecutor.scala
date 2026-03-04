@@ -1,6 +1,8 @@
 package utopia.echo.controller.vastai.vllm
 
 import utopia.annex.controller.RequestQueue
+import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
+import utopia.annex.model.response.RequestResult
 import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
@@ -16,7 +18,7 @@ import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.NewInstanceFoundation
 import utopia.echo.model.vastai.instance.offer.Offer
-import utopia.echo.model.vastai.process.VastAiVllmProcessRecord
+import utopia.echo.model.vastai.process.{VastAiVllmProcessRecord, VastAiVllmProcessorPoolStatus}
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{NotStarted, Stopping}
 import utopia.flow.async.AsyncExtensions._
@@ -228,6 +230,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	registerToStopOnceJVMCloses()
 	
 	
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @return The current status of each utilized processor pool
+	 */
+	def status = processPool.map { _.status }
+	
+	
 	// IMPLEMENTED  -----------------------
 	
 	override def apply(params: ChatParams): Future[Try[BufferedOpenAiReply]] = {
@@ -301,7 +311,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		// Starts filling the instance pool either lazily or immediately
 		val lazyCompletionFuture = if (startsLazily) Lazy { regenerate() } else Lazy.initialized(regenerate())
 		
-		private val usableClientsP = CopyOnDemand { processesP.value.flatMap { _.usableClient } }
+		private val usableClientsP = CopyOnDemand { processes.flatMap { _.usableClient } }
 		
 		private val clearQueueFutureP = Volatile(Future.successful(true))
 		private val clearQueueListener: ChangeListener[Seq[(RequestQueue, OpenAiModelInfo, Int)]] =
@@ -349,12 +359,25 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		
 		def hasImmediateCapacity = clients.exists { _._1.pendingRequestCount < maxParallelRequestsPerInstance }
 		
+		/**
+		 * @return The current status of this pool
+		 */
+		def status = VastAiVllmProcessorPoolStatus(maxContextSize, maxParallelRequestsPerInstance,
+			processes.map { process => (process.detailedState.phase, process.instanceStatus,
+				process.usableClient match {
+					case Some((client, _, _)) => client.pendingRequestCount
+					case None => 0
+				})
+			},
+			_queue.size)
+		
+		private def processes = processesP.value
 		private def clients = usableClientsP.value
 		
 		
 		// OTHER    -----------------------
 		
-		def tryPush(request: ChatParams, force: Boolean = false) = {
+		def tryPush(request: ChatParams, force: Boolean = false): Option[Future[RequestResult[BufferedOpenAiReply]]] = {
 			// Starts this processor, if not started already
 			if (startsLazily && lazyCompletionFuture.nonInitialized)
 				lazyCompletionFuture.value
@@ -373,7 +396,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		/**
 		 * Requests all currently running processes to stop
 		 */
-		def stopAll() = processesP.value.foreach { _.stop() }
+		def stopAll() = processes.foreach { _.stop() }
 		
 		private def scheduleQueueClearance(): Unit =
 			usableClientsP.addListenerAndSimulateEvent(Empty)(clearQueueListener)
@@ -406,12 +429,24 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 			}
 		}
 		
-		private def push(request: ChatParams, client: RequestQueue, model: String) =
-			client.push(BufferedOpenAiChatCompletionRequest(
+		private def push(request: ChatParams, client: RequestQueue, model: String): Future[RequestResult[BufferedOpenAiReply]] = {
+			// Converts the request into a full chat request
+			val apiRequest = BufferedOpenAiChatCompletionRequest(
 				request.toLlm(llmCache(model)).mapSetting(ContextTokens) { _.int match {
 					case Some(maxTokens) => maxTokens min maxContextSize
 					case None => maxContextSize
-				} })).future
+				} })
+			
+			// Adds handling for situations where instance-closing leads to request deprecation
+			// Causes such requests to be attempted again
+			client.push(apiRequest).future.flatMap {
+				// Case: Request was marked as deprecated at a lower process level => Attempts that request again
+				case RequestWasDeprecated if !apiRequest.deprecated && stopFlag.isNotSet =>
+					tryPush(request, force = true).getOrElse { queue(request) }
+				// Case: Request completed or terminated for another reason, or this system stopped => Finishes
+				case result => Future.successful(result)
+			}
+		}
 		
 		/**
 		 * Fills the process pool with new processes, until 'maxInstances' is reached.

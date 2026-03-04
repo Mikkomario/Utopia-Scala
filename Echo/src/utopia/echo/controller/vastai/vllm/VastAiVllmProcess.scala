@@ -290,6 +290,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	def vastAiStatePointer = vastAiProcess.detailedStatePointer
 	
 	/**
+	 * @return Status of the currently active Vast AI instance.
+	 *         None if no instance is currently active.
+	 */
+	def instanceStatus = vastAiState.instanceStatus
+	
+	/**
 	 * @return Currently usable client interface, along with the model to use and the maximum context size
 	 */
 	def usableClient = detailedState match {
