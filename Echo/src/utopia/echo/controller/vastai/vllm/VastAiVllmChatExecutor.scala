@@ -18,9 +18,9 @@ import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.NewInstanceFoundation
 import utopia.echo.model.vastai.instance.offer.Offer
-import utopia.echo.model.vastai.process.{VastAiVllmProcessRecord, VastAiVllmProcessorPoolStatus}
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{NotStarted, Stopping}
+import utopia.echo.model.vastai.process.{VastAiVllmProcessRecord, VastAiVllmProcessorPoolStatus}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.async.context.AccessQueue
@@ -35,8 +35,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.result.TryCatch
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
@@ -77,6 +77,8 @@ object VastAiVllmChatExecutor
 	 *                       If left empty (default), such requests will be immediately failed.
 	 * @param recorder An interface which receives records of completed Vast AI processes.
 	 *                 None (default) if no recording should be performed.
+	 * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
+	 *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
 	 * @param installScriptPath Path to a script for installing vLLM on the rented device.
 	 *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
 	 *                          Default = None.
@@ -107,18 +109,18 @@ object VastAiVllmChatExecutor
 	 */
 	def apply(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
 	          instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 4, 8, 8), (8192, 3, 4, 4), (16384, 2, 2, 2)),
-	          defaultContextSize: Option[Int] = None,
+	          defaultContextSize: Option[Int] = None, contextSafetyMargin: Int = 80,
 	          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
 	          recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
-	          maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
+	          remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
 	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
 	          label: String = "chat-executor", startLazily: Boolean = false)
 	         (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
 	         (thinks: String => Boolean)
 	         (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger) =
 		new VastAiVllmChatExecutor(selectOffer, modelSize, additionalReservedDisk, instanceCounts, defaultContextSize,
-			backupExecutor, recorder, installScriptPath, maxGpuUtil, setupTimeout, recoveryTimeout, noResponseTimeout,
-			label, startLazily)(chooseImage)(thinks)
+			contextSafetyMargin, backupExecutor, recorder, installScriptPath, remotePort, maxGpuUtil, setupTimeout,
+			recoveryTimeout, noResponseTimeout, label, startLazily)(chooseImage)(thinks)
 }
 
 /**
@@ -130,20 +132,23 @@ object VastAiVllmChatExecutor
  * @param instanceCounts Numbers of Vast AI instances to run. Each entry contains the following 4 values:
  *                          1. Applied maximum context size
  *                          1. Number of clients run in parallel
- *                          1. Number of parallel requests per client
- *                          1. Number of requests that may be queued per client,
+ *                          1. Number of request layers that may be queued per client,
  *                             without bleeding to another context size category
  *
  *                       The default value is:
- *                          1. 4 clients with context size of 4096 and 8 parallel requests
- *                          1. 3 clients with context size of 8192 and 4 parallel requests
- *                          1. 2 clients with context size of 16384 and 2 parallel requests
+ *                          1. 4 clients with context size of 4096 with 8 parallel requests for each
+ *                          1. 3 clients with context size of 8192 with 4 parallel requests for each
+ *                          1. 2 clients with context size of 16384 with 2 parallel requests for each
  * @param defaultContextSize Context size to assume when no context size is specified in the request.
  *                           Default = None = no context size is assumed,
  *                           but the backup solution is used instead (if applicable)
  *
  *                           NB: It is always recommended to specify the context size for the requests.
  *                               This can be done, for example, by utilizing a StatelessBufferedReplyGenerator.
+ * @param contextSafetyMargin Safety margin added to context calculations.
+ *                            If the request is at the edge of a lower pool's threshold,
+ *                            transfers it to a larger pool instead.
+ *                            Default = 80 tokens.
  * @param backupExecutor Request executor used for requests that exceed the largest allowed context size,
  *                       and for those which don't have a context size specified (if 'defaultContextSize' is None).
  *
@@ -153,6 +158,8 @@ object VastAiVllmChatExecutor
  * @param installScriptPath Path to a script for installing vLLM on the rented device.
  *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
  *                          Default = None.
+ * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
+ *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
  * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM. Default = 0.9.
  * @param setupTimeout Timeout for the setup process.
  *                     If the API doesn't become usable before this timeout, the instance is destroyed.
@@ -179,12 +186,14 @@ object VastAiVllmChatExecutor
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
+// TODO: Add support for dynamic parallel requests
+//  (not as easy as one might think - we first need a variable width action queue implementation)
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
-                             instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 4, 8, 8), (8192, 3, 4, 4), (16384, 2, 2, 2)),
-                             defaultContextSize: Option[Int] = None,
+                             instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 4, 8, 2), (8192, 3, 4, 2), (16384, 2, 2, 2)),
+                             defaultContextSize: Option[Int] = None, contextSafetyMargin: Int = 80,
                              backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
                              recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
-                             maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
+                             remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
                              recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
                              label: String = "chat-executor", startsLazily: Boolean = false)
                             (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
@@ -220,8 +229,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	 * Pools that actually handle the requests
 	 */
 	private val processPool = instanceCounts.toOptimizedSeq.sortBy { _._1 }
-		.map { case (maxContextSize, maxInstances, maxRequestsPerInstance, queuedLayers) =>
-			new ProcessPool(maxContextSize, maxInstances, maxRequestsPerInstance, queuedLayers)
+		.map { case (maxContextSize, maxInstances, maxParallel, queuedLayers) =>
+			new ProcessPool(maxContextSize, maxInstances, maxParallel, queuedLayers)
 		}
 	
 	
@@ -242,7 +251,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	
 	override def apply(params: ChatParams): Future[Try[BufferedOpenAiReply]] = {
 		// Checks the required context size
-		params(ContextTokens).int.orElse(defaultContextSize) match {
+		// Also adds a safety margin
+		val requiredContext = params(ContextTokens).int match {
+			case Some(context) => Some(context + contextSafetyMargin)
+			case None => defaultContextSize
+		}
+		requiredContext match {
 			case Some(tokens) =>
 				// Case: Too large a request => Uses the backup executor, if available
 				if (tokens > maxContextSize)
@@ -269,24 +283,29 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	
 	private def _apply(params: ChatParams, tokens: Int): Future[Try[BufferedOpenAiReply]] = {
 		// Acquires the pools that can theoretically handle this request
-		val options = processPool.dropWhile { _.maxContextSize < tokens }
-		// Gives the request to one of the process pools, depending on pool capacity
-		// Prefers smaller token limit pools
-		options
-			// Option 1: Finds a pool with immediate capacity
-			.findMap { pool =>
-				if (pool.hasImmediateCapacity)
-					pool.tryPush(params)
-				else
-					None
-			}
-			// Option 2: Finds a pool that is not overfilled
-			.orElse { options.findMap { _.tryPush(params) } }
-			// Option 3: Finds a pool that has at least one active client
-			.orElse { options.findMap { _.tryPush(params, force = true) } }
-			// Option 4: Queues the request to the first pool, until a client is acquired
-			.getOrElse { options.head.queue(params) }
-			.toTryFuture
+		giveToOneOf(params, processPool.dropWhile { _.maxContextSize < tokens }).toTryFuture
+	}
+	private def giveToOneOf(params: ChatParams, options: Seq[ProcessPool]): Future[RequestResult[BufferedOpenAiReply]] = {
+		options.oneOrMany match {
+			case Left(only) => only.tryPush(params, force = true).getOrElse { only.queue(params) }
+			case Right(options) =>
+				// Gives the request to one of the process pools, depending on pool capacity
+				// Prefers smaller token limit pools
+				options
+					// Option 1: Finds a pool with immediate capacity
+					.findMap { pool =>
+						if (pool.hasImmediateCapacity)
+							pool.tryPush(params)
+						else
+							None
+					}
+					// Option 2: Finds a pool that is not overfilled
+					.orElse { options.findMap { _.tryPush(params) } }
+					// Option 3: Finds a pool that has at least one active client
+					.orElse { options.findMap { _.tryPush(params, force = true) } }
+					// Option 4: Queues the request to the first pool, until a client is acquired
+					.getOrElse { options.head.queue(params) }
+		}
 	}
 	
 	private def delegateToBackup(request: ChatParams, failure: => Throwable) =
@@ -320,6 +339,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 				if (e.newValue.nonEmpty)
 					clearQueueFutureP.mutate { f =>
 						if (f.isCompleted) {
+							println(s"$maxContextSize: Starts clearing the queue")
 							val newFuture = clearQueue()
 							newFuture.forFailure { log(_, "Unexpected failure while clearing the queue") }
 							Some(newFuture) -> newFuture
@@ -332,6 +352,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 						case Some(clearanceCompletion) =>
 							Detach.and(After) {
 								clearanceCompletion.onComplete { result =>
+									println(s"$maxContextSize: Queue clearance completed with $result")
 									result.logWithMessage("Unexpected failure while clearing the queue")
 									if (result.toOption.forall { !_ } && stopFlag.isNotSet)
 										scheduleQueueClearance()
@@ -367,7 +388,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 				process.usableClient match {
 					case Some((client, _, _)) => client.pendingRequestCount
 					case None => 0
-				})
+				},
+				process.startTime)
 			},
 			_queue.size)
 		
@@ -433,8 +455,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 			// Converts the request into a full chat request
 			val apiRequest = BufferedOpenAiChatCompletionRequest(
 				request.toLlm(llmCache(model)).mapSetting(ContextTokens) { _.int match {
-					case Some(maxTokens) => maxTokens min maxContextSize
-					case None => maxContextSize
+					case Some(maxTokens) => maxTokens min (maxContextSize - contextSafetyMargin)
+					case None => maxContextSize - contextSafetyMargin
 				} })
 			
 			// Adds handling for situations where instance-closing leads to request deprecation
@@ -455,11 +477,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		 *         (usually some time after stop() has been called)
 		 */
 		private def regenerate(): Future[Unit] = {
+			println(s"$maxContextSize: Generating")
 			// Checks how much capacity there is for new processes
 			val capacity = cleanProcesses()
 			// Case: No capacity => Returns immediately
-			if (capacity <= 0)
+			if (capacity <= 0) {
+				println(s"$maxContextSize: No capacity")
 				Future.unit
+			}
 			// Case: Capacity for a single process
 			//       => Starts it and prepares to apply recursion when that process completes
 			else if (capacity == 1) {
@@ -473,13 +498,15 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 				}
 			}
 			// Case: Capacity for multiple processes => Starts them sequentially and waits until all have been started
-			else
+			else {
+				println(s"$maxContextSize: Starts $capacity new Vast AI instances")
 				Iterator.continually { startNewInstance() }.take(capacity).future.flatMap {
 					// Case: All processes were started => Prepares to apply recursion as they are completed
 					case TryCatch.Success(newProcesses, failures) =>
 						failures.foreach { error =>
 							log(error, "Unexpected partial failure while creating new instances")
 						}
+						println(s"Acquired ${ newProcesses.size } Vast AI instances")
 						newProcesses
 							// Cleans the process pool and tests for recursion after every completion
 							.map { _.completionFuture.flatMap { _ =>
@@ -495,25 +522,30 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 								case TryCatch.Failure(error) => throw error
 							}
 					// Case: Process starting failed unexpectedly => Fails
-					case TryCatch.Failure(error) => Future.failed(error)
+					case TryCatch.Failure(error) =>
+						println(s"Failed to acquire Vast AI instances: ${ error.getMessage }")
+						Future.failed(error)
 				}
+			}
 		}
 		
 		private def startNewInstance() = createInstanceAccess { _ =>
+			println(s"$maxContextSize: Starting a new instance")
 			// Always uses a different port number
 			val port = portCounter.getAndUpdate { _ + 1 }
 			// Creates and starts the process of setting up vLLM on Vast AI
 			val process = VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk,
 				Gateway(maxConnectionsPerRoute = maxParallelRequestsPerInstance,
-					maxConnectionsTotal = maxParallelRequestsPerInstance),
-				installScriptPath, port, maxGpuUtil = maxGpuUtil, setupTimeout = setupTimeout,
+					maxConnectionsTotal = maxParallelRequestsPerInstance, disableTrustStoreVerification = true),
+				installScriptPath, port, remotePort = remotePort, maxGpuUtil = maxGpuUtil, setupTimeout = setupTimeout,
 				recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
 				instanceLabel = s"$label-$maxContextSize") {
 				offer =>
 					val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
 					(image, initialVllmState, maxContextSize, model)
 			}
-			processesP :+ process
+			processesP :+= process
+			println(s"$maxContextSize: Now at ${ processes.size } instance processes")
 			process.runAsync()
 			
 			// Updates the usableClients when API-hosting starts or ends
@@ -523,11 +555,15 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 						Some(client -> model)
 					case _ => None
 				}
-				if (clientStates.isAsymmetric)
+				if (clientStates.isAsymmetric) {
+					println(s"$maxContextSize: Updating client count (${ e.newValue.phase })")
 					usableClientsP.update()
+				}
 				
-				if (e.newValue.phase >= Stopping)
+				if (e.newValue.phase >= Stopping) {
+					println(s"$maxContextSize: Stops listening to the Vast AI process")
 					Detach
+				}
 				else
 					Continue
 			}
@@ -536,9 +572,18 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 			recorder.foreach { recorder => process.recordFuture.foreach(recorder) }
 			
 			// The next instance may be acquired once the process is in loading state / instance has been acquired
-			process.detailedStatePointer.findMapFuture { state =>
-				if (state.isInstanceAvailable || state.phase >= Stopping) Some(process) else None
-			}
+			process.detailedStatePointer
+				.futureWhere { state => state.isInstanceAvailable || state.phase >= Stopping }
+				.flatMap { state =>
+					if (state.isInstanceAvailable)
+						Future.successful(process)
+					// Case: Failed to acquire an instance
+					//       => Waits for a while before attempting to get the next instance
+					else {
+						log("Warning: Failed to acquire an instance")
+						Delay(10.seconds) { process }
+					}
+				}
 		}
 		
 		/**

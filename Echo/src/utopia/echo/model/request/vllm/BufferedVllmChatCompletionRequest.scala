@@ -15,30 +15,37 @@ import scala.concurrent.Future
 
 /**
  * A VLLM compatible version of BufferedOpenAiChatCompletionRequest
- * @param params Request parameters
+ * @param baseParams Request parameters
  * @author Mikko Hilpinen
  * @since 25.02.2026, v1.5
  */
-case class BufferedVllmChatCompletionRequest(params: ChatParams)
+// FIXME: Remote reasoning_effort, move extra body to request body
+case class BufferedVllmChatCompletionRequest(baseParams: ChatParams)
 	extends BufferedOpenAiChatCompletionRequest
 {
+	// ATTRIBUTES   -----------------------
+	
+	// vLLM doesn't support reasoning_effort
+	override val params: ChatParams = baseParams.withReasoningEffort(None)
+	
+	
+	// IMPLEMENTED  -----------------------
+	
 	override def withSettings(settings: ModelSettings): BufferedOpenAiChatCompletionRequest =
-		copy(params = params.withSettings(settings))
+		BufferedVllmChatCompletionRequest(baseParams.withSettings(settings))
 	
 	override protected def finalizeBody(body: Model): Model = {
 		// Disables thinking for QWEN models with a separate parameter
-		val noThink = params.reasoningEffort match {
+		val noThink = baseParams.reasoningEffort match {
 			case Some(SkipReasoning) => Some(Constant("chat_template_kwargs", Model.from("enable_thinking" -> false)))
 			case _ => None
 		}
-		val extraParams = Model.from("top_k" -> params(TopK), "min_p" -> params(MinP),
-			"repetition_penalty" -> params(RepeatPenalty))
-			.withoutEmptyValues ++ noThink
 		// TODO: Add "length_penalty", "min_tokens"
-		extraParams.notEmpty match {
-			case Some(extraParams) => body + Constant("extra_body", extraParams)
-			case None => body
-		}
+		body ++
+			Model.from("top_k" -> baseParams.get(TopK), "min_p" -> baseParams.get(MinP),
+				"repetition_penalty" -> baseParams.get(RepeatPenalty))
+				.withoutEmptyValues ++
+			noThink
 	}
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[BufferedOpenAiReply]] =

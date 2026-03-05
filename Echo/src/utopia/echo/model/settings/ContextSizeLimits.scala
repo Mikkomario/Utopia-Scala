@@ -67,20 +67,21 @@ case class ContextSizeLimits(max: Int = 8192, additional: Int = 256, min: Int = 
 	 * @param min New minimum context size
 	 * @return Copy of these limits with the specified absolute minimum
 	 */
-	def withMin(min: Int) = copy(min = min, minWithThink = minWithThink max min)
+	def withMin(min: Int) = copy(min = min, minWithThink = minWithThink max min, max = max.max(min))
 	def mapMin(f: Mutate[Int]) = withMin(f(min))
 	/**
 	 * @param min Minimum context size to use in thinking mode
 	 * @return Copy of these limits with the specified conditional minimum
 	 */
-	def withMinWhenThinking(min: Int) = copy(minWithThink = min, min = this.min min min)
+	def withMinWhenThinking(min: Int) =
+		copy(minWithThink = min, min = this.min min min, max = max.max(min))
 	def mapMinWhenThinking(f: Mutate[Int]) = withMinWhenThinking(f(minWithThink))
 	
 	/**
 	 * @param max Absolute maximum context size
 	 * @return Copy of these limits with the specified maximum
 	 */
-	def withMax(max: Int) = copy(max = max)
+	def withMax(max: Int) = copy(max = max, min = min.min(max))
 	def mapMax(f: Mutate[Int]) = withMax(f(max))
 	
 	/**

@@ -2,6 +2,7 @@
 
 ## v1.12 (in development)
 ### Breaking changes
+- **ApiClient** now requires `rateLimiter: Option[RequestRateLimiter]` to be implemented
 - Various **RequestResultExtensions** functions now yield **RequestResult** instead of **Try**
   - Also, for asynchronous Seq-based results, `.tryMapEach(...)` is now `.tryMapAll(...)`
 - The following **ResponseParser** constructors no longer support custom parsing failure -statuses, 
@@ -24,6 +25,8 @@
   - Added `.attempt(...)`
 - **SchrodingerState** (object)
   - Added `.of(Future)`
+### Other
+- **ApiClient** now supports request rate -limiting
 
 ## v1.11 - 01.11.2025
 A small update introducing support for path parameters in API requests.

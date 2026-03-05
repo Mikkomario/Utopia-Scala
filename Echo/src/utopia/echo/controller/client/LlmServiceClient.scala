@@ -5,8 +5,8 @@ import utopia.annex.controller.{ApiClient, QueueSystem, RequestQueue}
 import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.disciple.controller.Gateway
 import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, StringBody}
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.generic.model.immutable.Value
@@ -34,7 +34,8 @@ object LlmServiceClient
 		             allowBodyParameters = false, allowJsonInUriParameters = false),
 	             maxParallelRequests: Int = 8)
 	            (implicit log: Logger, exc: ExecutionContext) =
-		new LlmServiceClient(gateway, "https://api.deepseek.com", apiKey, maxParallelRequests, 10.minutes)
+		new LlmServiceClient(gateway, "https://api.deepseek.com", apiKey, maxParallelRequests,
+			offlineWaitThreshold = 10.minutes)
 }
 
 /**
@@ -49,7 +50,7 @@ object LlmServiceClient
   * @param offlineWaitThreshold A request duration after which a connection is considered offline (default = 7 minutes)
   */
 class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "", maxParallelRequests: Int = 1,
-                       offlineWaitThreshold: Duration = 7.minutes)
+                       rateLimiter: Option[RequestRateLimiter] = None, offlineWaitThreshold: Duration = 7.minutes)
                       (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
 {
@@ -90,6 +91,7 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		override protected implicit def exc: ExecutionContext = LlmServiceClient.this.exc
 		
 		override protected def gateway = LlmServiceClient.this.gateway
+		override protected def rateLimiter: Option[RequestRateLimiter] = LlmServiceClient.this.rateLimiter
 		override protected def rootPath: String = serverAddress
 		
 		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)

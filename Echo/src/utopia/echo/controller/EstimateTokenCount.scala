@@ -45,7 +45,7 @@ object EstimateTokenCount
 			EstimatedTokenCount.zero
 		else {
 			val raw = _in(text)
-			val corrected = (raw * correctionModPointer.value).round.toInt
+			val corrected = (raw * correctionModPointer.value).ceil.toInt
 			// Handles the edge case where correction would set the token count to 0
 			EstimatedTokenCount(raw, if (corrected == 0) 1 else corrected)
 		}

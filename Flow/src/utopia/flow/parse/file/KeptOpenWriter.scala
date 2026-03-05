@@ -61,7 +61,7 @@ class KeptOpenWriter(keepOpenDuration: Duration)(generate: => OutputStream)
 	
 	/**
 	  * Performs a write operation
-	  * @param f A function that uses a writer (any thrown errors are catched)
+	  * @param f A function that uses a writer (any thrown errors are caught)
 	  * @tparam U Function result type
 	  * @return Success if writing (including function call) succeeded, failure otherwise
 	  */

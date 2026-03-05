@@ -25,7 +25,7 @@ trait HasImmutableContextSizeLimits[+Repr] extends HasContextSizeLimits
 	def withMinContextSizeWhenThinking(min: Int) = mapContextSizeLimits { _.withMinWhenThinking(min) }
 	def withAdditionalContextSize(additional: Int) = mapContextSizeLimits { _.withAdditional(additional) }
 	
-	def mapContextSizeLimits(f: Mutate[ContextSizeLimits]) = withContextSizeLimits(contextSizeLimits)
+	def mapContextSizeLimits(f: Mutate[ContextSizeLimits]) = withContextSizeLimits(f(contextSizeLimits))
 	
 	def mapMaxContextSize(f: Mutate[Int]) = mapContextSizeLimits { _.mapMax(f) }
 	def mapMinContextSize(f: Mutate[Int]) = mapContextSizeLimits { _.mapMin(f) }

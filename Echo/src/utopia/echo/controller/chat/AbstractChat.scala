@@ -364,6 +364,8 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				None
 			}
 			else {
+				// TODO: This doesn't work for Open AI,
+				//  which doesn't return the thinking content in /chat/completions response
 				EstimateTokenCount.train(reply.text, totalResponseSize)
 				updateLargestReplySize { _ max totalResponseSize }
 				Some(totalResponseSize)

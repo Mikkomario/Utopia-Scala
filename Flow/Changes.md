@@ -53,6 +53,7 @@
 - **Path**'s `.isDirectory` and `.isRegularFile` (in **FileExtensions**) no longer require file existence 
   in order to yield `true`. 
   - The previous implementations are available as `.isExistingDirectory` and `.isExistingRegularFile`
+- **Value**'s `.toJson` now yields an empty string if the value is of **StringType**
 - Some **LogQueue** functions now yields **IndexedSeq** instead of **Vector**
 - **RecursiveDirectoriesIterator** now yields **IndexedSeq**s instead of **Vector**s
 - `.subDirectories` and `.findDescendants(...)` in **FileExtensions** now yield **IndexedSeq** instead of **Vector**

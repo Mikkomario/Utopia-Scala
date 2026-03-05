@@ -4,6 +4,8 @@ import utopia.echo.model.vastai.instance.InstanceStatus
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.ApiHosting
 
+import java.time.Instant
+
 /**
  * Represents a status snapshot of a Vast AI + vLLM processor pool
  * @param maxContextSize Maximum context size of this processor pool
@@ -12,12 +14,13 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcess
  *                          1. The current API-hosting phase
  *                          1. The current state of the utilized Vast AI instance, if applicable
  *                          1. Number of requests being processed (including queued)
+ *                          1. Time when this processor was activated
  * @param requestsQueued Number of requests queued, waiting for available Vast AI + vLLM processors
  * @author Mikko Hilpinen
  * @since 04.03.2026, v1.5
  */
 case class VastAiVllmProcessorPoolStatus(maxContextSize: Int, maxParallelRequestsPerClient: Int,
-                                         instanceStates: Seq[(VastAiVllmProcessPhase, Option[InstanceStatus], Int)],
+                                         instanceStates: Seq[(VastAiVllmProcessPhase, Option[InstanceStatus], Int, Instant)],
                                          requestsQueued: Int)
 {
 	// ATTRIBUTES   --------------------

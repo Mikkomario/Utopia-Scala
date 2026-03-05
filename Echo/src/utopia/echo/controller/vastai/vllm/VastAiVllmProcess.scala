@@ -5,7 +5,7 @@ import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.Timeout
 import utopia.echo.controller.client.{LlmServiceClient, VastAiApiClient}
-import utopia.echo.controller.vastai.vllm.VastAiVllmProcess.defaultGateway
+import utopia.echo.controller.vastai.vllm.VastAiVllmProcess.{defaultGateway, takenMachineIdsP}
 import utopia.echo.controller.vastai.{SelectOffer, SshExecutor, VastAiProcess}
 import utopia.echo.model.enumeration.ServiceState
 import utopia.echo.model.enumeration.ServiceState.NotInstalled
@@ -23,7 +23,7 @@ import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessReco
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
-import utopia.flow.async.process.{Delay, Loop, Process, Wait}
+import utopia.flow.async.process.{Delay, LogProcessToFile, Loop, Process, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.parse.file.FileExtensions._
@@ -38,21 +38,29 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.{AssignableOnce, MayBeAssignedOnce}
+import utopia.flow.view.template.eventful.Flag
 
 import java.io.FileNotFoundException
 import java.nio.file.Path
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
-import scala.sys.process
 import scala.util.{Failure, Success, Try}
 
+// TODO: If instance goes offline, destroy it
 object VastAiVllmProcess
 {
+	// ATTRIBUTES   -------------------
+	
+	/**
+	 * Lists the currently taken machine IDs
+	 */
+	private val takenMachineIdsP = Volatile(Set[Int]())
+	
+	
 	// COMPUTED -----------------------
 	
 	private def defaultGateway = Gateway(maxConnectionsPerRoute = 4, maxConnectionsTotal = 4,
 		maximumTimeout = Timeout(connection = 60.seconds, read = 10.minutes, manager = 15.minutes),
-		allowBodyParameters = false, allowJsonInUriParameters = false,
 		disableTrustStoreVerification = true)
 	
 	
@@ -71,8 +79,8 @@ object VastAiVllmProcess
 	 * @param installScriptPath Path to a script for installing vLLM on the rented device.
 	 *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
 	 *                          Default = None.
-	 * @param localPort Port used for accessing the vLLM API locally. Default = 18000.
-	 * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 18000.
+	 * @param localPort Port used for accessing the vLLM API locally. Default = 8000.
+	 * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
 	 *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
 	 * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM.
 	 *                   Default = 0.9.
@@ -97,7 +105,7 @@ object VastAiVllmProcess
 	 */
 	def apply(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
 	          gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
-	          localPort: Int = 18000, remotePort: Int = 18000, maxGpuUtil: Double = 0.9,
+	          localPort: Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
 	          setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
 	          noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
 	          instanceLabel: String = "")
@@ -120,8 +128,8 @@ object VastAiVllmProcess
  * @param installScriptPath Path to a script for installing vLLM on the rented device.
  *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
  *                          Default = None.
- * @param localPort Port used for accessing the vLLM API locally. Default = 18000.
- * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 18000.
+ * @param localPort Port used for accessing the vLLM API locally. Default = 8000.
+ * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
  *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
  * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM.
  *                   Default = 0.9.
@@ -149,7 +157,7 @@ object VastAiVllmProcess
 // TODO: Add support for blacklisting offers (and remember which offer was taken)
 class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
                         gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
-                        localPort: Int = 18000, remotePort: Int = 18000, maxGpuUtil: Double = 0.9,
+                        localPort: Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
                         setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
                         noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
                         instanceLabel: String = "")
@@ -172,10 +180,11 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	val phasePointer = stateP.lightMap { _.phase }
 	
 	// Collects timestamps of various events, for the final result
+	private var _startTime = Now.toInstant
 	private var hostingStartTime: Option[Instant] = None
 	private var stopTime: Option[Instant] = None
 	
-	private val offerP = MayBeAssignedOnce[Offer]()
+	private val offerP = Volatile.lockable.empty[Offer]
 	/**
 	 * A pointer that contains the selected offer, once known
 	 */
@@ -225,27 +234,13 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	private val vastAiProcess = VastAiProcess(statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5)) { hurryFlag =>
 		// Requests for offers
 		val requiredDiskSpace = modelSize + additionalReservedDisk
-		// TODO: Remove test prints
-		val getOffers = GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
-			selectOffer.offerType)
-		println(getOffers.body)
-		client.send(getOffers)
-			// Selects one offer
-			.tryFlatMap(selectOffer.apply)
-			.flatMapOrFail { offer =>
-				offerP.trySet(offer)
-				stateP.value = AcquiringInstance(offer)
-				val (base, vllmDefaultState, contextSize, model) = chooseImage(offer)
-				assumedVllmState = vllmDefaultState
-				modelToServe = model
-				maxContextSize = contextSize
-				// Accepts the offer, requesting a new instance
-				// TODO: Remove test prints
-				val request = AcceptOffer(offer.id, base, runType = DirectSsh, reservedDiskSpace = requiredDiskSpace,
-					label = instanceLabel, deprecatedView = hurryFlag, cancelIfUnavailable = true)
-				println(request.path)
-				println(request.body)
-				client.send(request)
+		client.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
+				selectOffer.offerType))
+			.tryFlatMap { offers =>
+				// Won't include the currently used machine IDs
+				val usedMachineIds = takenMachineIdsP.value
+				selectFromOffers(offers.filterNot { o => usedMachineIds.contains(o.machineId) }, requiredDiskSpace,
+					hurryFlag || this.hurryFlag)
 			}
 			.toTryFuture
 	}
@@ -274,6 +269,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	
 	
 	// COMPUTED --------------------------
+	
+	/**
+	 * @return Time when this process was started.
+	 *         If this process hasn't been started, returns the time when it was created.
+	 */
+	def startTime = _startTime
 	
 	/**
 	 * @return The current (detailed) state of this process
@@ -319,7 +320,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	// IMPLEMENTED  ----------------------
 	
 	override protected def runOnce(): Unit = {
-		val startTime = Now
+		_startTime = Now
 		val runResult = Try {
 			stateP.value = SelectingOffer
 			// Sets up a Vast AI instance and waits for it to load (or for timeout or stop() call)
@@ -334,16 +335,22 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			val instanceLoadedFuture = vastAiProcess.liveInstanceFuture.flatMap {
 				// Case: Instance-acquisition succeeded => Checks when it's fully loaded
 				case Success(instance) =>
+					offerP.lock()
+					val machineId = instance.wrapped.machineId
+					takenMachineIdsP.update { _ + machineId }
 					stateP.value = InstanceLoading(instance)
 					// Starts tracking the instance state
 					instance.instancePointer.addListener { e =>
 						stateP.update { _.atInstanceState(e.newValue) }
 						Continue.onlyIf(state.isRunning)
 					}
+					// Once the instance is no longer used, remembers that the machine is available
+					vastAiProcess.completionFuture.onComplete { _ => takenMachineIdsP.update { _ - machineId } }
 					instance.loadedFuture
 				
 				// Case: Instance-acquisition failed => Won't proceed
 				case Failure(error) =>
+					offerP.lock()
 					clientP.set(Failure(error))
 					log(error, "Failed to acquire a Vast AI instance")
 					Future.successful(false)
@@ -403,12 +410,38 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			
 			// Records the completion of this process
 			recordP.set(VastAiVllmProcessRecord(
-				hostingResult, startTime, Now, hostingStartTime, stopTime, offerP.value))
+				hostingResult, started = startTime, terminated = Now, apiStarted = hostingStartTime,
+				stopped = stopTime, offer = offerP.value))
 		}
 	}
 	
 	
 	// OTHER    ---------------------
+	
+	private def selectFromOffers(offers: Seq[Offer], requiredDiskSpace: ByteCount, hurryFlag: Flag): Future[Try[Int]] =
+		selectOffer(offers).flatMapOrFail { offer =>
+			offerP.setOne(offer)
+			stateP.value = AcquiringInstance(offer)
+			
+			val (base, vllmDefaultState, contextSize, model) = chooseImage(offer)
+			assumedVllmState = vllmDefaultState
+			modelToServe = model
+			maxContextSize = contextSize
+			
+			// Accepts the offer, requesting a new instance
+			val request = AcceptOffer(offer.id, base, runType = DirectSsh, reservedDiskSpace = requiredDiskSpace,
+				label = instanceLabel, deprecatedView = hurryFlag, cancelIfUnavailable = true)
+			val resultFuture = client.send(request)
+			// If accept offer fails, may try again with a different offer
+			// TODO: Add handling for infinite loops
+			if (offers.hasSize > 1 && hurryFlag.isNotSet)
+				resultFuture.tryFlatMapFailure { error =>
+					log(error, "Failed to accept an offer")
+					selectFromOffers(offers.filterNot { _.id == offer.id }, requiredDiskSpace, hurryFlag)
+				}
+			else
+				resultFuture
+		}
 	
 	/**
 	 * Sets up and hosts the vLLM API on a rented Vast AI instance
@@ -444,6 +477,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 				// Case: API was successfully hosted => Exposes the vLLM client for external use
 				case Success(model) =>
 					// The client is now usable. Stores it in a pointer, enabling external use.
+					println("API is now usable")
 					val publicClient = lazyPublicClient.value
 					hostingStartTime = Some(Now)
 					clientP.set(Success((publicClient, model, maxContextSize)))
@@ -497,6 +531,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	                        stopFuture: Future[_]): Future[Try[Unit]] =
 	{
 		// Starts the vLLM service and port-forwarding
+		println("Starting vLLM & port-forwarding")
 		val (vllmProcess, portForwardingProcess) = startVllm(ssh, instancePointer)
 		val hostingEndFuture = vllmProcess match {
 			case Some(vllmProcess) => vllmProcess.future.raceWith(portForwardingProcess.future)
@@ -504,6 +539,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 		}
 		
 		def stopHosting() = {
+			println("Stopping vLLM & port-forwarding")
 			portForwardingProcess.kill()
 			vllmProcess.foreach { _.kill() }
 		}
@@ -518,6 +554,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			.flatMap {
 				// Case: API is usable => Remembers it (if not already known) and waits for the hosting to end
 				case Success(model) =>
+					println("Hosting the API")
 					resultPromise.trySuccess(Success(model))
 					hostingEndFuture.flatMap { _ =>
 						// Case: Hosting ended because this process was requested to stop => Completes
@@ -527,9 +564,11 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						//       => Reattempts hosting after a short delay (with limited recovery timeout)
 						else {
 							// Makes sure the existing processes are killed before attempting restart
+							println("Stopping the API")
 							stopHosting()
 							
 							Delay.future(10.seconds) {
+								println("Attempting again")
 								tryHostVllm(ssh, internalVllmClient, lazyExposedVllmClient, resultPromise,
 									instancePointer, Delay(recoveryTimeout) { () }.raceWith(this.stopFuture))
 							}
@@ -554,6 +593,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 *              1. The started vLLM process. None if no separate process was necessary.
 	 *              1. The port-forwarding process.
 	 */
+	// TODO: Add process logging for SSH
 	private def startVllm(ssh: SshExecutor, instancePointer: View[VastAiInstance]) = {
 		// Starts the vLLM in the background, unless it should be assumed to be running already
 		val vllmProcess = {
@@ -647,25 +687,6 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			case None => TryFuture.successCompletion
 		}
 	
-	private def startSshPortForwarding(instanceId: Int, ssh: SshConnection, setupTimeoutOrStopFuture: Future[_]) = {
-		// Makes sure we have a local SSH key
-		Env.home.toTry { new NoSuchElementException("HOME environment variable is not available") }.flatMap { home =>
-			val sshDirPath = home/".ssh"
-			registerSshKey(instanceId, sshDirPath/"id_ed25519.pub", View { setupTimeoutOrStopFuture.isCompleted })
-				.waitForResult().toTry
-				.map { _ =>
-					// Starts SSH port forwarding
-					println("Starts the port forwarding")
-					// TODO: Pass a ProcessLogger instance to run()
-					// TODO: Sometimes it may be good to try resetting the SSH connection in case of timeouts / failures
-					process.Process(s"ssh -N -i ${ sshDirPath/"id_ed25519" } -L $localPort:127.0.0.1:$remotePort root@${
-							ssh.host } -p ${
-							ssh.port } -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
-						.run()
-				}
-		}
-	}
-	
 	// Makes sure SSH keys are usable
 	private def setupSsh(instanceId: Int, sshConfig: SshConnection, deprecationView: View[Boolean]) = {
 		Env.home.toTry { new NoSuchElementException("HOME environment variable is not available") }
@@ -684,15 +705,9 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			.map { sshKey =>
 				// Makes sure that key is attached to the rented instance
 				client.send(GetSshKeys(instanceId, deprecationView)).mapOrFail { keysOnInstance =>
-					println(s"${ keysOnInstance.size } SSH keys attached:")
-					keysOnInstance.foreach { key => println(s"- $key") }
-					if (keysOnInstance.exists { _.publicKey == sshKey }) {
-						println("SSH key already attached")
+					if (keysOnInstance.exists { _.publicKey == sshKey })
 						Success("Key was already attached")
-					}
 					else {
-						println(s"The instance had ${
-							keysOnInstance.size } SSH keys; None matched id_ed25519 => Attaches the SSH key ($sshKey) to the remote device")
 						val result = client.send(AttachSshKey(instanceId, sshKey, deprecationView)).waitForResult()
 						println("Waiting 30 more seconds in order for the SSH key to be registered on the remote device")
 						// TODO: We need a more dynamic approach
@@ -704,8 +719,6 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			.flattenToFuture
 	}
 	
-	private def waitUntilGetModelsSucceeds(vllmClient: RequestQueue, setupTimeoutFuture: Future[_]) =
-		modelsAvailableFuture(vllmClient, setupTimeoutFuture).waitForResult()
 	private def modelsAvailableFuture(vllmClient: RequestQueue, setupTimeoutFuture: Future[_]) = {
 		val resultPromise = Promise[Try[OpenAiModelInfo]]()
 		// Completes the promise on timeout

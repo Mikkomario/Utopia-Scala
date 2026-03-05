@@ -43,6 +43,11 @@ case class VastAiVllmProcessRecord(hostingResult: ApiHostingResult, started: Ins
 	// COMPUTED -----------------------------
 	
 	/**
+	 * @return Total process duration
+	 */
+	def totalDuration = terminated - started
+	
+	/**
 	 * @return Whether the API was hosted for some time
 	 */
 	def hostedApi = hostingResult.wasHosted

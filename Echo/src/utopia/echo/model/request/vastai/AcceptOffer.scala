@@ -61,7 +61,7 @@ object AcceptOffer
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class AcceptOffer(offerId: Int, foundation: NewInstanceFoundation, runType: RunType = Ssh,
+case class AcceptOffer(offerId: Long, foundation: NewInstanceFoundation, runType: RunType = Ssh,
                        reservedDiskSpace: ByteCount = 10.gb, label: String = "",
                        bidPrice: Option[Double] = None, jupyterDirectory: String = "",
                        deprecatedView: View[Boolean] = AlwaysFalse,

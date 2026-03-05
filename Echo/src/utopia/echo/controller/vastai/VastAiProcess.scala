@@ -223,10 +223,8 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 					Future.successful(None)
 				}
 				// Case: Not yet finished => Checks the instance's status
-				else {
-					println("Checking instance status")
+				else
 					client.send(ShowInstance(instanceId)).map { Some(_) }
-				}
 			}
 			.flatten
 			.flatMap {

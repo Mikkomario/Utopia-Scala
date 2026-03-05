@@ -56,6 +56,7 @@
   - Added new constructors, including support for types other than those extending **HasId**
 - **TargetingManyRowsLike**
   - Added `.pullAndGroupBy(...)`
+  - Added `.take(Option)`
 - **TargetingTimeline**
   - Added `.chronological` and `.latestToEarliest`
 - **TimeDeprecatableView**

@@ -5,7 +5,7 @@ import utopia.access.model.enumeration.ContentCategory.Application
 import utopia.annex.controller.{ApiClient, PreparingResponseParser}
 import utopia.annex.model.response.Response
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.{Body, StringBody}
 import utopia.flow.collection.immutable.Single
@@ -36,6 +36,7 @@ class TestApiClient(executionContext: ExecutionContext, jsonParseLogic: JsonPars
 	
 	override protected lazy val gateway: Gateway =
 		new Gateway(allowBodyParameters = false, allowJsonInUriParameters = true)
+	override protected val rateLimiter: Option[RequestRateLimiter] = None
 	
 	override lazy val valueResponseParser: ResponseParser[Response[Value]] =
 		ResponseParser.value.unwrapToResponse { v =>

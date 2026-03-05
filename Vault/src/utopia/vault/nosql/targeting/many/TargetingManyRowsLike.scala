@@ -171,6 +171,15 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	// OTHER    --------------------------
 	
 	/**
+	 * @param limit Maximum number of rows to include. None if no limit should be placed.
+	 * @return Copy of this access, limited to that many rows.
+	 */
+	def take(limit: Option[Int]): Repr = limit match {
+		case Some(limit) => take(limit)
+		case None => self
+	}
+	
+	/**
 	  * Pulls all accessible data, including additional columns.
 	  * If some of the specified columns are not part of this access point's [[target]], joins to include them.
 	  * Assumes that only 0-1 column value(s) map to any single row.

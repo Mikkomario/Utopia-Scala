@@ -87,6 +87,7 @@ trait HasContextSizeLimits
 					if (contextSizeReduction >= tokenCounts.maxResponse)
 						Failure(new IllegalArgumentException(
 							s"Specified context size of $customContextSize is too small to contain this request"))
+					// TODO: Make the safety margin customizable
 					else
 						Success(settings + (PredictTokens -> (tokenCounts.maxResponse - contextSizeReduction)))
 				}

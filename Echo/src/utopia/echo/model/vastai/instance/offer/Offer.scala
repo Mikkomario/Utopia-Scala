@@ -44,7 +44,7 @@ object Offer extends FromModelFactory[Offer]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class Offer(id: Int, details: BasicInstanceInfo, gpuLimits: GpuLimits, reliability: Double, score: Double,
+case class Offer(id: Long, details: BasicInstanceInfo, gpuLimits: GpuLimits, reliability: Double, score: Double,
                  verification: VerificationStatus = Unverified, bundleId: Option[Int] = None, rentable: Boolean = true,
                  rented: Boolean = false)
 	extends Extender[BasicInstanceInfo]

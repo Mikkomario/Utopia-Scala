@@ -3,11 +3,12 @@ package utopia.echo.controller.client
 import utopia.access.model.Headers
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.response.Response
-import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.{Body, StringBody}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -31,6 +32,9 @@ class VastAiApiClient(override protected val gateway: Gateway, apiKey: String, a
 	
 	override val valueResponseParser: ResponseParser[Response[Value]] = newValueResponseParser
 	override val emptyResponseParser: ResponseParser[Response[Unit]] = newEmptyResponseParser
+	
+	// API requests too frequent: endpoint threshold=4.5*1.0
+	override protected val rateLimiter: Option[RequestRateLimiter] = Some(RequestRateLimiter(1, 1.seconds))
 	
 	
 	// IMPLEMENTED  ----------------------

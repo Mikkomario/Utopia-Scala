@@ -107,7 +107,8 @@ case class Value(content: Option[Any], dataType: DataType)
       */
     override def isEmpty = content.isEmpty
     
-    override def toJson = JsonValueConverter(this).getOrElse("null")
+	// All other empty values are represented with null, but an empty string value is represented as ""
+    override def toJson = JsonValueConverter(this).getOrElse { if (dataType == StringType) "\"\"" else "null" }
     
     /**
      * The contents of this value cast to a string

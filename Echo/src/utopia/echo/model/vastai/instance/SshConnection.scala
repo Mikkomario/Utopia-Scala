@@ -9,4 +9,5 @@ package utopia.echo.model.vastai.instance
  * @author Mikko Hilpinen
  * @since 25.02.2026, v1.5
  */
+// TODO: Remove the user parameter (we always use root)
 case class SshConnection(host: String, port: Int, machineDirectoryPort: Int, user: String)

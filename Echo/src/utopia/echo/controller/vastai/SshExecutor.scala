@@ -33,7 +33,7 @@ case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	 * @param command Command to execute
 	 * @return Process representing that command
 	 */
-	def apply(command: String) = _apply(s"$sshBase $command")
+	def apply(command: String) = Process(s"$sshBase $command")
 	
 	/**
 	 * Prepares a command for transferring a file to a remote device using SCP
@@ -42,7 +42,7 @@ case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	 * @return Process for executing the transfer
 	 */
 	def transfer(file: Path, toRemotePath: String) =
-		_apply(s"scp $prefixArgs $file $address:$toRemotePath $suffixArgs")
+		Process(s"scp $prefixArgs $file $address:$toRemotePath $suffixArgs")
 	/**
 	 * Prepares a command for executing a file over SSH
 	 * @param remoteScriptPath Path to the script / file on the remote instance, which should be executed
@@ -60,11 +60,5 @@ case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	 * @return A process for starting / running the port-forwarding (will run as long as forwarding is active)
 	 */
 	def portForwarding(localPort: Int, remotePort: Int, remoteHost: String = "127.0.0.1") =
-		_apply(s"ssh -N $prefixArgs -L $localPort:$remoteHost:$remotePort $address $suffixArgs -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
-	
-	// TODO: Remove test prints
-	private def _apply(command: String) = {
-		println(command)
-		Process(command)
-	}
+		Process(s"ssh -N $prefixArgs -L $localPort:$remoteHost:$remotePort $address $suffixArgs -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
 }

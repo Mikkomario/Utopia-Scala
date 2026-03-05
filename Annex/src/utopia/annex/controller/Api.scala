@@ -4,12 +4,14 @@ import utopia.access.model.Headers
 import utopia.access.model.enumeration.Method
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestResult, Response}
+import utopia.disciple.controller.RequestRateLimiter
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.Request
 import utopia.flow.generic.model.immutable.{Model, Value}
 
 import scala.concurrent.Future
 import utopia.flow.time.Duration
+
 import scala.util.{Failure, Success}
 
 /**
@@ -29,6 +31,8 @@ trait Api extends ApiClient
 	
 	
 	// IMPLEMENTED  ---------------------
+	
+	override protected def rateLimiter: Option[RequestRateLimiter] = None
 	
 	override def valueResponseParser: ResponseParser[Response[Value]] =
 		PreparingResponseParser.wrap(ResponseParser.value.getOrElseLog(Value.empty))(errorMessageFromValue)

@@ -8,7 +8,7 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.controller.Gateway
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.{Body, Request, Timeout}
 import utopia.flow.async.process.Delay
@@ -208,10 +208,10 @@ object ApiClient
 		  * @return Future which resolves into the eventual request send result
 		  */
 		def send[A](parser: ResponseParser[RequestResult[A]]) = {
-			// Sends the request and handles possible request sending failures
-			api.gateway.responseFor(wrapped)(parser).map {
-				case Success(response) => response.body
-				case Failure(error) => RequestSendingFailed(error)
+			// Applies request-rate limiting, if appropriate
+			api.rateLimiter match {
+				case Some(limiter) => limiter.push { _send(parser) }
+				case None => _send(parser)
 			}
 		}
 		
@@ -221,6 +221,14 @@ object ApiClient
 		  * @return Future which eventually resolves into the acquired response or a request failure
 		  */
 		def send(): Future[RequestResult[Unit]] = send(api.emptyResponseParser)
+		
+		private def _send[A](parser: ResponseParser[RequestResult[A]]) = {
+			// Sends the request and handles possible request sending failures
+			api.gateway.responseFor(wrapped)(parser).map {
+				case Success(response) => response.body
+				case Failure(error) => RequestSendingFailed(error)
+			}
+		}
 	}
 }
 
@@ -250,6 +258,10 @@ trait ApiClient
 	  * @return A [[Gateway]] instance to use when making http requests
 	  */
 	protected def gateway: Gateway
+	/**
+	 * @return Request rate limiter applied
+	 */
+	protected def rateLimiter: Option[RequestRateLimiter]
 	
 	/**
 	  * @return Domain address + the initial path common to all requests
