@@ -247,6 +247,7 @@
 - Renamed `.contains(String, Boolean)` to `.containsOther(String, Boolean)` in **StringExtensions**, 
   because the previous version could not be called because of ambiguous implicits.
 - `.groupByUsing(...)` and `.groupMapUsing(...)` in **IterableOnce** now support optional default value -generation
+- **Regex** now rethrows encountered errors as **RegexError**s, which contain more helpful information for debugging
 - **JsonSettingsAccess** now extends **HasPropertiesLike**
 - **LockableVolatile**'s `.lock()` now only declares the changing as stopped once
 - Various optimizations within **CachingSeq**

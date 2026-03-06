@@ -1,9 +1,10 @@
 package utopia.flow.parse.string
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.error.RegexError
 import utopia.flow.operator.{Identity, MaybeEmpty}
-import utopia.flow.parse.string.Regex.unbracketableChars
+import utopia.flow.parse.string.Regex.{MatchesIteratorFactory, unbracketableChars}
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.RangeExtensions._
 import utopia.flow.view.immutable.View
@@ -214,6 +215,69 @@ object Regex
 	  *         treated as a character and not an expression
 	  */
 	def escape(char: Char) = Regex(s"\\$char")
+	
+	
+	// NESTED   ----------------------
+	
+	/**
+	 * Used for constructing matcher-based iterators
+	 * @param regex The regular expression used (recorded for debugging)
+	 * @param input The input string (recorded for debugging)
+	 * @param matcher The pattern matcher used
+	 */
+	class MatchesIteratorFactory(regex: String, input: String, matcher: Matcher)
+	{
+		/**
+		 * @return An iterator that yields all regex start indices inside the input string
+		 */
+		def startIndices = apply { _.start() }
+		/**
+		 * @return An iterator that yields all regex end indices (exclusive) inside the input string
+		 */
+		def endIndices = apply { _.end() }
+		/**
+		 * @return An iterator that yields all regex match ranges (exclusive) inside the input string
+		 */
+		def ranges = apply { m => m.start() until m.end() }
+		/**
+		 * @return An iterator that yields all regex match values from the input string
+		 */
+		def matches = apply { _.group() }
+		/**
+		 * @return An iterator that yields all indices where a regular expression match either starts or ends
+		 */
+		def breaks = apply { m => Pair(m.start(), m.end()) }.flatten
+		
+		/**
+		 * @param f A function that utilizes a pattern matcher.
+		 *          The matcher's find() has yielded true before 'f' is called.
+		 * @tparam A Result type of 'f'
+		 * @return An iterator that yields all 'f' results, one for each find() success.
+		 */
+		def apply[A](f: Matcher => A): Iterator[A] = new MatcherIterator[A](regex, input, matcher)(f)
+	}
+	
+	private class MatcherIterator[+A](regex: String, input: String, matcher: Matcher)(f: Matcher => A)
+		extends Iterator[A]
+	{
+		// ATTRIBUTES   -------------------
+		
+		private val findCache = ResettableLazy {
+			try { matcher.find() } catch { case e: Error => throw new RegexError(regex, input, e) }
+		}
+		
+		
+		// IMPLEMENTED  ------------------
+		
+		override def hasNext = findCache.value
+		
+		override def next() = {
+			if (findCache.pop())
+				try { f(matcher) } catch { case e: Error => throw new RegexError(regex, input, e) }
+			else
+				throw new NoSuchElementException("Calling .next() after the end of this iterator")
+		}
+	}
 }
 
 /**
@@ -432,8 +496,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  */
 	// Implementation is based on Matcher.replaceAll(String)
 	// The main point of this function is to allow for the lazy initiation of the replacement
-	def replaceAll(str: String, replacement: View[String]) = {
-		val matcher = pattern.matcher(str)
+	def replaceAll(str: String, replacement: View[String]) = withMatcher(str) { matcher =>
 		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile(Identity)
 		if (findResultsIterator.hasNext) {
 			val resultBuffer = new StringBuffer()
@@ -444,6 +507,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		else
 			str
 	}
+	
 	/**
 	 * Replaces the first match of this regular expression within a string
 	 * @param str A string in which the replacement should be made
@@ -451,8 +515,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	 * @return A modified version of the specified string.
 	 *         If this expression didn't match any part of that string, yields that string without any modifications.
 	 */
-	def replaceFirst(str: String, replacement: => String) = {
-		val matcher = pattern.matcher(str)
+	def replaceFirst(str: String, replacement: => String) = withMatcher(str) { matcher =>
 		if (matcher.find())
 			s"${ str.take(matcher.start()) }$replacement${ str.drop(matcher.end()) }"
 		else
@@ -473,9 +536,8 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	 * @return Copy of the specified string where all non-matching sequences have been replaced
 	 *         with the specified string
 	 */
-	def replaceOthers(str: String, replacement: View[String]) = {
+	def replaceOthers(str: String, replacement: View[String]) = withMatcher(str) { matcher =>
 		val resultBuilder = new StringBuilder()
-		val matcher = pattern.matcher(str)
 		var lastMatchEnd = 0
 		// Finds all matches
 		while (matcher.find()) {
@@ -489,7 +551,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		// If the end of the string didn't match, replaces it
 		if (str.length > lastMatchEnd)
 			resultBuilder ++= replacement.value
-			
+		
 		resultBuilder.result()
 	}
 	/**
@@ -517,7 +579,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	 * @param str A target string
 	 * @return Whether this regex / pattern can be found from that string
 	 */
-	def existsIn(str: String) = pattern.matcher(str).find()
+	def existsIn(str: String) = withMatcher(str) { _.find() }
 	
 	/**
 	  * Finds the first match for this regex from the specified string
@@ -585,10 +647,8 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  * @return Parts of that string as a Vector.
 	  *         Each part is either: Left: A non-matched string part (outside match results) or Right: A match result
 	  */
-	def divide(str: String) = {
-		val matcher = pattern.matcher(str)
-		val builder = new VectorBuilder[Either[String, String]]()
-		
+	def divide(str: String) = withMatcher(str) { matcher =>
+		val builder = OptimizedIndexedSeq.newBuilder[Either[String, String]]
 		var lastEndIndex = 0
 		while (matcher.find()) {
 			val startIndex = matcher.start()
@@ -611,8 +671,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	 * @param str A string to split
 	 * @return Divided parts of the string
 	 */
-	def separate(str: String) = {
-		val matcher = pattern.matcher(str)
+	def separate(str: String) = withMatcher(str) { matcher =>
 		val builder = new VectorBuilder[String]()
 		var lastEndIndex = 0
 		while (matcher.find())
@@ -631,56 +690,43 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  * @param str A string
 	  * @return An iterator that returns pattern match results (substrings) from that string
 	  */
-	def matchesIteratorFrom(str: String): Iterator[String] = MatcherIterator.matches(pattern.matcher(str))
+	def matchesIteratorFrom(str: String): Iterator[String] = iterate(str).matches
 	/**
 	  * @param str A string
 	  * @return An iterator that returns pattern match ranges within that string
 	  */
-	def rangesIteratorIn(str: String): Iterator[Range] = MatcherIterator.ranges(pattern.matcher(str))
+	def rangesIteratorIn(str: String): Iterator[Range] = iterate(str).ranges
 	/**
 	  * @param str A string
 	  * @return An iterator that returns match start indices (inclusive) within that string
 	  */
-	def startIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.startIndices(pattern.matcher(str))
+	def startIndexIteratorIn(str: String): Iterator[Int] = iterate(str).startIndices
 	/**
 	  * @param str A string
 	  * @return An iterator that returns match end indices (exclusive) within that string
 	  */
-	def endIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.endIndices(pattern.matcher(str))
+	def endIndexIteratorIn(str: String): Iterator[Int] = iterate(str).endIndices
 	/**
 	  * @param str A string
-	  * @return An iterator that returns match start indices (inclusive)
-	  *         and match end indices (exclusive) within that string. I.e. all pattern ends (exclusive)
+	  * @return An iterator that returns each index at which a match either starts or ends.
 	  */
-	def breakIndexIteratorIn(str: String): Iterator[Int] = MatcherIterator.breaks(pattern.matcher(str))
-}
-
-private object MatcherIterator
-{
-	def apply[A](matcher: Matcher)(f: Matcher => A) = new MatcherIterator[A](matcher)(f)
+	def breakIndexIteratorIn(str: String): Iterator[Int] = iterate(str).breaks
 	
-	def startIndices(matcher: Matcher) = apply(matcher) { _.start() }
-	def endIndices(matcher: Matcher) = apply(matcher) { _.end() }
-	def ranges(matcher: Matcher) = apply(matcher) { m => m.start() until m.end() }
-	def matches(matcher: Matcher) = apply(matcher) { _.group() }
-	def breaks(matcher: Matcher) = apply(matcher) { m => Pair(m.start(), m.end()) }.flatten
-}
-
-private class MatcherIterator[+A](matcher: Matcher)(f: Matcher => A) extends Iterator[A]
-{
-	// ATTRIBUTES   -------------------
+	/**
+	 * @param str A string to which this expression is applied
+	 * @return A factory for accessing various iterator constructors, based on this regex + input string -combo
+	 */
+	def iterate(str: String) = new MatchesIteratorFactory(this.string, str, pattern.matcher(str))
 	
-	private val findCache = ResettableLazy { matcher.find() }
-	
-	
-	// IMPLEMENTED  ------------------
-	
-	override def hasNext = findCache.value
-	
-	override def next() = {
-		if (findCache.pop())
-			f(matcher)
-		else
-			throw new NoSuchElementException("Calling .next() after the end of this iterator")
+	/**
+	 * A function which catches and rethrows errors thrown by a Matcher, proving more helpful error descriptions.
+	 * @param input Pattern matcher input
+	 * @param f A function executed inside a try catch -block
+	 * @tparam A Result type of 'f'
+	 * @return Return value of 'f'
+	 */
+	private def withMatcher[A](input: String)(f: Matcher => A) = {
+		try { f(pattern.matcher(input)) }
+		catch { case e: Error => throw new RegexError(this.string, input, e) }
 	}
 }
