@@ -286,6 +286,7 @@ object Regex
   * @since 1.5.2019, v1+
   * @param string A regular expression
   */
+// TODO: Add support for atomic groups (?>...) -meaning "first mach of any of these"
 case class Regex(string: String) extends MaybeEmpty[Regex]
 {
 	// ATTRIBUTES	----------------
@@ -457,6 +458,11 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		else
 			throw new IllegalArgumentException("Empty range")
 	}
+	/**
+	 * @param n The smallest allowed number of consecutive occurrences of this regex
+	 * @return A regex that requires at least that many occurrences, but also accepts more
+	 */
+	def atLeastTimes(n: Int) = Regex(s"$string{$n,}")
 	
 	/**
 	  * Creates a regular expression that ignores results between the specified start and end characters

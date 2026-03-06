@@ -200,6 +200,7 @@
 - **Regex**
   - Added multiple new static values to the companion object
   - Added `.replaceFirst(String, String)`
+  - Added `.atLeastTimes(Int)`
 - **Seq** (via **CollectionExtensions**)
   - Added various `.popExtreme(...)` functions
 - **Set** (via **CollectionExtensions**)
