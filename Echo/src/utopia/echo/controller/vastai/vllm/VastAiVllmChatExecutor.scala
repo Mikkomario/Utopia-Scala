@@ -1,8 +1,9 @@
 package utopia.echo.controller.vastai.vllm
 
+import utopia.access.model.enumeration.Status.BadRequest
 import utopia.annex.controller.RequestQueue
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
-import utopia.annex.model.response.RequestResult
+import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
@@ -42,6 +43,7 @@ import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.CopyOnDemand
 
+import java.net.ServerSocket
 import java.nio.file.Path
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
@@ -219,7 +221,13 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	/**
 	 * A pointer for acquiring unique port numbers
 	 */
-	private val portCounter = Volatile(18001)
+	private val portCounter = {
+		// Continuously generates new port numbers
+		val p = Volatile(18001)
+		Iterator.continually { p.getAndUpdate { _ + 1 } }
+			// Makes sure only to yield available ports
+			.filter { port => Try { new ServerSocket(port).close() }.isSuccess }
+	}
 	
 	/**
 	 * Used for limiting instance-creation to one instance at a time
@@ -291,20 +299,43 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 			case Right(options) =>
 				// Gives the request to one of the process pools, depending on pool capacity
 				// Prefers smaller token limit pools
-				options
+				val optionsWithIndices = options.zipWithIndex
+				val (resultFuture, usedPoolIndex) = optionsWithIndices
 					// Option 1: Finds a pool with immediate capacity
-					.findMap { pool =>
+					.findMap { case (pool, index) =>
 						if (pool.hasImmediateCapacity)
-							pool.tryPush(params)
+							pool.tryPush(params).map { _ -> index }
 						else
 							None
 					}
-					// Option 2: Finds a pool that is not overfilled
-					.orElse { options.findMap { _.tryPush(params) } }
-					// Option 3: Finds a pool that has at least one active client
-					.orElse { options.findMap { _.tryPush(params, force = true) } }
-					// Option 4: Queues the request to the first pool, until a client is acquired
-					.getOrElse { options.head.queue(params) }
+					.getOrElse {
+						// Option 2: Finds a pool that is not overfilled
+						optionsWithIndices.findMap { case (pool, index) => pool.tryPush(params).map { _ -> index } }
+							.getOrElse {
+								// Option 3: Finds a pool that has at least one active client
+								optionsWithIndices
+									.findMap { case (pool, index) =>
+										pool.tryPush(params, force = true).map { _ -> index }
+									}
+									// Option 4: Queues the request to the first pool, until a client is acquired
+									.getOrElse { options.head.queue(params) -> 0 }
+							}
+					}
+				
+				// Case: Largest pool was used => Returns the acquired result
+				if (usedPoolIndex == options.size - 1)
+					resultFuture
+				// Case: A smaller pool was used
+				//       => Applies backup logic for 400 responses, where the request
+				//          is instead delegated to a pool with a larger context size
+				else
+					resultFuture.flatMap {
+						case Response.Failure(status, message, _) if status == BadRequest =>
+							log(s"Warning: $message => Delegated the request to a pool with a larger context window")
+							giveToOneOf(params, options.drop(usedPoolIndex + 1))
+						
+						case result => Future.successful(result)
+					}
 		}
 	}
 	
@@ -321,6 +352,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 	                          queuedLayers: Int)
 	{
 		// ATTRIBUTES   -------------------
+		
+		private val consecutiveGetInstanceFailuresP = Volatile(0)
 		
 		private val _queue = Volatile.eventful.emptySeq[Promise[(RequestQueue, String)]]
 		private val hasQueueFlag = _queue.nonEmptyFlag
@@ -418,7 +451,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		/**
 		 * Requests all currently running processes to stop
 		 */
-		def stopAll() = processes.foreach { _.stop() }
+		def stopAll() = {
+			processes.foreach { _.stop() }
+			// TODO: Handle failures more gracefully
+			_queue.popAll().foreach { _.failure(new InterruptedException("This process pool was stopped")) }
+		}
 		
 		private def scheduleQueueClearance(): Unit =
 			usableClientsP.addListenerAndSimulateEvent(Empty)(clearQueueListener)
@@ -531,14 +568,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		
 		private def startNewInstance() = createInstanceAccess { _ =>
 			println(s"$maxContextSize: Starting a new instance")
-			// Always uses a different port number
-			val port = portCounter.getAndUpdate { _ + 1 }
 			// Creates and starts the process of setting up vLLM on Vast AI
 			val process = VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk,
 				Gateway(maxConnectionsPerRoute = maxParallelRequestsPerInstance,
 					maxConnectionsTotal = maxParallelRequestsPerInstance, disableTrustStoreVerification = true),
-				installScriptPath, port, remotePort = remotePort, maxGpuUtil = maxGpuUtil, setupTimeout = setupTimeout,
-				recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
+				installScriptPath, localPort = portCounter.next(), remotePort = remotePort, maxGpuUtil = maxGpuUtil,
+				setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
 				instanceLabel = s"$label-$maxContextSize") {
 				offer =>
 					val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
@@ -575,13 +610,24 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 			process.detailedStatePointer
 				.futureWhere { state => state.isInstanceAvailable || state.phase >= Stopping }
 				.flatMap { state =>
-					if (state.isInstanceAvailable)
+					if (state.isInstanceAvailable) {
+						consecutiveGetInstanceFailuresP.value = 0
 						Future.successful(process)
+					}
 					// Case: Failed to acquire an instance
 					//       => Waits for a while before attempting to get the next instance
 					else {
 						log("Warning: Failed to acquire an instance")
-						Delay(10.seconds) { process }
+						// Checks whether there were too many instance-acquisition failures
+						val consecutiveFailures = consecutiveGetInstanceFailuresP.updateAndGet { _ + 1 }
+						// Case: Too many failures => Stops this whole system
+						if (consecutiveFailures > 50) {
+							println(s"$maxContextSize: Too many failures to acquire an instance => Stops the whole system")
+							stop()
+							Future.successful(process)
+						}
+						else
+							Delay(10.seconds) { process }
 					}
 				}
 		}
@@ -592,6 +638,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, add
 		 */
 		private def cleanProcesses() = processesP.mutate { processes =>
 			val remaining = processes.filterNot { _.state.isFinal }
+			val removed = processes.filterNot(remaining.contains)
+			if (removed.nonEmpty) {
+				println(s"$maxContextSize: Removed ${ removed.size } completed Vast AI processes:")
+				removed.foreach { p => println(s"\t- ${ p.instanceId.mkString }: ${ p.vastAiState }") }
+			}
 			(maxInstances - remaining.size) -> remaining
 		}
 	}

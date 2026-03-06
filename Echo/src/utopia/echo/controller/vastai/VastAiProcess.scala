@@ -115,6 +115,12 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	// COMPUTED -----------------------------
 	
 	/**
+	 * @return ID of the managed instance.
+	 *         None if no instance is or was managed.
+	 */
+	def instanceId = instanceIdFutureP.value.flatMap { _.currentResult.flatMap { _.toOption } }
+	
+	/**
 	 * @return The current detailed state of this process
 	 */
 	def detailedState = detailedStatePointer.value
@@ -136,7 +142,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 				def terminationRequested = terminationStartPromise.isCompleted
 				def terminate(): Unit = this.synchronized {
 					if (!terminationRequested) {
-						println("Terminating the Vast AI process")
+						println(s"$instanceId: Terminating the Vast AI process")
 						terminationStartPromise.success(client.send(DestroyInstance(instanceId)))
 						_stateP.update { previous => Stopping(previous.instanceStatus) }
 					}
@@ -162,12 +168,12 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 					
 					// Sets up the instance in the background
 					// Attempts to retrieve the instance multiple times, in case of {"instances": null} result
-					println("Requests initial instance information")
+					println(s"$instanceId: Requests initial instance information")
 					client.send(ShowInstance(instanceId, deprecationView = View { terminationRequested }))
 						.forResult {
 							// Case: Instance acquired => Prepares it for use and starts monitoring it
 							case Response.Success(instance, _, _) =>
-								println("Initial instance version loaded")
+								println(s"$instanceId: Initial instance version loaded")
 								val instanceP = Volatile.lockable(instance)
 								instancePointerP.setOne(Success(instanceP.readOnly))
 								_stateP.value = {
@@ -177,7 +183,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 										Running(instance.status)
 								}
 								// Once monitoring completes, locks the instance pointer
-								println("Starts monitoring the instance status")
+								println(s"$instanceId: Starts monitoring the instance status")
 								monitorInstance(instanceId, instanceP)(terminate).onComplete { result =>
 									instanceP.lock()
 									result.logWithMessage("Unexpected failure during the monitoring process")
@@ -185,17 +191,20 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 							
 							// Case: Failed to acquire the initial instance => Proceeds to destroy the instance
 							case failure: RequestFailure =>
-								println("Failed to acquire the initial instance version")
+								println(s"$instanceId: Failed to acquire the initial instance version")
 								instancePointerP.setOne(failure.toFailure)
 								terminate()
 						}
 				}
 				
 				// Waits for the contract to terminate
+				println(s"$instanceId: Waiting until terminated")
 				terminationStartPromise.future.flatten.waitForResult() match {
-					case _: Response.Success[_] => _stateP.value = Terminated
+					case _: Response.Success[_] =>
+						println(s"$instanceId: Terminated")
+						_stateP.value = Terminated
 					case failure: RequestFailure =>
-						println("Termination failed")
+						println(s"$instanceId: Termination failed")
 						_stateP.update { previousState => Failed(failure.cause, previousState, Some(instanceId)) }
 				}
 				hurryFlag.removeListener(terminator)
@@ -219,7 +228,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 			.apply(statusUpdateInterval) {
 				// Case: Finished during the delay => Won't perform a request
 				if (state.isFinal) {
-					println("Stops monitoring")
+					println(s"$instanceId: Stops monitoring")
 					Future.successful(None)
 				}
 				// Case: Not yet finished => Checks the instance's status
@@ -239,17 +248,17 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 						monitorInstance(instanceId, instanceP)(terminate)
 					// Case: Terminated => Finishes this loop
 					else {
-						println("Terminated => Finishes monitoring")
+						println(s"$instanceId: Terminated => Finishes monitoring")
 						Future.unit
 					}
 				
 				// Case: Request failed => Checks how many consecutive failures there has been
 				case _ =>
 					val consecutiveFailures = previousFailures + 1
-					println(s"Instance check failed (#$consecutiveFailures)")
+					println(s"$instanceId: Instance check failed (#$consecutiveFailures)")
 					// Case: Too many consecutive failures => Requests termination
 					if (maxConsecutiveStatusCheckFailures.exists { _ <= consecutiveFailures }) {
-						println("Too many failures => Requests termination")
+						println(s"$instanceId: Too many failures => Requests termination")
 						terminate()
 					}
 					
