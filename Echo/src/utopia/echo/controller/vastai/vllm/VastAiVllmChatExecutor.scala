@@ -190,6 +190,7 @@ object VastAiVllmChatExecutor
  */
 // TODO: Add support for dynamic parallel requests
 //  (not as easy as one might think - we first need a variable width action queue implementation)
+// TODO: We might have the wrong assumptions here. Why not use large max context size on every device and just manage processed tokens?
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
                              instanceCounts: Iterable[(Int, Int, Int, Int)] = Vector((4096, 4, 8, 2), (8192, 3, 4, 2), (16384, 2, 2, 2)),
                              defaultContextSize: Option[Int] = None, contextSafetyMargin: Int = 80,
