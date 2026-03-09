@@ -23,6 +23,8 @@
 ### New methods
 - **ApiClient**
   - Added `.attempt(...)`
+- **ApiRequest**
+  - Added new mapping functions
 - **SchrodingerState** (object)
   - Added `.of(Future)`
 ### Other

@@ -1,14 +1,17 @@
 package utopia.annex.model.request
 
 import utopia.access.model.enumeration.Method
+import utopia.annex.util.RequestResultExtensions._
 import utopia.annex.controller.ApiClient.PreparedRequest
+import utopia.annex.model.request.ApiRequest.MappedApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.Body
 import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.util.result.MayHaveFailed
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 object ApiRequest
 {
@@ -72,6 +75,20 @@ object ApiRequest
 	
 	// NESTED   ---------------------------
 	
+	private class MappedApiRequest[-A, +B](wrapped: ApiRequest[A])
+	                                      (f: Future[RequestResult[A]] => Future[RequestResult[B]])
+		extends ApiRequest[B]
+	{
+		override def method: Method = wrapped.method
+		override def path: String = wrapped.path
+		override def pathParams: Model = wrapped.pathParams
+		override def body: Either[Value, Body] = wrapped.body
+		
+		override def deprecated: Boolean = wrapped.deprecated
+		
+		override def send(prepared: PreparedRequest): Future[RequestResult[B]] = f(wrapped.send(prepared))
+	}
+	
 	private class _ApiRequest[A](override val method: Method, override val path: String, override val pathParams: Model,
 	                             bod: Value, deprecationView: View[Boolean])
 	                            (f: Send[A])
@@ -130,4 +147,30 @@ trait ApiRequest[+A] extends Retractable
 	// IMPLEMENTED  -----------------------
 	
 	override def toString = s"$method $path"
+	
+	
+	// OTHER    ---------------------------
+	
+	/**
+	 * @param f A mapping function applied to this request's results, if successful
+	 * @param exc Implicit execution context
+	 * @tparam B Type of the mapping results
+	 * @return A copy of this request, which applies the specified mapping
+	 */
+	def map[B](f: A => B)(implicit exc: ExecutionContext) = mapResultFuture { _.mapSuccess(f) }
+	/**
+	 * @param f A mapping function applied to this request's results, if successful. May yield a failure.
+	 * @param exc Implicit execution context
+	 * @tparam B Type of the mapping results
+	 * @return A copy of this request, which applies the specified mapping
+	 */
+	def mapOrFail[B](f: A => MayHaveFailed[B])(implicit exc: ExecutionContext) =
+		mapResultFuture { _.mapOrFail(f) }
+	/**
+	 * @param f A mapping function that accepts a result future from this request and maps it
+	 * @tparam B Type of mapped request results, when successful
+	 * @return A copy of this request that applies the specified mapping function
+	 */
+	def mapResultFuture[B](f: Future[RequestResult[A]] => Future[RequestResult[B]]): ApiRequest[B] =
+		new MappedApiRequest[A, B](this)(f)
 }
