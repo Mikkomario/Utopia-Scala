@@ -16,7 +16,7 @@ object AccessRequestPath extends AccessOneRoot[AccessRequestPath[RequestPath]]
 	/**
 	  * Access to individual request paths in the DB, also including domain information
 	  */
-	lazy val withDomain = AccessRequestPaths.withDomains.head
+	lazy val withDomain = AccessRequestPaths.detailed.head
 	
 	
 	// IMPLICIT	--------------------

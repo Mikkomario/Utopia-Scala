@@ -4,31 +4,26 @@ import utopia.logos.database.LogosTables
 import utopia.logos.database.access.url.domain.{AccessDomainValues, FilterByDomain}
 import utopia.logos.database.reader.url.{DetailedRequestPathDbReader, RequestPathDbReader}
 import utopia.logos.model.stored.url.RequestPath
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessManyRows, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows}
 import utopia.vault.nosql.targeting.one.TargetingOne
-
-import scala.language.implicitConversions
 
 object AccessRequestPaths extends AccessManyRoot[AccessRequestPathRows[RequestPath]]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val root = AccessRequestPathRows(AccessManyRows(RequestPathDbReader))
+	override val root = AccessRequestPathRows(AccessManyRows(RequestPathDbReader))
 	
 	/**
 	  * Access to request paths in the DB, also including domain information
 	  */
-	lazy val withDomains = AccessRequestPathRows(AccessManyRows(DetailedRequestPathDbReader))
+	lazy val detailed = AccessRequestPathRows(AccessManyRows(DetailedRequestPathDbReader))
 	
 	
-	// IMPLICIT	--------------------
+	// COMPUTED -------------------------
 	
-	/**
-	  * Provides implicit access to an access point's .values property
-	  * @param access Access point whose values are accessed
-	  */
-	implicit def accessValues(access: AccessRequestPaths[_, _]): AccessRequestPathValues = access.values
+	@deprecated("Renamed to .detailed", "v0.7")
+	def withDomains = detailed
 }
 
 /**
@@ -38,6 +33,7 @@ object AccessRequestPaths extends AccessManyRoot[AccessRequestPathRows[RequestPa
   */
 abstract class AccessRequestPaths[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
 	extends TargetingManyLike[A, Repr, AccessRequestPath[A]] with FilterRequestPaths[Repr]
+		with HasValues[AccessRequestPathValues]
 {
 	// ATTRIBUTES	--------------------
 	

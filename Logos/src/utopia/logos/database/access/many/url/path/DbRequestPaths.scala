@@ -111,8 +111,8 @@ object DbRequestPaths
 		override protected def pullMatchMap(values: Set[(Domain, String)])
 		                                   (implicit connection: Connection): Map[(Int, String), DetailedRequestPath] =
 		{
-			val domainMap = values.view.map { case (domain, _) => domain.id -> domain }.toMap
-			withinDomains(values.map { _._1.id }).pull.view
+			val domainMap = values.iterator.map { case (domain, _) => domain.id -> domain }.toMap
+			withinDomains(values.iterator.map { _._1.id }).pull.iterator
 				.map { p =>
 					val domain = domainMap(p.domainId)
 					(domain.id -> p.path.toLowerCase) -> domain(p)

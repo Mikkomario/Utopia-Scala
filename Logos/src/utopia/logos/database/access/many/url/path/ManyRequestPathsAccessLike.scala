@@ -1,12 +1,12 @@
 package utopia.logos.database.access.many.url.path
 
-import utopia.flow.collection.immutable.IntSet
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.storable.url.RequestPathDbModel
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.many.model.ManyModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.FilterableView
+import utopia.vault.sql.Condition
 
 /**
   * A common trait for access points which target multiple request paths or similar instances at a time
@@ -23,18 +23,15 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	  * domain ids of the accessible request paths
 	  */
 	def domainIds(implicit connection: Connection) = pullColumn(model.domainId.column).map { v => v.getInt }
-	
 	/**
 	  * paths of the accessible request paths
 	  */
 	def paths(implicit connection: Connection) = pullColumn(model.path.column).flatMap { _.string }
-	
 	/**
 	  * creation times of the accessible request paths
 	  */
 	def creationTimes(implicit connection: Connection) = 
 		pullColumn(model.created.column).map { v => v.getInstant }
-	
 	/**
 	  * Unique ids of the accessible request paths
 	  */
@@ -53,7 +50,6 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	  * @return Copy of this access point that only includes request paths with the specified path
 	  */
 	def withPath(path: String) = filter(model.path.column <=> path)
-	
 	/**
 	  * @param paths Targeted paths
 	  * @return Copy of this access point that only includes request paths where path is within the specified
@@ -66,12 +62,11 @@ trait ManyRequestPathsAccessLike[+A, +Repr] extends ManyModelAccess[A] with Inde
 	  * @return Copy of this access point that only includes request paths with the specified domain id
 	  */
 	def withinDomain(domainId: Int) = filter(model.domainId.column <=> domainId)
-	
 	/**
 	  * @param domainIds Targeted domain ids
 	  * @return Copy of this access point that only includes request paths where domain id is within the
 	  *  specified value set
 	  */
-	def withinDomains(domainIds: IterableOnce[Int]) = filter(model.domainId.column.in(IntSet.from(domainIds)))
+	def withinDomains(domainIds: IterableOnce[Int]) = filter(Condition.indexIn(model.domainId.column, domainIds))
 }
 

@@ -168,6 +168,11 @@ trait TargetingManyRowsLike[+A, +Repr, +One] extends TargetingManyLike[A, Repr, 
 	                   (f: Iterator[(A, Seq[Row])] => IterableOnce[B]): TargetingMany[B]
 	
 	
+	// IMPLEMENTED  ----------------------
+	
+	override def toMapBy[B](f: A => B)(implicit c: Connection) = stream { _.map { a => f(a) -> a }.toMap }
+	
+	
 	// OTHER    --------------------------
 	
 	/**
