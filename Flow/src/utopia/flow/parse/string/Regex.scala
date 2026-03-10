@@ -132,6 +132,7 @@ object Regex
 	lazy val comma = escape(',')
 	lazy val dot = escape('.')
 	lazy val semicolon = escape(';')
+	lazy val dash = escape('-')
 	
 	private val unbracketableChars = Set[Char]('[', ']', '(', ')', '|')
 	
