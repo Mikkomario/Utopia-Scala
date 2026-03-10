@@ -8,6 +8,8 @@ import utopia.flow.view.mutable.async.Volatile
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
 import utopia.flow.time.Duration
+import utopia.flow.view.immutable.View
+
 import scala.util.{Failure, Try}
 
 object Loop
@@ -24,7 +26,7 @@ object Loop
       */
     def after(delay: WaitTarget)(f: => Option[WaitTarget])(implicit exc: ExecutionContext, logger: Logger) =
     {
-        val loop = LoopingProcess(delay) { _ => f }
+        val loop = LoopingProcess(View.fixed(delay)) { _ => f }
         loop.runAsync()
         loop
     }

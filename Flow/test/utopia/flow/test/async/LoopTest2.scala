@@ -12,6 +12,7 @@ import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.ExecutionContext
 import utopia.flow.time.Duration
+import utopia.flow.view.immutable.View
 
 /**
   * Tests LoopingProcess and Loop
@@ -34,7 +35,7 @@ object LoopTest2 extends App
 	
 	// Tests temporary async looping
 	val counter = Volatile(0)
-	val l1 = LoopingProcess(0.5.seconds) { _ =>
+	val l1 = LoopingProcess(View.fixed(0.5.seconds)) { _ =>
 		val newVal = counter.updateAndGet { _ + 1 }
 		if (newVal < 3)
 			Some(WaitDuration(0.3.seconds))

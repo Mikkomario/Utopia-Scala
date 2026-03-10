@@ -54,6 +54,8 @@
   in order to yield `true`. 
   - The previous implementations are available as `.isExistingDirectory` and `.isExistingRegularFile`
 - **Value**'s `.toJson` now yields an empty string if the value is of **StringType**
+- Modified **LoopingProcess** default constructors to accept a **View** of a **WaitTarget** instead of a 
+  **WaitTarget** directly, for the initial delay
 - Some **LogQueue** functions now yields **IndexedSeq** instead of **Vector**
 - **RecursiveDirectoriesIterator** now yields **IndexedSeq**s instead of **Vector**s
 - `.subDirectories` and `.findDescendants(...)` in **FileExtensions** now yield **IndexedSeq** instead of **Vector**

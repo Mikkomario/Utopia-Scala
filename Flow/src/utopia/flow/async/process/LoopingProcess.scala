@@ -2,35 +2,17 @@ package utopia.flow.async.process
 
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{NoWait, WeeklyTime}
-import utopia.flow.time.WeekDay
+import utopia.flow.time.{Duration, WeekDay}
 import utopia.flow.util.logging.Logger
+import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.Flag
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 object LoopingProcess
 {
 	// OTHER    -----------------------------
-	
-	/**
-	  * Creates a new looping process
-	  * @param startDelay A delay to perform before the first iteration (default = no delay)
-	  * @param waitLock Wait lock to use (optional)
-	  * @param shutdownReaction How this loop should react to JVM shutdown (default = stop / cancel everything)
-	  * @param isRestartable Whether this loop should be restartable (default = true)
-	  * @param f The function that will be called regularly. Accepts a pointer that shows whether the function should
-	  *          hurry to complete itself. Returns the next wait target or None if this loop should be broken
-	  *          afterwards.
-	  * @param exc Implicit execution context
-	  * @return A new looping process
-	  */
-	def apply(startDelay: WaitTarget = NoWait, waitLock: AnyRef = new AnyRef,
-	          shutdownReaction: ShutdownReaction = Cancel, isRestartable: Boolean = true)
-	         (f: => Flag => Option[WaitTarget])
-	         (implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
-		new FunctionalLoop(startDelay, waitLock, shutdownReaction, isRestartable)(f)
 	
 	/**
 	  * Creates a new infinite looping process
@@ -48,7 +30,7 @@ object LoopingProcess
 	              isRestartable: Boolean = true)
 	             (f: => Flag => U)
 	             (implicit exc: ExecutionContext, logger: Logger) =
-		apply(if (waitFirst) interval else NoWait, waitLock, isRestartable = isRestartable) { p =>
+		apply(View.fixed(if (waitFirst) interval else NoWait), waitLock, isRestartable = isRestartable) { p =>
 			f(p)
 			Some(interval)
 		}
@@ -65,11 +47,10 @@ object LoopingProcess
 	def daily[U](runTime: LocalTime, isRestartable: Boolean = true)
 	            (f: => Flag => U)
 	            (implicit exc: ExecutionContext, logger: Logger) =
-		apply(runTime, isRestartable = isRestartable) { p =>
+		apply(View.fixed(runTime), isRestartable = isRestartable) { p =>
 			f(p)
 			Some(runTime)
 		}
-	
 	/**
 	  * Creates a new infinite looping process that iterates once a week
 	  * @param day Weekday on which the function should be called
@@ -86,20 +67,38 @@ object LoopingProcess
 	             (implicit exc: ExecutionContext, logger: Logger) =
 	{
 		val target = WeeklyTime(day, time)
-		apply(target, isRestartable = isRestartable) { p =>
+		apply(View.fixed(target), isRestartable = isRestartable) { p =>
 			f(p)
 			Some(target)
 		}
 	}
 	
+	/**
+	 * Creates a new looping process
+	 * @param startDelayView A view that yields the delay applied before the first iteration (default = no delay)
+	 * @param waitLock Wait lock to use (optional)
+	 * @param shutdownReaction How this loop should react to JVM shutdown (default = stop / cancel everything)
+	 * @param isRestartable Whether this loop should be restartable (default = true)
+	 * @param f The function that will be called regularly. Accepts a pointer that shows whether the function should
+	 *          hurry to complete itself. Returns the next wait target or None if this loop should be broken
+	 *          afterwards.
+	 * @param exc Implicit execution context
+	 * @return A new looping process
+	 */
+	def apply(startDelayView: View[WaitTarget] = View.fixed(NoWait), waitLock: AnyRef = new AnyRef,
+	          shutdownReaction: ShutdownReaction = Cancel, isRestartable: Boolean = true)
+	         (f: => Flag => Option[WaitTarget])
+	         (implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
+		new FunctionalLoop(startDelayView, waitLock, shutdownReaction, isRestartable)(f)
+	
 	
 	// NESTED   -----------------------------
 	
-	private class FunctionalLoop(startDelay: WaitTarget, waitLock: AnyRef, shutdownReaction: ShutdownReaction,
+	private class FunctionalLoop(startDelayView: View[WaitTarget], waitLock: AnyRef, shutdownReaction: ShutdownReaction,
 	                             override val isRestartable: Boolean)
 	                            (f: => Flag => Option[WaitTarget])
 	                            (implicit exc: ExecutionContext, logger: Logger)
-		extends LoopingProcess(startDelay, waitLock, shutdownReaction)
+		extends LoopingProcess(startDelayView, waitLock, shutdownReaction)
 	{
 		override protected def iteration() = f(hurryFlag)
 	}
@@ -112,13 +111,13 @@ object LoopingProcess
   * @author Mikko Hilpinen
   * @since 31.3.2019
   * @constructor Creates a new looping process that is not active yet
-  * @param startDelay Delay applied before the first iteration (default = no delay)
+  * @param startDelayView A view that yields the delay applied before the first iteration (default = no delay)
   * @param waitLock Wait lock to utilize (default = new lock)
   * @param shutdownReaction How this process should react to JVM shutdowns (default = terminate)
   * @param exc Implicit execution context
   * @param logger Logger that records exceptions caught during the scheduled actions
   **/
-abstract class LoopingProcess(startDelay: WaitTarget = NoWait, waitLock: AnyRef = new AnyRef,
+abstract class LoopingProcess(startDelayView: View[WaitTarget] = View.fixed(NoWait), waitLock: AnyRef = new AnyRef,
                               shutdownReaction: ShutdownReaction = Cancel)
                              (implicit exc: ExecutionContext, logger: Logger)
 	extends Process(waitLock, Some(shutdownReaction))
@@ -143,7 +142,7 @@ abstract class LoopingProcess(startDelay: WaitTarget = NoWait, waitLock: AnyRef 
 	  *         as TimedTasks don't have this feature.
 	  */
 	def toTimedTask =
-		startDelay.endTime.map { TimedTask.firstTimeAt(_).completing { iteration().flatMap { _.endTime } } }
+		startDelayView.value.endTime.map { TimedTask.firstTimeAt(_).completing { iteration().flatMap { _.endTime } } }
 	
 	
 	// IMPLEMENTED    --------------
@@ -151,6 +150,7 @@ abstract class LoopingProcess(startDelay: WaitTarget = NoWait, waitLock: AnyRef 
 	override protected def runOnce(): Unit = {
 		// Performs the initial delay, if one has been specified
 		var broken = {
+			val startDelay = startDelayView.value
 			if (startDelay.isPositive) {
 				// If the initial wait is interrupted, considers this loop as broken
 				val waitCompleted = Wait(startDelay, waitLock)
