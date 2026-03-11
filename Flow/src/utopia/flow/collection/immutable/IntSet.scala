@@ -37,32 +37,20 @@ object IntSet extends FromCollectionFactory[Int, IntSet]
 		case r: Range.Inclusive => apply(Single[NumericSpan[Int]](r))
 		// Case: An exclusive range => Wraps it as a span, if not empty
 		case r: Range => if (r.isEmpty) empty else apply(Single(NumericSpan(r.start, r.end - 1)))
-		// Case An ordered sequence
+		// Case: Seq => Sorts it and processes in order
 		case s: Seq[Int] =>
 			// Case: Empty => Skips building
 			if (s.isEmpty)
 				empty
-			// Case: Ordered => Builds using a simpler function
-			else if (s.iterator.paired.forall { p => p.first <= p.second })
-				fromPreparedIterator(s.iterator)
-			// Case: Unordered => Uses a builder
-			else {
-				val builder = newBuilder
-				builder ++= s
-				builder.result()
-			}
-		
-		// Case: Other type of collection => Uses a builder
+			else
+				fromPreparedIterator(s.sorted.iterator)
+		// Case: Other type of collection => Converts into a Seq, sorts and processes in order
 		case i =>
-			i.nonEmptyIterator match {
-				case Some(iterator) =>
-					val builder = newBuilder
-					builder ++= iterator
-					builder.result()
-					
-				// Case: Empty collection => No building is needed
-				case None => empty
-			}
+			val seq = OptimizedIndexedSeq.from(i)
+			if (seq.isEmpty)
+				empty
+			else
+				fromPreparedIterator(seq.sorted.iterator)
 	}
 	
 	override def apply(item: Int): IntSet = apply(Single(NumericSpan.singleValue(item)))

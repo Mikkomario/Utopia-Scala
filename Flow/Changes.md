@@ -256,6 +256,7 @@
 - Various optimizations within **CachingSeq**
 - Further optimizations within **Model** and **ModelLike**
 - Refactored `.divided` in **IterableOnce** (of **Either**)
+- Optimized `IntSet.from(IterableOnce)`, based on light testing
 - Internal refactoring within **Extreme**'s `.by(...)`
 - Internal refactoring within **Lazy**
 - Internal refactoring within some collection functions in **CollectionExtensions** and **TryExtensions**
