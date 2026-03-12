@@ -225,10 +225,15 @@ object ActionQueue
 		override def future: Future[A] = promise.future
 		override def isComplete: Boolean = promise.isCompleted
 		override def state = _statePointer.value
+		private def state_=(newState: BasicProcessState) = _statePointer.value = newState
 		
 		override def debugString: String = s"$state (sync)"
 		
-		override def run() = complete(promise)
+		override def run() = {
+			state = Running
+			complete(promise)
+			state = Completed
+		}
 		
 		// This method is left unimplemented on purpose. It is only used with asynchronously completing actions.
 		override def addCompletionListener(listener: ChangeListener[BasicProcessState]): Boolean =
