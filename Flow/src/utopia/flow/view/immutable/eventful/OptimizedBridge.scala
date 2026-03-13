@@ -164,7 +164,7 @@ class OptimizedBridge[-O, R](origin: Changing[O], trackActivelyFlag: Changing[Bo
 				// Case: Caching may be continued until invalidated
 				//       => Continues listening to the origin, if the cache still needs to be cleared
 				else
-					cache.nonEmpty
+					cache.isEmpty
 			}
 			if (shouldRemoveOriginListener)
 				origin.removeListener(originListener)

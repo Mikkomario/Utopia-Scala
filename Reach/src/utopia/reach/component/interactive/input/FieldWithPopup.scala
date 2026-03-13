@@ -588,17 +588,17 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	/**
 	  * A pointer which shows whether a pop-up is being displayed
 	  */
-	override lazy val popupVisibleFlag: Flag = popupP.flatMap {
+	override val popupVisibleFlag: Flag = popupP.flatMap {
 		case Some(window) => window.fullyVisibleFlag
 		case None => AlwaysFalse
 	}
 	/**
 	  * A pointer which contains true while a pop-up is hidden
 	  */
-	override lazy val popupHiddenFlag = !popupVisibleFlag
+	override val popupHiddenFlag = !popupVisibleFlag
 	
 	// Merges the expand and the collapse icons, if necessary
-	private lazy val rightIconP: Changing[SingleColorIcon] = {
+	private val rightIconP: Changing[SingleColorIcon] = {
 		// Case: No expand or collapse icon defined, or an always-present right-side icon is defined
 		//       => Uses only the right-side icon from settings
 		if (settings.rightIconPointer.existsFixed { _.nonEmpty } || settings.expandAndCollapseIcon.forall { _.isEmpty })
@@ -656,9 +656,9 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	/**
 	  * A pointer that contains true while the pop-up window is NOT displayed, but only while this field has focus
 	  */
-	lazy val popupHiddenWhileFocusedFlag = popupHiddenFlag && field.focusFlag
+	val popupHiddenWhileFocusedFlag = popupHiddenFlag && field.focusFlag
 	
-	private lazy val appliedPopUpContext = {
+	private val appliedPopUpContext = {
 		val base = VariableReachContentWindowContext(popupContext, context)
 		// Applies the field's background to the pop-up (optional feature)
 		if (settings.appliesFieldBackgroundInPopup)
@@ -671,13 +671,12 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 	// INITIAL CODE	-----------------------------
 	
 	// Initializes keyboard & mouse listening once attached to the component hierarchy
-	if (settings.activationKeys.nonEmpty || settings.hidesPopupAfterMouseRelease)
-		linkedFlag.onceSet {
-			if (settings.activationKeys.nonEmpty)
-				KeyboardEvents += new FieldKeyListener
-			if (settings.hidesPopupAfterMouseRelease)
-				CommonMouseEvents += new PopupHideMouseListener
-		}
+	if (settings.activationKeys.nonEmpty || settings.hidesPopupAfterMouseRelease) {
+		if (settings.activationKeys.nonEmpty)
+			KeyboardEvents += new FieldKeyListener
+		if (settings.hidesPopupAfterMouseRelease)
+			CommonMouseEvents += new PopupHideMouseListener
+	}
 	// Whenever this field becomes detached from the component hierarchy, disposes the pop-up window
 	linkedFlag.addListenerWhile(hasPopupFlag) { e =>
 		if (!e.newValue)

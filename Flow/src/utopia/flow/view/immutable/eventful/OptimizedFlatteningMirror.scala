@@ -7,7 +7,7 @@ import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.event.model.Destiny.Sealed
-import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, ChangeResponse}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
@@ -103,7 +103,7 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 		// Case: Active tracking is no longer required => Terminates it
 		else
 			stopActiveTracking()
-			
+		
 		Continue
 	}
 	
@@ -143,7 +143,7 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 				case Some(p) => p.toString
 				case None =>
 					val suffix = if (condition.isAlwaysTrue) "" else s".while($condition)"
-					s"Mirroring.flattening($source)$suffix"
+					s"Mirroring.flattening($source => $currentMidPointer)$suffix"
 			}
 	}
 	
@@ -174,7 +174,7 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 		/**
 		  * A listener that listens to the pointer-pointer and moves the aforementioned listener between mid-pointers
 		  */
-		private lazy val moveValueUpdatorListener = ChangeListener[Changing[R]] { event =>
+		private val moveValueUpdatorListener = ChangeListener[Changing[R]] { event =>
 			// Starts tracking the new pointer and stops tracking the old
 			val newMidPointer = event.newValue
 			valueUpdatorP.update { oldUpdator =>
@@ -217,7 +217,7 @@ class OptimizedFlatteningMirror[+O, R](source: Changing[O], directMap: O => Chan
 		  * @param newValue New value to assign
 		  * @return Change response to provide for the pointer that specified this value
 		  */
-		private def assign(newValue: R) = {
+		private def assign(newValue: R): IterableOnce[AfterEffect] = {
 			val oldValue = valueP.getAndSet(newValue)
 			if (oldValue == newValue)
 				Empty

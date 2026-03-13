@@ -2,7 +2,7 @@ package utopia.flow.view.template.eventful
 
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.immutable._
 import utopia.flow.event.listener.{ChangeListener, ChangingStoppedListener, ConditionalChangeReaction}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.{After, High, Normal}
@@ -12,8 +12,8 @@ import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.Extreme.Max
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.time.Duration
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful._
@@ -190,7 +190,7 @@ object Changing
 	{
 		// Set to true if a higher priority effect is encountered, triggering recursion
 		var interrupted = false
-		var remainingEffects: IterableOnce[(ChangeResponsePriority, Seq[AfterEffect])] = Empty
+		var remainingEffectsView: scala.collection.View[(ChangeResponsePriority, Seq[AfterEffect])] = EmptyView
 		
 		// Processes the effects in descending priority order
 		val effectPrioritiesIter = ChangeResponsePriority.descending.iterator
@@ -201,7 +201,7 @@ object Changing
 				// Prepares the effects to process, also taking the queued effects
 				val queuedEffectsBuilder = queuedEffectsBuilders(effectPriority)
 				var effectsIter = effectsByPriority.get(effectPriority) match {
-					case Some(effects) => effects.iterator ++ queuedEffectsBuilder.result()
+					case Some(effects) => (effects ++ queuedEffectsBuilder.result()).iterator
 					case None => queuedEffectsBuilder.result().iterator
 				}
 				queuedEffectsBuilder.clear()
@@ -232,9 +232,10 @@ object Changing
 						{
 							// Calculates the new remaining events
 							interrupted = true
-							remainingEffects = chainedEffectsByPriority.iterator.filter { _._1 > effectPriority } ++
-								effectsIter.notEmpty.map { effectPriority -> _.toOptimizedSeq } ++
-								effectsByPriority.view.filterKeys { _ < effectPriority }
+							remainingEffectsView = scala.collection.View.concat(
+								chainedEffectsByPriority.view.filterKeys { _ > effectPriority },
+								effectsIter.notEmpty.map { effectPriority -> _.toOptimizedSeq },
+								effectsByPriority.view.filterKeys { _ < effectPriority })
 						}
 					}
 				}
@@ -246,7 +247,7 @@ object Changing
 		
 		// Case: Processing was interrupted => Applies recursion
 		if (interrupted) {
-			val nextEffects = Map.from(remainingEffects)
+			val nextEffects = remainingEffectsView.toMap
 			handleEffects(listenerPriority, nextEffects, queuedEffectsBuilders, noListenersRemain)
 		}
 	}
@@ -268,6 +269,7 @@ object Changing
 	                              (getListeners: ChangeResponsePriority => IterableOnce[ChangeListener[A]])
 	                              (detachListener: (ChangeResponsePriority, ChangeListener[A]) => Unit)
 	                              (implicit log: Logger) =
+	{
 		ChangeResponsePriority.descending.iterator.filter { getListeners(_).iterator.hasNext }.map { priority =>
 			AfterEffect(priority).chaining {
 				val listenersIter = getListeners(priority).iterator
@@ -277,6 +279,8 @@ object Changing
 					Empty
 			}
 		}
+	}
+	
 	/**
 	 * Informs listeners of a single response-priority level about a change event.
 	 * This process is interrupted and continued as an after-effect, if one of the listeners issues a higher priority
@@ -326,7 +330,8 @@ object Changing
 								effectsIter.divideToSeqsBy { _.priority > priority }.toTuple
 							
 							// Case: Higher priority effects were issued
-							//       => Interrupts listener-informing in order to trigger the effects as quickly as possible
+							//       => Interrupts listener-informing
+							//          in order to trigger the effects as quickly as possible
 							if (highPriorityEffects.nonEmpty) {
 								interrupted = true
 								interruptingEffects = highPriorityEffects

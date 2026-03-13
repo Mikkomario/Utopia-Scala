@@ -1,19 +1,19 @@
 package utopia.flow.test.event
 
 import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.event.model.ChangeResponse.Continue
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
-import utopia.flow.event.model.{ChangeEvent, ChangeResult}
+import utopia.flow.event.model.{AfterEffect, ChangeEvent, ChangeResponsePriority, ChangeResult}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType.{DoubleType, StringType}
-import utopia.flow.operator.Identity
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.test.TestContext._
 import utopia.flow.util.EitherExtensions._
 import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
-import utopia.flow.view.mutable.{Pointer, Settable}
 import utopia.flow.view.mutable.async.{BecomesEventfulVolatile, EventfulVolatile, LockableVolatile}
 import utopia.flow.view.mutable.eventful._
+import utopia.flow.view.mutable.{Pointer, Settable}
 import utopia.flow.view.template.eventful.Flag
 
 import scala.util.Try
@@ -953,6 +953,57 @@ object ChangingTest extends App
 	
 	assert(lastVal)
 	assert(flatFlagP.value)
+	
+	// Tests chaining change event reactions
+	println("\nStarting deep events -test")
+	
+	private val o1 = Pointer.eventful(1)
+	private val directCalls = ChangeResponsePriority.descending.iterator.map { prio => prio -> Pointer(0) }.toMap
+	private val indirectCalls = ChangeResponsePriority.descending.iterator
+		.flatMap { prio1 => ChangeResponsePriority.descending.iterator.map { prio2 => (prio1 -> prio2) -> Pointer(0) } }
+		.toMap
+	private val deepCalls = ChangeResponsePriority.descending.iterator
+		.flatMap { prio1 =>
+			ChangeResponsePriority.descending.iterator.flatMap { prio2 =>
+				ChangeResponsePriority.descending.iterator.map { prio3 =>
+					(prio1, prio2, prio3) -> Pointer(0)
+				}
+			}
+		}
+		.toMap
+	o1.addListener { e =>
+		println("Main event => Generates High, Normal & After")
+		Continue ++ ChangeResponsePriority.descending.iterator.map { prio1 =>
+			AfterEffect(prio1).chaining {
+				println(s"Direct $prio1")
+				directCalls(prio1).value = e.newValue
+				ChangeResponsePriority.descending.iterator.map { prio2 =>
+					AfterEffect(prio2).chaining {
+						println(s"Indirect $prio1 -> $prio2")
+						indirectCalls(prio1 -> prio2).value = e.newValue
+						ChangeResponsePriority.descending.iterator.map { prio3 =>
+							AfterEffect(prio3) {
+								println(s"Deep $prio1 -> $prio2 -> $prio3")
+								deepCalls((prio1, prio2, prio3)).value = e.newValue
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	o1.value = 2
+	
+	ChangeResponsePriority.descending.foreach { prio1 =>
+		assert(directCalls(prio1).value == 2, prio1)
+		ChangeResponsePriority.descending.foreach { prio2 =>
+			assert(indirectCalls(prio1 -> prio2).value == 2, prio1 -> prio2)
+			ChangeResponsePriority.descending.foreach { prio3 =>
+				assert(deepCalls((prio1, prio2, prio3)).value == 2, (prio1, prio2, prio3))
+			}
+		}
+	}
 	
 	println("Done!")
 }

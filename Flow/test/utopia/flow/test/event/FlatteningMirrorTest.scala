@@ -2,8 +2,11 @@ package utopia.flow.test.event
 
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
+import utopia.flow.operator.Identity
 import utopia.flow.test.TestContext._
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.Pointer
+import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.ResettableFlag
 
 /**
@@ -25,7 +28,20 @@ object FlatteningMirrorTest extends App
 	private val mirror = origin.flatMapWhile(condition) { i =>
 		println(s"Mapping $i")
 		mapCalls += 1
-		if (i >= 0) positiveStepsP.map { i + _ } else negativeStepsP.map { i - _ }
+		if (i >= 0) {
+			println(s"Mid-pointer = $i + Positive steps")
+			positiveStepsP.map { steps =>
+				println(s"+Steps=$steps => Result=${ i + steps }")
+				i + steps
+			}
+		}
+		else {
+			println(s"Mid-pointer = $i - Negative steps")
+			negativeStepsP.map { steps =>
+				println(s"-Steps=$steps => Result=${ i - steps }")
+				i - steps
+			}
+		}
 	}
 	
 	assert(positiveStepsP.hasNoListeners)
@@ -121,6 +137,7 @@ object FlatteningMirrorTest extends App
 	assert(mirror.value == 3)
 	
 	// Changes + steps twice => Expects it to have effect both times
+	println("\nChanges positive steps twice")
 	positiveStepsP.value = 2
 	
 	assert(lastValue == 4)
@@ -131,15 +148,17 @@ object FlatteningMirrorTest extends App
 	assert(mirror.value == 5)
 	
 	// Stops active listening and then modifies the step => Expects no more events to be fired
+	println("\nStops active listening")
 	mirror.removeListener(lastValueUpdator)
 	positiveStepsP.value = 2
 	
 	assert(lastValue == 5)
 	
+	println("\nSets +Steps=1")
 	positiveStepsP.value = 1
 	
 	assert(lastValue == 5)
-	assert(mirror.value == 3)
+	assert(mirror.value == 3, mirror.value) // FIXME: Fails here (mid-pointer's value doesn't update)
 	
 	// Modifies the origin twice => Expects the effects to be lazy again
 	origin.value = -2
@@ -221,6 +240,34 @@ object FlatteningMirrorTest extends App
 	assert(lastValue == 2)
 	assert(mirror.destiny == Sealed)
 	assert(mirror.value == 2)
+	
+	// Tests pop-up visible -type setup
+	println("\n\nStarts flag test")
+	private var flagChanges = 0
+	private val flagP = Volatile.lockable.empty[ResettableFlag]
+	private val flattenedFlag = flagP.flatMap { flag =>
+		flagChanges += 1
+		flag.getOrElse(AlwaysFalse)
+	}
+	println("Starts listening to the flattened flag")
+	private var lastFlagValue = false
+	flattenedFlag.addListener { e => lastFlagValue = e.newValue }
+	
+	println("Specifies the flag")
+	private val flag1 = ResettableFlag()
+	flagP.setOne(flag1)
+	assert(!lastFlagValue)
+	
+	println("Sets the flag")
+	flag1.set()
+	assert(lastFlagValue)
+	
+	flag1.reset()
+	assert(!lastFlagValue)
+	
+	private val flag2 = ResettableFlag(initialValue = true)
+	flagP.setOne(flag2)
+	assert(lastFlagValue)
 	
 	println("Success!")
 }

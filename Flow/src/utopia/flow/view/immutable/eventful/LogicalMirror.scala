@@ -178,7 +178,7 @@ sealed class LogicalMirror(sources: Pair[Changing[Boolean]], stopValue: Boolean,
 		/**
 		  * Reacts to the secondary pointer, recalculating the output value
 		  */
-		private lazy val listener2 = ChangeListener[Boolean] { e =>
+		private val listener2 = ChangeListener[Boolean] { e =>
 			val effects = value = e.newValue
 			Continue ++ effects
 		}

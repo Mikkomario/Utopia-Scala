@@ -629,9 +629,9 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 {
 	// ATTRIBUTES	------------------------------
 	
-	lazy val nonEmptyFlag: Flag = contentPointer.lightMap { _.nonEmpty }
+	val nonEmptyFlag: Flag = contentPointer.nonEmptyFlag
 	
-	private lazy val _field = FieldWithPopup.withContext(hierarchy, context).withSettings(settings.popupSettings)
+	private val _field = FieldWithPopup.withContext(hierarchy, context).withSettings(settings.popupSettings)
 		// Activates the pop-up with an arrow key, unless the used axis is variable
 		.mapActivationKeys { original =>
 			settings.selectionAxisPointer.fixedValue match {
