@@ -1,7 +1,7 @@
 # Utopia Nexus for Tomcat - List of changes
 
-## v1.3.4 (in development)
-Rewrote every class
+## v1.3.4 - 15.03.2026
+In this update, I rewrote every class offered, focusing on **Nexus v2** support and asynchronous request -handling.
 ### Breaking changes
 - Moved **HttpExtensions** to `controller.servlet` package
 - **LogicWrappingServlet** now requires `logger: Logger`, `jsonParser: JsonParser` `exc: ExecutionContext` and 

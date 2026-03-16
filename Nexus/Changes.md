@@ -1,7 +1,8 @@
 # Utopia Nexus - List of Changes
 
-## v2.0 (in development)
-Rewrote the whole module
+## v2.0 - 15.03.2026
+This update rewrote every class in this project. The main ideas are the same, but brought up-to-date. 
+See the below list of changes for more information.
 ### Breaking changes
 - `.path` in the (now deprecated) **http.Request** is now named `.pathOption`
 - `.cookies` in **Request** is no longer a **Map**; the **Map** version is available as `.cookieMap`

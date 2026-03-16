@@ -1,6 +1,10 @@
 # Utopia Vault - List of Changes
 
-## v2.1 (in development)
+## v2.1 - 15.03.2026
+This update focuses on more advanced interfaces:
+- **Store** interface received a few updates, adding support for wider ranges of use-cases
+- Added lazily polling containers
+- Added **DbMap** for lazily accessing values from a specific table in a map-type fashion
 ### Breaking changes
 - **FilterableView**'s required `self` -property is now public instead of protected
   - This will likely cause build errors. However, these should be easily fixed with a simple find-and-replace.

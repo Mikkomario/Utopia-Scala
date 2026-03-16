@@ -1,7 +1,7 @@
 # Utopia Logos - List of Changes
 
-## v0.7 (in development)
-Supports **Vault v2.1** and **Flow v2.8**
+## v0.7 - 15.03.2026
+An intermediate update focusing on how domains are stored in the DB
 ### Breaking changes
 - **Domain** model structure changed; `url` no longer contains the protocol part. 
   The protocol is now specified in the `isHttps` property.

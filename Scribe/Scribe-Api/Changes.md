@@ -1,6 +1,6 @@
 # Utopia Scribe Api - list of changes
 
-## v1.1.1 (in development)
+## v1.1.1 - 15.03.2026
 Supports **Flow v2.8**, **Vault v2.1** and **Nexus v2.0**
 ### Deprecations
 - Deprecated **rest.logging.LoggingNode** in favor of the new **Nexus v2**-compatible version under `controller.node`

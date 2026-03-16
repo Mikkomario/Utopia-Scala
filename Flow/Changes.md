@@ -1,6 +1,22 @@
 # Utopia Flow - List of Changes
 
-## v2.8 (in development)
+## v2.8 - 15.03.2026
+This major update focuses on the following areas:
+- Parallel collection mapping
+  - Added new parallel mapping functions for all kinds of collections
+  - Rewrote **ActionQueue** to be more reliable in heavy-duty parallelism
+- Pointer event handling
+  - Rewrote how events are processed in **Changing**
+  - The new system is more reliable in multithreaded environments
+  - Includes important bugfixes
+- Try & Future -utility functions
+  - Rewrote major parts of **Try** + **Future** utilities in **AsyncExtensions**, 
+    adding better support for other similar types, such as **TryCatch**
+- Console utilities
+  - the **Console** class now supports namespacing for commands (beta)
+  - The help command was rewritten to be more readable
+  - ASCII tables are now even more usable than before
+- New **AppConfig** class for easier and more secure persistent app configurations
 ### Breaking changes
 - Moved **TryExtensions** and **TryCatch** to package `util.result`
 - Multiple breaking changes to **Changing**:

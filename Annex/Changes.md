@@ -1,6 +1,9 @@
 # Utopia Annex - List of Changes
 
-## v1.12 (in development)
+## v1.12 - 15.03.2026
+This update focuses on the **RequestResult** trait, especially in combination with **Future**. 
+Many response-parsing functions are made simpler.  
+Also, **ApiClient** now supports request rate -limiting.
 ### Breaking changes
 - **ApiClient** now requires `rateLimiter: Option[RequestRateLimiter]` to be implemented
 - Various **RequestResultExtensions** functions now yield **RequestResult** instead of **Try**

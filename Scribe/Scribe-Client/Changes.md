@@ -1,6 +1,6 @@
 # Utopia Scribe Client - list of changes
 
-## v1.0.7 (in development)
+## v1.0.7 - 15.03.2026
 Supports **Flow v2.8**
 
 ## v1.0.6 - 01.11.2025

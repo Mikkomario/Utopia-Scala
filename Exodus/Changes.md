@@ -1,6 +1,6 @@
 # Utopia Exodus - List of Changes
 
-## v4.1.11 (in development)
+## v4.1.11 - 15.03.2026
 Supports **Vault v2.1**
 
 ## v4.1.10 - 01.11.2025

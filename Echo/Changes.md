@@ -1,7 +1,10 @@
 # Utopia Echo - List of Changes
 
-## v1.5 (in development)
-TODO: Document Vast AI integration
+## v1.5 - 15.03.2026
+This major update introduces the following completely new features:
+- **Vast AI** integration - Enabling renting of GPUs for LLM-hosting
+- **Open AI**, **vLLM** & **DeepSeek** integration for simple buffered chat requests
+- Support for different new thinking configurations in **Ollama**, **vLLM**, etc.
 ### Breaking changes
 - Thinking is now controlled using a reasoning effort property, instead of a thinking enabled / thinks property 
 - **ChatLike** now tracks `largestReplySize` and `largestThinkSize` separately
@@ -14,6 +17,12 @@ TODO: Document Vast AI integration
 - Fixed a bug where **AbstractChat**'s `queueSize` would never reset after failing to start a chat request 
   (on context overflow) 
 ### New features
+- Added **Vast AI** integration, enabling the hosting of LLM services on rented GPUs
+  - See the following new classes:
+    - **VastAiVllmChatExecutor**: A functional buffering chat interface utilizing multiple rented GPUs at once - 
+      effective for large-scale parallel processing.
+    - **VastAiVllmProcess**: An interface for setting up an individual **vLLM** server on a rented GPU
+    - **VastAiProcess**: An interface for renting an individual GPU
 - Adding preliminary (beta) interfaces for sending buffered chat requests using Open AI, DeepSeek and vLLM
   - Only text-based non-streaming requests are supported at this time
 - Added **BufferedReplyGenerator** and **StatelessBufferedReplyGenerator** traits for streamlining buffered reply 

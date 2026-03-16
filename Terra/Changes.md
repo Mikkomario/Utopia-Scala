@@ -1,6 +1,7 @@
 # Utopia Terra - list of changes
 
-## v1.3.2 (in development)
+## v1.3.2 - 15.03.2026
+This update adds a few utility functions for dealing with **Double**-based latitude-longitude coordinates.
 ### New methods
 - **LatLong** (object)
   - Added `.longitudeToDegrees(Angle)` and `.degreesToLongitude(Double)`

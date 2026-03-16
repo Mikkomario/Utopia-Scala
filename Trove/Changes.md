@@ -1,6 +1,6 @@
 # Utopia Trove - List of Changes
 
-## v1.1.14 (in development)
+## v1.1.14 - 15.03.2026
 Supports **Flow v2.8**
 
 ## v1.1.13 - 01.11.2025

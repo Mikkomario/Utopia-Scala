@@ -1,6 +1,7 @@
 # Utopia Manuscript - List of changes
 
-## v1.0.4 (in development)
+## v1.0.4 - 15.03.2026
+A minor update reflecting **Flow**'s changes to the **Model** interface
 ### Deprecations
 - Renamed `.keyToIndex` in **Headers** to `.primaryKeyToIndex`
 ### New features

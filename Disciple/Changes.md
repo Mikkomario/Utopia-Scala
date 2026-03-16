@@ -1,7 +1,7 @@
 # Utopia Disciple - List of Changes
 
-## v1.9.2 (in development)
-Supports **Access v1.7** and **Flow v2.8**
+## v1.9.2 - 15.03.2026
+A minor update adding some quality-of-life changes, and support for some **Echo**-specific use-cases.
 ### Breaking changes
 - **Gateway**'s `allowBodyParameters` and `allowJsonInUriParameters` 
   now have the default value of `false` instead of `true`

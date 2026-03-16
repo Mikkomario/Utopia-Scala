@@ -1,6 +1,7 @@
 # Utopia Access - List of Changes
 
-## v1.7 (in development)
+## v1.7 - 15.03.2026
+This update makes minor modifications in **Headers**, mostly concerning content type -handling.
 ### Breaking changes
 - `.contentLength` in **Headers** now yields an **Option**
 ### Deprecations

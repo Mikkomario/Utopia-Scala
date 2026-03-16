@@ -1,6 +1,6 @@
 # Utopia Scribe Core - list of changes
 
-## v1.2.1 (in development)
+## v1.2.1 - 15.03.2026
 A new build supporting **Flow v2.8**
 ### New methods
 - **IterableOnce** of type **Throwable** (via **ScribeTryExtensions**)

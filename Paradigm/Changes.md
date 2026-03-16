@@ -1,6 +1,7 @@
 # Utopia Paradigm - List of Changes
 
-## v1.8.1 (in development)
+## v1.8.1 - 15.03.2026
+A very minor update, mostly focusing on supporting the latest **Flow** changes.
 ### New methods
 - **AngleRange** (object)
   - Added `.around(Iterable)` and `.aroundOption(Iterable)`
