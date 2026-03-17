@@ -1,5 +1,10 @@
 # Utopia Flow - List of Changes
 
+## v2.8.1 (in development)
+### New features
+- Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
+  except supporting variable cost / "width".
+
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:
 - Parallel collection mapping
