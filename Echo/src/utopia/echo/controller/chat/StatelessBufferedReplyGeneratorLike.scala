@@ -12,6 +12,7 @@ import utopia.echo.model.settings.{HasImmutableContextSizeLimits, HasImmutableMo
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.util.Mutate
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -113,6 +114,17 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 * @return A copy of this generator requesting the specified reasoning effort.
 	 */
 	def withReasoningEffort(effort: ReasoningEffort): Repr = withReasoningEffort(Some(effort))
+	
+	/**
+	 * @param f A mapping function applied to expected reply size
+	 * @return Copy of this generator with mapped expected reply size
+	 */
+	def mapExpectedReplySize(f: Mutate[Int]) = withExpectedReplySize(f(expectedReplySize))
+	/**
+	 * @param f A mapping function applied to expected think size
+	 * @return Copy of this generator with mapped expected think size
+	 */
+	def mapExpectedThinkSize(f: Mutate[Int]) = withExpectedThinkSize(f(expectedThinkSize))
 	
 	/**
 	 * @param message A message / prompt to send out

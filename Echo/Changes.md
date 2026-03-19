@@ -10,6 +10,8 @@
   and requests are no longer limited by default.
 - **VastAiVllmProcess** now accepts `maxParallelRequests: Option[Int]`
 ### New methods
+- **StatelessBufferedReplyGeneratorLike**
+  - Added `.mapExpectedReplySize(...)` and `.mapExpectedThinkSize(...)`
 - **ByteCount**
   - Added support for various operators
 - **VastAiVllmProcess**
