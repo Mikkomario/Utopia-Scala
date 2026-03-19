@@ -70,7 +70,7 @@ object OllamaClient
   */
 class OllamaClient(gateway: Gateway, serverAddress: String = "http://localhost:11434/api")
                   (implicit log: Logger, exc: ExecutionContext)
-	extends LlmServiceClient(gateway, serverAddress)
+	extends LlmServiceClient(gateway, serverAddress, maxParallelRequests = Some(1))
 {
 	// COMPUTED ----------------------------
 	

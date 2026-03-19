@@ -4,6 +4,9 @@
 ### New features
 - Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
   except supporting variable cost / "width".
+### New methods
+- **QueuedAction** (object)
+  - Added `.started(Future)`
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:

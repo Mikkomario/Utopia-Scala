@@ -10,3 +10,10 @@ import utopia.echo.model.unit.ByteCount
  * @since 05.03.2026, v1.5
  */
 case class LlmVramUse(modelSize: ByteCount, kiloTokenCost: ByteCount)
+{
+	/**
+	 * @param vram Available VRAM
+	 * @return Maximum context size for that VRAM amount
+	 */
+	def maxContextSizeOn(vram: ByteCount) = ((vram - modelSize) / kiloTokenCost * 1000).toInt
+}

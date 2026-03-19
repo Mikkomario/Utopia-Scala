@@ -79,7 +79,7 @@ object EchoTestContext
 						println("Please select the LLM to use")
 						StdIn.selectFrom(DeepSeekModel.values.map { m => m -> m.llmName }).map { model =>
 							val chat = new DeepSeekChat(
-								LlmServiceClient.deepSeek(apiKey, gateway, maxParallelRequests = 1), model)
+								LlmServiceClient.deepSeek(apiKey, gateway, maxParallelRequests = Some(1)), model)
 								
 							if (StdIn.ask("Do you want to specify a system message?"))
 								StdIn.readNonEmptyLine("Please specify the system message to use")

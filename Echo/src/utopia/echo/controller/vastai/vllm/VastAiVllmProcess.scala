@@ -24,7 +24,7 @@ import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessReco
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
-import utopia.flow.async.process.{Delay, LogProcessToFile, Loop, Process, Wait}
+import utopia.flow.async.process.{Delay, Loop, Process, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.parse.file.FileExtensions._
@@ -47,7 +47,6 @@ import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise, TimeoutException}
 import scala.util.{Failure, Success, Try}
 
-// TODO: If instance goes offline, destroy it
 object VastAiVllmProcess
 {
 	// ATTRIBUTES   -------------------
@@ -87,6 +86,10 @@ object VastAiVllmProcess
 	 *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
 	 * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM.
 	 *                   Default = 0.9.
+	 * @param maxParallelRequests Maximum number of requests to run in parallel.
+	 *                            None (default), if parallelism should not be limited on this level.
+	 *
+	 *                            Note: The used 'gateway' instance may also limit the number of parallel HTTP connections.
 	 * @param extraStartupArgs Additional arguments passed to vLLM serve (default = empty)
 	 * @param setupTimeout Timeout for the setup process.
 	 *                     If the API doesn't become usable before this timeout, the instance is destroyed.
@@ -109,15 +112,16 @@ object VastAiVllmProcess
 	 */
 	def apply(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
 	          gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
-	          localPort: Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9, extraStartupArgs: String = "",
+	          localPort: Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
+	          maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
 	          setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
 	          noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
 	          instanceLabel: String = "")
 	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, Int, String))
 	         (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient) =
 		new VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk, gateway, installScriptPath, localPort,
-			remotePort, maxGpuUtil, extraStartupArgs, setupTimeout, recoveryTimeout, noResponseTimeout,
-			statusCheckInterval, instanceLabel)(chooseImage)
+			remotePort, maxGpuUtil, maxParallelRequests, extraStartupArgs, setupTimeout, recoveryTimeout,
+			noResponseTimeout, statusCheckInterval, instanceLabel)(chooseImage)
 }
 
 /**
@@ -137,6 +141,10 @@ object VastAiVllmProcess
  *                     Default = 8000.
  * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
  *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
+ * @param maxParallelRequests Maximum number of requests to run in parallel.
+ *                            None (default), if parallelism should not be limited on this level.
+ *
+ *                            Note: The used 'gateway' instance may also limit the number of parallel HTTP connections.
  * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM.
  *                   Default = 0.9.
  * @param extraStartupArgs Additional arguments passed to vLLM serve (default = empty)
@@ -161,16 +169,15 @@ object VastAiVllmProcess
  * @since 26.02.2026, v1.5
  */
 // TODO: Add separate timeout for individual status phases (i.e. if keeps at same status for >X minutes, fail)
-// TODO: Add support for blacklisting offers (and remember which offer was taken)
 class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
                         gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
                         getLocalPort: => Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
-                        extraStartupArgs: String = "",
+                        maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
                         setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
                         noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
                         instanceLabel: String = "")
                        (chooseImage: Offer => (NewInstanceFoundation, ServiceState, Int, String))
-                       (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient)
+                       (implicit exc: ExecutionContext, log: Logger, vastAiClient: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
 	// ATTRIBUTES   ------------------------
@@ -238,14 +245,14 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	/**
 	 * Applied maximum context size. Specified when creating the instance.
 	 */
-	private var maxContextSize: Int = -1
+	private var _maxContextSize: Int = -1
 	/**
 	 * The process used for managing the Vast AI instance
 	 */
 	private val vastAiProcess = VastAiProcess(statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5)) { hurryFlag =>
 		// Requests for offers
 		val requiredDiskSpace = modelSize + additionalReservedDisk
-		client.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
+		vastAiClient.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
 				selectOffer.offerType))
 			.tryFlatMap { offers =>
 				// Won't include the currently used machine IDs
@@ -302,6 +309,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	def vastAiStatePointer = vastAiProcess.detailedStatePointer
 	
 	/**
+	 * @return Maximum context size applied on the model.
+	 *         None if maximum context size hasn't been determined (i.e. if no offer has been accepted yet).
+	 */
+	def maxContextSize = Some(_maxContextSize).filter { _ > 0 }
+	
+	/**
 	 * @return ID of the managed instance. None if no instance was acquired yet.
 	 *         Note: This instance might already have been destroyed. Use this value only for logging, etc.
 	 */
@@ -313,7 +326,43 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	def instanceStatus = vastAiState.instanceStatus
 	
 	/**
-	 * @return Currently usable client interface, along with the model to use and the maximum context size
+	 * @return Yields either:
+	 *              - None, if a client is still pending / not yet acquired
+	 *              - Some(Failure), if no functioning client could be acquired
+	 *              - Some(Success), if a client was successfully acquired. Contains the following 3 values:
+	 *                  - A request queue for that client
+	 *                  - Information about the utilized LLM
+	 *                  - Applied maximum context size
+	 *
+	 *         Note: Even if this yields Some(Success), the returned client might not be usable anymore.
+	 *               Always also follow [[detailedState]] to see whether the client has been terminated
+	 *               or became inaccessible.
+	 *
+	 * @see [[usableClient]]
+	 */
+	def client = clientP.value
+	/**
+	 * @return A pointer that contains either:
+	 *              - None, if a client is still pending / not yet acquired
+	 *              - Some(Failure), if no functioning client could be acquired
+	 *              - Some(Success), if a client was successfully acquired. Contains the following 3 values:
+	 *                  - A request queue for that client
+	 *                  - Information about the utilized LLM
+	 *                  - Applied maximum context size
+	 *
+	 *         The final state of this pointer will always be Some.
+	 *
+	 *         Note: Even if this pointer contains Some(Success), the returned client might not be usable anymore.
+	 *               Always also follow [[detailedState]] to see whether the client has been terminated
+	 *               or became inaccessible.
+	 *
+	 * @see [[usableClient]]
+	 */
+	def clientPointer = clientP.readOnly
+	/**
+	 * @return Currently usable client interface, along with the model to use and the maximum context size.
+	 *         None if no client is currently usable.
+	 * @see [[vastAiClient]] and [[clientFuture]]
 	 */
 	def usableClient = detailedState match {
 		case HostingApi(instance, client, model, maxContextSize) =>
@@ -458,12 +507,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			val (base, vllmDefaultState, contextSize, model) = chooseImage(offer)
 			assumedVllmState = vllmDefaultState
 			modelToServe = model
-			maxContextSize = contextSize
+			_maxContextSize = contextSize
 			
 			// Accepts the offer, requesting a new instance
 			val request = AcceptOffer(offer.id, base, runType = DirectSsh, reservedDiskSpace = requiredDiskSpace,
 				label = instanceLabel, deprecatedView = hurryFlag, cancelIfUnavailable = true)
-			val resultFuture = client.send(request)
+			val resultFuture = vastAiClient.send(request)
 			// If accept offer fails, may try again with a different offer
 			// TODO: Add handling for infinite loops
 			if (offers.hasSize > 1 && hurryFlag.isNotSet)
@@ -495,7 +544,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			val vllmClient = {
 				val _gateway = gateway
 				new LlmServiceClient(_gateway, s"http://127.0.0.1:$localPort/v1",
-					maxParallelRequests = _gateway.maxConnectionsPerRoute)
+					maxParallelRequests = maxParallelRequests)
 			}
 			val lazyPublicClient = Lazy { LockingRequestQueue.wrap(vllmClient, hurryFlag) }
 			val hostingResultPromise = Promise[Try[OpenAiModelInfo]]()
@@ -512,8 +561,8 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 					println(s"${ instancePointer.value.id }: API is now usable")
 					val publicClient = lazyPublicClient.value
 					hostingStartTime = Some(Now)
-					clientP.set(Success((publicClient, model, maxContextSize)))
-					stateP.value = HostingApi(instancePointer.value, publicClient, model, maxContextSize)
+					clientP.set(Success((publicClient, model, _maxContextSize)))
+					stateP.value = HostingApi(instancePointer.value, publicClient, model, _maxContextSize)
 					
 					// Updates the state once requested to stop
 					hurryFlag.onceSet {
@@ -644,8 +693,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						s"CUDA_VISIBLE_DEVICES=0 exec vllm serve $modelToServe"
 				}
 				// TODO: Add --tensor-parallel-size N
-				// TODO: Test this new syntax
-				Some(ssh(s"-- '$baseCommand --max-model-len $maxContextSize --host 127.0.0.1 --port $remotePort --gpu-memory-utilization $maxGpuUtil${
+				Some(ssh(s"-- '$baseCommand --max-model-len ${_maxContextSize} --host 127.0.0.1 --port $remotePort --gpu-memory-utilization $maxGpuUtil${
 					extraStartupArgs.prependIfNotEmpty(" ") }'")
 					.run().async)
 			}
@@ -742,11 +790,11 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 		StringFrom.path(publicSshKeyPath)
 			.map { sshKey =>
 				// Makes sure that key is attached to the rented instance
-				client.send(GetSshKeys(instanceId, deprecationView)).mapOrFail { keysOnInstance =>
+				vastAiClient.send(GetSshKeys(instanceId, deprecationView)).mapOrFail { keysOnInstance =>
 					if (keysOnInstance.exists { _.publicKey == sshKey })
 						Success("Key was already attached")
 					else {
-						val result = client.send(AttachSshKey(instanceId, sshKey, deprecationView)).waitForResult()
+						val result = vastAiClient.send(AttachSshKey(instanceId, sshKey, deprecationView)).waitForResult()
 						println(s"$instanceId: Waiting 40 more seconds in order for the SSH key to be registered on the remote device")
 						// TODO: We need a more dynamic approach
 						Wait(40.seconds)

@@ -22,14 +22,13 @@ object ComfyUiClient
 
 /**
  * An API client used for interacting with a (local) ComfyUI server
- *
  * @author Mikko Hilpinen
  * @since 05.08.2025, v1.4
  */
 class ComfyUiClient(gateway: Gateway = Gateway(), serverAddress: String = "http://localhost:8188",
                     clientId: String = RequestWork.defaultClientId, maxParallelRequests: Int = 4)
                    (implicit log: Logger, exc: ExecutionContext)
-	extends LlmServiceClient(gateway, serverAddress, maxParallelRequests = maxParallelRequests,
+	extends LlmServiceClient(gateway, serverAddress, maxParallelRequests = Some(maxParallelRequests),
 		offlineWaitThreshold = 30.seconds)
 {
 	/**

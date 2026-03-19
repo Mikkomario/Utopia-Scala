@@ -1,5 +1,23 @@
 # Utopia Echo - List of Changes
 
+## v1.6 (in development)
+### Breaking changes
+- Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances, but manages 
+  the amount of processed tokens more carefully.
+  - The constructor is now different, because of this
+  - The return value of `.status` is also different
+- **LlmServiceClient**'s `maxParallelRequests` parameter is now **Option** instead of **Int**, 
+  and requests are no longer limited by default.
+- **VastAiVllmProcess** now accepts `maxParallelRequests: Option[Int]`
+### New methods
+- **ByteCount**
+  - Added support for various operators
+- **VastAiVllmProcess**
+  - Added `.maxContextSize`
+  - Added `.client` and `.clientPointer`
+- **VastAiVllmProcessState**
+  - Added `.isUnusable`
+
 ## v1.5 - 15.03.2026
 This major update introduces the following completely new features:
 - **Vast AI** integration - Enabling renting of GPUs for LLM-hosting

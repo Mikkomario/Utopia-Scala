@@ -73,6 +73,17 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 		}
 	}
 	private val lazyQueuedCapacityP = lazyQueueP.map { _.map { _.iterator.map { _._3 }.sum } }
+	private val lazyUtilizationP = Lazy {
+		queueAndCapacityP.map { case (queue, usedCapacity) => costOf(queue) + usedCapacity }
+	}
+	private val lazyPendingToActiveRatioP = Lazy {
+		queueAndCapacityP.map { case (queue, usedCapacity) =>
+			if (usedCapacity == 0)
+				0.0
+			else
+				costOf(queue) / usedCapacity
+		}
+	}
 	
 	/**
 	 * @return A flag that contains true while there are actions waiting to be started
@@ -107,11 +118,11 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	/**
 	 * @return The currently used funnel width / capacity
 	 */
-	def usedCapacity: Double = queueAndCapacityP.value._2
+	def activeUtilization: Double = queueAndCapacityP.value._2
 	/**
 	 * @return A pointer that contains the currently used / active mapping capacity
 	 */
-	def usedCapacityPointer = lazyUsedCapacityP.value
+	def activeUtilizationPointer = lazyUsedCapacityP.value
 	/**
 	 * @return The total capacity represented by the queued actions
 	 */
@@ -123,6 +134,46 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	 * @return A pointer that contains the total capacity required for processing the queued actions
 	 */
 	def queuedCapacityPointer = lazyQueuedCapacityP.value
+	/**
+	 * @return The current total utilization, which consists of:
+	 *              1. Active utilization (i.e. running processes)
+	 *              1. Queued capacity (i.e. pending processes)
+	 */
+	def utilization = lazyUtilizationP.current match {
+		case Some(p) => p.value
+		case None =>
+			val (queue, usedCapacity) = queueAndCapacityP.value
+			costOf(queue) + usedCapacity
+	}
+	/**
+	 * @return A pointer that contains the current total utilization. This consists of:
+	 *              1. Active utilization (i.e. running processes)
+	 *              1. Queued capacity (i.e. pending processes)
+	 */
+	def utilizationPointer = lazyUtilizationP.value
+	/**
+	 * @return The ratio between the cost of pending and active processes.
+	 *         E.g. If 2 processes of cost 1 are pending, and one is running, this would yield 2.
+	 *
+	 *         Yields 0 if there are no pending processes.
+	 */
+	def pendingToActiveRatio = lazyPendingToActiveRatioP.current match {
+		case Some(p) => p.value
+		case None =>
+			val (queue, usedCapacity) = queueAndCapacityP.value
+			if (usedCapacity == 0)
+				0.0
+			else
+				costOf(queue) / usedCapacity
+	}
+	/**
+	 * @return A pointer that contains the ratio between the cost of pending and active processes.
+	 *         E.g. If 2 processes of cost 1 are pending, and one is running, this pointer would contain 2.
+	 *
+	 *         Contains 0 while there are no pending processes.
+	 */
+	def pendingToActiveRatioPointer = lazyPendingToActiveRatioP.value
+	
 	/**
 	 * @return Number of actions that are currently waiting to be processed, i.e. have not started yet.
 	 */
@@ -268,4 +319,6 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 				// Once each task completes, attempts to further clear the queue
 				resultFuture.onComplete { _ => emptyQueue(cost) }
 			}
+			
+	private def costOf(queue: Seq[(_, _, Double)]) = queue.iterator.map { _._3 }.sum
 }

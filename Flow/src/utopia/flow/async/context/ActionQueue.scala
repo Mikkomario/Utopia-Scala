@@ -11,8 +11,8 @@ import utopia.flow.event.model.ChangeResponsePriority.High
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.Duration
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
@@ -59,6 +59,15 @@ object ActionQueue
 		
 		// OTHER    --------------------
 		
+		/**
+		 * @param future A future wrapped by this action
+		 * @param exc Implicit execution context
+		 * @param log Implicit logging implementation
+		 * @tparam A Type of the future results
+		 * @return A started action wrapping the specified future
+		 */
+		def started[A](future: Future[A])(implicit exc: ExecutionContext, log: Logger): QueuedAction[A] =
+			new StartedAction[A](future)
 		/**
 		 * @param result Acquired action result
 		 * @tparam A type of the action result
@@ -165,6 +174,27 @@ object ActionQueue
 		
 		override def waitFor(timeout: Duration) = Success(result)
 		override def waitUntilStarted(timeout: Duration) = Success(this)
+	}
+	
+	private class StartedAction[+A](override val future: Future[A])(implicit exc: ExecutionContext, log: Logger)
+		extends QueuedAction[A]
+	{
+		// ATTRIBUTES   ----------------------------
+		
+		override lazy val statePointer: Changing[BasicProcessState] = {
+			if (future.isCompleted)
+				Fixed(Completed)
+			else
+				Changing.future[BasicProcessState, A](Running, future) { _ => Completed }
+		}
+		
+		
+		// IMPLEMENTED  ----------------------------
+		
+		override def state: BasicProcessState = if (future.isCompleted) Completed else Running
+		override def startFuture: Future[Unit] = Future.unit
+		
+		override def waitUntilStarted(timeout: Duration): Try[QueuedAction[A]] = Success(this)
 	}
 	
 	/**

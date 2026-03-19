@@ -9,6 +9,7 @@ import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, StringBody}
 import utopia.flow.async.context.ActionQueue
+import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Duration
@@ -24,15 +25,13 @@ object LlmServiceClient
 	 * @param apiKey API key used
 	 * @param gateway Gateway instance used. Default = new instance.
 	 * @param maxParallelRequests Maximum number of parallel request to send out / process.
-	 *                            Default = 8.
+	 *                            None (default), if parallel request count should not be limited (not recommended).
 	 * @param log Implicit logging implementation
 	 * @param exc Implicit execution context
 	 * @return a new LLM service client
 	 */
-	def deepSeek(apiKey: String,
-	             gateway: Gateway = Gateway(maxConnectionsPerRoute = 4,
-		             allowBodyParameters = false, allowJsonInUriParameters = false),
-	             maxParallelRequests: Int = 8)
+	def deepSeek(apiKey: String, gateway: Gateway = Gateway(maxConnectionsPerRoute = 4),
+	             maxParallelRequests: Option[Int] = None)
 	            (implicit log: Logger, exc: ExecutionContext) =
 		new LlmServiceClient(gateway, "https://api.deepseek.com", apiKey, maxParallelRequests,
 			offlineWaitThreshold = 10.minutes)
@@ -45,12 +44,13 @@ object LlmServiceClient
   * @param gateway The wrapped gateway instance, which handles http connections, etc.
   * @param serverAddress Address of the server's (root) API path
   * @param apiKey API key sent along with the outgoing requests (default = empty = no API key)
-  * @param maxParallelRequests Maximum number of requests that can be active/sent at once
-  *                            (default = 1 = parallelism not supported)
+  * @param maxParallelRequests Maximum number of requests that can be active/sent at once.
+ *                            None if unlimited (default).
   * @param offlineWaitThreshold A request duration after which a connection is considered offline (default = 7 minutes)
   */
-class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "", maxParallelRequests: Int = 1,
-                       rateLimiter: Option[RequestRateLimiter] = None, offlineWaitThreshold: Duration = 7.minutes)
+class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "",
+                       maxParallelRequests: Option[Int] = None, rateLimiter: Option[RequestRateLimiter] = None,
+                       offlineWaitThreshold: Duration = 7.minutes)
                       (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
 {
@@ -65,12 +65,15 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 	/**
 	  * The wrapped request queue
 	  */
-	protected val queue = RequestQueue(queueSystem, maxParallelRequests)
+	protected val queue = maxParallelRequests.map { RequestQueue(queueSystem, _) }
 	
 	
 	// IMPLEMENTED  ------------------------
 	
-	override def push[A](request: RequestQueueable[A]): ActionQueue.QueuedAction[RequestResult[A]] = queue.push(request)
+	override def push[A](request: RequestQueueable[A]): ActionQueue.QueuedAction[RequestResult[A]] = queue match {
+		case Some(q) => q.push(request)
+		case None => QueuedAction.started(queueSystem.push(request))
+	}
 	
 	
 	// NESTED   ----------------------------

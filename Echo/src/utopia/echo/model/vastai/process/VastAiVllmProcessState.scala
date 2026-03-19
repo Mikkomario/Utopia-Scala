@@ -43,6 +43,11 @@ sealed trait VastAiVllmProcessState
 	// COMPUTED -------------------------
 	
 	/**
+	 * @return Whether the API is NOT usable in this state
+	 */
+	def isUnusable = !isUsable
+	
+	/**
 	 * @return Whether a Vast AI instance is available in this process state
 	 */
 	def isInstanceAvailable = availableInstance.isDefined
