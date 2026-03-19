@@ -19,16 +19,16 @@ import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.NewInstanceFoundation
 import utopia.echo.model.vastai.instance.offer.Offer
-import utopia.echo.model.vastai.process.VastAiVllmProcessRecord
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted, Stopping}
+import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecord, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.async.context.{AccessQueue, MappingFunnel}
 import utopia.flow.async.process.{Breakable, Delay, LoopingProcess}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.After
@@ -46,6 +46,7 @@ import utopia.flow.view.mutable.{Pointer, Settable}
 
 import java.net.ServerSocket
 import java.nio.file.Path
+import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
@@ -232,6 +233,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 {
 	// ATTRIBUTES   -----------------------
 	
+	/**
+	 * Maximum context size applied by default / before there are any instances reserved.
+	 * The actual maximum context size is based on [[modelSize]] and available VRAM.
+	 */
 	private val defaultMaxContextSize = contextSizeOn(assumedVram)
 	
 	/**
@@ -253,13 +258,31 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			.filter { port => Try { new ServerSocket(port).close() }.isSuccess }
 	}
 	
+	/**
+	 * Counts the number of consecutive failures to acquire a Vast AI instance.
+	 * If this reaches 50, this executor stops.
+	 */
 	private val consecutiveGetInstanceFailuresP = Volatile(0)
 	
+	/**
+	 * Contains requests received while no processors were available.
+	 * Cleared once processors become available.
+	 */
 	private val _queue = Volatile.eventful.emptySeq[Promise[Processor]]
 	private val hasQueueFlag = _queue.nonEmptyFlag
 	
+	/**
+	 * Contains the number of instances that should be started at any time.
+	 * This is increased based on demand, and decreased when instances become idle.
+	 */
 	private val targetInstanceCountP = Volatile.eventful(if (startsLazily) 0 else coreInstanceCount)
+	/**
+	 * A decreasing counter for request tokens that triggers a target instance count update when it reaches 0.
+	 */
 	private val pendingTokensCheckThresholdP = Volatile(0)
+	/**
+	 * A decreasing counter for queued requests that triggers a target instance count update when it reaches 0.
+	 */
 	private val queueSizeCheckThresholdP = Volatile(0)
 	
 	private val gateway = Gateway(maxConnectionsPerRoute = maxConnectionsPerInstance,
@@ -270,18 +293,43 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private val createInstanceAccess = new AccessQueue(())
 	
+	/**
+	 * Contains the utilized processors.
+	 */
 	private val processorsP = Volatile.eventful.emptySeq[Processor]
+	/**
+	 * A pointer that lists the processors that are/were usable.
+	 * Updated (manually) whenever API-hosting starts or ends.
+	 */
 	private val usableProcessorsP = CopyOnDemand { processors.filter { _.usable } }
 	
-	private val growingFlag = CopyOnDemand { processors.exists { _.phase < ApiHosting } }
-	
+	/**
+	 * A pointer that contains the maximum context size of the largest available Vast AI instance,
+	 * or the default context size.
+	 *
+	 * Needs to be updated manually as processes become available or unavailable.
+	 */
 	private val maxContextSizeP = CopyOnDemand {
 		processors.iterator.filter { _.phase < Stopping }.flatMap { _.maxContextSize }.maxOption
 			.getOrElse(defaultMaxContextSize)
 	}
+	/**
+	 * A pointer that contains the maximum context size of the largest available Vast AI instance,
+	 * or the default context size.
+	 */
+	// A public-facing version of maxContextSizeP. Omits the safety margin, which is added to the incoming requests.
+	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin }
 	
+	/**
+	 * Contains futures of active regeneration processes.
+	 */
 	private val regenerateFuturesP = Volatile.emptySeq[Future[Unit]]
 	
+	/**
+	 * A process that shuts down idle and partially used processors.
+	 * None if no such process is needed.
+	 * Must be restarted at times.
+	 */
 	private val idleShutdownProcess = {
 		if (idleShutdownThreshold.isFinite || partialUseShutdownThreshold.isFinite)
 			Some(LoopingProcess(View(idleShutdownThreshold)) { _ =>
@@ -299,43 +347,55 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					queueSizeCheckThresholdP.value = 0
 					pendingTokensCheckThresholdP.value = 0
 				}
-				// Case: No idle processes & above core processor count => Checks whether some are not fully utilized
+				// Case: No idle processes & above core processor count
+				//       => Checks whether some have not been fully utilized for some time
 				else if (remaining.size > coreInstanceCount) {
-					val partialUseThreshold = now - partialUseShutdownThreshold
-					remaining.find { _.lastPendingTime < partialUseThreshold }.foreach { partiallyUsedProcessor =>
-						// Makes sure we're really above the core processor count before shutting down anything
-						val shouldTerminate = targetInstanceCountP.mutate { target =>
-							if (target > coreInstanceCount)
-								true -> (target - 1)
-							else
-								false -> target
+					lazy val partialUseThreshold = now - partialUseShutdownThreshold
+					remaining.find { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
+						.foreach { partiallyUsedProcessor =>
+							// Makes sure we're really above the core processor count before shutting down anything
+							val shouldTerminate = targetInstanceCountP.mutate { target =>
+								if (target > coreInstanceCount)
+									true -> (target - 1)
+								else
+									false -> target
+							}
+							if (shouldTerminate) {
+								// Terminates the partially used instance
+								partiallyUsedProcessor.stop()
+									.forFailure { log(_, "Failure while stopping a partially used processor") }
+								queueSizeCheckThresholdP.value = 0
+								pendingTokensCheckThresholdP.value = 0
+							}
 						}
-						if (shouldTerminate) {
-							// Terminates the partially used instance
-							partiallyUsedProcessor.stop()
-								.forFailure { log(_, "Failure while stopping a partially used processor") }
-							queueSizeCheckThresholdP.value = 0
-							pendingTokensCheckThresholdP.value = 0
-						}
-					}
 				}
 				
 				// Schedules the next check
-				Some(remaining.iterator.map { _.lastRequestTime }.minOption match {
-					case Some(earliestRequestTime) => earliestRequestTime + idleShutdownThreshold
-					case None => now + idleShutdownThreshold
-				})
+				val nextCheck = Pair[Option[Instant]](
+					remaining.iterator.map { _.lastRequestTime }.minOption.map { _ + idleShutdownThreshold },
+					remaining.iterator.filter { _.notFullyUtilized }.map { _.lastPendingEndTime }.minOption
+						.map { _ + partialUseShutdownThreshold })
+					.iterator.flatten.minOption.getOrElse { now + idleShutdownThreshold }
+				Some(nextCheck)
 			})
-		// Case: Idle shutdown is disabled
+		// Case: Idle shutdown is disabled => No process needed
 		else
 			None
 	}
 	
+	/**
+	 * Contains the future of the current / latest queue-clearance process.
+	 * Used for limiting clearing to a single process.
+	 */
 	private val clearQueueFutureP = Volatile(Future.successful(true))
+	/**
+	 * A listener for usable processors, which activates queue-clearing, if possible & appropriate.
+	 */
 	private val clearQueueListener: ChangeListener[Seq[Processor]] = ChangeListener[Seq[Processor]] { e =>
 		// Case: Processors are now available => Prepares to clear the queue
 		if (e.newValue.exists { _.usable })
 			clearQueueFutureP.mutate { f =>
+				// Case: Previous clearance had completed => Starts a new clearance process
 				if (f.isCompleted) {
 					println("Starts clearing the queue")
 					val newFuture = clearQueue()
@@ -368,10 +428,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	registerToStopOnceJVMCloses()
 	
-	// Updates the growing flag when applicable
-	processorsP.addContinuousAnyChangeListener { growingFlag.update() }
-	usableProcessorsP.addContinuousAnyChangeListener { growingFlag.update() }
-	
 	// Whenever the target instance count increases (which may be immediately), starts preparing new instances
 	targetInstanceCountP.addListenerAndSimulateEvent(0) { e =>
 		if (stopFlag.isSet)
@@ -395,26 +451,18 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	// COMPUTED ---------------------------
 	
-	/*
 	/**
-	 * @return The current status of this pool
+	 * @return The current status of this executor
 	 */
-	def status = VastAiVllmProcessorPoolStatus(maxContextSize, maxParallelRequestsPerInstance,
-		processes.map { process => (process.detailedState.phase, process.instanceStatus,
-			process.usableClient match {
-				case Some((client, _, _)) => client.pendingRequestCount
-				case None => 0
-			},
-			process.startTime)
-		},
-		_queue.size)
-	*/
+	def status = VastAiVllmChatExecutorStatus(processors.map { _.status }, _queue.size)
 	
 	/**
 	 * Maximum request (context) size that is possible to handle without using backup executors
 	 */
-	def maxContextSize = safeMaxContextSize + contextSafetyMargin
-	
+	def maxContextSize = safeMaxContextSize - contextSafetyMargin
+	/**
+	 * @return Maximum context size used internally
+	 */
 	private def safeMaxContextSize = maxContextSizeP.value
 	
 	private def processors = processorsP.value
@@ -465,14 +513,16 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			case None => TryFuture.failure(failure)
 		}
 	
+	// Notice: This request is pretty deeply recursive, being called from Processor
 	private def push(request: ChatParams, tokens: Int): Future[RequestResult[BufferedOpenAiReply]] = {
+		// Case: Already stopped => Fails
 		if (stopFlag.isSet)
 			Future.successful(RequestSendingFailed(
 				new IllegalStateException("This request-execution interface was closed")))
 		else {
 			val processors = this.processors
 			
-			// Attempts to give the request to one of the processors
+			// Attempts to give the request to one of the processors, preferring those least used
 			processors.sortBy { _.pendingToActiveRatio }
 				.findMap { processor =>
 					processor.tryPush(request, tokens).map { resultFuture =>
@@ -488,14 +538,17 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 						}
 						
 						// Checks whether it's possible to handle cases where the context window couldn't
-						// fit into the server's maximum context (because of token-counting issues)
+						// fit into the server's maximum context (400 error, because of token-counting issues)
 						processor.usableContextSize.flatMap { currentContextSize =>
+							// Attempts to reserve at least 20% more space
 							val nextContextSize = (currentContextSize * 1.2).ceil.toInt min safeMaxContextSize
 							if (processors.exists { _.usableContextSize.exists { _ >= nextContextSize } })
 								Some(nextContextSize)
 							else
 								None
 						} match {
+							// Case: A processor with a larger max context size is available
+							//       => Applies backup logic for 400 context size issues
 							case Some(nextContextSize) =>
 								resultFuture.flatMap {
 									case Response.Failure(status, message, _) if status == BadRequest =>
@@ -504,12 +557,13 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 									
 									case result => Future.successful(result)
 								}
+							// Case: No backup processor is available => Won't add recovery processes
 							case None => resultFuture
 						}
 					}
 				}
+				// Case: No processors are available => Queues this request
 				.getOrElse {
-					// Case: No processors are available => Queues this request
 					val clientPromise = Promise[Processor]()
 					val queueSize = _queue.updateAndGet { _ :+ clientPromise }.size
 					
@@ -517,17 +571,28 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					adjustInstanceTargetIfAppropriate(queueSizeCheckThresholdP, 1,
 						instanceActivationQueueSizeThreshold, 5, queueSize) { _ * instanceActivationQueueSizeThreshold }
 					
+					// Waits (async) until a processor becomes available
 					clientPromise.future.flatMap { processor =>
 						// Case: A processor became available => Gives it this request
 						processor.tryPush(request, tokens).getOrElse {
 							// Case: The processor couldn't receive this request (unexpected)
-							//       => Attempts again with another processor
+							//       => Attempts again with another processor (recursive)
 							push(request, tokens)
 						}
 					}
 				}
 		}
 	}
+	/**
+	 * Actually executes a request using a specific Vast AI instance.
+	 * Called from individual processors.
+	 * @param request Request to process
+	 * @param tokens Tokens required for processing this request
+	 * @param client Client that should handle this request
+	 * @param model Model hosted by the utilized instance
+	 * @param maxContextSize Maximum context size of the utilized instance
+	 * @return Future of the eventual request result
+	 */
 	private def push(request: ChatParams, tokens: Int, client: RequestQueue, model: String,
 	                 maxContextSize: Int): Future[RequestResult[BufferedOpenAiReply]] =
 	{
@@ -548,6 +613,18 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 	}
 	
+	/**
+	 * Adjusts [[targetInstanceCountP]], if that is deemed appropriate
+	 * @param checkThresholdP A pointer that's used for limiting these checks
+	 * @param adjustment Adjustment that should be applied to 'checkThresholdP'
+	 * @param thresholdIncrement Increase to 'checkThresholdP' after a check has been applied (call-by-name)
+	 * @param thresholdAtMaxInstances Next 'checkThresholdP' value applied in case we're already at max instances
+	 *                                (call-by-name)
+	 * @param current Current instance utilization value (either pending tokens or queue size, depending on the context).
+	 *                Call-by-name.
+	 * @param thresholdFrom A function for calculating the next target instance increase threshold.
+	 *                      Receives the current target instance count.
+	 */
 	private def adjustInstanceTargetIfAppropriate(checkThresholdP: Pointer[Int], adjustment: Int,
 	                                              thresholdIncrement: => Int, thresholdAtMaxInstances: => Int,
 	                                              current: => Int)
@@ -576,9 +653,20 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			}
 		}
 	
+	/**
+	 * Schedules the next queue-clearance, which is initiated when at least one processor becomes usable.
+	 */
 	private def scheduleQueueClearance(): Unit =
 		usableProcessorsP.addListenerAndSimulateEvent(Empty)(clearQueueListener)
 	
+	/**
+	 * A recursive process for clearing the request queue
+	 * @return A future that resolves once either:
+	 *              - No processors are available
+	 *              - The queue becomes empty
+	 *
+	 *         Yields whether the queue is now empty.
+	 */
 	private def clearQueue(): Future[Boolean] = {
 		// Checks the usable processors
 		val processors = this.processors.filter { _.usable }
@@ -607,16 +695,19 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 	}
 	
+	/**
+	 * An entry function for the recursive [[_regenerate]].
+	 */
 	private def regenerate() = regenerateFuturesP.update { previous =>
 		val result = _regenerate()
 		result.forFailure { log(_, "Instance regeneration failed") }
 		OptimizedIndexedSeq.concat(previous.view.filterNot { _.isCompleted }, Single(result))
 	}
 	/**
-	 * Fills the process pool with new processes, until 'maxInstances' is reached.
+	 * Fills the process pool with new processes, until targeted instance count is reached.
 	 * Continues recursively, keeping the pool filled.
 	 * @return A future that resolves once all processes have completed
-	 *         (usually some time after stop() has been called)
+	 *         (usually some time after [[stop]]() has been called)
 	 */
 	private def _regenerate(): Future[Unit] = {
 		println("Generating")
@@ -671,6 +762,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 	}
 	
+	/**
+	 * Starts a new Vast AI instance, adding it to the processor pool.
+	 * Also handles automatic shutdown & removal if the instance becomes unstable, etc.
+	 * @return A future that resolves when the Vast AI instance is available (although not usable),
+	 *         or if failed to acquire said instance.
+	 */
 	private def startNewInstance() = createInstanceAccess { _ =>
 		println("Starting a new instance")
 		// Creates and starts the process of setting up vLLM on Vast AI
@@ -756,44 +853,59 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		(targetInstanceCountP.value - remaining.size) -> remaining
 	}
 	
-	private def contextSizeOn(vram: ByteCount) = modelSize.maxContextSizeOn(vram) - contextSafetyMargin
+	/**
+	 * Calculates the maximum context size to apply on different devices
+	 * @param vram Amount of VRAM on the machine
+	 * @return Maximum context size to apply
+	 */
+	private def contextSizeOn(vram: ByteCount) =
+		modelSize.maxContextSizeOn(vram * maxGpuUtil) - contextSafetyMargin
 	
 	
 	// NESTED   ---------------------------
 	
+	/**
+	 * Manages / utilizes an individual Vast AI process for request-handling
+	 * @param process The utilized Vast AI process
+	 */
 	private class Processor(process: VastAiVllmProcess) extends Breakable with MaybeEmpty[Processor]
 	{
 		// ATTRIBUTES   ------------------
 		
+		private val started = Now.toInstant
 		private var stopped = false
-		private var _lastRequestTime = Now.toInstant
-		private var _lastPendingTime = _lastRequestTime
+		private var _lastRequestTime = started
+		private var _lastPendingStartTime = started
+		private var _lastPendingEndTime = started
 		
+		// Once / if a vLLM server becomes available, creates a funnel to wrap it
 		private val funnelP = process.clientPointer.map { _.map { _.map { case (queue, model, maxContextSize) =>
 			// Updates the last request -time now that the API is available.
 			// Also, makes sure the idle-clearing process is running.
 			_lastRequestTime = Now
-			_lastPendingTime = _lastRequestTime
+			_lastPendingStartTime = _lastRequestTime
+			_lastPendingEndTime = _lastRequestTime
 			idleShutdownProcess.foreach { _.runAsync() }
 			
 			// Prepares a funnel for the incoming requests
 			val safeMaxContextSize = maxContextSize - contextSafetyMargin
-			val funnel = MappingFunnel(safeMaxContextSize) { requestAndSize: (ChatParams, Int) =>
-				requestAndSize._2
-			} { case (request, tokens) =>
-				if (process.detailedState.isUsable) {
-					_lastRequestTime = Now
-					push(request, tokens, queue, model.name, safeMaxContextSize)
-				}
-				else
-					push(request, tokens)
+			val funnel = MappingFunnel(safeMaxContextSize) { requestAndSize: (ChatParams, Int) => requestAndSize._2 } {
+				case (request, tokens) =>
+					if (process.detailedState.isUsable) {
+						_lastRequestTime = Now
+						push(request, tokens, queue, model.name, safeMaxContextSize)
+					}
+					else
+						push(request, tokens)
 			}
 			
-			// Takes notice when the funnel becomes full
+			// Takes notice when the funnel becomes full or only partially filled
 			funnel.pendingFlag.addListener { e =>
 				if (e.newValue)
-					_lastPendingTime = Now
-					
+					_lastPendingStartTime = Now
+				else
+					_lastPendingEndTime = Now
+				
 				if (stopped) Detach else Continue
 			}
 			
@@ -804,9 +916,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		// COMPUTED ---------------------
 		
 		def instanceId = process.instanceId
+		
 		def phase = process.detailedState.phase
 		def vastAiState = process.vastAiState
+		def instanceStatus = process.instanceStatus
 		
+		/**
+		 * @return Whether this processor is capable of handling (more) requests at this time
+		 */
 		def usable = !stopped && process.detailedState.isUsable && funnelP.value.exists { _.isSuccess }
 		def terminated = process.state.isFinal
 		
@@ -827,11 +944,28 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			case None => 1000000
 		}
 		
+		def notFullyUtilized = funnel.exists { !_._1.containsPendingActions }
+		
 		def wasRequestedToStop = stopped
 		def lastRequestTime = _lastRequestTime
-		def lastPendingTime = _lastPendingTime
+		def lastPendingEndTime = _lastPendingEndTime
 		
-		private def funnel = funnelP.value.flatMap { _.toOption }
+		def status = {
+			val (active, pending) = funnel match {
+				case Some((funnel, _)) => funnel.activeUtilization.toInt -> funnel.queuedCapacity.toInt
+				case None => 0 -> 0
+			}
+			VastAiVllmProcessorStatus(phase, instanceStatus, active, pending,
+				maxContextSize.getOrElse(defaultMaxContextSize), started, _lastRequestTime, _lastPendingStartTime,
+				_lastPendingEndTime)
+		}
+		
+		/**
+		 * @return The currently available funnel, if applicable.
+		 *         None if no funnel is available at this time.
+		 */
+		private def funnel: Option[(MappingFunnel[(ChatParams, Int), RequestResult[BufferedOpenAiReply]], Int)] =
+			funnelP.value.flatMap { _.toOption }
 		
 		
 		// IMPLEMENTED  ------------------
@@ -843,8 +977,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		override def stop(): Future[Any] = {
 			stopped = true
 			val state = process.detailedState
+			// Case: Not currently hosting an API => Requests the Vast AI process to stop
 			if (state.phase != ApiHosting)
 				process.stop()
+			// Case: Hosting an API
+			//       => Makes sure the queued requests get resolved first, before requesting the instance to stop
 			else
 				funnel match {
 					case Some((funnel, _)) => funnel.emptyFuture.flatMap { _ => process.stop() }
@@ -855,6 +992,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		
 		// OTHER    ----------------------
 		
+		/**
+		 * Attempts to give a request for this processor to handle
+		 * @param request Request to process
+		 * @param tokens Number of tokens / max context required
+		 * @return Request result future. None if this processor can't handle that request at this time.
+		 */
 		def tryPush(request: ChatParams, tokens: Int) =
 			funnel
 				// Makes sure the funnel can handle this request

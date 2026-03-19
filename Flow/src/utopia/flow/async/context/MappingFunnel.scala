@@ -184,7 +184,7 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	def pendingCountPointer: Changing[Int] = lazyQueueSizeP.value
 	
 	/**
-	 * @return Whether the queue part of this
+	 * @return Whether the queue part of this funnel contains at least one item
 	 */
 	def containsPendingActions = queueAndCapacityP.value._1.nonEmpty
 	

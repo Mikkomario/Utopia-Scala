@@ -19,6 +19,7 @@ import java.time.Instant
  * @author Mikko Hilpinen
  * @since 04.03.2026, v1.5
  */
+@deprecated("Deprecated for removal. Replaced with VastAiVllmChatExecutorStatus.", "v1.6")
 case class VastAiVllmProcessorPoolStatus(maxContextSize: Int, maxParallelRequestsPerClient: Int,
                                          instanceStates: Seq[(VastAiVllmProcessPhase, Option[InstanceStatus], Int, Instant)],
                                          requestsQueued: Int)
