@@ -109,7 +109,7 @@ object VastAiVllmChatExecutor
 	 * @param startsLazily Whether this executor should only start when the first request is received.
 	 *                     Default = false = instances are acquired immediately.
 	 * @param chooseImage A function for choosing the image or Vast AI template to use.
-	 *                    Accepts the selected offer, yields:
+	 *                    Accepts the selected offer and the applied maximum context size, yields:
 	 *                          1. Instance-creation settings
 	 *                          1. Expected initial vLLM service state at the remote instance
 	 *                          1. Name of the model to start vLLM with.
@@ -132,7 +132,7 @@ object VastAiVllmChatExecutor
 	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
 	          idleShutdownThreshold: Duration = 15.minutes, partialUseShutdownThreshold: Duration = 25.minutes,
 	          label: String = "chat-executor", startsLazily: Boolean = false)
-	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, String))
+	         (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
 	         (thinks: String => Boolean)
 	         (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger) =
 		new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, coreInstanceCount, maxInstanceCount,
@@ -200,7 +200,7 @@ object VastAiVllmChatExecutor
  * @param startsLazily Whether this executor should only start when the first request is received.
  *                     Default = false = instances are acquired immediately.
  * @param chooseImage A function for choosing the image or Vast AI template to use.
- *                    Accepts the selected offer, yields:
+ *                    Accepts the selected offer and the applied maximum context size, yields:
  *                          1. Instance-creation settings
  *                          1. Expected initial vLLM service state at the remote instance
  *                          1. Name of the model to start vLLM with.
@@ -226,7 +226,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
                              idleShutdownThreshold: Duration = 15.minutes,
                              partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
                              startsLazily: Boolean = false)
-                            (chooseImage: Offer => (NewInstanceFoundation, ServiceState, String))
+                            (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
                             (thinks: String => Boolean)
                             (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger)
 	extends BufferingChatRequestExecutor[BufferedOpenAiReply] with Breakable
@@ -776,8 +776,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
 			instanceLabel = label) {
 			offer =>
-				val (image, initialVllmState, model) = chooseImage(offer)
-				(image, initialVllmState, contextSizeOn(offer.gpu.ram), model)
+				val maxContextSize = contextSizeOn(offer.gpu.ram)
+				val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
+				(image, initialVllmState, maxContextSize, model)
 		}
 		processorsP :+= new Processor(process)
 		println(s"Now at ${ processors.size } instance processes")
