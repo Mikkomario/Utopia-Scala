@@ -2,6 +2,7 @@ package utopia.echo.model.response
 
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
+import utopia.flow.util.NumberExtensions._
 
 object TokenUsage
 {
@@ -58,8 +59,22 @@ trait TokenUsage extends SelfCombinable[TokenUsage] with LinearScalable[TokenUsa
 	
 	override def self: TokenUsage = this
 	
-	override def toString: String = s"$input + $output = $total"
+	override def toString: String = s"${ tokensStr(input) } + ${ tokensStr(output) } = ${ tokensStr(total) }"
 	
 	override def +(other: TokenUsage): TokenUsage = TokenUsage(input + other.input, output + other.output)
 	override def *(mod: Double): TokenUsage = TokenUsage((input * mod).round.toInt, (output * mod).round.toInt)
+	
+	
+	// OTHER    ----------------------
+	
+	private def tokensStr(tokens: Int) = {
+		if (tokens > 1000000)
+			s"${ (tokens / 1000000.0).roundDecimals(1) } M"
+		else if (tokens > 10000)
+			s"${ tokens / 1000 } K"
+		else if (tokens > 1000)
+			s"${ (tokens / 1000.0).roundDecimals(1) } K"
+		else
+			tokens.toString
+	}
 }

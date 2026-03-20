@@ -19,6 +19,8 @@
   - Added `.client` and `.clientPointer`
 - **VastAiVllmProcessState**
   - Added `.isUnusable`
+### Other changes
+- Modified **TokenUsage**'s `.toString` implementation
 
 ## v1.5 - 15.03.2026
 This major update introduces the following completely new features:
