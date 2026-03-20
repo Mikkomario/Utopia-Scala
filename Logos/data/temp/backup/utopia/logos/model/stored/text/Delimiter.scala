@@ -16,8 +16,8 @@ object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 	
 	private lazy val spacedDelimiterRegex =
 		(Regex.anyOf(",.!?:;)]").oneOrMoreTimes +
-			(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
-	private lazy val surroundedDashRegex = (Regex.whiteSpace + dashRegex + Regex.whiteSpace).withinParentheses
+			(Regex.whitespace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
+	private lazy val surroundedDashRegex = (Regex.whitespace + dashRegex + Regex.whitespace).withinParentheses
 	
 	/**
 	  * A regular expression that finds delimiters from text

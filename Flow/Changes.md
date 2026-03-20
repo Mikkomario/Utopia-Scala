@@ -1,6 +1,11 @@
 # Utopia Flow - List of Changes
 
 ## v2.8.1 (in development)
+### Deprecations
+- `Regex.whiteSpace` is now named `Regex.whitespace`
+### Bugfixes
+- `Regex.whitespace` would previously match to newline characters, also. 
+  The new version uses `\h`, matching only horizontal whitespaces.
 ### New features
 - Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
   except supporting variable cost / "width".
@@ -9,6 +14,8 @@
   - Added `.started(Future)`
 - **PossiblyFailingFuture**
   - Added `.recoverFromFailureWith(...)`
+- **Regex** (object)
+  - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:

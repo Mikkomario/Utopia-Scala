@@ -39,7 +39,7 @@ object BasicValueCaster extends ValueCaster
 		DateTimeFormatter.ofPattern("dd.MM.uuuu HH:mm"),
 		DateTimeFormatter.ofPattern("MM/dd/uuuu HH:mm")
 	)
-	private lazy val dateTimeSplitRegex = Regex("T") || Regex.whiteSpace
+	private lazy val dateTimeSplitRegex = Regex("T") || Regex.whitespace
 	
 	override lazy val conversions = Set(
 		// Any type can be converted to a string using .toString, although some conversions may be considered more

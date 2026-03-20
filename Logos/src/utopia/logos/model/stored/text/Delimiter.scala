@@ -40,14 +40,14 @@ object Delimiter extends StoredFromModelFactory[DelimiterData, Delimiter]
 		 */
 		private lazy val spaced =
 			(Regex.anyOf(",.!?:;)]").oneOrMoreTimes +
-				(Regex.whiteSpace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
+				(Regex.whitespace || Regex.endOfString || Regex.newLine).withinParentheses).withinParentheses
 		
-		private lazy val surroundedDash = (Regex.whiteSpace + dash + Regex.whiteSpace).withinParentheses
+		private lazy val surroundedDash = (Regex.whitespace + dash + Regex.whitespace).withinParentheses
 		
 		/**
 		 * A regular expression that finds delimiters from text
 		 */
-		lazy val any = Regex.whiteSpace.noneOrOnce +
+		lazy val any = Regex.whitespace.noneOrOnce +
 			(Regex.anyOf("()<>{}[]") || quotation || spaced || surroundedDash || Regex.newLine).withinParentheses +
 			Regex.newLine.anyTimes
 	}

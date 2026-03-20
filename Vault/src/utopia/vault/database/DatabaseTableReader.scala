@@ -17,7 +17,7 @@ object DatabaseTableReader
 {
     // ATTRIBUTES   --------------------------
     
-    private lazy val splitterRegex = Regex.escape('_') || Regex.whiteSpace || Regex.escape('-')
+    private lazy val splitterRegex = Regex.escape('_') || Regex.whitespace || Regex.escape('-')
     
     
     // OTHER    -----------------------------

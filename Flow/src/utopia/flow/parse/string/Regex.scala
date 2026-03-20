@@ -50,9 +50,13 @@ object Regex
 	 */
 	lazy val nonDigit = Regex("\\D")
 	/**
-	 * Accepts only whitespace characters
+	 * Accepts only horizontal whitespace characters
 	 */
-	val whiteSpace = Regex("\\s")
+	val whitespace = Regex("\\h")
+	/**
+	 * Accepts only whitespace characters, including newline
+	 */
+	val whitespaceOrNewline = Regex("\\s")
 	/**
 	 * Accepts all characters, except whitespace characters
 	 */
@@ -138,6 +142,9 @@ object Regex
 	
 	
 	// COMPUTED --------------------------
+	
+	@deprecated("Renamed to .whitespace", "v2.8.1")
+	def whiteSpace = whitespace
 	
 	/**
 	 * Accepts lower- and upper-case letters

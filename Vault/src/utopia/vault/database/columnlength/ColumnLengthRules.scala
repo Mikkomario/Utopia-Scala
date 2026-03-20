@@ -26,7 +26,7 @@ object ColumnLengthRules
 {
 	// ATTRIBUTES   --------------------------------
 	
-	private lazy val ruleSplitRegex = Regex.whiteSpace + Regex("or") + Regex.whiteSpace
+	private lazy val ruleSplitRegex = Regex.whitespace + Regex("or") + Regex.whitespace
 	
 	/**
 	  * The column length rule applied by default (default = Throw an error)

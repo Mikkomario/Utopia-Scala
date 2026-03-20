@@ -52,7 +52,7 @@ object StringExtensions
 		  *         <b>This includes all non-whitespace characters but not newline characters</b>
 		  */
 		def wordsIterator =
-			s.linesIterator.flatMap { _.splitIterator(Regex.whiteSpace) }.map { _.trim }.filter { _.nonEmpty }
+			s.linesIterator.flatMap { _.splitIterator(Regex.whitespace) }.map { _.trim }.filter { _.nonEmpty }
 		/**
 		 * @return Words that belong to this string.
 		 *         <b>This includes all non-whitespace characters but not newline characters</b>
@@ -760,7 +760,7 @@ object StringExtensions
 		 * @return An iterator that returns lines that are <= 'maxCharactersPerLine' long, except in cases where
 		  *         individual words exceed this length limit.
 		  */
-		def splitToLinesIterator(maxCharactersPerLine: Int, splitRegex: Regex = Regex.whiteSpace,
+		def splitToLinesIterator(maxCharactersPerLine: Int, splitRegex: Regex = Regex.whitespace,
 		                         splitterOnNewLine: Boolean = false) =
 			s.linesIterator.flatMap { str =>
 				val length = str.length

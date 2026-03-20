@@ -15,7 +15,7 @@ object Command
 	 */
 	val namespaceSplitRegex = Regex.escape(':')
 	
-	private val whiteSpaceOutsideQuotesR = Regex.whiteSpace.ignoringQuotations
+	private val whiteSpaceOutsideQuotesR = Regex.whitespace.ignoringQuotations
 	
 	
 	// OTHER    -------------------------

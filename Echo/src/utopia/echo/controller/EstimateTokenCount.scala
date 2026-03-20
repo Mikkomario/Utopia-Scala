@@ -85,7 +85,7 @@ object EstimateTokenCount
 	 */
 	def train(text: String, correctTokenCount: Int) = feedback(_in(text), correctTokenCount)
 		
-	private def _in(text: String) = text.splitIterator(Regex.whiteSpace)
+	private def _in(text: String) = text.splitIterator(Regex.whitespace)
 		.map { word =>
 			// Each word may consist of multiple parts (e.g. "it's" or "e-commerce")
 			word.trim.splitIterator(specialCharSeqRegex)

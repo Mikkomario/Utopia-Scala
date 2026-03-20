@@ -21,7 +21,7 @@ object Statement
 	/**
 	 * A regular expression for separating words from each other
 	 */
-	lazy val wordSplitRegex = Regex.whiteSpace || Regex.escape(' ') || Regex.newLine
+	lazy val wordSplitRegex = Regex.whitespace || Regex.escape(' ') || Regex.newLine
 	/**
 	 * These characters may appear within a link, but if they appear at the end,
 	 * should be considered delimiters instead.

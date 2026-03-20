@@ -23,7 +23,7 @@ object BufferedReplyLike
 	// ATTRIBUTES   ------------------------
 	
 	private lazy val invalidArrayRegex =
-		Regex.escape(',') + (Regex.whiteSpace || Regex.newLine).anyTimes.withinParentheses + Regex.escape(']')
+		Regex.escape(',') + Regex.whitespaceOrNewline.anyTimes.withinParentheses + Regex.escape(']')
 	private lazy val lineCommentRegex =
 		Regex.escape('/').times(2) + (!Regex.newLine.anyTimes).withinParentheses + Regex.newLine
 	private lazy val escapedEscapeRegex = Regex.escape('\\').times(2)
