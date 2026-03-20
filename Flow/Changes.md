@@ -7,6 +7,8 @@
 ### New methods
 - **QueuedAction** (object)
   - Added `.started(Future)`
+- **PossiblyFailingFuture**
+  - Added `.recoverFromFailureWith(...)`
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:

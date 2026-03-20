@@ -256,6 +256,21 @@ trait PossiblyFailingFuture[A, T, +R[_]] extends Any
 		}
 	
 	/**
+	 * Recovers from a failure result (note: not from thrown errors) by using a specific function
+	 * @param f A function called if this future yields a failure. Yields the new / placeholder value to yield.
+	 * @param exc Implicit execution context
+	 * @tparam B Type of the returned value on failure
+	 * @return A mapped copy of this future
+	 */
+	def recoverFromFailureWith[B >: A](f: Throwable => B)(implicit exc: ExecutionContext) =
+		wrapped.map { result =>
+			wrap(result).toTry match {
+				case Success(value) => value
+				case Failure(error) => f(error)
+			}
+		}
+	
+	/**
 	 * Calls the specified function if this future completes with a failure
 	 * @param f A function called for a failure result (throwable)
 	 * @param exc Implicit execution context
