@@ -1,5 +1,6 @@
 package utopia.echo.model.vastai.process
 
+import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.vastai.instance.InstanceStatus
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
 
@@ -17,5 +18,6 @@ import java.time.Instant
  * @since 19.03.2026, v1.6
  */
 case class VastAiVllmProcessorStatus(phase: VastAiVllmProcessPhase, instanceStatus: Option[InstanceStatus],
-                                     activeTokens: Int, pendingTokens: Int, maxContextSize: Int, started: Instant,
-                                     lastRequestTime: Instant, lastPendingStarted: Instant, lastPendingEnded: Instant)
+                                     activeTokens: TokenCount, pendingTokens: TokenCount, maxContextSize: TokenCount,
+                                     started: Instant, lastRequestTime: Instant, lastPendingStarted: Instant,
+                                     lastPendingEnded: Instant)

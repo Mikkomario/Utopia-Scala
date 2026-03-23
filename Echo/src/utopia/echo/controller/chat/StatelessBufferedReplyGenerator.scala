@@ -4,6 +4,7 @@ import utopia.echo.model.enumeration.ReasoningEffort
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.response.BufferedReply
 import utopia.echo.model.settings.{ContextSizeLimits, ModelSettings}
+import utopia.echo.model.tokenization.TokenCount
 
 import scala.concurrent.ExecutionContext
 
@@ -29,7 +30,7 @@ object StatelessBufferedReplyGenerator
 	
 	private class _StatelessBufferedReplyGenerator[+R <: BufferedReply]
 	(override val settings: ModelSettings, override val contextSizeLimits: ContextSizeLimits,
-	 override val expectedReplySize: Int, override val expectedThinkSize: Int,
+	 override val expectedReplySize: TokenCount, override val expectedThinkSize: TokenCount,
 	 override val reasoningEffort: Option[ReasoningEffort],
 	 override protected val requestExecutor: BufferingChatRequestExecutor[R])
 	(implicit override val llm: LlmDesignator, override protected val exc: ExecutionContext)
@@ -41,13 +42,13 @@ object StatelessBufferedReplyGenerator
 			new _StatelessBufferedReplyGenerator[R](settings, contextSizeLimits, expectedReplySize, expectedThinkSize,
 				reasoningEffort, requestExecutor)(llm, exc)
 		
-		override def withExpectedReplySize(replySize: Int): StatelessBufferedReplyGenerator[R] = {
+		override def withExpectedReplySize(replySize: TokenCount): StatelessBufferedReplyGenerator[R] = {
 			if (expectedReplySize == replySize)
 				this
 			else
 				copy(expectedReplySize = replySize)
 		}
-		override def withExpectedThinkSize(thinkSize: Int): StatelessBufferedReplyGenerator[R] = {
+		override def withExpectedThinkSize(thinkSize: TokenCount): StatelessBufferedReplyGenerator[R] = {
 			if (expectedThinkSize == thinkSize)
 				this
 			else
@@ -66,7 +67,8 @@ object StatelessBufferedReplyGenerator
 		// OTHER    ---------------------------
 		
 		private def copy(settings: ModelSettings = settings, contextSizeLimits: ContextSizeLimits = contextSizeLimits,
-		                 expectedReplySize: Int = expectedReplySize, expectedThinkSize: Int = expectedThinkSize,
+		                 expectedReplySize: TokenCount = expectedReplySize,
+		                 expectedThinkSize: TokenCount = expectedThinkSize,
 		                 reasoningEffort: Option[ReasoningEffort] = reasoningEffort) =
 			new _StatelessBufferedReplyGenerator[R](settings, contextSizeLimits, expectedReplySize, expectedThinkSize,
 				reasoningEffort, requestExecutor)

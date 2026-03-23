@@ -13,7 +13,7 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.response.ReplyLike
 import utopia.echo.model.settings.{ContextSizeLimits, HasMutableContextSizeLimits, HasMutableModelSettings, ModelSettings}
-import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount}
+import utopia.echo.model.tokenization.{PartiallyEstimatedTokenCount, TokenCount}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.event.listener.ChangeListener
@@ -111,13 +111,13 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  * Number of tokens expected to appear in replies.
 	 * The actual expectation depends on this value, as well as the largest received reply (in the message history).
 	  */
-	var expectedReplySize = 512
+	var expectedReplySize: TokenCount = 512
 	/**
 	 * Context size reserved for the thinking output by default, in cases where thinking is utilized.
 	 * The actual expectation depends on this value,
 	 * as well as the largest received think output (in the message history).
 	 */
-	var expectedThinkSize = 800
+	var expectedThinkSize: TokenCount = 800
 	
 	/**
 	 * A mutable pointer that contains the reasoning effort to request.
@@ -182,11 +182,11 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	/**
 	  * A mutable pointer that contains the number of tokens assumed to be present within the default system message
 	  */
-	val defaultSystemMessageTokensPointer = EventfulPointer(0)
+	val defaultSystemMessageTokensPointer = EventfulPointer(TokenCount.zero)
 	/**
 	 * Records system message tokens, if they can be fully deduced
 	 */
-	protected val knownSystemMessageTokensPointer = Pointer.eventful.empty[Int]
+	protected val knownSystemMessageTokensPointer = Pointer.eventful.empty[TokenCount]
 	/**
 	  * A pointer that contains the estimated size of the currently applied system messages.
 	  * Measured in tokens.
@@ -199,7 +199,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 			systemMessagesPointer.flatMap { messages =>
 				// Case: No system messages => Applies the value of the default system message tokens -pointer
 				if (messages.isEmpty)
-					defaultSystemMessageTokensPointer.map { EstimatedTokenCount(_): PartiallyEstimatedTokenCount }
+					defaultSystemMessageTokensPointer.map[PartiallyEstimatedTokenCount] { _.asEstimate }
 				// Case: System messages defined
 				//       => Estimates the token count in these messages.
 				//          Updates the estimate as the estimation interface gets more accurate.
@@ -224,7 +224,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 *      1. This interface has just been set up
 	 *      1. Message history or system message has been manually modified
 	 */
-	protected val knownLastPromptAndReplySizePointer = EventfulPointer(Pair(None, Some(0)))
+	protected val knownLastPromptAndReplySizePointer = EventfulPointer(Pair(None, Some(TokenCount.zero)))
 	/**
 	 * A (mutable) pointer that contains:
 	 *      1. The latest total prompt size, including message history & system message
@@ -243,7 +243,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 						// Special case: Prompt size is known while reply size is not
 						//               => Only calculates the reply size based on chat history
 						case Some(knownPromptSize) =>
-							lazy val promptSize = PartiallyEstimatedTokenCount.confirmed(knownPromptSize)
+							val promptSize = PartiallyEstimatedTokenCount.confirmed(knownPromptSize)
 							_messageHistoryPointer.map { history =>
 								val replySize = history.lastOption.filter { _._1.senderRole == Assistant } match {
 									case Some((_, lastReplySize)) => lastReplySize
@@ -263,7 +263,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 									// Case: Last reply size not known
 									case None =>
 										history.lastOption.filter { _._1.senderRole == Assistant } match {
-											case Some((_, replySize)) => replySize: PartiallyEstimatedTokenCount
+											case Some((_, replySize)) => replySize
 											case None => PartiallyEstimatedTokenCount.zero
 										}
 								}
@@ -273,7 +273,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 										PartiallyEstimatedTokenCount.zero
 									else if (history.last._1.senderRole == Assistant) {
 										if (history.hasSize > 1)
-											history.view.dropRight(1).map { _._2 }.reduce { _ + _ }
+											history.view.dropRight(1).iterator.map { _._2 }.reduce { _ + _ }
 										else
 											PartiallyEstimatedTokenCount.zero
 									}
@@ -290,7 +290,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 * A (mutable) pointer that contains the largest reply token count within the message history.
 	 * May be an estimated value.
 	 */
-	private val _largestReplySizePointer = EventfulPointer(0)
+	private val _largestReplySizePointer = EventfulPointer(TokenCount.zero)
 	/**
 	  * A pointer that contains the largest encountered reply size during the current conversation.
 	  * May contain an estimate, depending on the context (e.g. when message history has been manually modified).
@@ -299,7 +299,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	/**
 	 * A mutable pointer that contains the largest think output within the message history. May be an estimate.
 	 */
-	private val _largestThinkSizePointer = Pointer.eventful(0)
+	private val _largestThinkSizePointer = Pointer.eventful(TokenCount.zero)
 	/**
 	 * A pointer that contains the largest encountered think output size during the current conversation.
 	 * May contain an estimate, depending on the context.
@@ -349,7 +349,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 						knownSizes.second
 					// Case: Message history cleared => Size is known to be 0
 					else if (newHistory.isEmpty)
-						Some(0)
+						Some(TokenCount.zero)
 					// Case: Reply was altered => Exact size is unknown
 					else
 						None
@@ -360,7 +360,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 			// Recalculates the largest reply size
 			updateLargestReplySize {
 				_.max(newHistoryWithSizes.iterator
-					.filter { _._1.senderRole == Assistant }.map { _._2.corrected }.maxOption.getOrElse(0))
+					.filter { _._1.senderRole == Assistant }.map { _._2.corrected }.maxOption.getOrElse(TokenCount.zero))
 			}
 		}
 	}
@@ -368,7 +368,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	/**
 	  * A pointer that contains:
 	  *     1. The context size (token count) at which the conversation history will be
-	  *     automatically summarized in order to conserve space.
+	  *        automatically summarized in order to conserve space.
 	  *     1. The minimum number of messages to summarize before auto-summarization may be applied.
 	  *     1. The number of latest messages that will be preserved
 	  *
@@ -376,7 +376,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  *
 	  * During the auto-summarization process, no other messages are sent via this interface.
 	  */
-	val autoSummarizeAtTokensPointer = EventfulPointer.empty[(Int, Int, Int)]
+	val autoSummarizeAtTokensPointer = EventfulPointer.empty[(TokenCount, Int, Int)]
 	/**
 	 * A pointer that contains the prompt given to the LLM when requesting auto-summarization
 	 */
@@ -468,7 +468,8 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 * @return The number of tokens estimated to be present in the model's default system message.
 	 */
 	def defaultSystemMessageTokens = defaultSystemMessageTokensPointer.value
-	def defaultSystemMessageTokens_=(defaultTokens: Int) = defaultSystemMessageTokensPointer.value = defaultTokens
+	def defaultSystemMessageTokens_=(defaultTokens: TokenCount) =
+		defaultSystemMessageTokensPointer.value = defaultTokens
 	
 	/**
 	  * @return Currently applied message history.
@@ -540,12 +541,12 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 * @return Largest single received within this conversation. May consist of an estimate.
 	 */
 	def largestReplySize = _largestReplySizePointer.value
-	protected def largestReplySize_=(replySize: Int) = _largestReplySizePointer.value = replySize
+	protected def largestReplySize_=(replySize: TokenCount) = _largestReplySizePointer.value = replySize
 	/**
 	 * @return The largest think output encountered during the current conversation. May be an estimate.
 	 */
 	def largestThinkSize = _largestThinkSizePointer.value
-	protected def largestThinkSize_=(thinkSize: Int) = _largestThinkSizePointer.value = thinkSize
+	protected def largestThinkSize_=(thinkSize: TokenCount) = _largestThinkSizePointer.value = thinkSize
 	
 	/**
 	  * @return Whether this interface is currently performing a summary of the current conversation history
@@ -566,7 +567,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  *         None if auto-summarization is disabled.
 	  */
 	def autoSummarizeThresholds = autoSummarizeAtTokensPointer.value
-	def autoSummarizeThresholds_=(newThreshold: Option[(Int, Int, Int)]) =
+	def autoSummarizeThresholds_=(newThreshold: Option[(TokenCount, Int, Int)]) =
 		autoSummarizeAtTokensPointer.value = newThreshold
 	/**
 	 * @return The prompt used when requesting the LLM to summarize the current chat history
@@ -619,12 +620,12 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	@deprecated("Deprecated for removal", "v1.5")
 	def thinkingContextSize = contextSizeLimits.minWithThink
 	@deprecated("Please use setMinthinkingContextSize(Int) instead", "v1.5")
-	def thinkingContextSize_=(tokens: Int) = setMinThinkingContextSize(tokens)
+	def thinkingContextSize_=(tokens: TokenCount) = setMinThinkingContextSize(tokens)
 	
 	@deprecated("Renamed to expectedThinkSize", "v1.5")
 	def additionalThinkingContextSize = expectedThinkSize
 	@deprecated("Renamed to expectedThinkSize", "v1.5")
-	def additionalThinkingContextSize_=(tokens: Int) = expectedThinkSize = tokens
+	def additionalThinkingContextSize_=(tokens: TokenCount) = expectedThinkSize = tokens
 	
 	
 	// IMPLEMENTED  ---------------------------
@@ -650,17 +651,18 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 		val lastPromptAndReplySize = knownLastPromptAndReplySizePointer.value
 		Model.from(
 			"llm" -> llm.llmName, "llmThinks" -> llm.thinks,
-			"expectedReplySize" -> expectedReplySize, "expectedThinkSize" -> expectedThinkSize,
+			"expectedReplySize" -> expectedReplySize.value, "expectedThinkSize" -> expectedThinkSize.value,
 			"reasoningEffort" -> reasoningEffort,
 			"systemMessages" -> systemMessagesPointer.value,
 			"messageHistory" -> _messageHistoryPointer.value.map { case (message, size) =>
 				message.toModel + Constant("size", size)
 			},
-			"lastPromptSize" -> lastPromptAndReplySize.first, "lastReplySize" -> lastPromptAndReplySize.second,
+			"lastPromptSize" -> lastPromptAndReplySize.first.map { _.value },
+			"lastReplySize" -> lastPromptAndReplySize.second.map { _.value },
 			"settings" -> settings, "contextSizeLimits" -> contextSizeLimits, "tools" -> tools,
 			"autoSummarizeAt" -> autoSummarizeAtTokensPointer.value
 				.map { case (contextSize, messageCount, preserveCount) =>
-					Model.from("tokens" -> contextSize, "messages" -> messageCount, "preserve" -> preserveCount)
+					Model.from("tokens" -> contextSize.value, "messages" -> messageCount, "preserve" -> preserveCount)
 				}
 		)
 	}
@@ -765,7 +767,8 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	  *                         For best performance, you should specify an even number.
 	  *                         Default = 2 = the latest query & reply will be excluded.
 	  */
-	def setupAutoSummaries(contextSizeThreshold: Int = (maxContextSize * 0.8).toInt - (largestReplySize max expectedReplySize),
+	def setupAutoSummaries(contextSizeThreshold: TokenCount =
+	                       (maxContextSize * 0.8) - (largestReplySize max expectedReplySize),
 	                       minimumMessageCount: Int = 4, keepMessageCount: Int = 2) =
 		autoSummarizeThresholds = Some((contextSizeThreshold, minimumMessageCount, keepMessageCount))
 	/**
@@ -838,12 +841,12 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 * Alters the largest reply size -pointer
 	 * @param f A mapping function applied to the current largest reply size -value
 	 */
-	protected def updateLargestReplySize(f: Mutate[Int]) = _largestReplySizePointer.update(f)
+	protected def updateLargestReplySize(f: Mutate[TokenCount]) = _largestReplySizePointer.update(f)
 	/**
 	 * Alters the largest think size -pointer
 	 * @param f A mapping function applied to the current largest think size -value
 	 */
-	protected def updateLargestThinkSize(f: Mutate[Int]) = _largestThinkSizePointer.update(f)
+	protected def updateLargestThinkSize(f: Mutate[TokenCount]) = _largestThinkSizePointer.update(f)
 	/**
 	 * Alters the message history
 	 * @param f A mapping function applied to the current message history (also controlling message sizes)

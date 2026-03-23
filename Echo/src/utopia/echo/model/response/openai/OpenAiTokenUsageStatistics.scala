@@ -1,6 +1,7 @@
 package utopia.echo.model.response.openai
 
 import utopia.echo.model.response.TokenUsage
+import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
@@ -12,7 +13,7 @@ object OpenAiTokenUsageStatistics
 	/**
 	 * A zero usage -statistics
 	 */
-	lazy val zero = apply(0, 0, 0, 0, 0)
+	lazy val zero = apply(TokenCount.zero, TokenCount.zero, TokenCount.zero, TokenCount.zero, TokenCount.zero)
 	
 	
 	// COMPUTED ---------------------
@@ -80,5 +81,6 @@ object OpenAiTokenUsageStatistics
   * @param reasoning The number of output tokens that were used in the reasoning phase
   * @param total Total number of tokens used in this interaction (input + output)
   */
-case class OpenAiTokenUsageStatistics(input: Int, cached: Int, output: Int, reasoning: Int, total: Int)
+case class OpenAiTokenUsageStatistics(input: TokenCount, cached: TokenCount, output: TokenCount, reasoning: TokenCount,
+                                      total: TokenCount)
 	extends TokenUsage

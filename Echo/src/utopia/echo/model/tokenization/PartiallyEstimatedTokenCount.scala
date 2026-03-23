@@ -4,11 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.{FromModelFactory, FromValueFactory}
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType}
-import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
-import utopia.flow.operator.combine.Combinable.SelfCombinable
-import utopia.flow.operator.combine.Subtractable
-import utopia.flow.operator.{MayBeZero, Reversible}
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.util.Mutate
 
 import scala.language.implicitConversions
@@ -22,7 +19,7 @@ object PartiallyEstimatedTokenCount
 	/**
 	 * A zero token count
 	 */
-	lazy val zero = confirmed(0)
+	lazy val zero = confirmed(TokenCount.zero)
 	
 	
 	// IMPLICIT ------------------------
@@ -32,7 +29,8 @@ object PartiallyEstimatedTokenCount
 	 * @param estimate Estimate to wrap
 	 * @return A count that only consists of an estimate
 	 */
-	implicit def wrapEstimate(estimate: EstimatedTokenCount): PartiallyEstimatedTokenCount = apply(estimate, 0)
+	implicit def estimate(estimate: EstimatedTokenCount): PartiallyEstimatedTokenCount =
+		apply(estimate, TokenCount.zero)
 	
 	
 	// IMPLEMENTED  -------------------
@@ -41,26 +39,39 @@ object PartiallyEstimatedTokenCount
 	
 	override def apply(model: HasProperties): Try[PartiallyEstimatedTokenCount] = {
 		if (model.contains("estimate"))
-			Success(apply(EstimatedTokenCount.getFromValue(model("estimate")), model("confirmed").getInt))
+			Success(apply(EstimatedTokenCount.getFromValue(model("estimate")), TokenCount(model("confirmed").getInt)))
 		else if (model.contains("confirmed"))
-			model.tryGet("confirmed") { _.tryInt }.map(confirmed)
+			model.tryGet("confirmed") { _.tryInt }.map { tokens => confirmed(TokenCount(tokens)) }
 		else
-			EstimatedTokenCount(model).map(wrapEstimate)
+			EstimatedTokenCount(model).map(estimate)
 	}
 	override def fromValue(value: Value): Option[PartiallyEstimatedTokenCount] = value.castTo(ModelType, IntType) match {
 		case Left(modelV) => modelV.model.flatMap { apply(_).toOption }
-		case Right(intV) => intV.int.map(confirmed)
+		case Right(intV) => intV.int.map { tokens => confirmed(TokenCount(tokens)) }
 	}
 	
 	
 	// OTHER    ------------------------
 	
 	/**
+	 * @param tokenCount A token count counted as an estimate
+	 * @return That token count as an partial estimate
+	 */
+	def estimate(tokenCount: TokenCount): PartiallyEstimatedTokenCount = estimate(EstimatedTokenCount.from(tokenCount))
+	/**
 	 * Wraps a fully confirmed token count
 	 * @param tokenCount Token count to wrap. Should originate from an LLM / be 100% correct.
 	 * @return A new token count consisting only of a confirmed part
 	 */
-	def confirmed(tokenCount: Int) = apply(EstimatedTokenCount.zero, tokenCount)
+	def confirmed(tokenCount: TokenCount) = apply(EstimatedTokenCount.zero, tokenCount)
+	
+	/**
+	 * @param estimate Part of this token count that consists of an estimate
+	 * @param confirmed Part of this token count that has been confirmed (i.e. originates from an LLM)
+	 * @return A new partially estimated token count
+	 */
+	def apply(estimate: EstimatedTokenCount, confirmed: TokenCount) =
+		new PartiallyEstimatedTokenCount(estimate, confirmed)
 }
 
 /**
@@ -70,17 +81,15 @@ object PartiallyEstimatedTokenCount
  * @param estimatePart Part of this token count that consists of an estimate
  * @param confirmedPart Part of this token count that has been confirmed (i.e. originates from an LLM)
  */
-case class PartiallyEstimatedTokenCount(estimatePart: EstimatedTokenCount, confirmedPart: Int)
-	extends MayBeZero[PartiallyEstimatedTokenCount] with SelfCombinable[PartiallyEstimatedTokenCount]
-		with Subtractable[PartiallyEstimatedTokenCount, PartiallyEstimatedTokenCount]
-		with Reversible[PartiallyEstimatedTokenCount] with ModelConvertible
+class PartiallyEstimatedTokenCount(val estimatePart: EstimatedTokenCount, val confirmedPart: TokenCount)
+	extends TokenCount with TokenCountLike[PartiallyEstimatedTokenCount] with ModelConvertible
 {
 	// COMPUTED ----------------------------------
 	
 	/**
 	 * @return Token count which includes a correction factor in the estimate part
 	 */
-	def corrected = estimatePart.corrected + confirmedPart
+	def corrected = confirmedPart + estimatePart.corrected
 	
 	/**
 	 * @return True if this token count only consists of a confirmed part
@@ -96,18 +105,27 @@ case class PartiallyEstimatedTokenCount(estimatePart: EstimatedTokenCount, confi
 	
 	override def self: PartiallyEstimatedTokenCount = this
 	
+	override def value: Int = corrected.value
+	
 	override def zero: PartiallyEstimatedTokenCount = PartiallyEstimatedTokenCount.zero
-	override def isZero: Boolean = confirmedPart == 0 && estimatePart.isZero
+	override def isZero: Boolean = confirmedPart.isZero && estimatePart.isZero
 	
 	override def unary_- : PartiallyEstimatedTokenCount = PartiallyEstimatedTokenCount(-estimatePart, -confirmedPart)
 	
-	override def toModel: Model = Model.from("estimate" -> estimatePart, "confirmed" -> confirmedPart)
+	override def toModel: Model = Model.from("estimate" -> estimatePart, "confirmed" -> confirmedPart.value)
 	override def toString = if (isFullyConfirmed) confirmedPart.toString else s"~$corrected"
 	
-	override def +(other: PartiallyEstimatedTokenCount): PartiallyEstimatedTokenCount =
-		PartiallyEstimatedTokenCount(estimatePart + other.estimatePart, confirmedPart + other.confirmedPart)
-	override def -(other: PartiallyEstimatedTokenCount): PartiallyEstimatedTokenCount =
-		PartiallyEstimatedTokenCount(estimatePart - other.estimatePart, confirmedPart - other.confirmedPart)
+	override def +(other: TokenCount) = other match {
+		case p: PartiallyEstimatedTokenCount =>
+			PartiallyEstimatedTokenCount(estimatePart + p.estimatePart, confirmedPart + p.confirmedPart)
+		case e: EstimatedTokenCount => mapEstimatePart { _ + e }
+		case o => mapConfirmedPart { _ + o }
+	}
+	override def +(amount: Int) = mapConfirmedPart { _ + amount }
+	override def *(mod: Double) = PartiallyEstimatedTokenCount(estimatePart * mod, confirmedPart * mod)
+	
+	override protected def withValue(value: Int): PartiallyEstimatedTokenCount =
+		PartiallyEstimatedTokenCount.confirmed(TokenCount(value))
 		
 	
 	// OTHER    ---------------------------------
@@ -116,11 +134,14 @@ case class PartiallyEstimatedTokenCount(estimatePart: EstimatedTokenCount, confi
 	 * @param estimate Estimate part to assign to this count
 	 * @return Copy of this count with the specified estimate part
 	 */
-	def withEstimatePart(estimate: EstimatedTokenCount) = copy(estimatePart = estimate)
+	def withEstimatePart(estimate: EstimatedTokenCount) = PartiallyEstimatedTokenCount(estimate, confirmedPart)
 	/**
 	 * @param f A mapping function applied to this count's estimate part
 	 * @return Copy of this count with mapped estimate part
 	 */
 	def mapEstimatePart(f: Mutate[EstimatedTokenCount]) =
 		withEstimatePart(f(estimatePart))
+		
+	def withConfirmedPart(confirmed: TokenCount) = PartiallyEstimatedTokenCount(estimatePart, confirmed)
+	def mapConfirmedPart(f: Mutate[TokenCount]) = withConfirmedPart(f(confirmedPart))
 }

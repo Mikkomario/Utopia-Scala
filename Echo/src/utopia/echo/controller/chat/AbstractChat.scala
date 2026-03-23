@@ -15,7 +15,7 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.response.{BufferedReply, ReplyLike}
-import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount}
+import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCount}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.CollectionExtensions._
@@ -351,7 +351,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				// Checks whether to reserve more tokens for the think output next time
 				// TODO: Add handling for situations where think size is known
 				//  (which is the case for providers other than Ollama)
-				val thinkTokens = EstimateTokenCount.in(reply.thoughts).corrected
+				val thinkTokens = EstimateTokenCount.in(reply.thoughts)
 				updateLargestThinkSize { _ max thinkTokens }
 				updateLargestReplySize { _ max (totalResponseSize - thinkTokens) }
 				
@@ -396,9 +396,9 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	}
 	
 	private def appendMessageHistory(sentMessages: Seq[ChatMessage],
-	                                 messageSizeEstimate: EstimatedTokenCount, deducedMessageSize: Option[Int],
-	                                 receivedReply: ChatMessage, replySize: Option[Int],
-	                                 previousContextSize: Option[Int]) =
+	                                 messageSizeEstimate: EstimatedTokenCount, deducedMessageSize: Option[TokenCount],
+	                                 receivedReply: ChatMessage, replySize: Option[TokenCount],
+	                                 previousContextSize: Option[TokenCount]) =
 	{
 		updateMessageHistory { history =>
 			// Modifies the message history sizes or system message size to match the captured context size, if possible
@@ -430,7 +430,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 									message -> size
 								else
 									message -> size.mapEstimatePart { e =>
-										e.withCorrected((correctedTotal * (e.raw / totalRawEstimates)).round.toInt)
+										e.withCorrected((correctedTotal * (e.raw / totalRawEstimates)).value)
 									}
 							}
 						}
@@ -455,7 +455,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 						val estimations = sentMessages.map { m => m -> EstimateTokenCount.in(m.text) }
 						val totalEstimation = estimations.view.map { _._2.corrected }.sum.toDouble
 						estimations.map { case (m, estimate) =>
-							val correctedValue = ((estimate.corrected / totalEstimation) * messageSize).round.toInt
+							val correctedValue = (messageSize * (estimate.corrected / totalEstimation)).value
 							m -> (estimate.withCorrected(correctedValue): PartiallyEstimatedTokenCount)
 						}
 					}
@@ -473,6 +473,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				case Some(knownSize) => PartiallyEstimatedTokenCount.confirmed(knownSize)
 				case None => EstimateTokenCount.in(receivedReply.text)
 			}
-			modifiedSizeHistory ++ newPromptMessages :+ (receivedReply -> replySizeEstimate)		}
+			modifiedSizeHistory ++ newPromptMessages :+ (receivedReply -> replySizeEstimate)
+		}
 	}
 }

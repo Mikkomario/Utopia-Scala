@@ -1,5 +1,6 @@
 package utopia.echo.model.settings
 
+import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.util.Mutate
 
 /**
@@ -16,9 +17,9 @@ trait HasMutableContextSizeLimits extends HasContextSizeLimits
 	
 	// COMPUTED ----------------------------
 	
-	def maxContextSize_=(max: Int) = updateContextSizeLimits { _.withMax(max) }
-	def minContextSize_=(min: Int) = updateContextSizeLimits { _.withMin(min) }
-	def additionalContextSize_=(additional: Int) = updateContextSizeLimits { _.withAdditional(additional) }
+	def maxContextSize_=(max: TokenCount) = updateContextSizeLimits { _.withMax(max) }
+	def minContextSize_=(min: TokenCount) = updateContextSizeLimits { _.withMin(min) }
+	def additionalContextSize_=(additional: TokenCount) = updateContextSizeLimits { _.withAdditional(additional) }
 	
 	
 	// OTHER    ----------------------------
@@ -26,7 +27,7 @@ trait HasMutableContextSizeLimits extends HasContextSizeLimits
 	/**
 	 * @param min Minimum context size to use in thinking mode
 	 */
-	def setMinThinkingContextSize(min: Int) = updateContextSizeLimits { _.withMinWhenThinking(min) }
+	def setMinThinkingContextSize(min: TokenCount) = updateContextSizeLimits { _.withMinWhenThinking(min) }
 	
 	/**
 	 * Modifies the applied context size limits

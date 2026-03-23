@@ -10,11 +10,12 @@ package utopia.echo.model.tokenization
  *                         May be a full or a partial estimate.
  * @param context Reserved context size as a number of tokens
  */
-case class TokenCounts(newMessages: EstimatedTokenCount, systemAndHistory: PartiallyEstimatedTokenCount, context: Int)
+case class EstimatedContextSize(newMessages: EstimatedTokenCount, systemAndHistory: PartiallyEstimatedTokenCount,
+                                context: TokenCount)
 {
 	/**
 	 * Maximum allowed size for the response (in tokens).
 	 * Based on the available context size, minus used capacity. Set to not overflow the context size.
 	 */
-	lazy val maxResponse = context - systemAndHistory.corrected - newMessages.corrected
+	lazy val maxResponse = context - systemAndHistory - newMessages
 }

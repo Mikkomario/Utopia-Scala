@@ -9,7 +9,7 @@ import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.tool.ToolFactory
 import utopia.echo.model.response.ollama.{BufferedOllamaReply, OllamaReply}
 import utopia.echo.model.settings.{ContextSizeLimits, ModelSettings}
-import utopia.echo.model.tokenization.PartiallyEstimatedTokenCount
+import utopia.echo.model.tokenization.{PartiallyEstimatedTokenCount, TokenCount}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.template.HasValues
@@ -71,7 +71,7 @@ object OllamaChat
 				}
 			}
 			chat.knownLastPromptAndReplySizePointer.value =
-				Pair(model("lastPromptSize"), model("lastReplySize")).map { _.int }
+				Pair(model("lastPromptSize"), model("lastReplySize")).map { _.int.map(TokenCount.apply) }
 			model("settings").model.foreach { settingsModel =>
 				ModelSettings(settingsModel).logWithMessage("Failed to parse chat settings")
 					.foreach { chat.settings = _ }

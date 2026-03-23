@@ -15,6 +15,7 @@ import utopia.echo.model.llm.{LlmDesignator, LlmVramUse}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.openai.BufferedOpenAiChatCompletionRequest
 import utopia.echo.model.response.openai.BufferedOpenAiReply
+import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.NewInstanceFoundation
@@ -122,17 +123,17 @@ object VastAiVllmChatExecutor
 	 */
 	def apply(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount, coreInstanceCount: Int = 1,
 	          maxInstanceCount: Int = 4, instanceActivationQueueSizeThreshold: Int = 24,
-	          instanceActivationPendingTokensThreshold: Int = 24000,
-	          instanceAccelerationPendingTokensThreshold: Int = 48000, maxConnectionsPerInstance: Int = 28,
-	          additionalReservedDisk: ByteCount = 5.gb, defaultContextSize: Option[Int] = None,
-	          contextSafetyMargin: Int = 64,
+	          instanceActivationPendingTokensThreshold: TokenCount = 24000,
+	          instanceAccelerationPendingTokensThreshold: TokenCount = 48000, maxConnectionsPerInstance: Int = 28,
+	          additionalReservedDisk: ByteCount = 5.gb, defaultContextSize: Option[TokenCount] = None,
+	          contextSafetyMargin: TokenCount = 64,
 	          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
 	          recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
 	          remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
 	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
 	          idleShutdownThreshold: Duration = 15.minutes, partialUseShutdownThreshold: Duration = 25.minutes,
 	          label: String = "chat-executor", startsLazily: Boolean = false)
-	         (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
+	         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
 	         (thinks: String => Boolean)
 	         (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger) =
 		new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, coreInstanceCount, maxInstanceCount,
@@ -215,10 +216,10 @@ object VastAiVllmChatExecutor
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
                              coreInstanceCount: Int = 1, maxInstanceCount: Int = 4,
                              instanceActivationQueueSizeThreshold: Int = 24,
-                             instanceActivationPendingTokensThreshold: Int = 24000,
-                             instanceAccelerationPendingTokensThreshold: Int = 48000,
+                             instanceActivationPendingTokensThreshold: TokenCount = 24000,
+                             instanceAccelerationPendingTokensThreshold: TokenCount = 48000,
                              maxConnectionsPerInstance: Int = 28, additionalReservedDisk: ByteCount = 5.gb,
-                             defaultContextSize: Option[Int] = None, contextSafetyMargin: Int = 64,
+                             defaultContextSize: Option[TokenCount] = None, contextSafetyMargin: TokenCount = 64,
                              backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
                              recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
                              remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
@@ -226,7 +227,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
                              idleShutdownThreshold: Duration = 15.minutes,
                              partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
                              startsLazily: Boolean = false)
-                            (chooseImage: (Offer, Int) => (NewInstanceFoundation, ServiceState, String))
+                            (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
                             (thinks: String => Boolean)
                             (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger)
 	extends BufferingChatRequestExecutor[BufferedOpenAiReply] with Breakable
@@ -309,7 +310,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 *
 	 * Needs to be updated manually as processes become available or unavailable.
 	 */
-	private val maxContextSizeP = CopyOnDemand {
+	private val maxContextSizeP = CopyOnDemand[TokenCount] {
 		processors.iterator.filter { _.phase < Stopping }.flatMap { _.maxContextSize }.maxOption
 			.getOrElse(defaultMaxContextSize)
 	}
@@ -514,7 +515,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 	
 	// Notice: This request is pretty deeply recursive, being called from Processor
-	private def push(request: ChatParams, tokens: Int): Future[RequestResult[BufferedOpenAiReply]] = {
+	private def push(request: ChatParams, tokens: TokenCount): Future[RequestResult[BufferedOpenAiReply]] = {
 		// Case: Already stopped => Fails
 		if (stopFlag.isSet)
 			Future.successful(RequestSendingFailed(
@@ -527,21 +528,21 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				.findMap { processor =>
 					processor.tryPush(request, tokens).map { resultFuture =>
 						// Activates more instances, if appropriate
-						adjustInstanceTargetIfAppropriate(pendingTokensCheckThresholdP, tokens,
-							instanceActivationPendingTokensThreshold, 5000,
+						adjustInstanceTargetIfAppropriate(pendingTokensCheckThresholdP, tokens.value,
+							instanceActivationPendingTokensThreshold.value, 5000,
 							processors.iterator.map { _.pendingTokens }.sum.toInt) {
 							currentTarget =>
 								if (processors.size < currentTarget || processors.exists { _.phase < ApiHosting })
-									currentTarget * instanceAccelerationPendingTokensThreshold
+									currentTarget * instanceAccelerationPendingTokensThreshold.value
 								else
-									currentTarget * instanceActivationPendingTokensThreshold
+									currentTarget * instanceActivationPendingTokensThreshold.value
 						}
 						
 						// Checks whether it's possible to handle cases where the context window couldn't
 						// fit into the server's maximum context (400 error, because of token-counting issues)
 						processor.usableContextSize.flatMap { currentContextSize =>
 							// Attempts to reserve at least 20% more space
-							val nextContextSize = (currentContextSize * 1.2).ceil.toInt min safeMaxContextSize
+							val nextContextSize = (currentContextSize * 1.2) min safeMaxContextSize
 							if (processors.exists { _.usableContextSize.exists { _ >= nextContextSize } })
 								Some(nextContextSize)
 							else
@@ -593,14 +594,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * @param maxContextSize Maximum context size of the utilized instance
 	 * @return Future of the eventual request result
 	 */
-	private def push(request: ChatParams, tokens: Int, client: RequestQueue, model: String,
-	                 maxContextSize: Int): Future[RequestResult[BufferedOpenAiReply]] =
+	private def push(request: ChatParams, tokens: TokenCount, client: RequestQueue, model: String,
+	                 maxContextSize: TokenCount): Future[RequestResult[BufferedOpenAiReply]] =
 	{
 		// Converts the request into a full chat request
 		val apiRequest = BufferedOpenAiChatCompletionRequest(
 			request.toLlm(llmCache(model)).mapSetting(ContextTokens) { _.int match {
-				case Some(maxTokens) => maxTokens min maxContextSize
-				case None => maxContextSize
+				case Some(maxTokens) => maxTokens min maxContextSize.value
+				case None => maxContextSize.value
 			} })
 		
 		// Adds handling for situations where instance-closing leads to request deprecation
@@ -890,7 +891,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			
 			// Prepares a funnel for the incoming requests
 			val safeMaxContextSize = maxContextSize - contextSafetyMargin
-			val funnel = MappingFunnel(safeMaxContextSize) { requestAndSize: (ChatParams, Int) => requestAndSize._2 } {
+			val funnel = MappingFunnel(safeMaxContextSize.value) {
+				requestAndSize: (ChatParams, TokenCount) => requestAndSize._2.value } {
 				case (request, tokens) =>
 					if (process.detailedState.isUsable) {
 						_lastRequestTime = Now
@@ -929,7 +931,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		def terminated = process.state.isFinal
 		
 		def maxContextSize = process.maxContextSize
-		def usableContextSize: Option[Int] = {
+		def usableContextSize: Option[TokenCount] = {
 			if (stopped || process.detailedState.isUnusable)
 				None
 			else
@@ -941,7 +943,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			case None => 0.0
 		}
 		def pendingToActiveRatio = funnel match {
-			case Some((funnel, maxContextSize)) => funnel.queuedCapacity / maxContextSize
+			case Some((funnel, maxContextSize)) => funnel.queuedCapacity / maxContextSize.value
 			case None => 1000000
 		}
 		
@@ -965,7 +967,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		 * @return The currently available funnel, if applicable.
 		 *         None if no funnel is available at this time.
 		 */
-		private def funnel: Option[(MappingFunnel[(ChatParams, Int), RequestResult[BufferedOpenAiReply]], Int)] =
+		private def funnel: Option[(MappingFunnel[(ChatParams, TokenCount), RequestResult[BufferedOpenAiReply]], TokenCount)] =
 			funnelP.value.flatMap { _.toOption }
 		
 		
@@ -999,7 +1001,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		 * @param tokens Number of tokens / max context required
 		 * @return Request result future. None if this processor can't handle that request at this time.
 		 */
-		def tryPush(request: ChatParams, tokens: Int) =
+		def tryPush(request: ChatParams, tokens: TokenCount) =
 			funnel
 				// Makes sure the funnel can handle this request
 				.filter { case (_, maxContextSize) =>

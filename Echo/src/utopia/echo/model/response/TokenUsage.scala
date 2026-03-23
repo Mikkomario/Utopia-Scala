@@ -1,5 +1,6 @@
 package utopia.echo.model.response
 
+import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
 import utopia.flow.util.NumberExtensions._
@@ -11,7 +12,7 @@ object TokenUsage
 	/**
 	 * A zero token usage instance (0 tokens in, 0 tokens out)
 	 */
-	lazy val zero = apply(0, 0)
+	lazy val zero = apply(TokenCount.zero, TokenCount.zero)
 	
 	
 	// OTHER    --------------------------
@@ -21,14 +22,14 @@ object TokenUsage
 	 * @param output The number of tokens used for generating the response, including reasoning tokens
 	 * @return Token usage based on the specified input
 	 */
-	def apply(input: Int, output: Int): TokenUsage = _TokenUsage(input, output)
+	def apply(input: TokenCount, output: TokenCount): TokenUsage = _TokenUsage(input, output)
 	
 	
 	// NESTED   --------------------------
 	
-	private case class _TokenUsage(input: Int, output: Int) extends TokenUsage
+	private case class _TokenUsage(input: TokenCount, output: TokenCount) extends TokenUsage
 	{
-		override def total: Int = input + output
+		override def total: TokenCount = input + output
 	}
 }
 
@@ -44,37 +45,23 @@ trait TokenUsage extends SelfCombinable[TokenUsage] with LinearScalable[TokenUsa
 	/**
 	 * @return The number of tokens used in the prompt
 	 */
-	def input: Int
+	def input: TokenCount
 	/**
 	 * @return The number of tokens used for generating the response, including reasoning tokens
 	 */
-	def output: Int
+	def output: TokenCount
 	/**
 	 * @return Total number of tokens used throughout the request
 	 */
-	def total: Int
+	def total: TokenCount
 	
 	
 	// IMPLEMENTED  -------------------
 	
 	override def self: TokenUsage = this
 	
-	override def toString: String = s"${ tokensStr(input) } + ${ tokensStr(output) } = ${ tokensStr(total) }"
+	override def toString: String = s"$input + $output = $total"
 	
 	override def +(other: TokenUsage): TokenUsage = TokenUsage(input + other.input, output + other.output)
-	override def *(mod: Double): TokenUsage = TokenUsage((input * mod).round.toInt, (output * mod).round.toInt)
-	
-	
-	// OTHER    ----------------------
-	
-	private def tokensStr(tokens: Int) = {
-		if (tokens > 1000000)
-			s"${ (tokens / 1000000.0).roundDecimals(1) } M"
-		else if (tokens > 10000)
-			s"${ tokens / 1000 } K"
-		else if (tokens > 1000)
-			s"${ (tokens / 1000.0).roundDecimals(1) } K"
-		else
-			tokens.toString
-	}
+	override def *(mod: Double): TokenUsage = TokenUsage(input * mod, output * mod)
 }

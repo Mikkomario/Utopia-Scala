@@ -9,6 +9,7 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.BufferedReply
 import utopia.echo.model.settings.{HasImmutableContextSizeLimits, HasImmutableModelSettings}
+import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.immutable.Empty
@@ -42,11 +43,11 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	/**
 	 * @return Expected number of tokens in the LLM's reply. Used for calculating the context size.
 	 */
-	def expectedReplySize: Int
+	def expectedReplySize: TokenCount
 	/**
 	 * @return Expected number of thinking tokens in the LLM's reply. Used for calculating the context size.
 	 */
-	def expectedThinkSize: Int
+	def expectedThinkSize: TokenCount
 	
 	/**
 	 * @return An interface which executes prepared chat requests
@@ -67,12 +68,12 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 * @param replySize Expected size of the received replies
 	 * @return A copy of this generator using the specified estimate when computing context size limits
 	 */
-	def withExpectedReplySize(replySize: Int): Repr
+	def withExpectedReplySize(replySize: TokenCount): Repr
 	/**
 	 * @param thinkSize Expected size of the received think outputs, where applicable
 	 * @return A copy of this generator using the specified estimate when computing context size limits
 	 */
-	def withExpectedThinkSize(thinkSize: Int): Repr
+	def withExpectedThinkSize(thinkSize: TokenCount): Repr
 	/**
 	 * @param effort Reasoning effort to request. None if model default should be applied.
 	 * @return A copy of this generator requesting the specified reasoning effort.
@@ -119,12 +120,12 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 * @param f A mapping function applied to expected reply size
 	 * @return Copy of this generator with mapped expected reply size
 	 */
-	def mapExpectedReplySize(f: Mutate[Int]) = withExpectedReplySize(f(expectedReplySize))
+	def mapExpectedReplySize(f: Mutate[TokenCount]) = withExpectedReplySize(f(expectedReplySize))
 	/**
 	 * @param f A mapping function applied to expected think size
 	 * @return Copy of this generator with mapped expected think size
 	 */
-	def mapExpectedThinkSize(f: Mutate[Int]) = withExpectedThinkSize(f(expectedThinkSize))
+	def mapExpectedThinkSize(f: Mutate[TokenCount]) = withExpectedThinkSize(f(expectedThinkSize))
 	
 	/**
 	 * @param message A message / prompt to send out
@@ -135,8 +136,9 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 *                          Default = None = Applies [[expectedThinkSize]].
 	 * @return A future that will yield the LLM's reply, if successful
 	 */
-	def bufferedReplyFor(message: String, history: Seq[ChatMessage] = Empty, expectedReplySize: Option[Int] = None,
-	                     expectedThinkSize: Option[Int] = None): Future[Try[R]] =
+	def bufferedReplyFor(message: String, history: Seq[ChatMessage] = Empty,
+	                     expectedReplySize: Option[TokenCount] = None,
+	                     expectedThinkSize: Option[TokenCount] = None): Future[Try[R]] =
 	{
 		// Modifies the settings to include context size limits
 		val (appliedSettings, lazyTokenUsage) = applyLimitsTo(settings,

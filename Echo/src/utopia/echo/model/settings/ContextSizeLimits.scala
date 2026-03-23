@@ -1,10 +1,9 @@
 package utopia.echo.model.settings
 
 import utopia.echo.controller.EstimateTokenCount
-import utopia.echo.model.tokenization.{EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCounts}
+import utopia.echo.model.tokenization.{EstimatedContextSize, EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCount}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.casting.ValueUnwraps._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
@@ -37,7 +36,7 @@ object ContextSizeLimits extends FromModelFactory[ContextSizeLimits]
 					case None => Success(8192)
 				}
 			}
-			.map { max => apply(max, model("additional"), model("min"), model("minWithThink")) }
+			.map { max => apply(max, model("additional").getInt, model("min").getInt, model("minWithThink").getInt) }
 }
 
 /**
@@ -52,13 +51,14 @@ object ContextSizeLimits extends FromModelFactory[ContextSizeLimits]
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class ContextSizeLimits(max: Int = 8192, additional: Int = 256, min: Int = 1024, minWithThink: Int = 2048)
+case class ContextSizeLimits(max: TokenCount = TokenCount(8192), additional: TokenCount = TokenCount(256),
+                             min: TokenCount = TokenCount(1024), minWithThink: TokenCount = TokenCount(2048))
 	extends ModelConvertible
 {
 	// IMPLEMENTED  -----------------------
 	
-	override def toModel: Model = Model.from("min" -> min, "max" -> max, "additional" -> additional,
-		"minWithThink" -> minWithThink)
+	override def toModel: Model = Model.from("min" -> min.value, "max" -> max.value, "additional" -> additional.value,
+		"minWithThink" -> minWithThink.value)
 	
 	
 	// OTHER    ---------------------------
@@ -67,29 +67,30 @@ case class ContextSizeLimits(max: Int = 8192, additional: Int = 256, min: Int = 
 	 * @param min New minimum context size
 	 * @return Copy of these limits with the specified absolute minimum
 	 */
-	def withMin(min: Int) = copy(min = min, minWithThink = minWithThink max min, max = max.max(min))
-	def mapMin(f: Mutate[Int]) = withMin(f(min))
+	def withMin(min: TokenCount) =
+		copy(min = min, minWithThink = minWithThink atLeast min, max = max atLeast min)
+	def mapMin(f: Mutate[TokenCount]) = withMin(f(min))
 	/**
 	 * @param min Minimum context size to use in thinking mode
 	 * @return Copy of these limits with the specified conditional minimum
 	 */
-	def withMinWhenThinking(min: Int) =
-		copy(minWithThink = min, min = this.min min min, max = max.max(min))
-	def mapMinWhenThinking(f: Mutate[Int]) = withMinWhenThinking(f(minWithThink))
+	def withMinWhenThinking(min: TokenCount) =
+		copy(minWithThink = min, min = this.min atMost min, max = max atLeast min)
+	def mapMinWhenThinking(f: Mutate[TokenCount]) = withMinWhenThinking(f(minWithThink))
 	
 	/**
 	 * @param max Absolute maximum context size
 	 * @return Copy of these limits with the specified maximum
 	 */
-	def withMax(max: Int) = copy(max = max, min = min.min(max))
-	def mapMax(f: Mutate[Int]) = withMax(f(max))
+	def withMax(max: TokenCount) = copy(max = max, min = min atMost max)
+	def mapMax(f: Mutate[TokenCount]) = withMax(f(max))
 	
 	/**
 	 * @param additional Additional context size reserved for every request, if possible
 	 * @return Copy of these limits with the specified additional size
 	 */
-	def withAdditional(additional: Int) = copy(additional = additional)
-	def mapAdditional(f: Mutate[Int]) = withAdditional(f(additional))
+	def withAdditional(additional: TokenCount) = copy(additional = additional)
+	def mapAdditional(f: Mutate[TokenCount]) = withAdditional(f(additional))
 	
 	/**
 	 * Estimates the context size required for a query
@@ -100,7 +101,8 @@ case class ContextSizeLimits(max: Int = 8192, additional: Int = 256, min: Int = 
 	 * @param thinks Whether thinking output is expected. Default = false.
 	 * @return Token counts to use for that query.
 	 */
-	def contextSizeFor(messages: IterableOnce[String], expectedReplySize: Int, expectedThinkSize: Int = 0,
+	def contextSizeFor(messages: IterableOnce[String], expectedReplySize: TokenCount,
+	                   expectedThinkSize: TokenCount = TokenCount.zero,
 	                   history: PartiallyEstimatedTokenCount = PartiallyEstimatedTokenCount.zero,
 	                   thinks: Boolean = false) =
 	{
@@ -123,6 +125,6 @@ case class ContextSizeLimits(max: Int = 8192, additional: Int = 256, min: Int = 
 			else
 				includingThink
 		}
-		TokenCounts(messageSize, history, total)
+		EstimatedContextSize(messageSize, history, total)
 	}
 }

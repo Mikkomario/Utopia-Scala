@@ -1,6 +1,6 @@
 package utopia.echo.controller
 
-import utopia.echo.model.tokenization.EstimatedTokenCount
+import utopia.echo.model.tokenization.{EstimatedTokenCount, TokenCount}
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.SysErrLogger
@@ -75,15 +75,15 @@ object EstimateTokenCount
 	 * @param rawEstimate The "raw" token count estimated by this interface
 	 * @param actualCount The actual number of tokens reported by the LLM
 	 */
-	def feedback(rawEstimate: Int, actualCount: Int) =
-		historyP.update { _ + EstimatedTokenCount(rawEstimate, actualCount) }
+	def feedback(rawEstimate: Int, actualCount: TokenCount) =
+		historyP.update { _ + EstimatedTokenCount(rawEstimate, actualCount.value) }
 	/**
 	 * Helps this interface become more accurate by providing training sample.
 	 * An alternative for [[feedback]].
 	 * @param text A text
 	 * @param correctTokenCount Token count in the specified text
 	 */
-	def train(text: String, correctTokenCount: Int) = feedback(_in(text), correctTokenCount)
+	def train(text: String, correctTokenCount: TokenCount) = feedback(_in(text), correctTokenCount)
 		
 	private def _in(text: String) = text.splitIterator(Regex.whitespace)
 		.map { word =>

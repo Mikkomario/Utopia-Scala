@@ -12,6 +12,7 @@ import utopia.echo.model.enumeration.ServiceState.NotInstalled
 import utopia.echo.model.request.openai.ListOpenAiModels
 import utopia.echo.model.request.vastai.{AcceptOffer, AttachSshKey, GetOffers, GetSshKeys}
 import utopia.echo.model.response.openai.OpenAiModelInfo
+import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.InstanceState.Disconnected
@@ -117,7 +118,7 @@ object VastAiVllmProcess
 	          setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
 	          noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
 	          instanceLabel: String = "")
-	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, Int, String))
+	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
 	         (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient) =
 		new VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk, gateway, installScriptPath, localPort,
 			remotePort, maxGpuUtil, maxParallelRequests, extraStartupArgs, setupTimeout, recoveryTimeout,
@@ -176,7 +177,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
                         setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
                         noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
                         instanceLabel: String = "")
-                       (chooseImage: Offer => (NewInstanceFoundation, ServiceState, Int, String))
+                       (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
                        (implicit exc: ExecutionContext, log: Logger, vastAiClient: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
@@ -215,7 +216,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 *      1. Information about the used model
 	 *      1. Applied maximum context size
 	 */
-	private val clientP = AssignableOnce[Try[(LockingRequestQueue, OpenAiModelInfo, Int)]]()
+	private val clientP = AssignableOnce[Try[(LockingRequestQueue, OpenAiModelInfo, TokenCount)]]()
 	/**
 	 * A mutable pointer that is set if requests start timing out (see [[noResponseTimeout]]).
 	 * Causes this process to stop (more or less gracefully).
@@ -245,7 +246,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	/**
 	 * Applied maximum context size. Specified when creating the instance.
 	 */
-	private var _maxContextSize: Int = -1
+	private var _maxContextSize: TokenCount = TokenCount.zero
 	/**
 	 * The process used for managing the Vast AI instance
 	 */
@@ -312,7 +313,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 * @return Maximum context size applied on the model.
 	 *         None if maximum context size hasn't been determined (i.e. if no offer has been accepted yet).
 	 */
-	def maxContextSize = Some(_maxContextSize).filter { _ > 0 }
+	def maxContextSize = _maxContextSize.ifPositive
 	
 	/**
 	 * @return ID of the managed instance. None if no instance was acquired yet.
@@ -693,7 +694,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						s"CUDA_VISIBLE_DEVICES=0 exec vllm serve $modelToServe"
 				}
 				// TODO: Add --tensor-parallel-size N
-				Some(ssh(s"-- '$baseCommand --max-model-len ${_maxContextSize} --host 127.0.0.1 --port $remotePort --gpu-memory-utilization $maxGpuUtil${
+				Some(ssh(s"-- '$baseCommand --max-model-len ${ _maxContextSize.value } --host 127.0.0.1 --port $remotePort --gpu-memory-utilization $maxGpuUtil${
 					extraStartupArgs.prependIfNotEmpty(" ") }'")
 					.run().async)
 			}

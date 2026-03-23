@@ -2,6 +2,7 @@
 
 ## v1.6 (in development)
 ### Breaking changes
+- Token counts are now represented using **TokenCount** instead of **Int**
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances, but manages 
   the amount of processed tokens more carefully.
   - The constructor is now different, because of this

@@ -2,7 +2,7 @@ package utopia.echo.model.settings
 
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
-import utopia.echo.model.tokenization.PartiallyEstimatedTokenCount
+import utopia.echo.model.tokenization.{PartiallyEstimatedTokenCount, TokenCount}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
@@ -39,12 +39,12 @@ trait HasContextSizeLimits
 	/**
 	 * @return Maximum applied context size
 	 */
-	def maxContextSize: Int = contextSizeLimits.max
+	def maxContextSize: TokenCount = contextSizeLimits.max
 	
 	/**
 	 * @return Additional context size applied always when possible (may be limited by [[maxContextSize]])
 	 */
-	def additionalContextSize: Int  = contextSizeLimits.additional
+	def additionalContextSize: TokenCount  = contextSizeLimits.additional
 	
 	
 	// OTHER    ----------------------------
@@ -64,7 +64,7 @@ trait HasContextSizeLimits
 	 *         (no token counts are calculated when context size is already specified in the 'settings').
 	 */
 	def applyLimitsTo(settings: ModelSettings, messages: => IterableOnce[String],
-	                  expectedReplySize: => Int, expectedThinkSize: => Int = 0,
+	                  expectedReplySize: => TokenCount, expectedThinkSize: => TokenCount = TokenCount.zero,
 	                  history: => PartiallyEstimatedTokenCount = PartiallyEstimatedTokenCount.zero) =
 	{
 		val customReplySize = settings.get(PredictTokens).int
@@ -82,14 +82,14 @@ trait HasContextSizeLimits
 					Success(settings)
 				else {
 					val tokenCounts = lazyTokenCounts.value
-					val contextSizeReduction = (tokenCounts.context - customContextSize) max 0
+					val contextSizeReduction = (tokenCounts.context - customContextSize).positiveOrZero
 					// Case: The custom context size is too small to fit any response => Fails
 					if (contextSizeReduction >= tokenCounts.maxResponse)
 						Failure(new IllegalArgumentException(
 							s"Specified context size of $customContextSize is too small to contain this request"))
 					// TODO: Make the safety margin customizable
 					else
-						Success(settings + (PredictTokens -> (tokenCounts.maxResponse - contextSizeReduction)))
+						Success(settings + (PredictTokens -> (tokenCounts.maxResponse - contextSizeReduction).value))
 				}
 			// Case: No custom context size => Assigns a context size based on other calculations
 			case None =>
@@ -97,10 +97,10 @@ trait HasContextSizeLimits
 				if (tokenCounts.maxResponse > 0) {
 					// Case: Custom max response size specified => Won't override it
 					if (customReplySize.isDefined)
-						Success(settings + (ContextTokens -> tokenCounts.context))
+						Success(settings + (ContextTokens -> tokenCounts.context.value))
 					else
 						Success(settings ++ Pair[(ModelParameter, Value)](
-							ContextTokens -> tokenCounts.context, PredictTokens -> tokenCounts.maxResponse))
+							ContextTokens -> tokenCounts.context.value, PredictTokens -> tokenCounts.maxResponse.value))
 				}
 				// Case: Context size can't be increased enough to fit a response (max context size exceeded) => Fails
 				else
@@ -117,7 +117,8 @@ trait HasContextSizeLimits
 	 * @param history Size of the applied conversation history. Default = 0.
 	 * @return Context size that should be reserved.
 	 */
-	def contextSizeFor(messages: IterableOnce[String], expectedReplySize: Int, expectedThinkSize: Int = 0,
+	def contextSizeFor(messages: IterableOnce[String], expectedReplySize: TokenCount,
+	                   expectedThinkSize: TokenCount = TokenCount.zero,
 	                   history: PartiallyEstimatedTokenCount = PartiallyEstimatedTokenCount.zero) =
 		contextSizeLimits.contextSizeFor(messages, expectedReplySize, expectedThinkSize, history, thinks)
 }

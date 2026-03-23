@@ -2,6 +2,7 @@ package utopia.echo.model.vastai.process
 
 import utopia.annex.controller.LockingRequestQueue
 import utopia.echo.model.response.openai.OpenAiModelInfo
+import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading}
 import utopia.echo.model.vastai.instance.{InstanceState, VastAiInstance}
 import utopia.echo.model.vastai.instance.offer.Offer
@@ -231,7 +232,7 @@ object VastAiVllmProcessState
 	 * @param maxContextSize Maximum context size allowed in this client
 	 */
 	case class HostingApi(instance: VastAiInstance, apiClient: LockingRequestQueue, model: OpenAiModelInfo,
-	                      maxContextSize: Int)
+	                      maxContextSize: TokenCount)
 		extends VastAiVllmProcessState
 	{
 		override val phase: VastAiVllmProcessPhase = ApiHosting

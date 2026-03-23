@@ -1,6 +1,7 @@
 package utopia.echo.model.response.ollama
 
 import utopia.echo.model.response.TokenUsage
+import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.combine.Combinable.SelfCombinable
@@ -47,9 +48,9 @@ case class OllamaResponseStatistics(context: Value, duration: GenerationDuration
 	// COMPUTED ---------------------------
 	
 	@deprecated("Please use tokenUsage.input instead", "v1.4")
-	def promptTokenCount: Int = tokenUsage.input
+	def promptTokenCount: TokenCount = tokenUsage.input
 	@deprecated("Please use tokenUsage.output instead", "v1.4")
-	def responseTokenCount: Int = tokenUsage.output
+	def responseTokenCount: TokenCount = tokenUsage.output
 	
 	/**
 	  * @return Total number of tokens used within request context.

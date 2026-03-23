@@ -1,5 +1,6 @@
 package utopia.echo.model.settings
 
+import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.util.Mutate
 
 /**
@@ -20,15 +21,15 @@ trait HasImmutableContextSizeLimits[+Repr] extends HasContextSizeLimits
 	
 	// OTHER    ------------------------
 	
-	def withMaxContextSize(max: Int) = mapContextSizeLimits { _.withMax(max) }
-	def withMinContextSize(min: Int) = mapContextSizeLimits { _.withMin(min) }
-	def withMinContextSizeWhenThinking(min: Int) = mapContextSizeLimits { _.withMinWhenThinking(min) }
-	def withAdditionalContextSize(additional: Int) = mapContextSizeLimits { _.withAdditional(additional) }
+	def withMaxContextSize(max: TokenCount) = mapContextSizeLimits { _.withMax(max) }
+	def withMinContextSize(min: TokenCount) = mapContextSizeLimits { _.withMin(min) }
+	def withMinContextSizeWhenThinking(min: TokenCount) = mapContextSizeLimits { _.withMinWhenThinking(min) }
+	def withAdditionalContextSize(additional: TokenCount) = mapContextSizeLimits { _.withAdditional(additional) }
 	
 	def mapContextSizeLimits(f: Mutate[ContextSizeLimits]) = withContextSizeLimits(f(contextSizeLimits))
 	
-	def mapMaxContextSize(f: Mutate[Int]) = mapContextSizeLimits { _.mapMax(f) }
-	def mapMinContextSize(f: Mutate[Int]) = mapContextSizeLimits { _.mapMin(f) }
-	def mapMinContextSizeWhenThinking(f: Mutate[Int]) = mapContextSizeLimits { _.mapMinWhenThinking(f) }
-	def mapAdditionalContextSize(f: Mutate[Int]) = mapContextSizeLimits { _.mapAdditional(f) }
+	def mapMaxContextSize(f: Mutate[TokenCount]) = mapContextSizeLimits { _.mapMax(f) }
+	def mapMinContextSize(f: Mutate[TokenCount]) = mapContextSizeLimits { _.mapMin(f) }
+	def mapMinContextSizeWhenThinking(f: Mutate[TokenCount]) = mapContextSizeLimits { _.mapMinWhenThinking(f) }
+	def mapAdditionalContextSize(f: Mutate[TokenCount]) = mapContextSizeLimits { _.mapAdditional(f) }
 }
