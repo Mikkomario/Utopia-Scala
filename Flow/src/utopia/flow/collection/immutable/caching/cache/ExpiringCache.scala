@@ -13,6 +13,16 @@ import scala.concurrent.ExecutionContext
 
 object ExpiringCache
 {
+	// COMPUTED -----------------------
+	
+	/**
+	 * @return Access to constructors for caches that expire unused elements
+	 */
+	def ifUnused = ExpiringUnusedCache
+	
+	
+	// OTHER    -----------------------
+	
 	/**
 	  * Creates a new expiring cache
 	  * @param request Function for requesting new values
@@ -75,14 +85,13 @@ class ExpiringCache[K, V](request: K => V)(calculateExpiration: (K, V) => Durati
 					// Case: There were no other expirations queued
 					if (queue.isEmpty)
 						false -> Single(expirationTime -> key)
+					// Case: Other expirations were queued => Inserts the new expiration to the correct position
 					else
 						queue.findLastIndexWhere { case (time, _) => time < expirationTime } match {
 							// Case: The new expiration is executed after some other expiration =>
 							// No need to modify the expiration process
 							case Some(previousIndex) =>
-								val newQueue = (queue.take(previousIndex + 1) :+
-									(expirationTime -> key)) ++ queue.drop(previousIndex + 1)
-								false -> newQueue
+								false -> queue.inserted(expirationTime -> key, previousIndex + 1)
 							// Case: The new expiration becomes the first expiration time =>
 							// Notifies the expiration process of this change
 							case None =>

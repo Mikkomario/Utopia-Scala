@@ -9,7 +9,10 @@
 ### New features
 - Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
   except supporting variable cost / "width".
+- Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 ### New methods
+- **AppConfig**
+  - Added `.getOrElseUpdate(...)`
 - **QueuedAction** (object)
   - Added `.started(Future)`
 - **PossiblyFailingFuture**

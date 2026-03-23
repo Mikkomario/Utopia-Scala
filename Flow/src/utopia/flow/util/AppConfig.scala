@@ -121,6 +121,9 @@ class AppConfig private(path: Path, initialState: Model)(implicit exc: Execution
 	
 	// COMPUTED -----------------------------
 	
+	/**
+	 * @return This set of configurations as a single model
+	 */
 	def toModel = modelP.value
 	
 	
@@ -162,7 +165,17 @@ class AppConfig private(path: Path, initialState: Model)(implicit exc: Execution
 	
 	// OTHER    -----------------------------
 	
+	/**
+	 * Assigns a value to a key
+	 * @param key Targeted key / path
+	 * @param value Assigned value
+	 */
 	def update(key: String, value: Value): Unit = update(key) { _ => value }
+	/**
+	 * Updates the value of a single key
+	 * @param key Targeted key / path
+	 * @param f A function used for modifying that key's value
+	 */
 	def update(key: String)(f: Mutate[Value]) = modelP.update { model =>
 		key.split(pathSplitR).oneOrMany match {
 			case Left(key) => model.mapValue(key)(f)
@@ -171,20 +184,43 @@ class AppConfig private(path: Path, initialState: Model)(implicit exc: Execution
 	}
 	
 	/**
+	 * @param key Targeted key
+	 * @param value Value assigned, if this config doesn't specify a value for that key
+	 * @return Value of the specified key
+	 */
+	def getOrElseUpdate(key: String)(value: => Value) = existingProperty(key) match {
+		case Some(prop) => prop.value
+		case None =>
+			update(key, value)
+			apply(key)
+	}
+	
+	/**
 	 * Removes a value from this config
 	 * @param key Key of the value to remove
 	 */
 	def clear(key: String) = update(key, Value.empty)
 	
+	/**
+	 * Modifies the value of a single nested property
+	 * @param model Root model
+	 * @param keysIter Iterator of the targeted keys (excluding the last key)
+	 * @param lastKey The last targeted key
+	 * @param f A function for altering the targeted value
+	 * @return
+	 */
 	private def _map(model: Model, keysIter: Iterator[String], lastKey: String)(f: Mutate[Value]): Model = {
 		keysIter.nextOption() match {
+			// Case: More path to explore => Maps the next nested model
 			case Some(nextKey) =>
 				model.mapValue(nextKey) { value =>
 					value.model match {
 						case Some(nextModel) => _map(nextModel, keysIter, lastKey)(f)
+						// Case: There's no nested model => Creates one
 						case None => _create(keysIter ++ Single(lastKey), f(Value.empty))
 					}
 				}
+			// Case: No more path to iterate => Maps the target value
 			case None => model.mapValue(lastKey)(f)
 		}
 	}
