@@ -29,6 +29,7 @@ import utopia.flow.async.process.{Delay, Loop, Process, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.parse.string.StringFrom
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
@@ -102,6 +103,7 @@ object VastAiVllmProcess
 	 *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
 	 * @param statusCheckInterval Interval between instance pointer / check updates. Default = 30 seconds.
 	 * @param instanceLabel Custom label given to the rented Vast AI instance. Default = empty.
+	 * @param debugLogger Interface for making debug log entries (optional)
 	 * @param chooseImage A function for choosing the image or Vast AI template to use.
 	 *                    Accepts the selected offer, yields:
 	 *                          1. Instance-creation settings
@@ -117,12 +119,12 @@ object VastAiVllmProcess
 	          maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
 	          setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
 	          noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
-	          instanceLabel: String = "")
+	          instanceLabel: String = "", debugLogger: Option[KeptOpenWriter] = None)
 	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
 	         (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient) =
 		new VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk, gateway, installScriptPath, localPort,
 			remotePort, maxGpuUtil, maxParallelRequests, extraStartupArgs, setupTimeout, recoveryTimeout,
-			noResponseTimeout, statusCheckInterval, instanceLabel)(chooseImage)
+			noResponseTimeout, statusCheckInterval, instanceLabel, debugLogger)(chooseImage)
 }
 
 /**
@@ -159,6 +161,7 @@ object VastAiVllmProcess
  *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
  * @param statusCheckInterval Interval between instance pointer / check updates. Default = 30 seconds.
  * @param instanceLabel Custom label given to the rented Vast AI instance. Default = empty.
+ * @param debugLogger Interface for making debug log entries (optional)
  * @param chooseImage A function for choosing the image or Vast AI template to use.
  *                    Accepts the selected offer, yields:
  *                          1. Instance-creation settings
@@ -176,7 +179,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
                         maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
                         setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
                         noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
-                        instanceLabel: String = "")
+                        instanceLabel: String = "", debugLogger: Option[KeptOpenWriter] = None)
                        (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
                        (implicit exc: ExecutionContext, log: Logger, vastAiClient: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
@@ -250,18 +253,20 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	/**
 	 * The process used for managing the Vast AI instance
 	 */
-	private val vastAiProcess = VastAiProcess(statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5)) { hurryFlag =>
-		// Requests for offers
-		val requiredDiskSpace = modelSize + additionalReservedDisk
-		vastAiClient.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
-				selectOffer.offerType))
-			.tryFlatMap { offers =>
-				// Won't include the currently used machine IDs
-				val usedMachineIds = takenMachineIdsP.value
-				selectFromOffers(offers.filterNot { o => usedMachineIds.contains(o.machineId) }, requiredDiskSpace,
-					hurryFlag || this.hurryFlag)
-			}
-			.toTryFuture
+	private val vastAiProcess = VastAiProcess(statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5),
+		debugLogger = debugLogger) {
+		hurryFlag =>
+			// Requests for offers
+			val requiredDiskSpace = modelSize + additionalReservedDisk
+			vastAiClient.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
+					selectOffer.offerType))
+				.tryFlatMap { offers =>
+					// Won't include the currently used machine IDs
+					val usedMachineIds = takenMachineIdsP.value
+					selectFromOffers(offers.filterNot { o => usedMachineIds.contains(o.machineId) }, requiredDiskSpace,
+						hurryFlag || this.hurryFlag)
+				}
+				.toTryFuture
 	}
 	
 	/**
@@ -401,7 +406,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			val instanceLoadedFuture = vastAiProcess.liveInstanceFuture.flatMap {
 				// Case: Instance-acquisition succeeded => Checks when it's fully loaded
 				case Success(instance) =>
-					println(s"Instance ${ instance.id } acquired")
+					debugLog(s"Instance ${ instance.id } acquired")
 					offerP.lock()
 					val machineId = instance.wrapped.machineId
 					takenMachineIdsP.update { _ + machineId }
@@ -412,7 +417,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						// If the instance goes offline or disconnects, stops this process immediately
 						val status = e.newValue.status
 						if (status.actual.value == Disconnected || unsupportedStatuses.contains(status.message)) {
-							println(s"${e.newValue.id}: Status became ${
+							debugLog(s"${e.newValue.id}: Status became ${
 								e.newValue.status } => Starts the termination process")
 							stop()
 						}
@@ -420,7 +425,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 					}
 					// Once the instance is no longer used, remembers that the machine is available
 					vastAiProcess.completionFuture.onComplete { _ =>
-						println(s"${ instance.id }: Marks the machine as free again")
+						debugLog(s"${ instance.id }: Marks the machine as free again")
 						takenMachineIdsP.update { _ - machineId }
 					}
 					instance.loadedFuture
@@ -438,7 +443,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 				.logWithMessage("Failure while waiting for instance to load, timeout or stop").getOrElse(false))
 				vastAiProcess.instancePointerFuture.waitForResult()
 					.flatMap { instancePointer =>
-						println(s"${ instancePointer.value.id }: Instance loaded")
+						debugLog(s"${ instancePointer.value.id }: Instance loaded")
 						instancePointer.value.ssh
 							.toTry {
 								new IllegalStateException("SSH connection is not available on the rented instance")
@@ -452,7 +457,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 					}
 			// Case: Instance failed to load => Completes the client pointer, if not already completed
 			else {
-				println(s"${ vastAiProcess.instanceId.mkString }: Marks the machine as free again")
+				debugLog(s"${ vastAiProcess.instanceId.mkString }: Marks the machine as free again")
 				clientP.trySet(Failure(new IllegalStateException("The Vast AI instance failed to load")))
 			}
 		}
@@ -473,7 +478,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 		}
 		finally {
 			// Destroys the Vast AI instance
-			println(s"${ vastAiProcess.instanceId.mkString }: Destroying the Vast AI instance")
+			debugLog(s"${ vastAiProcess.instanceId.mkString }: Destroying the Vast AI instance")
 			vastAiProcess.stop().waitFor()
 				.logWithMessage("Failure while waiting for the Vast AI instance to be destroyed")
 			// Finalizes the state
@@ -490,7 +495,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			offerP.lock()
 			
 			// Records the completion of this process
-			println(s"${ vastAiProcess.instanceId.mkString }: Records process completion")
+			debugLog(s"${ vastAiProcess.instanceId.mkString }: Records process completion")
 			recordP.set(VastAiVllmProcessRecord(
 				hostingResult, started = startTime, terminated = Now, apiStarted = hostingStartTime,
 				stopped = stopTime, offer = offerP.value))
@@ -559,7 +564,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 				// Case: API was successfully hosted => Exposes the vLLM client for external use
 				case Success(model) =>
 					// The client is now usable. Stores it in a pointer, enabling external use.
-					println(s"${ instancePointer.value.id }: API is now usable")
+					debugLog(s"${ instancePointer.value.id }: API is now usable")
 					val publicClient = lazyPublicClient.value
 					hostingStartTime = Some(Now)
 					clientP.set(Success((publicClient, model, _maxContextSize)))
@@ -567,7 +572,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 					
 					// Updates the state once requested to stop
 					hurryFlag.onceSet {
-						println(s"${ instancePointer.value.id }: Starting the API shutdown process")
+						debugLog(s"${ instancePointer.value.id }: Starting the API shutdown process")
 						// Timeout is not possible at this point, anymore
 						requestTimedOutStateP.lock()
 						
@@ -575,7 +580,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 							timedOut = hasTimedOut)
 						// Includes the pending request count in the state during this phase
 						publicClient.pendingRequestCountPointer.addListener { e =>
-							println(s"${ instancePointer.value.id }: ${ e.newValue } more request to process before shutdown")
+							debugLog(s"${ instancePointer.value.id }: ${ e.newValue } more request to process before shutdown")
 							stateP.mutate {
 								case stopping: StoppingApi => Continue -> stopping.withRequestsPending(e.newValue)
 								case other => Detach -> other
@@ -615,7 +620,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	                        stopFuture: Future[_]): Future[Try[Unit]] =
 	{
 		// Starts the vLLM service and port-forwarding
-		println(s"${ instancePointer.value.id }: Starting vLLM & port-forwarding")
+		debugLog(s"${ instancePointer.value.id }: Starting vLLM & port-forwarding")
 		val (vllmProcess, portForwardingProcess) = startVllm(ssh, instancePointer)
 		val hostingEndFuture = vllmProcess match {
 			case Some(vllmProcess) => vllmProcess.future.raceWith(portForwardingProcess.future)
@@ -623,7 +628,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 		}
 		
 		def stopHosting() = {
-			println(s"${ instancePointer.value.id }: Stopping vLLM & port-forwarding")
+			debugLog(s"${ instancePointer.value.id }: Stopping vLLM & port-forwarding")
 			portForwardingProcess.kill()
 			vllmProcess.foreach { _.kill() }
 		}
@@ -638,7 +643,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			.flatMap {
 				// Case: API is usable => Remembers it (if not already known) and waits for the hosting to end
 				case Success(model) =>
-					println(s"${ instancePointer.value.id }: Hosting the API")
+					debugLog(s"${ instancePointer.value.id }: Hosting the API")
 					resultPromise.trySuccess(Success(model))
 					hostingEndFuture.flatMap { _ =>
 						// Case: Hosting ended because this process was requested to stop => Completes
@@ -648,11 +653,11 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						//       => Reattempts hosting after a short delay (with limited recovery timeout)
 						else {
 							// Makes sure the existing processes are killed before attempting restart
-							println(s"${ instancePointer.value.id }: Stopping the API")
+							debugLog(s"${ instancePointer.value.id }: Stopping the API")
 							stopHosting()
 							
 							Delay.future(10.seconds) {
-								println(s"${ instancePointer.value.id }: Attempting hosting again")
+								debugLog(s"${ instancePointer.value.id }: Attempting hosting again")
 								tryHostVllm(ssh, internalVllmClient, lazyExposedVllmClient, resultPromise,
 									instancePointer, Delay(recoveryTimeout) { () }.raceWith(this.stopFuture))
 							}
@@ -775,7 +780,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	
 	// Makes sure SSH keys are usable
 	private def setupSsh(instanceId: Int, sshConfig: SshConnection, deprecationView: View[Boolean]) = {
-		println(s"$instanceId: Setting up SSH")
+		debugLog(s"$instanceId: Setting up SSH")
 		Env.home.toTry { new NoSuchElementException("HOME environment variable is not available") }
 			.map { home =>
 				val sshDir = home/".ssh"
@@ -796,7 +801,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						Success("Key was already attached")
 					else {
 						val result = vastAiClient.send(AttachSshKey(instanceId, sshKey, deprecationView)).waitForResult()
-						println(s"$instanceId: Waiting 40 more seconds in order for the SSH key to be registered on the remote device")
+						debugLog(s"$instanceId: Waiting 40 more seconds in order for the SSH key to be registered on the remote device")
 						// TODO: We need a more dynamic approach
 						Wait(40.seconds)
 						result
@@ -850,7 +855,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 					// Case: No models are available yet => Attempts again after a while
 					case None =>
 						if (result.isSuccess)
-							println("No models are available yet")
+							debugLog("No models are available yet")
 						else
 							result.failure.foreach { log(_, "GET /models failed") }
 						
@@ -865,7 +870,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 		if (noResponseTimeout.isFinite) {
 			// Compares timeout against the earliest request queue time, or the earliest recorded request start time
 			// This is in order to avoid timeouts for requests that have been queued (but not running) for a long time
-			println(s"${ vastAiProcess.instanceId.mkString }: Starts monitoring request timeouts")
+			debugLog(s"${ vastAiProcess.instanceId.mkString }: Starts monitoring request timeouts")
 			val lastRecordedStartTimeP = Volatile(Now.toInstant)
 			val process = Loop.after(noResponseTimeout) {
 				queue.pendingRequests.notEmpty match {
@@ -876,17 +881,17 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						// Case: At least one request has timed out
 						//       => Remembers the instance state & requests the API to stop
 						if (earliestRequestTime <= Now - noResponseTimeout) {
-							println(s"${ vastAiProcess.instanceId.mkString }: Requests started timing out (${
+							debugLog(s"${ vastAiProcess.instanceId.mkString }: Requests started timing out (${
 								(Now - earliestRequestTime).description })")
 							if (requestTimedOutStateP.trySet(getInstanceStatus)) {
-								println(s"${ vastAiProcess.instanceId.mkString }: Stopping because of a request timeout")
+								debugLog(s"${ vastAiProcess.instanceId.mkString }: Stopping because of a request timeout")
 								stop()
 							}
 							None
 						}
 						// Case: No request has timed out => Updates the start time
 						else {
-							println(s"${ vastAiProcess.instanceId.mkString }: No request timed out")
+							debugLog(s"${ vastAiProcess.instanceId.mkString }: No request timed out")
 							requests.findMap { request => Some(request.result.startFuture).filterNot { _.isCompleted } }
 								.foreach { _.onComplete { _ => lastRecordedStartTimeP.value = Now } }
 							
@@ -895,12 +900,16 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 						}
 					// Case: No pending requests => No timeout is possible
 					case None =>
-						println(s"${ vastAiProcess.instanceId.mkString }: No requests are pending")
+						debugLog(s"${ vastAiProcess.instanceId.mkString }: No requests are pending")
 						Some(noResponseTimeout)
 				}
 			}
 			// Once this process is requested to stop, timeouts are not needed anymore
 			hurryFlag.onceSet { process.stop() }
 		}
+	}
+	
+	private def debugLog(entry: => String) = debugLogger.foreach { logger =>
+		logger { _.println(s"${ Now.toLocalTime }: $entry") }
 	}
 }

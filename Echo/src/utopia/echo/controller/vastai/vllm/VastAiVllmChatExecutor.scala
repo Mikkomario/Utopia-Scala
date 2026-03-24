@@ -24,7 +24,8 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcess
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecord, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{AccessQueue, MappingFunnel}
-import utopia.flow.async.process.{Breakable, Delay, LoopingProcess}
+import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.async.process.{Breakable, Delay, Loop, LoopingProcess}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
@@ -33,8 +34,10 @@ import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.parse.file.FileExtensions._
+import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Duration, Now}
+import utopia.flow.time.{Duration, Now, Today}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
@@ -105,6 +108,7 @@ object VastAiVllmChatExecutor
 	 * @param idleShutdownThreshold A time threshold, at which completely idle processes are stopped.
 	 *                              Default = 15 min.
 	 * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
+	 * @param logDir Directory where debug log entries will be placed (optional)
 	 * @param startsLazily Whether this executor should only start when the first request is received.
 	 *                     Default = false = instances are acquired immediately.
 	 * @param chooseImage A function for choosing the image or Vast AI template to use.
@@ -130,7 +134,7 @@ object VastAiVllmChatExecutor
 	          remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
 	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
 	          idleShutdownThreshold: Duration = 15.minutes, partialUseShutdownThreshold: Duration = 25.minutes,
-	          label: String = "chat-executor", startsLazily: Boolean = false)
+	          label: String = "chat-executor", logDir: Option[Path] = None, startsLazily: Boolean = false)
 	         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
 	         (thinks: String => Boolean)
 	         (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger) =
@@ -139,7 +143,7 @@ object VastAiVllmChatExecutor
 			instanceAccelerationPendingTokensThreshold, maxConnectionsPerInstance, additionalReservedDisk,
 			defaultContextSize, contextSafetyMargin, backupExecutor, recorder, installScriptPath, remotePort,
 			maxGpuUtil, setupTimeout, recoveryTimeout, noResponseTimeout, idleShutdownThreshold,
-			partialUseShutdownThreshold, label, startsLazily)(chooseImage)(thinks)
+			partialUseShutdownThreshold, label, logDir, startsLazily)(chooseImage)(thinks)
 }
 
 /**
@@ -196,6 +200,7 @@ object VastAiVllmChatExecutor
  * @param idleShutdownThreshold A time threshold, at which completely idle processes are stopped.
  *                              Default = 15 min.
  * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
+ * @param logDir Directory where debug log entries will be placed (optional)
  * @param startsLazily Whether this executor should only start when the first request is received.
  *                     Default = false = instances are acquired immediately.
  * @param chooseImage A function for choosing the image or Vast AI template to use.
@@ -224,7 +229,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
                              recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
                              idleShutdownThreshold: Duration = 15.minutes,
                              partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
-                             startsLazily: Boolean = false)
+                             logDir: Option[Path] = None, startsLazily: Boolean = false)
                             (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
                             (thinks: String => Boolean)
                             (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger)
@@ -324,6 +329,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private val regenerateFuturesP = Volatile.emptySeq[Future[Unit]]
 	
+	private val debugLogger = logDir.map { dir => KeptOpenWriter((dir/s"$Today-Vast-AI-log.txt").unique, 30.seconds) }
+	
 	/**
 	 * A process that shuts down idle and partially used processors.
 	 * None if no such process is needed.
@@ -342,6 +349,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				// Case: Some processes were idle => Stops them and reduces the target count accordingly
 				if (idle.nonEmpty) {
 					targetInstanceCountP.update { target => (target - idle.size) max 0 }
+					debugLog(s"Shutting down ${ idle.size } idle processors")
 					idle.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
 					queueSizeCheckThresholdP.value = 0
 					pendingTokensCheckThresholdP.value = 0
@@ -360,6 +368,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 									false -> target
 							}
 							if (shouldTerminate) {
+								debugLog("Shutting down a partially used processor")
 								// Terminates the partially used instance
 								partiallyUsedProcessor.stop()
 									.forFailure { log(_, "Failure while stopping a partially used processor") }
@@ -396,7 +405,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			clearQueueFutureP.mutate { f =>
 				// Case: Previous clearance had completed => Starts a new clearance process
 				if (f.isCompleted) {
-					println("Starts clearing the queue")
+					debugLog("Starts clearing the queue")
 					val newFuture = clearQueue()
 					newFuture.forFailure { log(_, "Unexpected failure while clearing the queue") }
 					Some(newFuture) -> newFuture
@@ -409,7 +418,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				case Some(clearanceCompletion) =>
 					Detach.and(After) {
 						clearanceCompletion.onComplete { result =>
-							println(s"Queue clearance completed with $result")
+							debugLog(s"Queue clearance completed with $result")
 							result.logWithMessage("Unexpected failure while clearing the queue")
 							if (result.toOption.forall { !_ } && stopFlag.isNotSet)
 								scheduleQueueClearance()
@@ -446,6 +455,33 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	}
 	
 	idleShutdownProcess.foreach { _.runAsync() }
+	
+	// If debug logging is enabled, starts tracking various pointers
+	debugLogger.foreach { debug =>
+		_queue.addContinuousListener { e => debugLogUsing(debug, s"${ e.newValue.size } requests are queued now") }
+		targetInstanceCountP.addContinuousListener { e =>
+			debugLogUsing(debug, s"Now targeting ${ e.newValue } instances instead of the previous ${ e.oldValue }")
+		}
+		processorsP.addContinuousListener { e => debugLogUsing(debug, s"Now using ${ e.newValue.size } processors") }
+		usableProcessorsP.addContinuousListener { e =>
+			debugLogUsing(debug, s"${ e.newValue.size } processors are now fully usable")
+		}
+		
+		// Also prints the status regularly
+		Loop.after(1.minutes) {
+			debug { writer =>
+				writer.println(s"${ Now.toLocalTime }: Status:")
+				status.processorStates.foreach { status =>
+					println(s"\t- ${ status.phase.name }: ${ status.activeTokens } active + ${
+						status.pendingTokens } pending")
+				}
+			}
+			if (stopFlag.isSet && processors.isEmpty)
+				None
+			else
+				Some(1.minutes)
+		}
+	}
 	
 	
 	// COMPUTED ---------------------------
@@ -500,6 +536,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	override def stop(): Future[Any] = {
 		if (stopFlag.set()) {
+			debugLog("Stop called")
 			val processorStopFutures = processors.map { _.stop() }
 			// TODO: Handle failures more gracefully
 			_queue.popAll().foreach { _.failure(new InterruptedException("This process pool was stopped")) }
@@ -557,6 +594,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 							case Some(nextContextSize) =>
 								resultFuture.flatMap {
 									case Response.Failure(status, message, _) if status == BadRequest =>
+										debugLog(s"$message => Delegates the request to a processor with a larger context window")
 										log(s"Warning: $message => Delegated the request to a processor with a larger context window")
 										push(request, nextContextSize)
 									
@@ -692,6 +730,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					else
 						tasks.zip(processors.sortBy { _.pendingToActiveRatio })
 				}
+				debugLog(s"Resolves the next ${ pairedTasks.size } queued requests")
 				pairedTasks.foreach { case (promise, processor) => promise.success(processor) }
 				
 				// After a short delay, continues to unqueue more tasks
@@ -715,12 +754,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 *         (usually some time after [[stop]]() has been called)
 	 */
 	private def _regenerate(): Future[Unit] = {
-		println("Generating")
+		debugLog("Generating")
 		// Checks how much capacity there is for new processes
 		val capacity = cleanProcesses()
 		// Case: No capacity => Returns immediately
 		if (capacity <= 0) {
-			println("No capacity")
+			debugLog("No capacity")
 			Future.unit
 		}
 		// Case: Capacity for a single process
@@ -737,14 +776,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 		// Case: Capacity for multiple processes => Starts them sequentially and waits until all have been started
 		else {
-			println(s"Starts $capacity new Vast AI instances")
+			debugLog(s"Starts $capacity new Vast AI instances")
 			Iterator.continually { startNewInstance() }.take(capacity).future.flatMap {
 				// Case: All processes were started => Prepares to apply recursion as they are completed
 				case TryCatch.Success(newProcesses, failures) =>
 					failures.foreach { error =>
 						log(error, "Unexpected partial failure while creating new instances")
 					}
-					println(s"Acquired ${ newProcesses.size } Vast AI instances")
+					debugLog(s"Acquired ${ newProcesses.size } Vast AI instances")
 					newProcesses
 						// Cleans the process pool and tests for recursion after every completion
 						.map { _.completionFuture.flatMap { _ =>
@@ -761,7 +800,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 						}
 				// Case: Process starting failed unexpectedly => Fails
 				case TryCatch.Failure(error) =>
-					println(s"Failed to acquire Vast AI instances: ${ error.getMessage }")
+					debugLog(s"Failed to acquire Vast AI instances: ${ error.getMessage }")
 					Future.failed(error)
 			}
 		}
@@ -774,19 +813,19 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 *         or if failed to acquire said instance.
 	 */
 	private def startNewInstance() = createInstanceAccess { _ =>
-		println("Starting a new instance")
+		debugLog("Starting a new instance")
 		// Creates and starts the process of setting up vLLM on Vast AI
 		val process = VastAiVllmProcess(selectOffer, modelSize.modelSize, additionalReservedDisk, gateway,
 			installScriptPath, localPort = portCounter.next(), remotePort = remotePort, maxGpuUtil = maxGpuUtil,
 			setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
-			instanceLabel = label) {
+			instanceLabel = label, debugLogger = debugLogger) {
 			offer =>
 				val maxContextSize = contextSizeOn(offer.gpu.ram)
 				val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
 				(image, initialVllmState, maxContextSize, model)
 		}
 		processorsP :+= new Processor(process)
-		println(s"Now at ${ processors.size } instance processes")
+		debugLog(s"Now at ${ processors.size } instance processes")
 		process.runAsync()
 		
 		// Updates the usableClients when API-hosting starts or ends
@@ -802,14 +841,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				case _ => None
 			}
 			if (clientStates.isAsymmetric) {
-				println(s"Updating client count (${ e.newValue.phase })")
+				debugLog(s"Updating client count (${ e.newValue.phase })")
 				usableProcessorsP.update()
 			}
 			
 			// Case: Stop process initiated => Updates max context size & stops listening
 			if (e.newValue.phase >= Stopping) {
 				maxContextSizeP.update()
-				println("Stops listening to the Vast AI process")
+				debugLog("Stops listening to the Vast AI process")
 				Detach
 			}
 			else
@@ -835,7 +874,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					val consecutiveFailures = consecutiveGetInstanceFailuresP.updateAndGet { _ + 1 }
 					// Case: Too many failures => Stops this whole system
 					if (consecutiveFailures > 50) {
-						println("Too many failures to acquire an instance => Stops the whole system")
+						debugLog("Too many failures to acquire an instance => Stops the whole system")
 						stop()
 						Future.successful(process)
 					}
@@ -851,10 +890,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private def cleanProcesses() = processorsP.mutate { processes =>
 		val remaining = processes.filterNot { _.terminated }
-		val removed = processes.filterNot(remaining.contains)
-		if (removed.nonEmpty) {
-			println(s"Removed ${ removed.size } completed Vast AI processes:")
-			removed.foreach { p => println(s"\t- ${ p.instanceId.mkString }: ${ p.vastAiState }") }
+		debugLogger.foreach { log =>
+			val removed = processes.filterNot(remaining.contains)
+			if (removed.nonEmpty) {
+				log { writer =>
+					writer.println(s"${ Now.toLocalTime }: Removed ${ removed.size } completed Vast AI processes:")
+					removed.foreach { p => writer.println(s"\t- ${ p.instanceId.mkString }: ${ p.vastAiState }") }
+				}
+			}
 		}
 		(targetInstanceCountP.value - remaining.size) -> remaining
 	}
@@ -866,6 +909,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private def contextSizeOn(vram: ByteCount) =
 		modelSize.maxContextSizeOn(vram * maxGpuUtil) - contextSafetyMargin
+		
+	private def debugLog(entry: => String) = debugLogger.foreach { debugLogUsing(_, entry) }
+	private def debugLogUsing(logger: KeptOpenWriter, entry: String) =
+		logger { _.println(s"${ Now.toLocalTime }: $entry") }
 	
 	
 	// NESTED   ---------------------------
@@ -895,6 +942,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			
 			// Prepares a funnel for the incoming requests
 			val safeMaxContextSize = maxContextSize - contextSafetyMargin
+			debugLog(s"Starting a funnel of $safeMaxContextSize tokens")
 			val funnel = MappingFunnel(safeMaxContextSize.value) {
 				requestAndSize: (ChatParams, TokenCount) => requestAndSize._2.value } {
 				case (request, tokens) =>
