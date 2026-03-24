@@ -1,6 +1,7 @@
 package utopia.echo.test
 
 import utopia.echo.controller.chat.{BufferingChatRequestExecutor, StatelessBufferedReplyGenerator}
+import utopia.echo.controller.tokenization.{EstimateTokenCount, TokenCounter}
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
@@ -20,6 +21,7 @@ object ChatRequestCreationTest extends App
 {
 	// ATTRIBUTES   ----------------
 	
+	implicit val tokenCounter: TokenCounter = EstimateTokenCount
 	implicit val llm: LlmDesignator = LlmDesignator("TEST", thinks = true)
 	private var lastRequest = BufferedVllmChatCompletionRequest(ChatParams(ChatMessage("START")))
 	private val gen = StatelessBufferedReplyGenerator(Executor).withMaxContextSize(4096)

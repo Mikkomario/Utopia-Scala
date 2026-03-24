@@ -3,7 +3,6 @@ package utopia.echo.controller.chat
 import utopia.annex.model.manifest.SchrodingerState._
 import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
 import utopia.annex.schrodinger.Schrodinger
-import utopia.echo.controller.EstimateTokenCount
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.Assistant
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
@@ -204,8 +203,8 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 				//       => Estimates the token count in these messages.
 				//          Updates the estimate as the estimation interface gets more accurate.
 				else {
-					lazy val defaultEstimate = messages.iterator.map(EstimateTokenCount.in).reduce { _ + _ }
-					EstimateTokenCount.correctionModPointer
+					lazy val defaultEstimate = messages.iterator.map(tokenCounter.tokensIn).reduce { _ + _ }
+					tokenCounter.correctionModPointer
 						.map { defaultEstimate.withCorrectionModifier(_): PartiallyEstimatedTokenCount }
 				}
 			}
@@ -324,7 +323,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 		// by estimating their token counts
 		val newHistoryWithSizes = newHistory.map { message =>
 			oldHistory.find { _._1 == message }.getOrElse {
-				message -> (EstimateTokenCount.in(message.text): PartiallyEstimatedTokenCount)
+				message -> (tokenCounter.tokensIn(message.text): PartiallyEstimatedTokenCount)
 			}
 		}
 		_messageHistoryPointer.value = newHistoryWithSizes

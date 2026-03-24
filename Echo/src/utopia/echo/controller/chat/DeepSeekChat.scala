@@ -1,6 +1,7 @@
 package utopia.echo.controller.chat
 
 import utopia.echo.controller.client.LlmServiceClient
+import utopia.echo.controller.tokenization.TokenCounter
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.deepseek.BufferedDeepSeekChatRequest
@@ -25,7 +26,7 @@ import scala.util.Try
 // TODO: Make sure the output size is not unnecessarily limited
 @deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.5")
 class DeepSeekChat(client: LlmServiceClient, initialLlm: LlmDesignator)
-                  (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
+                  (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger, tokenCounter: TokenCounter)
 	extends AbstractChat[ReplyLike[BufferedOpenAiReply], BufferedOpenAiReply, DeepSeekChat](client, initialLlm,
 		BufferedOpenAiReply.empty, BufferedOpenAiReply.empty)
 		with Chat

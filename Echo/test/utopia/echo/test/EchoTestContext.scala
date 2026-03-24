@@ -4,9 +4,9 @@ import utopia.annex.util.RequestResultExtensions._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.Timeout
-import utopia.echo.controller.EstimateTokenCount
 import utopia.echo.controller.chat.{Chat, DeepSeekChat, OllamaChat}
 import utopia.echo.controller.client.{LlmServiceClient, OllamaClient}
+import utopia.echo.controller.tokenization.{EstimateTokenCount, TokenCounter}
 import utopia.echo.model.enumeration.DeepSeekModel
 import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.async.context.ThreadPool
@@ -34,6 +34,7 @@ object EchoTestContext
 	implicit val log: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Echo")
 	implicit val jsonParser: JsonParser = JsonBunny
+	implicit val tokenCounter: TokenCounter = EstimateTokenCount
 	
 	// private val accessLogger = new AccessLogger(new FileLogger("Echo/data/test-output", groupDuration = 1.seconds))
 	val gateway = Gateway(maximumTimeout = Timeout(15.minutes, 15.minutes))
@@ -159,7 +160,7 @@ object EchoTestContext
 			}
 		}
 		
-		chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.in(originalSystemMessage).corrected
+		chat.defaultSystemMessageTokensPointer.value = EstimateTokenCount.tokensIn(originalSystemMessage)
 		newSystemMessage.foreach(chat.appendSystemMessage)
 	}
 	

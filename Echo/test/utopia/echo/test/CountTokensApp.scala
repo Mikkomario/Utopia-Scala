@@ -1,6 +1,6 @@
 package utopia.echo.test
 
-import utopia.echo.controller.EstimateTokenCount
+import utopia.echo.controller.tokenization.EstimateTokenCount
 
 /**
  * A simple test application that counts the tokens in the input string (using EstimateTokens)

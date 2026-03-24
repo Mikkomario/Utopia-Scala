@@ -1,8 +1,7 @@
 package utopia.echo.model.settings
 
-import utopia.echo.controller.EstimateTokenCount
-import utopia.echo.model.tokenization.{EstimatedContextSize, EstimatedTokenCount, PartiallyEstimatedTokenCount, TokenCount}
-import utopia.flow.collection.CollectionExtensions._
+import utopia.echo.controller.tokenization.TokenCounter
+import utopia.echo.model.tokenization.{EstimatedContextSize, PartiallyEstimatedTokenCount, TokenCount}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
@@ -99,18 +98,17 @@ case class ContextSizeLimits(max: TokenCount = TokenCount(8192), additional: Tok
 	 * @param expectedThinkSize Expected size of the thinking output. Default = 0.
 	 * @param history Size of the conversation history. Default = 0.
 	 * @param thinks Whether thinking output is expected. Default = false.
+	 * @param counter Interface that counts message sizes
 	 * @return Token counts to use for that query.
 	 */
 	def contextSizeFor(messages: IterableOnce[String], expectedReplySize: TokenCount,
 	                   expectedThinkSize: TokenCount = TokenCount.zero,
 	                   history: PartiallyEstimatedTokenCount = PartiallyEstimatedTokenCount.zero,
-	                   thinks: Boolean = false) =
+	                   thinks: Boolean = false)
+	                  (implicit counter: TokenCounter) =
 	{
 		// Estimates the number of tokens in the message and in the reply
-		val messageSize = messages.nonEmptyIterator match {
-			case Some(iterator) => iterator.map(EstimateTokenCount.in).reduce { _ + _ }
-			case None => EstimatedTokenCount.zero
-		}
+		val messageSize = counter.tokensIn(messages)
 		val total = {
 			// Attempts to estimate the reply size. Limits the result to the current limits.
 			val raw = history.corrected + messageSize.corrected + expectedReplySize + additional

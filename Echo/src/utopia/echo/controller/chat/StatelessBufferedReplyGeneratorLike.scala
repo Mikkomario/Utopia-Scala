@@ -1,6 +1,5 @@
 package utopia.echo.controller.chat
 
-import utopia.echo.controller.EstimateTokenCount
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.enumeration.ReasoningEffort
@@ -150,11 +149,11 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 				val resultFuture = requestExecutor(ChatParams(User(message), conversationHistory = history,
 					settings = settings, reasoningEffort = if (llm.thinks) reasoningEffort else None))
 				// Updates the token count estimator based on the acquired reply
-				// TODO: This doesn't work for Open AI,
-				//  which doesn't return the thinking content in /chat/completions response
 				resultFuture.forSuccess { reply =>
-					EstimateTokenCount.feedback(lazyTokenUsage.value.newMessages, reply.tokenUsage.input)
-					EstimateTokenCount.train(s"${reply.thoughts}${reply.text}", reply.tokenUsage.output)
+					tokenCounter.feedback(lazyTokenUsage.value.newMessages, reply.tokenUsage.input)
+					// Won't assume that reflection tokens are always included in the response
+					if (!thinks || reply.thoughts.nonEmpty)
+						tokenCounter.train(s"${reply.thoughts}${reply.text}", reply.tokenUsage.output)
 				}
 				resultFuture
 			

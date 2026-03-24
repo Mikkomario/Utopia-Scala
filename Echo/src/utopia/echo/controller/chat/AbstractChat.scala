@@ -7,7 +7,7 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
-import utopia.echo.controller.EstimateTokenCount
+import utopia.echo.controller.tokenization.TokenCounter
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole
 import utopia.echo.model.enumeration.ChatRole.System
@@ -60,7 +60,8 @@ import scala.util.{Failure, Success, Try}
   */
 abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: AbstractChat[R, _, _]]
 (requestQueue: RequestQueue, initialLlm: LlmDesignator, emptyReply: R, emptyBufferedReply: BR)
-(implicit override protected val log: Logger, override protected val exc: ExecutionContext, jsonParser: JsonParser)
+(implicit override protected val log: Logger, override protected val exc: ExecutionContext, jsonParser: JsonParser,
+ override protected val tokenCounter: TokenCounter)
 	extends ChatLike[R, BR, Repr]
 {
 	// ABSTRACT -------------------------------
@@ -351,7 +352,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				// Checks whether to reserve more tokens for the think output next time
 				// TODO: Add handling for situations where think size is known
 				//  (which is the case for providers other than Ollama)
-				val thinkTokens = EstimateTokenCount.in(reply.thoughts)
+				val thinkTokens = tokenCounter.tokensIn(reply.thoughts)
 				updateLargestThinkSize { _ max thinkTokens }
 				updateLargestReplySize { _ max (totalResponseSize - thinkTokens) }
 				
@@ -359,14 +360,15 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				llmPointer.updateIf { !_.thinks } { _.thinking }
 				
 				// Provides feedback for the estimator
-				EstimateTokenCount.train(s"${reply.thoughts}${reply.text}", totalResponseSize)
+				tokenCounter.train(s"${reply.thoughts}${reply.text}", totalResponseSize)
 				
 				None
 			}
 			else {
-				// TODO: This doesn't work for Open AI,
-				//  which doesn't return the thinking content in /chat/completions response
-				EstimateTokenCount.train(reply.text, totalResponseSize)
+				// Sometimes think tokens are not included in the reply (usually with Open AI)
+				// => We can't assume that the output tokens consist purely of reply tokens, unless thinking is not used
+				if (!thinks)
+					tokenCounter.train(reply.text, totalResponseSize)
 				updateLargestReplySize { _ max totalResponseSize }
 				Some(totalResponseSize)
 			}
@@ -389,7 +391,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 			(messageSize, previousContextSize) -> current
 		}
 		// Provides feedback for the token estimator
-		messageSize.foreach { EstimateTokenCount.feedback(estimatedMessageTokenCount.raw, _) }
+		messageSize.foreach { tokenCounter.feedback(estimatedMessageTokenCount.raw, _) }
 		
 		appendMessageHistory(outgoingMessages, estimatedMessageTokenCount, messageSize, reply.message, replySize,
 			previousContextSize)
@@ -452,7 +454,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 					//       but there were more messages than 1
 					//       => Divides the calculated amount between the messages
 					else {
-						val estimations = sentMessages.map { m => m -> EstimateTokenCount.in(m.text) }
+						val estimations = sentMessages.map { m => m -> tokenCounter.tokensIn(m.text) }
 						val totalEstimation = estimations.view.map { _._2.corrected }.sum.toDouble
 						estimations.map { case (m, estimate) =>
 							val correctedValue = (messageSize * (estimate.corrected / totalEstimation)).value
@@ -465,13 +467,13 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 					if (sentMessages.hasSize(1))
 						sentMessages.map { _ -> (messageSizeEstimate: PartiallyEstimatedTokenCount) }
 					else
-						sentMessages.map { m => m -> (EstimateTokenCount.in(m.text): PartiallyEstimatedTokenCount) }
+						sentMessages.map { m => m -> (tokenCounter.tokensIn(m.text): PartiallyEstimatedTokenCount) }
 			}
 			
 			// Appends prompt & reply
 			val replySizeEstimate: PartiallyEstimatedTokenCount = replySize match {
 				case Some(knownSize) => PartiallyEstimatedTokenCount.confirmed(knownSize)
-				case None => EstimateTokenCount.in(receivedReply.text)
+				case None => tokenCounter.tokensIn(receivedReply.text)
 			}
 			modifiedSizeHistory ++ newPromptMessages :+ (receivedReply -> replySizeEstimate)
 		}

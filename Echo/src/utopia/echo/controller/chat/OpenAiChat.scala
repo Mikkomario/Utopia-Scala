@@ -1,6 +1,7 @@
 package utopia.echo.controller.chat
 
 import utopia.echo.controller.client.LlmServiceClient
+import utopia.echo.controller.tokenization.TokenCounter
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.openai.GetBufferedOpenAiResponse
@@ -24,7 +25,7 @@ import scala.util.Try
  */
 @deprecated("The current version of this interface is not suitable for proper chatting. Use StatelessBufferedReplyGenerator instead.", "v1.5")
 class OpenAiChat(client: LlmServiceClient, initialLlm: LlmDesignator)
-                (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger)
+                (implicit exc: ExecutionContext, jsonParser: JsonParser, log: Logger, tokenCounter: TokenCounter)
 	extends AbstractChat[ReplyLike[OpenAiResponse], OpenAiResponse, OpenAiChat](client, initialLlm,
 		OpenAiResponse.empty, OpenAiResponse.empty)
 		with Chat

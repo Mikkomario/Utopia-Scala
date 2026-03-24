@@ -3,6 +3,7 @@
 ## v1.6 (in development)
 ### Breaking changes
 - Token counts are now represented using **TokenCount** instead of **Int**
+- Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances, but manages 
   the amount of processed tokens more carefully.
   - The constructor is now different, because of this
@@ -10,6 +11,8 @@
 - **LlmServiceClient**'s `maxParallelRequests` parameter is now **Option** instead of **Int**, 
   and requests are no longer limited by default.
 - **VastAiVllmProcess** now accepts `maxParallelRequests: Option[Int]`
+### New features
+- Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**
 ### New methods
 - **StatelessBufferedReplyGeneratorLike**
   - Added `.mapExpectedReplySize(...)` and `.mapExpectedThinkSize(...)`

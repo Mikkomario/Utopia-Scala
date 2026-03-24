@@ -1,5 +1,6 @@
 package utopia.echo.model.settings
 
+import utopia.echo.controller.tokenization.TokenCounter
 import utopia.echo.model.enumeration.ModelParameter
 import utopia.echo.model.enumeration.ModelParameter.{ContextTokens, PredictTokens}
 import utopia.echo.model.tokenization.{PartiallyEstimatedTokenCount, TokenCount}
@@ -18,6 +19,11 @@ import scala.util.{Failure, Success}
 trait HasContextSizeLimits
 {
 	// ABSTRACT -----------------------------
+	
+	/**
+	 * @return Interface used in token-counting
+	 */
+	implicit protected def tokenCounter: TokenCounter
 	
 	/**
 	 * @return Limits applied to context size

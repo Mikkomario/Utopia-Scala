@@ -1,6 +1,6 @@
 package utopia.echo.test
 
-import utopia.echo.controller.EstimateTokenCount
+import utopia.echo.controller.tokenization.EstimateTokenCount
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.StringExtensions._
 

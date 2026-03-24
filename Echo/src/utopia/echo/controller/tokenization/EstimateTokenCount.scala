@@ -1,4 +1,4 @@
-package utopia.echo.controller
+package utopia.echo.controller.tokenization
 
 import utopia.echo.model.tokenization.{EstimatedTokenCount, TokenCount}
 import utopia.flow.parse.string.Regex
@@ -12,7 +12,7 @@ import utopia.flow.view.mutable.Pointer
   * @author Mikko Hilpinen
   * @since 19.09.2024, v1.1
   */
-object EstimateTokenCount
+object EstimateTokenCount extends TokenCounter
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -31,16 +31,9 @@ object EstimateTokenCount
 	val correctionModPointer = historyP.map { count => if (count.isZero) 1.0 else count.corrected / count.raw.toDouble }
 	
 	
-	// OTHER    ----------------------------
+	// IMPLEMENTED  ------------------------
 	
-	/**
-	  * Estimates the number of tokens within some text
-	  * @param text A string
-	  * @return Estimated number of tokens within that text.
-	 *         Contains both the raw (heuristic) estimate, and a corrected value based on historical results.
-	  */
-	// Counts the number of words
-	def in(text: String) = {
+	override def tokensIn(text: String): EstimatedTokenCount = {
 		if (text.isEmpty)
 			EstimatedTokenCount.zero
 		else {
@@ -52,52 +45,44 @@ object EstimateTokenCount
 	}
 	
 	/**
-	 * @param text A string
-	 * @return A pointer that contains an up-to-date estimate of the specified string's token count.
-	 *         Updated as feedback is given to this interface.
-	 */
-	def continuallyIn(text: String) = {
-		lazy val raw = _in(text)
-		correctionModPointer.map { EstimatedTokenCount.withCorrectionMod(raw, _) }
-	}
-	/**
-	 * @param messages A sequence of messages
-	 * @return A pointer that contains an up-to-date estimate of the combined token count in the specified messages.
-	 *         Updated as feedback is given to this interface.
-	 */
-	def continuallyIn(messages: IterableOnce[String]) = {
-		lazy val raw = messages.iterator.map(_in).sum
-		correctionModPointer.map { EstimatedTokenCount.withCorrectionMod(raw, _) }
-	}
-	
-	/**
 	 * Provides feedback for this interface, so that future estimations may be more accurate
 	 * @param rawEstimate The "raw" token count estimated by this interface
 	 * @param actualCount The actual number of tokens reported by the LLM
 	 */
-	def feedback(rawEstimate: Int, actualCount: TokenCount) =
+	override def feedback(rawEstimate: Int, actualCount: TokenCount) =
 		historyP.update { _ + EstimatedTokenCount(rawEstimate, actualCount.value) }
-	/**
-	 * Helps this interface become more accurate by providing training sample.
-	 * An alternative for [[feedback]].
-	 * @param text A text
-	 * @param correctTokenCount Token count in the specified text
-	 */
-	def train(text: String, correctTokenCount: TokenCount) = feedback(_in(text), correctTokenCount)
+	
+	
+	// OTHER    ----------------------------
+	
+	@deprecated("Renamed to .tokensIn(String)", "v1.6")
+	def in(text: String) = tokensIn(text)
+	
+	@deprecated("Renamed to .countContinuallyFrom(String)", "v1.6")
+	def continuallyIn(text: String) = countContinuallyFrom(text)
+	@deprecated("Renamed to .countContinuallyFrom(IterableOnce)", "v1.6")
+	def continuallyIn(messages: IterableOnce[String]) = countContinuallyFrom(messages)
 		
 	private def _in(text: String) = text.splitIterator(Regex.whitespace)
 		.map { word =>
 			// Each word may consist of multiple parts (e.g. "it's" or "e-commerce")
-			word.trim.splitIterator(specialCharSeqRegex)
-				.map { part =>
-					// The first 4 letters count as a single token
-					// After that, every 3 letters count as a token
-					if (part.length >= 9)
-						(part.length / 3) min 5
-					else if (part.length > 4)
-						2
-					else
-						1
+			specialCharSeqRegex.divide(word.trim).iterator
+				.map {
+					case Left(text) =>
+						// The first 4 letters count as a single token
+						// After that, every 3 letters count as a token
+						if (text.length >= 9)
+							(text.length / 3) min 5
+						else if (text.length > 4)
+							2
+						else
+							1
+					// Case: A separator consisting of special characters => These are also counted as 1-2 tokens
+					case Right(separator) =>
+						if (separator.length < 4)
+							1
+						else
+							2
 				}
 				.sum
 		}

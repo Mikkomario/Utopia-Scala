@@ -2,6 +2,7 @@ package utopia.echo.controller.chat
 
 import utopia.annex.model.request.ApiRequest
 import utopia.echo.controller.client.OllamaClient
+import utopia.echo.controller.tokenization.TokenCounter
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ReasoningEffort
 import utopia.echo.model.llm.LlmDesignator
@@ -36,12 +37,14 @@ object OllamaChat
 	 *                    Note: The default parameter throws if any tools have been defined!
 	 * @param exc Implicit execution context
 	 * @param log Implicit logging interface used
-	 * @param jsonParser Json parser used in response-processing
+	 * @param jsonParser JSON parser used in response-processing
+	 * @param tokenCounter Counter used when estimating message sizes
 	 * @param client Wrapped / utilized Ollama client interface
 	 * @return Parsed chat interface. Failure if the specified model didn't specify the targeted LLM.
 	 */
 	def parseFrom(model: HasValues, toolFactory: ToolFactory = ToolFactory.notImplemented)
-	             (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser, client: OllamaClient) =
+	             (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser, tokenCounter: TokenCounter,
+	              client: OllamaClient) =
 	{
 		model("llm").string.toTry { new NoSuchElementException("Required parameter \"llm\" is missing") }.map { llm =>
 			val chat = new OllamaChat(LlmDesignator(llm, thinks = model("llmThinks").getBoolean))
@@ -112,7 +115,8 @@ object OllamaChat
  * @param client Wrapped / utilized Ollama client interface
   */
 class OllamaChat(initialLlm: LlmDesignator)
-                (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser, client: OllamaClient)
+                (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser, tokenCounter: TokenCounter,
+                 client: OllamaClient)
 	extends AbstractChat[OllamaReply, BufferedOllamaReply, OllamaChat](client, initialLlm,
 		BufferedOllamaReply.empty, BufferedOllamaReply.empty) with Chat
 {

@@ -1,5 +1,6 @@
 package utopia.echo.controller.chat
 
+import utopia.echo.controller.tokenization.TokenCounter
 import utopia.echo.model.enumeration.ReasoningEffort
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.response.BufferedReply
@@ -17,11 +18,13 @@ object StatelessBufferedReplyGenerator
 	 * @param executor An interface for executing prepared chat requests
 	 * @param llm Implicit LLM to use
 	 * @param exc Implicit execution context to use
+	 * @param tokenCounter Interface used for estimating message sizes
 	 * @tparam R Type of the generated responses
 	 * @return A new reply generator using the specified settings
 	 */
 	def apply[R <: BufferedReply](executor: BufferingChatRequestExecutor[R])
-	                             (implicit llm: LlmDesignator, exc: ExecutionContext): StatelessBufferedReplyGenerator[R] =
+	                             (implicit llm: LlmDesignator, exc: ExecutionContext,
+	                              tokenCounter: TokenCounter): StatelessBufferedReplyGenerator[R] =
 		new _StatelessBufferedReplyGenerator[R](ModelSettings.empty, ContextSizeLimits.default, 800, 800, None,
 			executor)
 	
@@ -33,14 +36,15 @@ object StatelessBufferedReplyGenerator
 	 override val expectedReplySize: TokenCount, override val expectedThinkSize: TokenCount,
 	 override val reasoningEffort: Option[ReasoningEffort],
 	 override protected val requestExecutor: BufferingChatRequestExecutor[R])
-	(implicit override val llm: LlmDesignator, override protected val exc: ExecutionContext)
+	(implicit override val llm: LlmDesignator, override protected val exc: ExecutionContext,
+	 override protected val tokenCounter: TokenCounter)
 		extends StatelessBufferedReplyGenerator[R]
 	{
 		// IMPLEMENTED  ---------------------
 		
 		override def withLlm(llm: LlmDesignator): StatelessBufferedReplyGenerator[R] =
 			new _StatelessBufferedReplyGenerator[R](settings, contextSizeLimits, expectedReplySize, expectedThinkSize,
-				reasoningEffort, requestExecutor)(llm, exc)
+				reasoningEffort, requestExecutor)(llm, exc, tokenCounter)
 		
 		override def withExpectedReplySize(replySize: TokenCount): StatelessBufferedReplyGenerator[R] = {
 			if (expectedReplySize == replySize)
