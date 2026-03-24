@@ -1,5 +1,10 @@
 # Utopia Annex - List of Changes
 
+## v1.12.1 (in development)
+### New methods
+- **RequestResult**
+  - Added `.forSuccess(...)` for **Future**'s containing **RequestResult**
+
 ## v1.12 - 15.03.2026
 This update focuses on the **RequestResult** trait, especially in combination with **Future**. 
 Many response-parsing functions are made simpler.  

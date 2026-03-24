@@ -2,6 +2,7 @@ package utopia.echo.controller.chat
 
 import utopia.annex.controller.RequestQueue
 import utopia.annex.model.request.ApiRequest
+import utopia.annex.model.response.RequestResult
 import utopia.echo.controller.client.{LlmServiceClient, OllamaClient}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.deepseek.BufferedDeepSeekChatRequest
@@ -11,7 +12,6 @@ import utopia.echo.model.request.vllm.BufferedVllmChatCompletionRequest
 import utopia.echo.model.response.BufferedReply
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
 object BufferingChatRequestExecutor
 {
@@ -67,7 +67,7 @@ object BufferingChatRequestExecutor
 	 * @tparam R Type of the replies received.
 	 * @return A new interface for executing chat requests
 	 */
-	def apply[R](f: ChatParams => Future[Try[R]]): BufferingChatRequestExecutor[R] =
+	def apply[R](f: ChatParams => Future[RequestResult[R]]): BufferingChatRequestExecutor[R] =
 		new _BufferingChatRequestExecutor[R](f)
 		
 	
@@ -114,7 +114,7 @@ object BufferingChatRequestExecutor
 		
 		// IMPLEMENTED  -------------------
 		
-		override def apply(params: ChatParams): Future[Try[R]] = queue.push(makeRequest(params)).future.map { _.toTry }
+		override def apply(params: ChatParams): Future[RequestResult[R]] = queue.push(makeRequest(params)).future
 	}
 	
 	private class _QueuingBufferedRequestExecutor[+R](override protected val queue: RequestQueue)
@@ -125,10 +125,10 @@ object BufferingChatRequestExecutor
 		override protected def makeRequest(params: ChatParams): ApiRequest[R] = f(params)
 	}
 	
-	private class _BufferingChatRequestExecutor[R](f: ChatParams => Future[Try[R]])
+	private class _BufferingChatRequestExecutor[R](f: ChatParams => Future[RequestResult[R]])
 		extends BufferingChatRequestExecutor[R]
 	{
-		override def apply(params: ChatParams): Future[Try[R]] = f(params)
+		override def apply(params: ChatParams): Future[RequestResult[R]] = f(params)
 	}
 }
 
@@ -145,5 +145,5 @@ trait BufferingChatRequestExecutor[+R]
 	 * @param params Parameters for creating the request
 	 * @return A future that will yield a reply for that request, if successful
 	 */
-	def apply(params: ChatParams): Future[Try[R]]
+	def apply(params: ChatParams): Future[RequestResult[R]]
 }

@@ -3,8 +3,7 @@ package utopia.echo.controller.vastai.vllm
 import utopia.access.model.enumeration.Status.BadRequest
 import utopia.annex.controller.RequestQueue
 import utopia.annex.model.response.RequestNotSent.{RequestSendingFailed, RequestWasDeprecated}
-import utopia.annex.model.response.{RequestResult, Response}
-import utopia.annex.util.RequestResultExtensions._
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
 import utopia.echo.controller.client.VastAiApiClient
@@ -24,7 +23,6 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted, Stopping}
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecord, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.TryFuture
 import utopia.flow.async.context.{AccessQueue, MappingFunnel}
 import utopia.flow.async.process.{Breakable, Delay, LoopingProcess}
 import utopia.flow.collection.CollectionExtensions._
@@ -466,12 +464,17 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private def safeMaxContextSize = maxContextSizeP.value
 	
+	/**
+	 * @return Whether there's at least one Vast AI instance ready to process incoming requests
+	 */
+	def usable = usableProcessorsP.value.exists { _.usable }
+	
 	private def processors = processorsP.value
 	
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def apply(params: ChatParams): Future[Try[BufferedOpenAiReply]] = {
+	override def apply(params: ChatParams): Future[RequestResult[BufferedOpenAiReply]] = {
 		// Checks the required context size
 		// Also adds a safety margin
 		val requiredContext = params(ContextTokens).int match {
@@ -482,15 +485,16 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			case Some(tokens) =>
 				// Case: Too large a request => Uses the backup executor, if available
 				if (tokens > safeMaxContextSize)
-					delegateToBackup(params, new IllegalArgumentException(
+					delegateToBackup(params, Response.Failure(BadRequest,
 						s"Maximum context size of $safeMaxContextSize is exceeded by $tokens"))
 				// Case: Suitable context size => Delegates processing to one of available clients
 				else
-					push(params, tokens).toTryFuture
+					push(params, tokens)
 			
 			// Case: No context size known (never recommended) => Uses the backup executor, if available
 			case None =>
-				delegateToBackup(params, new IllegalArgumentException("Request context size was not specified"))
+				delegateToBackup(params,
+					RequestSendingFailed(new IllegalArgumentException("Request context size was not specified")))
 		}
 	}
 	
@@ -508,10 +512,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	// OTHER    ---------------------------
 	
-	private def delegateToBackup(request: ChatParams, failure: => Throwable) =
+	private def delegateToBackup(request: ChatParams, failure: => RequestFailure) =
 		backupExecutor match {
 			case Some(backup) => backup(request)
-			case None => TryFuture.failure(failure)
+			case None => Future.successful(failure)
 		}
 	
 	// Notice: This request is pretty deeply recursive, being called from Processor

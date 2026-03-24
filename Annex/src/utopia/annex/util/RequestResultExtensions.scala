@@ -1,5 +1,7 @@
 package utopia.annex.util
 
+import utopia.access.model.Headers
+import utopia.access.model.enumeration.Status
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
@@ -87,6 +89,19 @@ object RequestResultExtensions
 		
 		
 		// OTHER    --------------------------
+		
+		/**
+		 * @param f A function called if this request succeeds. Receives:
+		 *              1. Parsed response value
+		 *              1. Response status
+		 *              1. Response headers
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 */
+		def forSuccess[U](f: (A, Status, Headers) => U)(implicit exc: ExecutionContext) = wrapped.onComplete {
+			case Success(Response.Success(value, status, headers)) => f(value, status, headers)
+			case _ => ()
+		}
 		
 		/**
 		 * Asynchronously maps the response body value, if successful, once it resolves.

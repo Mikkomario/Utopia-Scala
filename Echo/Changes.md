@@ -4,6 +4,7 @@
 ### Breaking changes
 - Token counts are now represented using **TokenCount** instead of **Int**
 - Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
+- **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances, but manages 
   the amount of processed tokens more carefully.
   - The constructor is now different, because of this
@@ -24,6 +25,7 @@
 - **VastAiVllmProcessState**
   - Added `.isUnusable`
 ### Other changes
+- Added multiple new `.toModel` implementations and model parsing functions
 - Modified **TokenUsage**'s `.toString` implementation
 
 ## v1.5 - 15.03.2026

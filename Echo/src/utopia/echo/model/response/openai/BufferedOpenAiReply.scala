@@ -7,9 +7,11 @@ import utopia.echo.model.response.{BufferedReply, BufferedReplyLike}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.ModelDeclaration
+import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.{ModelType, StringType}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 
 import java.time.Instant
@@ -81,7 +83,7 @@ object BufferedOpenAiReply extends FromModelFactory[BufferedOpenAiReply]
  */
 case class BufferedOpenAiReply(id: String, messages: Seq[ChatMessage], tokenUsage: OpenAiTokenUsageStatistics,
                                stopReason: MessageStopReason = MessageCompleted, lastUpdated: Instant = Now)
-	extends BufferedReply with BufferedReplyLike[BufferedOpenAiReply]
+	extends BufferedReply with BufferedReplyLike[BufferedOpenAiReply] with ModelConvertible
 {
 	// ATTRIBUTES   ------------------------
 	
@@ -94,4 +96,7 @@ case class BufferedOpenAiReply(id: String, messages: Seq[ChatMessage], tokenUsag
 	override def self: BufferedOpenAiReply = this
 	
 	override def message: ChatMessage = messages.lastOption.getOrElse(ChatMessage.empty.fromAssistant)
+	
+	override def toModel: Model = Model.from("id" -> id, "messages" -> messages.map { _.toModelIncludingThoughts },
+		"usage" -> tokenUsage, "finish_reason" -> stopReason.key, "created" -> lastUpdated)
 }

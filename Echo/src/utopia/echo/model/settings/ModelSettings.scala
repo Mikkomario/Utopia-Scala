@@ -1,6 +1,7 @@
 package utopia.echo.model.settings
 
 import utopia.echo.model.enumeration.ModelParameter
+import utopia.echo.model.settings.ModelSettings.emptyParams
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
@@ -14,6 +15,8 @@ import scala.language.implicitConversions
 object ModelSettings extends SureFromModelFactory[ModelSettings]
 {
 	// ATTRIBUTES   -------------------------
+	
+	private val emptyParams = Map[ModelParameter, Value]().withDefaultValue(Value.empty)
 	
 	/**
 	  * Empty set of model settings
@@ -30,25 +33,36 @@ object ModelSettings extends SureFromModelFactory[ModelSettings]
 	// IMPLEMENTED  ------------------------
 	
 	override def parseFrom(model: HasProperties): ModelSettings = {
-		val params = Pair("defined", "defaults").map { key =>
-			model(key).getModel.properties.view
-				.flatMap { p => ModelParameter.findForKey(p.name).map { _ -> p.value } }
-				.toMap
+		val parts = Pair("defined", "defaults").map { model(_).model }
+		// Case: No "defined" or "defaults" found => Attempts to parse parameters directly from the model
+		if (parts.forall { _.isEmpty })
+			apply(paramsFrom(model), emptyParams)
+		else {
+			val params = parts.map {
+				case Some(model) => paramsFrom(model)
+				case None => emptyParams
+			}
+			apply(params.first, params.second)
 		}
-		apply(params.first, params.second)
 	}
+	
+	
+	// OTHER    ---------------------------
+	
+	private def paramsFrom(model: HasProperties) =
+		model.properties.iterator.flatMap { p => ModelParameter.findForKey(p.name).map { _ -> p.value } }.toMap
+			.withDefaultValue(Value.empty)
 }
 
 /**
   * Common trait for read-accesses to model parameter -assignments
-  * @author Mikko Hilpinen
-  * @since 22.09.2024, v1.1
-  *
   * @param defined Specifically defined parameter values
   * @param default Default values used in mapping, but not considered specifically defined
+ * @author Mikko Hilpinen
+ * @since 22.09.2024, v1.1
   */
-case class ModelSettings(defined: Map[ModelParameter, Value] = Map(),
-                         default: Map[ModelParameter, Value] = Map())
+case class ModelSettings(defined: Map[ModelParameter, Value] = emptyParams,
+                         default: Map[ModelParameter, Value] = emptyParams)
 	extends ModelConvertible
 {
 	// COMPUTED -------------------------
@@ -65,11 +79,9 @@ case class ModelSettings(defined: Map[ModelParameter, Value] = Map(),
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def toModel: Model = {
-		Model(Pair("defined" -> defined, "defaults" -> default).map { case (key, params) =>
-			key -> Model(params.map { case (k, v) => k.key -> v })
-		})
-	}
+	override def toModel: Model = Model(Pair("defined" -> defined, "defaults" -> default).map { case (key, params) =>
+		key -> Model(params.map { case (k, v) => k.key -> v })
+	})
 	
 	
 	// OTHER    -------------------------

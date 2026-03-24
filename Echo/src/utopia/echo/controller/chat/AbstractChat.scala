@@ -4,7 +4,8 @@ import utopia.annex.controller.RequestQueue
 import utopia.annex.model.manifest.SchrodingerState
 import utopia.annex.model.manifest.SchrodingerState._
 import utopia.annex.model.request.ApiRequest
-import utopia.annex.model.response.{RequestFailure, Response}
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.annex.schrodinger.Schrodinger
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.tokenization.TokenCounter
@@ -172,8 +173,9 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	def push(message: String, images: Seq[String] = Empty, extraTools: Seq[Tool] = Empty, noStreaming: Boolean = false) =
 	{
 		// Prepares Schrödinger state & result pointer
-		val statePointer = LockablePointer[(SchrodingerState, Try[BR])](
-			Flux(lastResult.isSuccess) -> Failure(new IllegalArgumentException("No response has been acquired yet")))
+		val statePointer = LockablePointer[(SchrodingerState, RequestResult[BR])](
+			Flux(lastResult.isSuccess) ->
+				RequestSendingFailed(new IllegalArgumentException("No response has been acquired yet")))
 		
 		// Prepares the text, newText & lastUpdated pointers
 		// These depend on whether streaming or tools are used
@@ -212,7 +214,8 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				val thinkingPointer = OnceFlatteningPointer(true)
 				val lastUpdatedPointer = OnceFlatteningPointer(Now.toInstant)
 				
-				def replyIncoming(reply: R) = {
+				def replyIncoming(response: Response.Success[R]) = {
+					val reply = response.value
 					thoughtsPointer.complete(reply.thoughtsPointer)
 					thinkingPointer.complete(reply.thinkingFlag)
 					newTextPointer.complete(reply.newTextPointer)
@@ -229,7 +232,7 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				}
 				
 				(textPointer, thoughtsPointer, newTextPointer, thinkingPointer: Flag, lastUpdatedPointer,
-					Some[R => Unit](replyIncoming), None, Some[() => Unit](handleFailure))
+					Some[Response.Success[R] => Unit](replyIncoming), None, Some[() => Unit](handleFailure))
 			}
 		}
 		
@@ -239,17 +242,18 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 				streamingReply =>
 					replyIncoming.foreach { _(streamingReply) }
 					statePointer.value =
-						PositiveFlux -> Failure(new IllegalStateException("The reply hasn't been fully formed yet")) } {
+						PositiveFlux -> RequestSendingFailed(
+							new IllegalStateException("The reply hasn't been fully formed yet")) } {
 				completedReply =>
 					replyCompleted.foreach { _(completedReply) }
 					finalReplyPromise.success(Success(completedReply))
-					statePointer.value = Alive -> Success(completedReply) } {
-				error =>
+					statePointer.value = Alive -> Response.Success(completedReply) } {
+				failure =>
 					handleFailure.foreach { _() }
-					finalReplyPromise.success(Failure(error))
-					statePointer.value = Dead -> Failure(error)
+					finalReplyPromise.success(failure.toFailure)
+					statePointer.value = Dead -> failure
 					statePointer.lock()
-					log(error, "Messaging failed") }
+					log(failure.cause, "Messaging failed") }
 		}
 		
 		// Returns a Schrödinger
@@ -271,8 +275,8 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 	 * @param handleFailure If failed to perform the request or acquire a response, calls this function.
 	 */
 	private def _push(messages: Seq[ChatMessage], extraTools: Seq[Tool], allowStreaming: Boolean)
-	                 (replyIncoming: R => Unit)(replyCompleted: BR => Unit)
-	                 (handleFailure: Throwable => Unit): Unit =
+	                 (replyIncoming: Response.Success[R] => Unit)(replyCompleted: BR => Unit)
+	                 (handleFailure: RequestFailure => Unit): Unit =
 	{
 		// Calculates and applies the context size & max response size, unless these are user-defined
 		val (appliedSettings, lazyTokenCounts) = applyLimitsTo(settings, messages.iterator.map { _.text },
@@ -301,9 +305,9 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 					
 					result match {
 						// Case: Successfully acquired a response => Processes the streamed response contents
-						case Response.Success(reply, _, _) =>
+						case response @ Response.Success(reply, _, _) =>
 							if (reply.isStreaming)
-								replyIncoming(reply)
+								replyIncoming(response)
 							// Handles the reply completion asynchronously
 							// TODO: Move this part to a separate function
 							reply.future.forResult {
@@ -331,14 +335,15 @@ abstract class AbstractChat[R <: ReplyLike[BR], BR <: BufferedReply, +Repr <: Ab
 										case None => replyCompleted(reply)
 									}
 								// Case: Reply parsing failed => Fails
-								case Failure(error) => handleFailure(error)
+								case Failure(error) =>
+									handleFailure(Response.Failure(Response.parseFailureStatus, error.getMessage))
 							}
 						// Case: Failed to acquire a response => Fails
-						case f: RequestFailure => handleFailure(f.cause)
+						case f: RequestFailure => handleFailure(f)
 					}
 				}
 			// Case: Suitable settings couldn't be specified (max context size exceeded) => Fails
-			case Failure(error) => handleFailure(error)
+			case Failure(error) => handleFailure(RequestSendingFailed(error))
 		}
 	}
 	

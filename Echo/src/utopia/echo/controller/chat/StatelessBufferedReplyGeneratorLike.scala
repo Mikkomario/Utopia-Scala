@@ -1,5 +1,8 @@
 package utopia.echo.controller.chat
 
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.RequestResult
+import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.User
 import utopia.echo.model.enumeration.ReasoningEffort
@@ -9,13 +12,11 @@ import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.BufferedReply
 import utopia.echo.model.settings.{HasImmutableContextSizeLimits, HasImmutableModelSettings}
 import utopia.echo.model.tokenization.TokenCount
-import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.TryFuture
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.Mutate
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 /**
  * Common trait for interfaces that convert prompts to buffered replies, without using a mutable state.
@@ -104,7 +105,8 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 */
 	override def thinks = llm.thinks && thinkingEnabled
 	
-	override def bufferedReplyFor(message: String): Future[Try[R]] = bufferedReplyFor(message, Empty, None, None)
+	override def bufferedReplyFor(message: String): Future[RequestResult[R]] =
+		bufferedReplyFor(message, Empty, None, None)
 	
 	
 	// OTHER    --------------------------
@@ -137,7 +139,7 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 */
 	def bufferedReplyFor(message: String, history: Seq[ChatMessage] = Empty,
 	                     expectedReplySize: Option[TokenCount] = None,
-	                     expectedThinkSize: Option[TokenCount] = None): Future[Try[R]] =
+	                     expectedThinkSize: Option[TokenCount] = None): Future[RequestResult[R]] =
 	{
 		// Modifies the settings to include context size limits
 		val (appliedSettings, lazyTokenUsage) = applyLimitsTo(settings,
@@ -149,7 +151,7 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 				val resultFuture = requestExecutor(ChatParams(User(message), conversationHistory = history,
 					settings = settings, reasoningEffort = if (llm.thinks) reasoningEffort else None))
 				// Updates the token count estimator based on the acquired reply
-				resultFuture.forSuccess { reply =>
+				resultFuture.forSuccess { (reply, _, _) =>
 					tokenCounter.feedback(lazyTokenUsage.value.newMessages, reply.tokenUsage.input)
 					// Won't assume that reflection tokens are always included in the response
 					if (!thinks || reply.thoughts.nonEmpty)
@@ -157,7 +159,7 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 				}
 				resultFuture
 			
-			case Failure(error) => TryFuture.failure(error)
+			case Failure(error) => Future.successful(RequestSendingFailed(error))
 		}
 	}
 }

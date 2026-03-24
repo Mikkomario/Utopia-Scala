@@ -211,7 +211,7 @@ object ChatTest extends App
 				println("\nWaiting for the response...\n")
 				schrodinger.manifest.newTextPointer.addContinuousListenerAndSimulateEvent("") { e => print(e.newValue) }
 				
-				schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped }.log.foreach { reply =>
+				schrodinger.finalResultFuture.waitFor().flatMap { _.wrapped.toTry }.log.foreach { reply =>
 					Wait(0.2.seconds)
 					println(s"\n\n${ reply.tokenUsage }\n")
 				}

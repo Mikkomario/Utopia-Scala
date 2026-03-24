@@ -1,5 +1,7 @@
 package utopia.echo.controller.chat
 
+import utopia.annex.util.RequestResultExtensions._
+import utopia.annex.model.response.{RequestResult, Response}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.{BufferedReply, TokenUsage}
 import utopia.echo.model.tokenization.LlmRequestCount
@@ -7,7 +9,6 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.mutable.async.Volatile
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
 /**
  * A wrapper for [[BufferingChatRequestExecutor]] which counts the requests and tokens passing through
@@ -61,7 +62,7 @@ class CountingBufferingChatRequestExecutorWrapper[+R <: BufferedReply](wrapped: 
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def apply(params: ChatParams): Future[Try[R]] = {
+	override def apply(params: ChatParams): Future[RequestResult[R]] = {
 		// Delegates the request execution
 		requestsInP.update { _ + 1 }
 		val result = wrapped(params)
@@ -70,8 +71,8 @@ class CountingBufferingChatRequestExecutorWrapper[+R <: BufferedReply](wrapped: 
 		result.forResult { result =>
 			requestsOutP.update { _ + 1 }
 			result match {
-				case Success(reply) => tokensP.update { _ + reply.tokenUsage }
-				case Failure(_) => failuresP.update { _ + 1 }
+				case Response.Success(reply: BufferedReply, _, _) => tokensP.update { _ + reply.tokenUsage }
+				case _ => failuresP.update { _ + 1 }
 			}
 		}
 		

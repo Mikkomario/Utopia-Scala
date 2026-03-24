@@ -1,10 +1,10 @@
 package utopia.echo.controller.chat
 
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.RequestResult
 import utopia.echo.model.request.ChatParams
-import utopia.flow.async.TryFuture
 
 import scala.concurrent.Future
-import scala.util.Try
 
 /**
  * A chat request executor that fails every time.
@@ -15,5 +15,6 @@ import scala.util.Try
 class AlwaysFailingChatRequestExecutor(failure: Throwable = new UnsupportedOperationException("Chat requests can't succeed"))
 	extends BufferingChatRequestExecutor[Nothing]
 {
-	override def apply(params: ChatParams): Future[Try[Nothing]] = TryFuture.failure(failure)
+	override def apply(params: ChatParams): Future[RequestResult[Nothing]] =
+		Future.successful(RequestSendingFailed(failure))
 }

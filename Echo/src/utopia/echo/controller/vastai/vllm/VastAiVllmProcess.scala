@@ -63,7 +63,7 @@ object VastAiVllmProcess
 	// COMPUTED -----------------------
 	
 	private def defaultGateway = Gateway(maxConnectionsPerRoute = 4, maxConnectionsTotal = 4,
-		maximumTimeout = Timeout(connection = 60.seconds, read = 10.minutes, manager = 15.minutes),
+		maximumTimeout = Timeout(read = 10.minutes, manager = 15.minutes), connectionTimeout = 60.seconds,
 		disableTrustStoreVerification = true)
 	
 	

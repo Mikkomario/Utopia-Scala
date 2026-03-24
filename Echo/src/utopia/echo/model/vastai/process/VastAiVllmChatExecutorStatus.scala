@@ -1,5 +1,10 @@
 package utopia.echo.model.vastai.process
 
+import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
+
 /**
  * Represents a status snapshot of a Vast AI + vLLM processor / chat executor
  * @param processorStates Status of each active processor
@@ -8,6 +13,7 @@ package utopia.echo.model.vastai.process
  * @since 19.03.2026, v1.6
  */
 case class VastAiVllmChatExecutorStatus(processorStates: Seq[VastAiVllmProcessorStatus], requestsQueued: Int)
+	extends ModelConvertible
 {
 	// ATTRIBUTES   --------------------
 	
@@ -20,4 +26,25 @@ case class VastAiVllmChatExecutorStatus(processorStates: Seq[VastAiVllmProcessor
 	 * The combined amount of tokens (input + max output) being actively processed
 	 */
 	lazy val processing = processorStates.iterator.map { _.activeTokens }.sum
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def toModel: Model = {
+		val phase = {
+			if (processorStates.isEmpty)
+				NotStarted
+			else {
+				val phases = processorStates.map { _.phase }
+				if (phases.contains(ApiHosting))
+					ApiHosting
+				else
+					phases.iterator.filter { _ < ApiHosting }.maxOption.getOrElse { phases.min }
+			}
+		}
+		Model.from(
+			"phase" -> Model.from("name" -> phase.name, "index" -> phase.index),
+			"processors" -> processorStates, "queued" -> requestsQueued,
+			"pendingTokensTotal" -> pending.value, "activeTokensTotal" -> processing.value)
+	}
 }

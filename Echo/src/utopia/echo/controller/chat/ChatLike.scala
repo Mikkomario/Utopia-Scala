@@ -2,6 +2,7 @@ package utopia.echo.controller.chat
 
 import utopia.annex.model.manifest.SchrodingerState._
 import utopia.annex.model.manifest.{HasSchrodingerState, SchrodingerState}
+import utopia.annex.model.response.RequestResult
 import utopia.annex.schrodinger.Schrodinger
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ChatRole.Assistant
@@ -101,7 +102,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 	 *         buffered reply on success, or a failure.
 	 */
 	def push(message: String, images: Seq[String] = Empty, extraTools: Seq[Tool] = Empty,
-	         noStreaming: Boolean = false): Schrodinger[R, Try[BR]]
+	         noStreaming: Boolean = false): Schrodinger[R, RequestResult[BR]]
 	
 	
 	// ATTRIBUTES   ---------------------------
@@ -666,7 +667,7 @@ trait ChatLike[+R <: ReplyLike[BR], +BR, +Repr]
 		)
 	}
 	
-	override def bufferedReplyFor(message: String): Future[Try[BR]] =
+	override def bufferedReplyFor(message: String): Future[RequestResult[BR]] =
 		push(message, noStreaming = true).finalResultFuture.map { _.wrapped }
 	
 	override def mapSettings(f: Mutate[ModelSettings]) = settingsPointer.update(f)

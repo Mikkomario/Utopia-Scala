@@ -1,5 +1,6 @@
 package utopia.echo.model.enumeration
 
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType
@@ -19,6 +20,10 @@ trait ModelParameter
 	  */
 	def key: String
 	/**
+	 * @return Alternative JSON keys for representing this parameter. Lower case.
+	 */
+	def altKeys: Seq[String]
+	/**
 	  * @return Data type expected by in this parameter
 	  */
 	def dataType: DataType
@@ -36,6 +41,14 @@ trait ModelParameter
 	  * @return Largest applicable value for this parameter (as a double number)
 	  */
 	def maxValue: Option[Double]
+	
+	
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @return Keys used for representing this parameter
+	 */
+	def keys = key +: altKeys
 }
 
 object ModelParameter
@@ -54,7 +67,7 @@ object ModelParameter
 	/**
 	  * All supported parameters as a map where keys are parameter string keys and values are the parameters themselves.
 	  */
-	lazy val valueByKey = values.view.map { v => v.key -> v }.toMap
+	lazy val valueByKey = values.iterator.flatMap { v => v.keys.iterator.map { _ -> v } }.toMap
 	
 	
 	// OTHER    ---------------------------
@@ -75,13 +88,14 @@ object ModelParameter
 	  */
 	case object Seed extends ModelParameter
 	{
-		override def key: String = "seed"
-		override def dataType: DataType = IntType
+		override val key: String = "seed"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 0
+		override val defaultValue: Value = 0
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -94,13 +108,14 @@ object ModelParameter
 	  */
 	case object ContextTokens extends ModelParameter
 	{
-		override def key: String = "num_ctx"
-		override def dataType: DataType = IntType
+		override val key: String = "num_ctx"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 2048
+		override val defaultValue: Value = 2048
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * Maximum number of tokens to predict when generating text.
@@ -112,13 +127,14 @@ object ModelParameter
 	  */
 	case object PredictTokens extends ModelParameter
 	{
-		override def key: String = "num_predict"
-		override def dataType: DataType = IntType
+		override val key: String = "num_predict"
+		override val altKeys: Seq[String] = Single("max_tokens")
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 128
+		override val defaultValue: Value = 128
 		
-		override def minValue: Option[Double] = Some(-2)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(-2)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * The number of previously seen tokens to keep in memory for language modeling.
@@ -126,13 +142,14 @@ object ModelParameter
 	  */
 	case object KeepTokens extends ModelParameter
 	{
-		override def key: String = "num_keep"
-		override def dataType: DataType = IntType
+		override val key: String = "num_keep"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 24
+		override val defaultValue: Value = 24
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -141,13 +158,14 @@ object ModelParameter
 	  */
 	case object RepeatLastTokens extends ModelParameter
 	{
-		override def key: String = "repeat_last_n"
-		override def dataType: DataType = IntType
+		override val key: String = "repeat_last_n"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 64
+		override val defaultValue: Value = 64
 		
-		override def minValue: Option[Double] = Some(-1)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(-1)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * Sets how strongly to penalize repetitions.
@@ -160,13 +178,14 @@ object ModelParameter
 	  */
 	case object RepeatPenalty extends ModelParameter
 	{
-		override def key: String = "repeat_penalty"
-		override def dataType: DataType = DoubleType
+		override val key: String = "repeat_penalty"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 1.1
+		override val defaultValue: Value = 1.1
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * A penalty for the absence of words in language modeling.
@@ -174,13 +193,14 @@ object ModelParameter
 	  */
 	case object PresencePenalty extends ModelParameter
 	{
-		override def key: String = "presence_penalty"
-		override def dataType: DataType = DoubleType
+		override val key: String = "presence_penalty"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 1.1
+		override val defaultValue: Value = 1.1
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * A penalty for the frequency of words in language modeling.
@@ -188,26 +208,28 @@ object ModelParameter
 	  */
 	case object FrequencyPenalty extends ModelParameter
 	{
-		override def key: String = "frequency_penalty"
-		override def dataType: DataType = DoubleType
+		override val key: String = "frequency_penalty"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 1.1
+		override val defaultValue: Value = 1.1
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * Whether the use of newline characters should be penalized.
 	  */
 	case object PenalizeNewLine extends ModelParameter
 	{
-		override def key: String = "penalize_newline"
-		override def dataType: DataType = BooleanType
+		override val key: String = "penalize_newline"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = BooleanType
 		
-		override def defaultValue: Value = true
+		override val defaultValue: Value = true
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	
 	/**
@@ -219,13 +241,14 @@ object ModelParameter
 	  */
 	case object Temperature extends ModelParameter
 	{
-		override def key: String = "temperature"
-		override def dataType: DataType = DoubleType
+		override val key: String = "temperature"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 0.8
+		override val defaultValue: Value = 0.8
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	
 	/**
@@ -236,13 +259,14 @@ object ModelParameter
 	  */
 	case object MiroStat extends ModelParameter
 	{
-		override def key: String = "mirostat"
-		override def dataType: DataType = IntType
+		override val key: String = "mirostat"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 1
+		override val defaultValue: Value = 1
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(2)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(2)
 	}
 	/**
 	  * Helps decide if the machine should stick closely to the topic (lower values = coherence)
@@ -252,13 +276,14 @@ object ModelParameter
 	  */
 	case object MiroStatTau extends ModelParameter
 	{
-		override def key: String = "mirostat_tau"
-		override def dataType: DataType = DoubleType
+		override val key: String = "mirostat_tau"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 5.0
+		override val defaultValue: Value = 5.0
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * Adjusts how quickly the machine learns from what it’s currently talking about.
@@ -272,13 +297,14 @@ object ModelParameter
 	  */
 	case object MiroStatEta extends ModelParameter
 	{
-		override def key: String = "mirostat_eta"
-		override def dataType: DataType = DoubleType
+		override val key: String = "mirostat_eta"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 0.1
+		override val defaultValue: Value = 0.1
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -290,13 +316,14 @@ object ModelParameter
 	  */
 	case object TopK extends ModelParameter
 	{
-		override def key: String = "top_k"
-		override def dataType: DataType = IntType
+		override val key: String = "top_k"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 40
+		override val defaultValue: Value = 40
 		
-		override def minValue: Option[Double] = Some(1)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(1)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * Determines the ratio of words included in the options. Works together with top-k.
@@ -310,13 +337,14 @@ object ModelParameter
 	  */
 	case object TopP extends ModelParameter
 	{
-		override def key: String = "top_p"
-		override def dataType: DataType = DoubleType
+		override val key: String = "top_p"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 0.9
+		override val defaultValue: Value = 0.9
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	/**
 	  * A minimum probability threshold for words to be selected during prediction.
@@ -330,13 +358,14 @@ object ModelParameter
 	  */
 	case object MinP extends ModelParameter
 	{
-		override def key: String = "min_p"
-		override def dataType: DataType = DoubleType
+		override val key: String = "min_p"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 0.0
+		override val defaultValue: Value = 0.0
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	/**
 	  * The typical probability threshold for words to be selected during prediction.
@@ -344,13 +373,14 @@ object ModelParameter
 	  */
 	case object TypicalP extends ModelParameter
 	{
-		override def key: String = "typical_p"
-		override def dataType: DataType = DoubleType
+		override val key: String = "typical_p"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 0.5
+		override val defaultValue: Value = 0.5
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	
 	/**
@@ -364,13 +394,14 @@ object ModelParameter
 	  */
 	case object TailFreeSampling extends ModelParameter
 	{
-		override def key: String = "tfs_z"
-		override def dataType: DataType = DoubleType
+		override val key: String = "tfs_z"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = DoubleType
 		
-		override def defaultValue: Value = 1
+		override val defaultValue: Value = 1
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -379,13 +410,14 @@ object ModelParameter
 	  */
 	case object Stop extends ModelParameter
 	{
-		override def key: String = "stop"
-		override def dataType: DataType = VectorType
+		override val key: String = "stop"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = VectorType
 		
-		override def defaultValue: Value = Value.empty
+		override val defaultValue: Value = Value.empty
 		
-		override def minValue: Option[Double] = None
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = None
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -394,13 +426,14 @@ object ModelParameter
 	  */
 	case object NumberOfBatches extends ModelParameter
 	{
-		override def key: String = "num_batch"
-		override def dataType: DataType = IntType
+		override val key: String = "num_batch"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 256
+		override val defaultValue: Value = 256
 		
-		override def minValue: Option[Double] = Some(1)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(1)
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -411,13 +444,14 @@ object ModelParameter
 	  */
 	case object NumberOfGpus extends ModelParameter
 	{
-		override def key: String = "num_gpu"
-		override def dataType: DataType = IntType
+		override val key: String = "num_gpu"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 8
+		override val defaultValue: Value = 8
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	/**
 	  * The index of the main GPU to use for parallel processing during training.
@@ -428,13 +462,14 @@ object ModelParameter
 	  */
 	case object MainGpuIndex extends ModelParameter
 	{
-		override def key: String = "main_gpu"
-		override def dataType: DataType = IntType
+		override val key: String = "main_gpu"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = IntType
 		
-		override def defaultValue: Value = 0
+		override val defaultValue: Value = 0
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = None
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = None
 	}
 	
 	/**
@@ -442,13 +477,14 @@ object ModelParameter
 	  */
 	case object Numa extends ModelParameter
 	{
-		override def key: String = "numa"
-		override def dataType: DataType = BooleanType
+		override val key: String = "numa"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = BooleanType
 		
-		override def defaultValue: Value = false
+		override val defaultValue: Value = false
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	
 	/**
@@ -456,13 +492,14 @@ object ModelParameter
 	  */
 	case object LowVRam extends ModelParameter
 	{
-		override def key: String = "low_vram"
-		override def dataType: DataType = BooleanType
+		override val key: String = "low_vram"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = BooleanType
 		
-		override def defaultValue: Value = true
+		override val defaultValue: Value = true
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 	
 	/**
@@ -470,12 +507,13 @@ object ModelParameter
 	  */
 	object Fp16 extends ModelParameter
 	{
-		override def key: String = "fp16_kv"
-		override def dataType: DataType = BooleanType
+		override val key: String = "fp16_kv"
+		override val altKeys: Seq[String] = Empty
+		override val dataType: DataType = BooleanType
 		
-		override def defaultValue: Value = false
+		override val defaultValue: Value = false
 		
-		override def minValue: Option[Double] = Some(0)
-		override def maxValue: Option[Double] = Some(1)
+		override val minValue: Option[Double] = Some(0)
+		override val maxValue: Option[Double] = Some(1)
 	}
 }

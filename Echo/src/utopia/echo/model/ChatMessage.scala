@@ -8,7 +8,7 @@ import utopia.echo.util.ReplyParseUtils
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
-import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.util.{Mutate, NotEmpty}
@@ -37,28 +37,33 @@ object ChatMessage
 	def openAiMessageParser: FromModelFactory[ChatMessage] = OpenAiMessageParser
 	
 	
+	// OTHER    -----------------------
+	
+	private def parse(model: HasProperties)(textAndThoughts: => (String, String)) =
+		model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
+			val (text, thoughts) = textAndThoughts
+			ChatMessage(text, thoughts, model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant),
+				model("images").getVector.flatMap { _.string }, toolCalls, model("tool_call_id").getString)
+		}
+	
+	
 	// NESTED   -----------------------
 	
 	private object OllamaMessageParser extends FromModelFactory[ChatMessage]
 	{
 		override def apply(model: HasProperties): Try[ChatMessage] =
-			model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
-				ChatMessage(model("content").getString, model("thinking").getString,
-					model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant),
-					model("images").getVector.flatMap { _.string }, toolCalls)
-			}
+			parse(model) { model("content").getString -> model("thinking").getString }
 	}
 	
 	private object OpenAiMessageParser extends FromModelFactory[ChatMessage]
 	{
 		// TODO: Add support for refusals
 		override def apply(model: HasProperties): Try[ChatMessage] = {
-			model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
+			parse(model) {
 				// NB: Open AI doesn't provide reasoning_content, but DeepSeek does.
 				// We're also preparing for the possible <think> element, in case of QWEN models
 				val (text, thoughtsFromContent) = ReplyParseUtils.separateThinkFrom(model("content").getString)
-				ChatMessage(text, model("reasoning_content").getString + thoughtsFromContent,
-					model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant), toolCalls = toolCalls)
+				text -> (model("reasoning_content").getString + thoughtsFromContent)
 			}
 		}
 	}
@@ -72,7 +77,7 @@ object ChatMessage
   *                     Empty if no image is attached (default).
   * @param toolCalls Tool calls made by this message
  * @param respondedToolCallId ID of the tool call that was responded to.
- *                   Specify this only when sender role = Tool.
+ *                            Specify this only when sender role = Tool.
  * @author Mikko Hilpinen
   * @since 20.07.2024, v1.0
   */
@@ -87,6 +92,16 @@ case class ChatMessage(text: String, thoughts: String = "", senderRole: ChatRole
 	 * @return A copy of this message where the sender role is set to [[Assistant]]
 	 */
 	def fromAssistant = withSenderRole(Assistant)
+	
+	/**
+	 * @return A model of this chat message, including thoughts as "reasoning_content", if applicable
+	 */
+	def toModelIncludingThoughts = {
+		if (thoughts.isEmpty)
+			toModel
+		else
+			toModel + Constant("reasoning_content", thoughts)
+	}
 	
 	/**
 	  * @param llm Targeted LLM

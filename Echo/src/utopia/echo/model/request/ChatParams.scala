@@ -2,6 +2,7 @@ package utopia.echo.model.request
 
 import utopia.echo.model.ChatMessage
 import utopia.echo.model.enumeration.ReasoningEffort
+import utopia.echo.model.enumeration.ReasoningEffort.SkipReasoning
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ollama.RequestParams
 import utopia.echo.model.request.ollama.chat.OllamaChatRequest
@@ -10,9 +11,62 @@ import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.settings.ModelSettings
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.util.Mutate
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
+
+import scala.language.implicitConversions
+import scala.util.Try
+
+object ChatParams
+{
+	// COMPUTED -------------------------
+	
+	/**
+	 * @param defaultLlm LLM applied by default
+	 * @return A model parser for chat parameters
+	 */
+	def parser(implicit defaultLlm: LlmDesignator): FromModelFactory[ChatParams] = new ChatParamsParser()
+	
+	
+	// IMPLICIT -------------------------
+	
+	implicit def objectAsParser(o: ChatParams.type)(implicit defaultLlm: LlmDesignator): FromModelFactory[ChatParams] =
+		o.parser
+	
+	
+	// NESTED   -------------------------
+	
+	private class ChatParamsParser(implicit llm: LlmDesignator) extends FromModelFactory[ChatParams]
+	{
+		// IMPLEMENTED  -----------------
+		
+		// NB: Doesn't support tools at this time
+		override def apply(model: HasProperties): Try[ChatParams] =
+			model
+				.tryGet("messages", "message") {
+					_.tryVectorWith { _.tryModel.flatMap(ChatMessage.openAiMessageParser.apply) }.filter { _.nonEmpty }
+				}
+				.map { messages =>
+					val settings = ModelSettings.parseFrom(model("options", "settings").model.getOrElse(model))
+					val reasoningEffort = model("reasoning_effort").string match {
+						case Some(effortStr) => ReasoningEffort.findForKey(effortStr)
+						case None =>
+							model("think").boolean.map { if (_) ReasoningEffort.Medium else SkipReasoning }
+					}
+					val appliedLlm = model("model").string.filterNot { _ ~== llm.llmName } match {
+						case Some(modelName) => LlmDesignator(modelName)
+						case None => llm
+					}
+					
+					ChatParams(messages.head, messages.tail, settings = settings, reasoningEffort = reasoningEffort)(
+						appliedLlm)
+				}
+	}
+}
 
 /**
   * Parameters sent out with a chat request

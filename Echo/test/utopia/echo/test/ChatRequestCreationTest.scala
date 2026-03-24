@@ -1,5 +1,7 @@
 package utopia.echo.test
 
+import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.RequestResult
 import utopia.echo.controller.chat.{BufferingChatRequestExecutor, StatelessBufferedReplyGenerator}
 import utopia.echo.controller.tokenization.{EstimateTokenCount, TokenCounter}
 import utopia.echo.model.ChatMessage
@@ -7,11 +9,9 @@ import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.vllm.BufferedVllmChatCompletionRequest
 import utopia.echo.model.response.openai.BufferedOpenAiReply
-import utopia.flow.async.TryFuture
 import utopia.flow.test.TestContext._
 
 import scala.concurrent.Future
-import scala.util.Try
 
 /**
  * @author Mikko Hilpinen
@@ -41,12 +41,12 @@ object ChatRequestCreationTest extends App
 	
 	private object Executor extends BufferingChatRequestExecutor[BufferedOpenAiReply]
 	{
-		override def apply(params: ChatParams): Future[Try[BufferedOpenAiReply]] = {
+		override def apply(params: ChatParams): Future[RequestResult[BufferedOpenAiReply]] = {
 			println(params)
 			val request = BufferedVllmChatCompletionRequest(params)
 			lastRequest = request
 			println(request.body)
-			TryFuture.failure(new NotImplementedError("No response logic"))
+			Future.successful(RequestSendingFailed(new NotImplementedError("No response logic")))
 		}
 	}
 }

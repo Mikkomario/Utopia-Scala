@@ -5,6 +5,8 @@ import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.casting.ValueConversions._
 
 object OpenAiTokenUsageStatistics
 {
@@ -83,4 +85,9 @@ object OpenAiTokenUsageStatistics
   */
 case class OpenAiTokenUsageStatistics(input: TokenCount, cached: TokenCount, output: TokenCount, reasoning: TokenCount,
                                       total: TokenCount)
-	extends TokenUsage
+	extends TokenUsage with ModelConvertible
+{
+	override def toModel: Model = Model.from("input_tokens" -> input.value, "output_tokens" -> output.value,
+		"total_tokens" -> total.value, "input_tokens_details" -> Model.from("cached_tokens" -> cached.value),
+		"output_tokens_details" -> Model.from("reasoning_tokens" -> reasoning.value))
+}

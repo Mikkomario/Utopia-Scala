@@ -3,6 +3,10 @@ package utopia.echo.model.vastai.process
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.vastai.instance.InstanceStatus
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
+import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.ApiHosting
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 
 import java.time.Instant
 
@@ -21,3 +25,12 @@ case class VastAiVllmProcessorStatus(phase: VastAiVllmProcessPhase, instanceStat
                                      activeTokens: TokenCount, pendingTokens: TokenCount, maxContextSize: TokenCount,
                                      started: Instant, lastRequestTime: Instant, lastPendingStarted: Instant,
                                      lastPendingEnded: Instant)
+	extends ModelConvertible
+{
+	override def toModel: Model = Model.from("maxContext" -> maxContextSize.value,
+		"phase" -> Model.from("name" -> phase.name, "index" -> phase.index), "instanceStatus" -> instanceStatus,
+		"usable" -> (phase == ApiHosting),
+		"tokenUsage" -> Model.from("active" -> activeTokens.value, "pending" -> pendingTokens.value),
+		"started" -> started, "lastRequestTime" -> lastRequestTime, "lastPendingStarted" -> lastPendingStarted,
+		"lastPendingEnded" -> lastPendingEnded)
+}
