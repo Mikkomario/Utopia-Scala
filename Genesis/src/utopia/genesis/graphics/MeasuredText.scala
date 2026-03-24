@@ -64,7 +64,7 @@ case class MeasuredText(text: String, context: FontMetricsWrapper, alignment: Al
 						Single(line)
 					else {
 						// Measures the width of all parts of this line
-						val parts = line.split(Regex.whiteSpace).map { s => s -> context.widthOf(s) }
+						val parts = line.split(Regex.whitespace).map { s => s -> context.widthOf(s) }
 						val viewParts = parts.view
 						val whiteSpaceWidth = context.widthOf(' ')
 						

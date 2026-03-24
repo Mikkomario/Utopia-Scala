@@ -291,7 +291,7 @@ object LocalDatabase
 				// Sets up the database
 				val configBuilder = DBConfigurationBuilder.newBuilder()
 				configBuilder.setPort(0)
-				configBuilder.setDataDir(("database": Path).absolute.toString)
+				configBuilder.setDataDir(("database": Path).absolute.toFile)
 				val database = DB.newEmbeddedDB(configBuilder.build()) // May throw
 				dbPointer.setOne(database)
 				

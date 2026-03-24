@@ -1,5 +1,7 @@
 package utopia.disciple.model.request
 
+import utopia.flow.collection.immutable.Pair
+
 /**
   * An enumeration for the supported timeout types
   * @author Mikko Hilpinen
@@ -18,31 +20,31 @@ sealed trait TimeoutType
 object TimeoutType
 {
 	/**
-	  * Timeout used when establishing connection with the server
-	  */
-	case object ConnectionTimeout extends TimeoutType
-	{
-		override def name = "Connect"
-	}
-	
-	/**
 	  * Timeout used when reading data from the server (maximum duration between two data packets)
 	  */
 	case object ReadTimeout extends TimeoutType
 	{
-		override def name = "Read"
+		override val name = "Read"
 	}
-	
 	/**
 	  * Timeout used before connection is attempted (when other requests are queued in the manager)
 	  */
 	case object ManagerTimeout extends TimeoutType
 	{
-		override def name = "Make Request"
+		override val name = "Make Request"
+	}
+	
+	/**
+	 * Timeout used when establishing connection with the server
+	 */
+	@deprecated("Deprecated for removal. Request-specific connection timeout was removed in Apache HttpClient v6", "v1.9.3")
+	case object ConnectionTimeout extends TimeoutType
+	{
+		override val name = "Connect"
 	}
 	
 	/**
 	  * All timeout types
 	  */
-	val values = Vector[TimeoutType](ManagerTimeout, ConnectionTimeout, ReadTimeout)
+	val values = Pair[TimeoutType](ManagerTimeout, ReadTimeout)
 }

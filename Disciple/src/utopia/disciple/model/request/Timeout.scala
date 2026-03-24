@@ -31,13 +31,21 @@ object Timeout
 			  more: (TimeoutType, Duration)*): Timeout =
 		Timeout((more :+ first :+ second).toMap)
 	/**
-	  * @param connection Connection timeout (default = infinite)
 	  * @param read Read timeout (default = infinite)
 	  * @param manager Manager timeout (default = infinite)
 	  * @return Timeout based on specified values
 	  */
-	def apply(connection: Duration = Duration.infinite, read: Duration = Duration.infinite,
-			  manager: Duration = Duration.infinite): Timeout =
+	def apply(read: Duration = Duration.infinite, manager: Duration = Duration.infinite): Timeout =
+		new Timeout(
+			Map(ReadTimeout -> read, ManagerTimeout -> manager).flatMap { case (k, v) => v.ifFinite.map { k -> _ } })
+	/**
+	 * @param connection Connection timeout (default = infinite)
+	 * @param read Read timeout (default = infinite)
+	 * @param manager Manager timeout (default = infinite)
+	 * @return Timeout based on specified values
+	 */
+	@deprecated("Deprecated for removal. Request-specific connection timeout was removed in Apache HttpClient v6", "v1.9.3")
+	def apply(connection: Duration, read: Duration, manager: Duration): Timeout =
 		new Timeout(
 			Map(ConnectionTimeout -> connection, ReadTimeout -> read, ManagerTimeout -> manager)
 				.flatMap { case (k, v) => v.ifFinite.map { k -> _ } })
@@ -46,6 +54,7 @@ object Timeout
 	  * @param connectionTimeout Connection timeout threshold
 	  * @return A timeout with only connection timeout set
 	  */
+	@deprecated("Deprecated for removal. Request-specific connection timeout was removed in Apache HttpClient v6", "v1.9.3")
 	def forConnection(connectionTimeout: Duration) = apply(ConnectionTimeout, connectionTimeout)
 	/**
 	  * @param readTimeout Read timeout threshold
@@ -62,7 +71,8 @@ object Timeout
 	  * @param generalTimeout Timeout to apply to all types of situations (connect, read, manager)
 	  * @return A new timeout
 	  */
-	def uniform(generalTimeout: Duration) = apply(TimeoutType.values.map { t => t -> generalTimeout }.toMap)
+	def uniform(generalTimeout: Duration) =
+		apply(TimeoutType.values.view.map { t => t -> generalTimeout }.toMap)
 }
 
 /**
@@ -77,6 +87,7 @@ case class Timeout(thresholds: Map[TimeoutType, Duration]) extends MaybeEmpty[Ti
 	/**
 	  * @return Connection timeout threshold. Infinite if not otherwise specified.
 	  */
+	@deprecated("Deprecated for removal. Request-specific connection timeout was removed in Apache HttpClient v6", "v1.9.3")
 	def forConnection = apply(ConnectionTimeout)
 	/**
 	  * @return Read timeout threshold. Infinite if not otherwise specified.
@@ -90,6 +101,7 @@ case class Timeout(thresholds: Map[TimeoutType, Duration]) extends MaybeEmpty[Ti
 	/**
 	  * @return Copy of this timeout with no limit on connection timeout
 	  */
+	@deprecated("Deprecated for removal. Request-specific connection timeout was removed in Apache HttpClient v6", "v1.9.3")
 	def withoutConnectionTimeout = without(ConnectionTimeout)
 	/**
 	  * @return Copy of this timeout with no limit on read timeout
@@ -148,6 +160,7 @@ case class Timeout(thresholds: Map[TimeoutType, Duration]) extends MaybeEmpty[Ti
 	  * @param threshold New connection timeout
 	  * @return A copy of this timeout with specified connection timeout
 	  */
+	@deprecated("Deprecated for removal. Request-specific connection timeout was removed in Apache HttpClient v6", "v1.9.3")
 	def withConnectionTimeout(threshold: Duration) = withThreshold(ConnectionTimeout, threshold)
 	/**
 	  * @param threshold New read timeout

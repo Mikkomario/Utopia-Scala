@@ -2,11 +2,11 @@ package utopia.disciple.controller
 
 import org.apache.hc.client5.http.DnsResolver
 import org.apache.hc.client5.http.classic.methods._
-import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.config.{ConnectionConfig, RequestConfig}
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
 import org.apache.hc.client5.http.impl.classic.{HttpClientBuilder, HttpClients}
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
-import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory
+import org.apache.hc.client5.http.ssl.{ClientTlsStrategyBuilder, NoopHostnameVerifier}
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.net.URIBuilder
@@ -14,9 +14,10 @@ import org.apache.hc.core5.ssl.SSLContexts
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Method._
 import utopia.access.model.enumeration.{Method, Status}
+import utopia.disciple.controller.Gateway.insecureTlsStrategy
 import utopia.disciple.controller.interceptor.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.controller.parse.ResponseParser
-import utopia.disciple.model.request.TimeoutType.{ConnectionTimeout, ManagerTimeout, ReadTimeout}
+import utopia.disciple.model.request.TimeoutType.{ManagerTimeout, ReadTimeout}
 import utopia.disciple.model.request.{Body, Request, Timeout}
 import utopia.disciple.model.response.StreamedResponse
 import utopia.flow.collection.immutable.Empty
@@ -25,6 +26,7 @@ import utopia.flow.operator.Identity
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.json.JsonParser
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
@@ -34,6 +36,7 @@ import java.net.{URI, URLEncoder}
 import java.nio.charset.StandardCharsets
 import java.util
 import java.util.concurrent
+import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
@@ -42,12 +45,32 @@ import scala.util.Try
 
 object Gateway
 {
+	// ATTRIBUTES   --------------------
+	
+	/**
+	 * Used for disabling trust store / certificate verification.
+	 * Note: Very insecure.
+	 */
+	private lazy val insecureTlsStrategy = {
+		val sslContext = SSLContexts.custom()
+			.loadTrustMaterial(null, (_: Array[java.security.cert.X509Certificate], _: String) => true)
+			.build()
+		
+		ClientTlsStrategyBuilder.create()
+			.setSslContext(sslContext)
+			.setHostnameVerifier(NoopHostnameVerifier.INSTANCE)
+			.buildClassic()
+	}
+	
+	
+	// OTHER    ------------------------
+	
 	/**
 	  * Creates a new gateway instance
 	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
 	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
-	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
-	  *                       infinite queuing timeout).
+	 * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes read and infinite queuing timeout).
+	 * @param connectionTimeout Applied connection timeout. Default = 5 minutes.
 	  * @param parameterEncoding Encoding option used for query (uri) parameters.
 	  *                          None if no encoding should be used (default).
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
@@ -70,13 +93,13 @@ object Gateway
 	  * @return A new gateway instance
 	  */
 	def apply(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
-	          maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+	          maximumTimeout: Timeout = Timeout(read = 5.minutes), connectionTimeout: Duration = 5.minutes,
 	          parameterEncoding: Option[Codec] = None,
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
 	          responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
 	          allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
 	          disableTrustStoreVerification: Boolean = false) =
-		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, connectionTimeout, parameterEncoding,
 			requestInterceptors, responseInterceptors, dnsResolver, Identity, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 	
@@ -84,8 +107,8 @@ object Gateway
 	  * Creates a new gateway instance
 	  * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
 	  * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
-	  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
-	  *                       infinite queuing timeout).
+	 * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes read and infinite queuing timeout).
+	 * @param connectionTimeout Applied connection timeout. Default = 5 minutes.
 	  * @param parameterEncoding Encoding option used for query (uri) parameters.
 	  *                          None if no encoding should be used (default).
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
@@ -109,14 +132,14 @@ object Gateway
 	  * @return A new gateway instance
 	  */
 	def custom(maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
-	           maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+	           maximumTimeout: Timeout = Timeout(read = 5.minutes), connectionTimeout: Duration = 5.minutes,
 	           parameterEncoding: Option[Codec] = None,
 	           requestInterceptors: Seq[RequestInterceptor] = Empty,
 	           responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
 	           allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
 	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
-		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, parameterEncoding,
+		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, connectionTimeout, parameterEncoding,
 			requestInterceptors, responseInterceptors, dnsResolver, customizeClient, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 }
@@ -128,9 +151,9 @@ object Gateway
 * @since 22.2.2018
   * @param maxConnectionsPerRoute The maximum number of simultaneous connections to a single route (default = 2)
   * @param maxConnectionsTotal The maximum number of simultaneous connections in total (default = 10)
-  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes connection, 5 minutes read,
-  *                       infinite queuing timeout).
-  * @param parameterEncoding Encoding option used for query (uri) parameters.
+  * @param maximumTimeout Maximum timeouts for a single request (default = 5 minutes read and infinite queuing timeout).
+  * @param connectionTimeout Applied connection timeout. Default = 5 minutes.
+ * @param parameterEncoding Encoding option used for query (uri) parameters.
   *                          None if no encoding should be used (default).
   * @param requestInterceptors Interceptors that access and potentially modify all outgoing requests (default = empty)
   * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
@@ -152,7 +175,7 @@ object Gateway
   *                                      https://stackoverflow.com/questions/6784463/error-trustanchors-parameter-must-be-non-empty
 **/
 class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10,
-              maximumTimeout: Timeout = Timeout(connection = 5.minutes, read = 5.minutes),
+              maximumTimeout: Timeout = Timeout(read = 5.minutes), connectionTimeout: Duration = 5.minutes,
               parameterEncoding: Option[Codec] = None,
               requestInterceptors: Seq[RequestInterceptor] = Empty,
               responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
@@ -161,22 +184,30 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
               disableTrustStoreVerification: Boolean = false)
 {
     // ATTRIBUTES    -------------------------
-	
-    private val connectionManager = {
+    
+	private val connectionManager = {
 	    val manager = {
 		    val builder = PoolingHttpClientConnectionManagerBuilder.create()
 		    
-		    // From https://www.baeldung.com/httpclient-ssl
-		    // The tutorial used one function which didn't exist in HttpClient v5
+		    // Optionally disables certificate / trust verification
 		    if (disableTrustStoreVerification)
-		        builder.setSSLSocketFactory(new SSLConnectionSocketFactory(
-			        SSLContexts.custom().loadTrustMaterial(null, (_: Any, _: Any) => true).build()))
+			    builder.setTlsSocketStrategy(insecureTlsStrategy)
 		    
+		    // Sets custom the DNS resolver, if applicable
 		    dnsResolver.foreach(builder.setDnsResolver)
+		    
+		    // Specifies the connection timeout
+		    connectionTimeout.ifFinite.foreach { timeout =>
+			    builder.setDefaultConnectionConfig(
+				    ConnectionConfig.custom().setConnectTimeout(timeout.toMillis, TimeUnit.MILLISECONDS).build())
+		    }
+		    
 		    builder.build()
 	    }
 	    manager.setDefaultMaxPerRoute(maxConnectionsPerRoute)
 	    manager.setMaxTotal(maxConnectionsTotal)
+		
+		
 	    manager
     }
 	
@@ -204,7 +235,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
     // https://stackoverflow.com/questions/2304663/apache-httpclient-making-multipart-form-post
 	
 	/**
-	  * Performs a synchronous request over a HTTP(s) connection, calling the specified function
+	  * Performs a synchronous request over an HTTP(s) connection, calling the specified function
 	  * once (if) a response is received.
 	  *
 	  * Please note that this function blocks during the request.
@@ -225,25 +256,26 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 			// Adds the headers
 			req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
 			// Sets the timeout
-			val config = {
+			val requestConfig = {
 				val builder = RequestConfig.custom()
-				(req.timeout min maximumTimeout).thresholds.view.mapValues { _.toMillis.toInt }
-					.foreach { case (timeoutType, millis) =>
+				(req.timeout min maximumTimeout).thresholds
+					.foreach { case (timeoutType, threshold) =>
+						val millis = threshold.toMillis
 						timeoutType match {
-							case ConnectionTimeout =>
-								builder.setConnectTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 							case ReadTimeout =>
 								builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 							case ManagerTimeout =>
 								builder.setConnectionRequestTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
+							case _ => ()
 						}
 					}
 				builder.build()
 			}
-			base.setConfig(config)
+			base.setConfig(requestConfig)
 			
 			// Performs the request and acquires a response, if possible
-			val rawResponse = client.execute(base)
+			// TODO: Could specify host here
+			val rawResponse = client.executeOpen(null, base, null)
 			StreamedResponse(
 				status = Status(rawResponse.getCode),
 				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)

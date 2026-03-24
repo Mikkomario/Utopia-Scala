@@ -1,5 +1,9 @@
 # Utopia Vault - List of Changes
 
+## v2.1.1 (in development)
+### Breaking changes
+- Updated to **MariaDB Java client v3.3.1**
+
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:
 - **Store** interface received a few updates, adding support for wider ranges of use-cases

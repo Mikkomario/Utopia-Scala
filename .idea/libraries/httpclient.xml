@@ -1,19 +1,17 @@
 <component name="libraryTable">
   <library name="httpclient" type="repository">
-    <properties maven-id="org.apache.httpcomponents.client5:httpclient5:5.1.2" />
+    <properties maven-id="org.apache.httpcomponents.client5:httpclient5:RELEASE" />
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.1.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.1.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.1.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.25.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/commons-codec-1.15.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.36.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.1.2-javadoc.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.1.2-javadoc.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.1.2-javadoc.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.25-javadoc.jar!/" />
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/commons-codec-1.15-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.6-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.4-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.4-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.36-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES />
   </library>
