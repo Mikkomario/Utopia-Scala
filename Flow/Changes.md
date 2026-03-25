@@ -19,6 +19,8 @@
   - Added `.recoverFromFailureWith(...)`
 - **Regex** (object)
   - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
+- **Value**
+  - Added `.getModelOrString`
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:

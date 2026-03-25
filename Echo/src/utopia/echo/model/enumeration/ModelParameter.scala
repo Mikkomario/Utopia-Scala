@@ -179,7 +179,7 @@ object ModelParameter
 	case object RepeatPenalty extends ModelParameter
 	{
 		override val key: String = "repeat_penalty"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("repetition_penalty")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 1.1
@@ -309,7 +309,6 @@ object ModelParameter
 	
 	/**
 	  * Limits the machine’s word choices to the top contenders, which helps it stay on topic and make sense.
-	  *
 	  * A higher value (e.g. 100) will give more diverse answers,
 	  * while a lower value (e.g. 10) will be more conservative.
 	  * Default is 40.

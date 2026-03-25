@@ -87,7 +87,15 @@ case class OpenAiTokenUsageStatistics(input: TokenCount, cached: TokenCount, out
                                       total: TokenCount)
 	extends TokenUsage with ModelConvertible
 {
+	// IMPLEMENTED  ---------------------
+	
 	override def toModel: Model = Model.from("input_tokens" -> input.value, "output_tokens" -> output.value,
 		"total_tokens" -> total.value, "input_tokens_details" -> Model.from("cached_tokens" -> cached.value),
 		"output_tokens_details" -> Model.from("reasoning_tokens" -> reasoning.value))
+	
+	
+	// OTHER    -------------------------
+	
+	def +(other: OpenAiTokenUsageStatistics) = OpenAiTokenUsageStatistics(input + other.input, cached + other.cached,
+		output + other.output, reasoning + other.reasoning, total + other.total)
 }

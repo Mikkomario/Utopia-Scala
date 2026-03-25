@@ -22,7 +22,8 @@ trait HasImmutableContextSizeLimits[+Repr] extends HasContextSizeLimits
 	// OTHER    ------------------------
 	
 	def withMaxContextSize(max: TokenCount) = mapContextSizeLimits { _.withMax(max) }
-	def withMinContextSize(min: TokenCount) = mapContextSizeLimits { _.withMin(min) }
+	def withMinContextSize(min: TokenCount, sameWithThink: Boolean = false) =
+		mapContextSizeLimits { _.withMin(min, sameWithThink) }
 	def withMinContextSizeWhenThinking(min: TokenCount) = mapContextSizeLimits { _.withMinWhenThinking(min) }
 	def withAdditionalContextSize(additional: TokenCount) = mapContextSizeLimits { _.withAdditional(additional) }
 	

@@ -10,7 +10,7 @@ import utopia.echo.model.request.openai.GetBufferedOpenAiResponse
 import utopia.echo.model.request.tool.Tool
 import utopia.echo.model.settings.ModelSettings
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.equality.EqualsExtensions._
@@ -19,7 +19,7 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object ChatParams
 {
@@ -45,26 +45,50 @@ object ChatParams
 		// IMPLEMENTED  -----------------
 		
 		// NB: Doesn't support tools at this time
-		override def apply(model: HasProperties): Try[ChatParams] =
-			model
-				.tryGet("messages", "message") {
-					_.tryVectorWith { _.tryModel.flatMap(ChatMessage.openAiMessageParser.apply) }.filter { _.nonEmpty }
-				}
-				.map { messages =>
-					val settings = ModelSettings.parseFrom(model("options", "settings").model.getOrElse(model))
-					val reasoningEffort = model("reasoning_effort").string match {
-						case Some(effortStr) => ReasoningEffort.findForKey(effortStr)
-						case None =>
-							model("think").boolean.map { if (_) ReasoningEffort.Medium else SkipReasoning }
+		override def apply(model: HasProperties): Try[ChatParams] = {
+			// The messages may be specified as either:
+			//      1. An object array under "messages"
+			//      2. An object in "message"
+			//      3. A string in "message"
+			val messages = model.tryGet("messages") {
+				_.tryVectorWith { _.tryModel.flatMap(ChatMessage.openAiMessageParser.apply) }.filter { _.nonEmpty }
+			} match {
+				case Success(messages) => Success(messages)
+				case Failure(error) =>
+					model("message").getModelOrString match {
+						case Left(messageModel) => ChatMessage.openAiMessageParser(messageModel).map(Single.apply)
+						case Right(message) =>
+							if (message.isEmpty)
+								Failure(error)
+							else
+								Success(Single(ChatMessage(message)))
 					}
-					val appliedLlm = model("model").string.filterNot { _ ~== llm.llmName } match {
-						case Some(modelName) => LlmDesignator(modelName)
-						case None => llm
-					}
-					
-					ChatParams(messages.head, messages.tail, settings = settings, reasoningEffort = reasoningEffort)(
-						appliedLlm)
+			}
+			messages.map { messages =>
+				// Settings may be specified in either:
+				//      1. "options"
+				//      2. "settings"
+				//      3. Model root
+				val settings = ModelSettings.parseFrom(model("options", "settings").model.getOrElse(model))
+				// Thinking may be specified with either:
+				//      1. reasoning_effort: String
+				//      2. think: Boolean
+				//      3. Neither
+				val reasoningEffort = model("reasoning_effort").string match {
+					case Some(effortStr) => ReasoningEffort.findForKey(effortStr)
+					case None =>
+						model("think").boolean.map { if (_) ReasoningEffort.Medium else SkipReasoning }
 				}
+				// Uses the default LLM, if not specified in the model
+				val appliedLlm = model("model").string.filterNot { _ ~== llm.llmName } match {
+					case Some(modelName) => LlmDesignator(modelName)
+					case None => llm
+				}
+				
+				ChatParams(messages.head, messages.tail, settings = settings, reasoningEffort = reasoningEffort)(
+					appliedLlm)
+			}
+		}
 	}
 }
 

@@ -356,10 +356,16 @@ case class Value(content: Option[Any], dataType: DataType)
 	
 	/**
 	 * @return Either:
-	 *              - Left: This value as a Model, if possible
+	 *              - Left: This value as a Model, if possible to convert
 	 *              - Right This value as a Vector
 	 */
 	def getModelOrVector = getLeftOrRight { _.model } { _.getVector }
+	/**
+	 * @return Either:
+	 *              - Left: This value as a Model, if possible to convert
+	 *              - Right: This value as a String
+	 */
+	def getModelOrString = getLeftOrRight { _.model } { _.getString }
 	
 	/**
 	 * Attempts to cast this value to a left value. And if that doesn't work, tries to cast this to a right value.

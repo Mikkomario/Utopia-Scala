@@ -27,10 +27,10 @@ case class VastAiVllmProcessorStatus(phase: VastAiVllmProcessPhase, instanceStat
                                      lastPendingEnded: Instant)
 	extends ModelConvertible
 {
-	override def toModel: Model = Model.from("maxContext" -> maxContextSize.value,
-		"phase" -> Model.from("name" -> phase.name, "index" -> phase.index), "instanceStatus" -> instanceStatus,
-		"usable" -> (phase == ApiHosting),
-		"tokenUsage" -> Model.from("active" -> activeTokens.value, "pending" -> pendingTokens.value),
-		"started" -> started, "lastRequestTime" -> lastRequestTime, "lastPendingStarted" -> lastPendingStarted,
-		"lastPendingEnded" -> lastPendingEnded)
+	override def toModel: Model = Model.from("max_context" -> maxContextSize.value,
+		"phase" -> Model.from("name" -> phase.name, "index" -> phase.index), "instance_status" -> instanceStatus,
+		"usable" -> (phase == ApiHosting && instanceStatus.exists { _.instanceIsUsable }),
+		"token_usage" -> Model.from("active" -> activeTokens.value, "pending" -> pendingTokens.value),
+		"started" -> started, "last_request_time" -> lastRequestTime, "last_pending_started" -> lastPendingStarted,
+		"last_pending_ended" -> lastPendingEnded)
 }

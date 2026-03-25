@@ -64,10 +64,11 @@ case class ContextSizeLimits(max: TokenCount = TokenCount(8192), additional: Tok
 	
 	/**
 	 * @param min New minimum context size
+	 * @param sameWithThink Whether the same minimum context size should be used in thinking mode
 	 * @return Copy of these limits with the specified absolute minimum
 	 */
-	def withMin(min: TokenCount) =
-		copy(min = min, minWithThink = minWithThink atLeast min, max = max atLeast min)
+	def withMin(min: TokenCount, sameWithThink: Boolean = false) =
+		copy(min = min, minWithThink = if (sameWithThink) min else minWithThink atLeast min, max = max atLeast min)
 	def mapMin(f: Mutate[TokenCount]) = withMin(f(min))
 	/**
 	 * @param min Minimum context size to use in thinking mode
