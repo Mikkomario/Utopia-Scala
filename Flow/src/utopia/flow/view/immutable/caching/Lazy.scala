@@ -8,7 +8,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.ListenableLazy
-import utopia.flow.view.mutable.caching.{DeprecatingLazy, ResettableLazy}
+import utopia.flow.view.mutable.caching.{DeprecatingLazy, ExpiringLazy, ResettableLazy}
 import utopia.flow.view.mutable.eventful.GeneratesOnce
 
 object Lazy
@@ -27,6 +27,11 @@ object Lazy
 	 * @return Access to constructors of volatile (i.e. thread-safe) lazy containers
 	 */
 	def volatile = VolatileLazy
+	
+	/**
+	 * @return Access to expiring lazy constructors
+	 */
+	def expiring = ExpiringLazy
 	
 	
 	// OTHER    ------------------------

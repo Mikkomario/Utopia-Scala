@@ -1,6 +1,7 @@
 package utopia.access.model
 
 import utopia.access.model.enumeration.Method
+import utopia.flow.async.process.WaitTarget.{Until, WaitDuration}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
@@ -12,6 +13,7 @@ import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.{Mutate, NotEmpty}
 
@@ -108,6 +110,19 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	  * HTTP-date, as described in section 3.3.1; it MUST be sent in RFC 1123 [8]-date format.
 	  */
 	lazy val date = timeHeader("Date")
+	
+	/**
+	 * The HTTP Retry-After response header indicates how long the user agent should wait before
+	 * making a follow-up request. There are three main cases this header is used:
+	 *      - In a 503 Service Unavailable response, this indicates how long the service is expected to be unavailable.
+	 *      - In a 429 Too Many Requests response, this indicates how long to wait before making a new request.
+	 *      - In a redirect response, such as 301 Moved Permanently, this indicates the minimum time that the user
+	 *        agent is asked to wait before issuing the redirected request.
+	 */
+	lazy val retryAfter = timeHeader("Retry-After") match {
+		case Some(after) => Some(Until(after))
+		case None => apply("Retry-After").double.map { delay => WaitDuration(delay.seconds) }
+	}
 	
 	
 	// IMPLEMENTED    ---------------

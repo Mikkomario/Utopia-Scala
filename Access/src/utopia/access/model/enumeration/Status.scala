@@ -9,8 +9,9 @@ object Status extends OpenEnumeration[Status, Int]
 	// INITIAL CODE -----------------------------
 	
 	introduce(OK, Created, Accepted,
-		NoContent, MovedPermanently, Found, NotModified,
-		BadRequest, Unauthorized, Forbidden, NotFound, MethodNotAllowed,
+		NoContent, MovedPermanently, Found, NotModified, TemporaryRedirect,
+		BadRequest, Unauthorized, Forbidden, NotFound,
+		MethodNotAllowed, NotAcceptable, Teapot, Locked, TooEarly, TooManyRequests, NoResponse,
 		InternalServerError, NotImplemented, ServiceUnavailable)
 	
 	
@@ -119,6 +120,26 @@ object Status extends OpenEnumeration[Status, Int]
 	case object NotModified extends Status("Not Modified", 304, isTemporary = true, doNotRepeat = false)
 	
 	/**
+	 * The HTTP 307 Temporary Redirect redirection response status code indicates that the resource requested has
+	 * been temporarily moved to the URL in the Location header.
+	 *
+	 * A browser receiving this status will automatically request the resource at the URL in the Location header,
+	 * redirecting the user to the new page. Search engines receiving this response will not attribute links to the
+	 * original URL to the new resource, meaning no SEO value is transferred to the new URL.
+	 *
+	 * The method and the body of the original request are reused to perform the redirected request.
+	 * In the cases where you want the request method to be changed to GET, use 303 See Other instead.
+	 * This is useful when you want to give an answer to a successful PUT request that is not the uploaded resource,
+	 * but a status monitor or confirmation message like "You have successfully uploaded XYZ".
+	 *
+	 * The difference between 307 and 302 is that 307 guarantees that the client will not change the request method
+	 * and body when the redirected request is made.
+	 * With 302, older clients incorrectly changed the method to GET. 307 and 302 responses are identical when the
+	 * request method is GET.
+	 */
+	case object TemporaryRedirect extends Status("Temporary Redirect", 307, isTemporary = true, doNotRepeat = false)
+	
+	/**
 	 * The request could not be understood by the server due to malformed syntax. The client SHOULD NOT
 	 * repeat the request without modifications.
 	 */
@@ -161,6 +182,76 @@ object Status extends OpenEnumeration[Status, Int]
 	 * the requested resource.
 	 */
 	case object MethodNotAllowed extends Status("Method Not Allowed", 405, isTemporary = false, doNotRepeat = true)
+	
+	/**
+	 * The HTTP 406 Not Acceptable client error response status code indicates that the server could not produce a
+	 * response matching the list of acceptable values defined in the request's proactive content negotiation headers
+	 * and that the server was unwilling to supply a default representation.
+	 *
+	 * Proactive content negotiation headers include:
+	 *      - Accept
+	 *      - Accept-Encoding
+	 *      - Accept-Language
+	 *
+	 * A server may return responses that differ from the request's accept headers.
+	 * In such cases, a 200 response with a default resource that doesn't match the client's list of acceptable
+	 * content negotiation values may be preferable to sending a 406 response.
+	 *
+	 * If a server returns a 406, the body of the message should contain the list of available representations
+	 * for the resource, allowing the user to choose, although no standard way for this is defined.
+	 */
+	case object NotAcceptable extends Status("Not Acceptable", 406, isTemporary = false, doNotRepeat = true)
+	
+	/**
+	 * The HTTP 418 I'm a teapot status response code indicates that the server refuses to brew coffee
+	 * because it is, permanently, a teapot.
+	 * A combined coffee/tea pot that is temporarily out of coffee should instead return 503.
+	 * This error is a reference to Hyper Text Coffee Pot Control Protocol defined in April Fools'
+	 * jokes in 1998 and 2014.
+	 *
+	 * While originally defined in RFC 2324 as an April Fools' joke,
+	 * this status code was formally reserved in RFC 9110 due to its wide deployment as a joke,
+	 * so it cannot be assigned any non-joke semantics for the foreseeable future.
+	 *
+	 * Some websites use this response for requests they do not wish to handle, such as automated queries.
+	 */
+	case object Teapot extends Status("I'm a Teapot", 418, isTemporary = false, doNotRepeat = true)
+	/**
+	 * The HTTP 423 Locked client error response status code indicates that a resource is locked,
+	 * meaning it can't be accessed.
+	 */
+	case object Locked extends Status("Locked", 423, isTemporary = false, doNotRepeat = true)
+	/**
+	 * The HTTP 425 Too Early client error response status code indicates that the server was unwilling to risk
+	 * processing a request that might be replayed to avoid potential replay attacks.
+	 *
+	 * If a client has interacted with a server recently, early data (also known as zero round-trip time (0-RTT) data)
+	 * allows the client to send data to a server in the first round trip of a connection,
+	 * without waiting for the TLS handshake to complete. A client that sends a request in early data does not
+	 * need to include the Early-Data header.
+	 *
+	 * See https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Early-Data for more information.
+	 */
+	case object TooEarly extends Status("Too Early", 425)
+	/**
+	 * The HTTP 429 Too Many Requests client error response status code indicates the client
+	 * has sent too many requests in a given amount of time.
+	 * This mechanism of asking the client to slow down the rate of requests is commonly called "rate limiting".
+	 *
+	 * A Retry-After header may be included to this response to indicate how long a client should wait
+	 * before making the request again.
+	 *
+	 * Implementations of rate limiting vary; restrictions may be server-wide or per resource. Typically,
+	 * rate-limiting restrictions are based on a client's IP but can be specific to users or authorized
+	 * applications if requests are authenticated or contain a cookie.
+	 */
+	case object TooManyRequests extends Status("Too Many Requests", 429, isTemporary = true, doNotRepeat = false)
+	/**
+	 * HTTP response status code 444 No Response is an unofficial client error specific to nginx.
+	 * The server closes the HTTP Connection without sending any data back to the client,
+	 * including this HTTP status code itself.
+	 */
+	case object NoResponse extends Status("No Response", 444, isTemporary = false, doNotRepeat = true)
 	
 	/**
 	 * The server encountered an unexpected condition which prevented it from fulfilling the request.

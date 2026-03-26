@@ -13,6 +13,8 @@
 ### New methods
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **Lazy** (object)
+  - Added `.expiring`
 - **QueuedAction** (object)
   - Added `.started(Future)`
 - **PossiblyFailingFuture**

@@ -1,5 +1,12 @@
 # Utopia Access - List of Changes
 
+## v1.7.1 (in development)
+### New methods
+- **Headers**
+  - Added `.retryAfter`
+### Other changes
+- Added multiple new **Status** values
+
 ## v1.7 - 15.03.2026
 This update makes minor modifications in **Headers**, mostly concerning content type -handling.
 ### Breaking changes

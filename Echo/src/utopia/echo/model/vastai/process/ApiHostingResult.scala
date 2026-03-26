@@ -13,6 +13,11 @@ sealed trait ApiHostingResult
 	 * @return Whether the API was hosted for some time
 	 */
 	def wasHosted: Boolean
+	
+	/**
+	 * @return If API setup failed, yields the associated error
+	 */
+	def failure: Option[Throwable]
 }
 
 object ApiHostingResult
@@ -25,14 +30,28 @@ object ApiHostingResult
 	 */
 	case class Failed(cause: Throwable) extends ApiHostingResult
 	{
+		// ATTRIBUTES   -----------------
+		
 		override val wasHosted: Boolean = false
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def failure: Option[Throwable] = Some(cause)
 	}
 	/**
 	 * Result given when the API was successfully hosted, and was stopped without issues.
 	 */
 	case object Stopped extends ApiHostingResult
 	{
+		// ATTRIBUTES   -----------------
+		
 		override val wasHosted: Boolean = true
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def failure: Option[Throwable] = None
 	}
 	/**
 	 * Result given when the API was stopped because it could no longer be accessed
@@ -40,6 +59,13 @@ object ApiHostingResult
 	 */
 	case class Disconnected(instanceStatus: InstanceStatus) extends ApiHostingResult
 	{
+		// ATTRIBUTES   -----------------
+		
 		override val wasHosted: Boolean = true
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def failure: Option[Throwable] = None
 	}
 }
