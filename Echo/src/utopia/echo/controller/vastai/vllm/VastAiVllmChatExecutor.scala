@@ -21,10 +21,9 @@ import utopia.echo.model.vastai.instance.NewInstanceFoundation
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted, Stopping}
-import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecord, VastAiVllmProcessorStatus}
+import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecorder, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{AccessQueue, MappingFunnel}
-import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.async.process.{Breakable, Delay, Loop, LoopingProcess}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
@@ -130,7 +129,7 @@ object VastAiVllmChatExecutor
 	          additionalReservedDisk: ByteCount = 5.gb, defaultContextSize: Option[TokenCount] = None,
 	          contextSafetyMargin: TokenCount = 64,
 	          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
-	          recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
+	          recorder: Option[VastAiVllmProcessRecorder], installScriptPath: Option[Path] = None,
 	          remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
 	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
 	          idleShutdownThreshold: Duration = 15.minutes, partialUseShutdownThreshold: Duration = 25.minutes,
@@ -224,7 +223,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
                              maxConnectionsPerInstance: Int = 28, additionalReservedDisk: ByteCount = 5.gb,
                              defaultContextSize: Option[TokenCount] = None, contextSafetyMargin: TokenCount = 64,
                              backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
-                             recorder: Option[VastAiVllmProcessRecord => Unit], installScriptPath: Option[Path] = None,
+                             recorder: Option[VastAiVllmProcessRecorder], installScriptPath: Option[Path] = None,
                              remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
                              recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
                              idleShutdownThreshold: Duration = 15.minutes,
@@ -855,8 +854,19 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				Continue
 		}
 		
-		// Informs the "recorder" once this process finishes
-		recorder.foreach { recorder => process.recordFuture.foreach(recorder) }
+		// Informs the recorder once this process finishes, and when/if an API is successfully hosted
+		recorder.foreach { recorder =>
+			process.detailedStatePointer.addListenerAndSimulateEvent(NotStarted) { e =>
+				e.newValue match {
+					case HostingApi(instance, _, _, _) =>
+						recorder.onApiSetup(instance, process.startTime)
+						Detach
+					case state if state.phase > ApiHosting => Detach
+					case _ => Continue
+				}
+			}
+			process.recordFuture.foreach(recorder.onProcessCompleted)
+		}
 		
 		// The next instance may be acquired once the process is in loading state / instance has been acquired
 		process.detailedStatePointer

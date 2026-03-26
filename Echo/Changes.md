@@ -9,6 +9,7 @@
   the amount of processed tokens more carefully.
   - The constructor is now different, because of this
   - The return value of `.status` is also different
+  - Accepted process recorder is also different
 - **LlmServiceClient**'s `maxParallelRequests` parameter is now **Option** instead of **Int**, 
   and requests are no longer limited by default.
 - **VastAiVllmProcess** now accepts `maxParallelRequests: Option[Int]`
