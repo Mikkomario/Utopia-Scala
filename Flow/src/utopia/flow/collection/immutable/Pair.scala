@@ -415,6 +415,23 @@ case class Pair[+A](first: A, second: A)
 	// OTHER    --------------------------
 	
 	/**
+	 * @param f A function that returns true for prioritized entries
+	 * @return 1-2 items from this pair, preferring those which fulfilled the specified function
+	 */
+	def bestMatch(f: A => Boolean): IndexedSeq[A] = {
+		if (f(first)) {
+			if (f(second))
+				self
+			else
+				Single(first)
+		}
+		else if (f(second))
+			Single(second)
+		else
+			self
+	}
+	
+	/**
 	  * @param f A mapping function to apply on both sides of this pair, lazily
 	  * @tparam B Type of mapping function results
 	  * @return Lazily mapped copy of this pair

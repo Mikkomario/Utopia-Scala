@@ -15,10 +15,12 @@
   - Added `.getOrElseUpdate(...)`
 - **Lazy** (object)
   - Added `.expiring`
-- **QueuedAction** (object)
-  - Added `.started(Future)`
+- **Pair**
+  - Added `.bestMatch(...)`
 - **PossiblyFailingFuture**
   - Added `.recoverFromFailureWith(...)`
+- **QueuedAction** (object)
+  - Added `.started(Future)`
 - **Regex** (object)
   - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
 - **Value**
