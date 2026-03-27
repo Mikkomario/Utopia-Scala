@@ -19,7 +19,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{AssignableOnce, SettableFlag}
-import utopia.vault.database.Connection.{GeneratedKeysIterator, StatementRowsIterator, settings}
+import utopia.vault.database.Connection.{GeneratedKeysIterator, StatementRowsIterator, driver, settings}
 import utopia.vault.error.HandleError
 import utopia.vault.model.error.{DBException, NoConnectionException}
 import utopia.vault.model.immutable.{Result, Row, Table}

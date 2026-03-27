@@ -2,8 +2,7 @@
 
 ## v2.1.1 (in development)
 ### Breaking changes
-- Updated to **MariaDB Java client v3.3.1**
-  - If you're using a custom driver, you may need to upgrade to one that supports JDBC 4.5
+- The default connection target is now :mariadb instead of :mysql
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:

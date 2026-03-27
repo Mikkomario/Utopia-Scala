@@ -149,7 +149,7 @@ Within the settings file, specify a json object with the following properties:
 - `log_directory: Path (optional)` - Determines the directory where encountered errors are logged
   - Errors are always written on the console itself as well
 - `database: Object` - Contains the following properties:
-  - `address: String` - Address used when connecting to the database. The default value is `"jdbc:mysql://localhost:3306/"`
+  - `address: String` - Address used when connecting to the database. The default value is `"jdbc:mariadb://localhost:3306/"`
   - `user: String` - User used in authentication. The default value is `"root"`
   - `password: String` - Password used in authentication. Required if the database is password-protected.
   - `name: String` - Name of the used database

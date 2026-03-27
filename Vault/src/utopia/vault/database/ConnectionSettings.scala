@@ -5,7 +5,7 @@ package utopia.vault.database
  * semantics
  * @param connectionTarget
  * The new MariaDB / MySQL server to be used. Should not include 
- * the name of the database. Default: "jdbc:mysql://localhost:3306/"
+ * the name of the database. Default: "jdbc:mariadb://localhost:3306/"
  * @param user The user name used for accessing the database. Default: "root"
  * @param password the password used for accessing the database. Default: ""
  * @param driver The driver used when connecting to the server. Eg. "org.gjt.mm.mysql.Driver.". 
@@ -19,7 +19,7 @@ package utopia.vault.database
  * @author Mikko Hilpinen
  * @since 16.4.2017
  */
-case class ConnectionSettings(connectionTarget: String = "jdbc:mysql://localhost:3306/", user: String = "root",
+case class ConnectionSettings(connectionTarget: String = "jdbc:mariadb://localhost:3306/", user: String = "root",
 							  password: String = "", defaultDBName: Option[String] = None,
 							  driver: Option[String] = None, debugPrintsEnabled: Boolean = false,
 							  maximumAmountOfRowsCached: Int = 10000, charsetName: String = "",
@@ -38,6 +38,12 @@ case class ConnectionSettings(connectionTarget: String = "jdbc:mysql://localhost
 		}
 	}
 	
-	override def toString = s"Connecting to $connectionTarget with user $user ${
-		if (password.nonEmpty) "using a password" else "without a password"} ($charsetString)"
+	override def toString = {
+		val driverStr = driver match {
+			case Some(driver) => s"using driver $driver"
+			case None => "using the default driver"
+		}
+		s"Connecting to $connectionTarget with user $user ${
+			if (password.nonEmpty) "using a password" else "without a password"} $driverStr ($charsetString)"
+	}
 }

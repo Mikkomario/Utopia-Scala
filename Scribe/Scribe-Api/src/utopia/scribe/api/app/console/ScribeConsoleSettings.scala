@@ -77,7 +77,7 @@ object ScribeConsoleSettings
 		override lazy val schema: ModelDeclaration = ModelDeclaration(
 			PropertyDeclaration("log_directory", StringType, Vector("log"), isOptional = true)
 		).withChild("database", ModelDeclaration(
-			PropertyDeclaration("address", StringType, Vector("target", "url"), "jdbc:mysql://localhost:3306/"),
+			PropertyDeclaration("address", StringType, Vector("target", "url"), "jdbc:mariadb://localhost:3306/"),
 			PropertyDeclaration("user", StringType, defaultValue = "root"),
 			PropertyDeclaration("password", StringType, Vector("pw"), isOptional = true),
 			PropertyDeclaration("name", StringType, defaultValue = "scribe_db")
