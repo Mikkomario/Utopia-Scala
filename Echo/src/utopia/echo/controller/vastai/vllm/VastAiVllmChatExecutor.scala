@@ -471,7 +471,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			debug { writer =>
 				writer.println(s"${ Now.toLocalTime }: Status:")
 				status.processorStates.foreach { status =>
-					println(s"\t- ${ status.phase.name }: ${ status.activeTokens } active + ${
+					writer.println(s"\t- ${ status.phase.name }: ${ status.activeTokens } active + ${
 						status.pendingTokens } pending")
 				}
 			}

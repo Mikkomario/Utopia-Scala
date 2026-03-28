@@ -94,7 +94,7 @@ class EstimatedTokenCount(val raw: Int, val corrected: Int)
 	override def unary_- : EstimatedTokenCount = EstimatedTokenCount(-raw, -corrected)
 	
 	override def toModel: Model = Model.from("raw" -> raw, "corrected" -> corrected)
-	override def toString = if (raw == 0) "0" else s"~${ super.toString }"
+	override def toString = if (raw == 0) "0" else s"~${ super[TokenCountLike].toString }"
 	
 	override def +(other: TokenCount) = other match {
 		case estimate: EstimatedTokenCount => EstimatedTokenCount(raw + estimate.raw, corrected + estimate.corrected)

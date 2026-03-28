@@ -28,7 +28,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	/**
 	 * A regular expression that finds "www."
 	 */
-	val wwwRegex = ((Regex("w").times(3) || Regex("W").times(3)) + Regex.escape('.')).withinParentheses
+	val wwwRegex = ((Regex("w").times(3) || Regex("W").times(3)) + Regex.dot).withinParentheses
 	private val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
 	
 	/**
@@ -37,7 +37,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	  */
 	val regex =
 		((httpRegex + wwwRegex.noneOrOnce).withinParentheses || wwwRegex).withinParentheses +
-			domainCharacterRegex.oneOrMoreTimes + Regex.escape('.') + domainCharacterRegex.oneOrMoreTimes +
+			domainCharacterRegex.oneOrMoreTimes + Regex.dot + domainCharacterRegex.oneOrMoreTimes +
 			portNumberRegex.noneOrOnce
 	
 	
