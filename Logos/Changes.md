@@ -1,5 +1,12 @@
 # Utopia Logos - List of Changes
 
+## v0.7.1
+### New methods
+- **Domain** (object)
+  - Added `.standardizeWithoutProtocol(String)` and `.removeHttp(String)`
+### Other changes
+- **FilterDomains** now normalizes URL input to not include the HTTP part
+
 ## v0.7 - 15.03.2026
 An intermediate update focusing on how domains are stored in the DB
 ### Breaking changes
