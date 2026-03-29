@@ -9,15 +9,6 @@ object AccessDomain extends AccessOneRoot[AccessDomain[Domain]]
 	// ATTRIBUTES	--------------------
 	
 	override lazy val root = AccessDomains.root.head
-	
-	
-	// IMPLICIT	--------------------
-	
-	/**
-	  * Provides implicit access to an access point's .values property
-	  * @param access Access point whose values are accessed
-	  */
-	implicit def accessValues(access: AccessDomain[_]): AccessDomainValue = access.values
 }
 
 /**

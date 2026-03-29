@@ -29,7 +29,7 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 	// IMPLEMENTED  -------------------------
 	
 	// Removes the http:// and https://
-	override protected def standardize(value: String): String = removeHttp(value).toLowerCase
+	override protected def standardize(value: String): String = Domain.removeHttp(value).toLowerCase
 	
 	override protected def diff(proposed: Set[String], existing: Set[String]): Set[String] = {
 		if (existing.isEmpty)
@@ -39,13 +39,13 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 	}
 	
 	override protected def pullMatchMap(values: Set[String])(implicit connection: Connection): Map[String, Domain] =
-		access.withUrls(values.map(removeHttp)).toMapBy { _.url }
+		access.withUrls(values).toMapBy { _.url }
 	
 	override protected def insertAndMap(values: Seq[String])(implicit connection: Connection): Map[String, Domain] =
 		model.insertFrom(values.map { d =>
 			if (d.startsWith("http")) {
 				val isHttps = d.lift(4).contains('s')
-				removeHttp(d) -> CertainBoolean(isHttps)
+				Domain.removeHttp(d) -> CertainBoolean(isHttps)
 			}
 			else
 				d -> UncertainBoolean
@@ -100,7 +100,7 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 		access.filter(model.url.like("http%")).stream { domainsIter =>
 			domainsIter.foreach { domain =>
 				val isHttps = domain.url.lift(4).contains('s')
-				model.withId(domain.id).withUrl(removeHttp(domain.url)).withIsHttps(isHttps).update()
+				model.withId(domain.id).withUrl(Domain.removeHttp(domain.url)).withIsHttps(isHttps).update()
 			}
 		}
 		// Removes all duplicate entries from the DB
@@ -152,10 +152,5 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 					access(duplicateIds).delete()
 				}
 		}
-	}
-	
-	private def removeHttp(url: String) = Domain.httpRegex.endIndexIteratorIn(url).nextOption() match {
-		case Some(startIndex) => url.drop(startIndex)
-		case None => url
 	}
 }

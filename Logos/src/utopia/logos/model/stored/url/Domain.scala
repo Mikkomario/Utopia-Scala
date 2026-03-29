@@ -54,30 +54,13 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	 * @param preferHttps Whether to prepend "https://" instead of "http://". Default = false.
 	 * @return A standardized copy of the specified URL. If the specified URL was empty, returns it as it is.
 	 */
-	def standardize(url: String, preferHttps: Boolean = false) = {
-		// Case: Empty string => No changes
-		if (url.isEmpty)
-			url
-		// Looks for the http(s) part
-		else {
-			val noControl = url.stripControlCharacters.trim.toLowerCase
-			// Case: Http(s) found => Valid
-			val modified = {
-				if (httpRegex.existsIn(noControl))
-					noControl
-				// Case: No http(s) => Adds it
-				else {
-					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
-					s"$httpPart$noControl"
-				}
-			}
-			// Removes the trailing forward slash, also
-			if (modified.endsWith("/"))
-				modified.dropRight(1)
-			else
-				modified
-		}
-	}
+	def standardize(url: String, preferHttps: Boolean = false) = _standardize(url, preferHttps)
+	/**
+	 * Standardizes a URL, but doesn't consider the http protocol part
+	 * @param url URL to standardize
+	 * @return A standardized copy of the specified URL. If the specified URL was empty, returns it as it is.
+	 */
+	def standardizeWithoutProtocol(url: String) = _standardize(url, skipProtocol = true)
 	
 	/**
 	 * Includes www. in the specified URL, unless it's based on a numeric IP address
@@ -101,6 +84,40 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 					else
 						s"www.$url"
 			}
+	}
+	
+	/**
+	 * @param url An URL, possibly containing http:// or https://
+	 * @return The specified URL without the http part
+	 */
+	def removeHttp(url: String) = httpRegex.endIndexIteratorIn(url).nextOption() match {
+		case Some(startIndex) => url.drop(startIndex)
+		case None => url
+	}
+	
+	private def _standardize(url: String, preferHttps: Boolean = false, skipProtocol: Boolean = false) = {
+		// Case: Empty string => No changes
+		if (url.isEmpty)
+			url
+		// Looks for the http(s) part (optional)
+		else {
+			val noControl = url.stripControlCharacters.trim.toLowerCase
+			// Case: Http(s) found or skipped => Valid
+			val modified = {
+				if (skipProtocol || httpRegex.existsIn(noControl))
+					noControl
+				// Case: No http(s) => Adds it
+				else {
+					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
+					s"$httpPart$noControl"
+				}
+			}
+			// Removes the trailing forward slash, also
+			if (modified.endsWith("/"))
+				modified.dropRight(1)
+			else
+				modified
+		}
 	}
 }
 

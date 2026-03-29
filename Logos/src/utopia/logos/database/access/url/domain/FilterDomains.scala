@@ -2,6 +2,7 @@ package utopia.logos.database.access.url.domain
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.storable.url.DomainDbModel
+import utopia.logos.model.stored.url.Domain
 import utopia.vault.nosql.view.FilterableView
 
 /**
@@ -22,16 +23,15 @@ trait FilterDomains[+Repr] extends FilterableView[Repr]
 	// OTHER	--------------------
 	
 	/**
-	  * @param url url to target
-	  * @return Copy of this access point that only includes domains with the specified url
+	  * @param url URL to target (may include the http part, but it is ignored)
+	  * @return Copy of this access point that only includes domains with the specified URL
 	  */
-	def withUrl(url: String) = filter(model.url.column <=> url)
-	
+	def withUrl(url: String) = filter(model.url.column <=> Domain.removeHttp(url))
 	/**
-	  * @param urls Targeted urls
-	  * @return Copy of this access point that only includes domains where url is within the specified value 
-	  * set
+	  * @param urls Targeted URLs (may include the http parts, but these are ignored)
+	  * @return Copy of this access point that only includes domains where url is within the specified value set
 	  */
-	def withUrls(urls: Iterable[String]) = filter(model.url.column.in(urls))
+	def withUrls(urls: IterableOnce[String]) =
+		filter(model.url.column.in(urls.iterator.map(Domain.removeHttp).toSet))
 }
 

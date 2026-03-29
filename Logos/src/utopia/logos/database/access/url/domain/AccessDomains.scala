@@ -15,19 +15,9 @@ object AccessDomains
 	override lazy val root = apply(DomainDbReader)
 	
 	
-	// IMPLICIT	--------------------
-	
-	/**
-	  * Provides implicit access to an access point's .values property
-	  * @param access Access point whose values are accessed
-	  */
-	implicit def accessValues(access: AccessDomains[_, _]): AccessDomainValues = access.values
-	
-	
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessDomainRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedDomains(access)
 }
 
