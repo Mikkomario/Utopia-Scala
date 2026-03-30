@@ -258,7 +258,7 @@ object ScribeTryExtensions
 				
 				groupedFailures.foreach { case (errorName, failures) =>
 					_scribe.variant("error", errorName)
-						.apply(_message, _details ++ Model.from(
+						.apply(failures.head, _message, _details ++ Model.from(
 							"theseFailures" -> failures.size, "totalFailures" -> totalFailureCount))
 				}
 			}

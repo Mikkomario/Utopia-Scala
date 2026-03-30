@@ -4,6 +4,7 @@
 ### New methods
 - **Domain** (object)
   - Added `.standardizeWithoutProtocol(String)` and `.removeHttp(String)`
+  - Added `.suffixRegex`
 ### Other changes
 - **FilterDomains** now normalizes URL input to not include the HTTP part
 

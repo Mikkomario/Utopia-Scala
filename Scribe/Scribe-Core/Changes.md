@@ -1,5 +1,9 @@
 # Utopia Scribe Core - list of changes
 
+## v1.2.2 (in development)
+### Bugfixes
+- Throwable collection logging now includes an example from the collected failures
+
 ## v1.2.1 - 15.03.2026
 A new build supporting **Flow v2.8**
 ### New methods

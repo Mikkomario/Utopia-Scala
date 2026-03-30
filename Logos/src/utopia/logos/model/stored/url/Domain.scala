@@ -29,6 +29,11 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	 * A regular expression that finds "www."
 	 */
 	val wwwRegex = ((Regex("w").times(3) || Regex("W").times(3)) + Regex.dot).withinParentheses
+	/**
+	 * A regular expression for finding the domain suffix, such as ".com".
+	 * Accepts very long suffixes (up to 24 letters).
+	 */
+	val suffixRegex = Regex.dot + Regex.letter.times(2 to 24)
 	private val portNumberRegex = (colonRegex + Regex.digit.times(1 to 6)).withinParentheses
 	
 	/**
@@ -37,8 +42,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	  */
 	val regex =
 		((httpRegex + wwwRegex.noneOrOnce).withinParentheses || wwwRegex).withinParentheses +
-			domainCharacterRegex.oneOrMoreTimes + Regex.dot + domainCharacterRegex.oneOrMoreTimes +
-			portNumberRegex.noneOrOnce
+			domainCharacterRegex.atLeastTimes(2) + suffixRegex + portNumberRegex.noneOrOnce
 	
 	
 	// IMPLEMENTED	--------------------

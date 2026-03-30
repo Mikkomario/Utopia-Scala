@@ -28,7 +28,7 @@ object TryCatchBuilder
 	 * @return A new builder
 	 */
 	def wrap[A, Coll <: Iterable[_]](builder: mutable.Builder[A, Coll]) =
-		new TryCatchBuilder[A, Coll](builder)(_.isEmpty)
+		wrapCustom[A, Coll](builder) { _.isEmpty }
 	/**
 	 * Creates a new TryCatch-builder which always yields successful values
 	 * @param builder Builder that will be used for creating wrapped collection
@@ -38,6 +38,18 @@ object TryCatchBuilder
 	 */
 	def wrapAlwaysSucceeding[A, Coll](builder: mutable.Builder[A, Coll]) =
 		new TryCatchBuilder[A, Coll](builder, alwaysSucceed = true)(_ => false)
+	
+	/**
+	 * Creates a new TryCatch-builder by wrapping another builder
+	 * @param builder Builder used for creating the wrapped entry
+	 * @param isEmpty A function which tests whether the specified entry is empty.
+	 *                Empty entries may be converted to failures, if failures were encountered.
+	 * @tparam A Type of the collected successful values
+	 * @tparam Coll Type of the resulting wrapped entry
+	 * @return A new builder
+	 */
+	def wrapCustom[A, Coll](builder: mutable.Builder[A, Coll])(isEmpty: Coll => Boolean) =
+		new TryCatchBuilder[A, Coll](builder)(isEmpty)
 }
 
 /**

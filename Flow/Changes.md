@@ -25,6 +25,8 @@
   - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
 - **Value**
   - Added `.getModelOrString`
+### Other changes
+- Parallel mapping now supports custom builders
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:
