@@ -53,7 +53,9 @@ object VastAiVllmProcess
 {
 	// ATTRIBUTES   -------------------
 	
-	private val unsupportedStatuses = Set("docker_build() error writing dockerfile")
+	private val unsupportedStatuses = Set(
+		"docker_build() error writing dockerfile",
+		"Error: GPU error, unable to start instance.")
 	
 	/**
 	 * Lists the currently taken machine IDs

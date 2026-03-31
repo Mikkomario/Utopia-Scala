@@ -215,6 +215,7 @@ object VastAiVllmChatExecutor
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
+// FIXME: We got an error where queue size became 1, but no it was never emptied (there were many APIs available)
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
                              coreInstanceCount: Int = 1, maxInstanceCount: Int = 4,
                              instanceActivationQueueSizeThreshold: Int = 24,
