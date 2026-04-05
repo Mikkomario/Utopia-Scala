@@ -27,6 +27,16 @@ case class VastAiVllmProcessorStatus(phase: VastAiVllmProcessPhase, instanceStat
                                      lastPendingEnded: Instant)
 	extends ModelConvertible
 {
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @return Whether this processor is usable in this state
+	 */
+	def usable = phase == ApiHosting && instanceStatus.exists { _.instanceIsUsable }
+	
+	
+	// IMPLEMENTED  -----------------------
+	
 	override def toModel: Model = Model.from("max_context" -> maxContextSize.value,
 		"phase" -> Model.from("name" -> phase.name, "index" -> phase.index), "instance_status" -> instanceStatus,
 		"usable" -> (phase == ApiHosting && instanceStatus.exists { _.instanceIsUsable }),
