@@ -215,7 +215,6 @@ object VastAiVllmChatExecutor
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
-// FIXME: We got an error where queue size became 1, but no it was never emptied (there were many APIs available)
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
                              coreInstanceCount: Int = 1, maxInstanceCount: Int = 4,
                              instanceActivationQueueSizeThreshold: Int = 24,
@@ -272,7 +271,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * Contains requests received while no processors were available.
 	 * Cleared once processors become available.
 	 */
-	private val _queue = Volatile.eventful.emptySeq[Promise[Processor]]
+	private val _queue = Volatile.eventful.emptySeq[QueuedTask]
 	private val hasQueueFlag = _queue.nonEmptyFlag
 	
 	/**
@@ -342,32 +341,44 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				// Checks whether any processes are currently idle or only partially used
 				val now = Now.toInstant
 				val idleThreshold = now - idleShutdownThreshold
-				val (remaining, idle) = processors.iterator
-					.filter { p => p.phase == ApiHosting && !p.wasRequestedToStop }
-					.divideToSeqsBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
+				val (loading, active) = processors.divideBy { p => p.phase == ApiHosting && !p.wasRequestedToStop }
+					.toTuple
+				val (remaining, idle) = active.divideBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
 				
 				// Case: Some processes were idle => Stops them and reduces the target count accordingly
 				if (idle.nonEmpty) {
 					targetInstanceCountP.update { target => (target - idle.size) max 0 }
-					debugLog(s"Shutting down ${ idle.size } idle processors")
-					idle.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
+					debugLog(s"Shutting down ${ idle.size } idle processors and ${ loading.size } loading processors")
+					(idle.iterator ++ loading)
+						.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
 					queueSizeCheckThresholdP.value = 0
 					pendingTokensCheckThresholdP.value = 0
 				}
-				// Case: No idle processes & above core processor count
-				//       => Checks whether some have not been fully utilized for some time
-				else if (remaining.size > coreInstanceCount) {
+				// Case: No idle processes => Checks whether some have not been fully utilized for some time
+				else if (remaining.size > coreInstanceCount ||
+					(loading.nonEmpty && remaining.size == coreInstanceCount))
+				{
 					lazy val partialUseThreshold = now - partialUseShutdownThreshold
 					remaining.find { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
+						// Case: A partially used processor found
 						.foreach { partiallyUsedProcessor =>
-							// Makes sure we're really above the core processor count before shutting down anything
-							val shouldTerminate = targetInstanceCountP.mutate { target =>
+							// Shuts down the loading processes (we don't need more processes at this time)
+							if (loading.nonEmpty) {
+								debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
+								loading.foreach {
+									_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
+								}
+							}
+							
+							// Makes sure we're really above the core processor count
+							// before shutting down active processes
+							val shouldTerminateActive = targetInstanceCountP.mutate { target =>
 								if (target > coreInstanceCount)
 									true -> (target - 1)
 								else
 									false -> target
 							}
-							if (shouldTerminate) {
+							if (shouldTerminateActive) {
 								debugLog("Shutting down a partially used processor")
 								// Terminates the partially used instance
 								partiallyUsedProcessor.stop()
@@ -538,8 +549,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		if (stopFlag.set()) {
 			debugLog("Stop called")
 			val processorStopFutures = processors.map { _.stop() }
-			// TODO: Handle failures more gracefully
-			_queue.popAll().foreach { _.failure(new InterruptedException("This process pool was stopped")) }
+			_queue.popAll().foreach { _.fail() }
 			(processorStopFutures ++ regenerateFuturesP.value).future
 		}
 		else
@@ -607,22 +617,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				}
 				// Case: No processors are available => Queues this request
 				.getOrElse {
-					val clientPromise = Promise[Processor]()
-					val queueSize = _queue.updateAndGet { _ :+ clientPromise }.size
+					val task = new QueuedTask(request, tokens)
+					val queueSize = _queue.updateAndGet { _ :+ task }.size
 					
 					// Activates more instances, if appropriate
 					adjustInstanceTargetIfAppropriate(queueSizeCheckThresholdP, 1,
 						instanceActivationQueueSizeThreshold, 5, queueSize) { _ * instanceActivationQueueSizeThreshold }
 					
-					// Waits (async) until a processor becomes available
-					clientPromise.future.flatMap { processor =>
-						// Case: A processor became available => Gives it this request
-						processor.tryPush(request, tokens).getOrElse {
-							// Case: The processor couldn't receive this request (unexpected)
-							//       => Attempts again with another processor (recursive)
-							push(request, tokens)
-						}
-					}
+					task.future
 				}
 		}
 	}
@@ -712,30 +714,51 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private def clearQueue(): Future[Boolean] = {
 		// Checks the usable processors
-		val processors = this.processors.filter { _.usable }
-		// Case: No clients are usable => Completes
-		if (processors.isEmpty)
-			Future.successful(_queue.isEmpty)
-		else {
-			// Collects the tasks to process
-			val tasks = _queue.pop(processors.size)
-			// Case: No tasks to process => Completes
-			if (tasks.isEmpty)
-				Future.successful(true)
-			else {
-				// Assigns the tasks to the available processors
-				val pairedTasks = {
-					if (tasks.size == processors.size)
-						tasks.zip(processors)
-					else
-						tasks.zip(processors.sortBy { _.pendingToActiveRatio })
+		val processors = this.processors.filter { _.usable }.sortBy { _.maxContextSize.getOrElse(TokenCount.zero) }
+		processors.lastOption.flatMap { _.maxContextSize } match {
+			case Some(maxProcessorSize) =>
+				// Collects the tasks to process
+				// If there are tasks that are too large for the current processors, delays them
+				val tasks = _queue.mutate { queue =>
+					val iter = queue.iterator
+					val keepBuilder = OptimizedIndexedSeq.newBuilder[QueuedTask]
+					val processBuilder = OptimizedIndexedSeq.newBuilder[QueuedTask]
+					var remainingCapacity = processors.size
+					
+					while (remainingCapacity > 0 && iter.hasNext) {
+						val next = iter.next()
+						if (next.tokens > maxProcessorSize)
+							keepBuilder += next
+						else {
+							processBuilder += next
+							remainingCapacity -= 1
+						}
+					}
+					
+					processBuilder.result().sortBy { _.tokens } -> (iter ++ keepBuilder.result()).toOptimizedSeq
 				}
-				debugLog(s"Resolves the next ${ pairedTasks.size } queued requests")
-				pairedTasks.foreach { case (promise, processor) => promise.success(processor) }
+				// Case: No tasks to process => Completes
+				if (tasks.isEmpty) {
+					// If there were too large tasks, fails them
+					_queue.popAll().foreach { _.fail() }
+					Future.successful(true)
+				}
+				else {
+					// Assigns the tasks to the available processors
+					debugLog(s"Resolves the next ${ tasks.size } queued requests")
+					tasks.iterator.zipWithIndex.foreach { case (task, i) =>
+						processors.view.drop(i).find { _.maxContextSize.exists { _ >= task.tokens } } match {
+							case Some(processor) => task.resolveUsing(processor)
+							case None => task.fail()
+						}
+					}
+					
+					// After a short delay, continues to unqueue more tasks
+					Delay.future(2.5.seconds) { clearQueue() }
+				}
 				
-				// After a short delay, continues to unqueue more tasks
-				Delay.future(5.seconds) { clearQueue() }
-			}
+			// Case: No clients are usable => Completes
+			case None => Future.successful(_queue.isEmpty)
 		}
 	}
 	
@@ -1070,5 +1093,41 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				.filter { case (_, maxContextSize) =>
 					!stopped && tokens <= maxContextSize && process.detailedState.isUsable }
 				.map { _._1.push(request -> tokens) }
+	}
+	
+	private class QueuedTask(request: ChatParams, val tokens: TokenCount)
+	{
+		// ATTRIBUTES   ---------------------------
+		
+		private val promise = Promise[Option[Processor]]()
+		val future: Future[RequestResult[BufferedOpenAiReply]] = promise.future.flatMap {
+			// Case: A processor became available => Gives it this request
+			case Some(processor) =>
+				processor.tryPush(request, tokens).getOrElse {
+					// Case: The processor couldn't receive this request (unexpected)
+					//       => Attempts again with another processor (recursive)
+					if (stopFlag.isSet)
+						Future.successful(RequestSendingFailed(
+							new IllegalStateException("This interface was stopped before this request could be handled")))
+					else
+						push(request, tokens)
+				}
+			// Case: No processor could handle this request => Fails
+			case None =>
+				val failure = {
+					if (stopFlag.isSet)
+						new IllegalStateException("This interface was stopped before this request could be handled")
+					else
+						new IllegalArgumentException(
+							s"No processor was able to receive this request of $tokens tokens")
+				}
+				Future.successful(RequestSendingFailed(failure))
+		}
+		
+		
+		// OTHER    ------------------------------
+		
+		def resolveUsing(processor: Processor) = promise.success(Some(processor))
+		def fail() = promise.success(None)
 	}
 }
