@@ -1,5 +1,9 @@
 # Utopia Genesis - List of Changes
 
+## v4.2.4 (in development)
+### New features
+- Added **Chart** for drawing point charts
+
 ## v4.2.3 - 15.03.2026
 Supports **Flow v2.8**
 

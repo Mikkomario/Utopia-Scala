@@ -1,5 +1,10 @@
 # Utopia Paradigm - List of Changes
 
+## v1.8.2 (in development)
+### New methods
+- **HasBounds**
+  - Added `.extremeAlong(Extreme, Axis2D)`
+
 ## v1.8.1 - 15.03.2026
 A very minor update, mostly focusing on supporting the latest **Flow** changes.
 ### New methods

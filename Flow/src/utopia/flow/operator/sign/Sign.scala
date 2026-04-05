@@ -285,8 +285,9 @@ object Sign
 	  */
 	case object Positive extends Sign
 	{
-		override def isPositive = true
-		override def modifier = 1
+		override val isPositive = true
+		override val modifier = 1
+		
 		override def extreme = Max
 		override def end: End = Last
 		
@@ -308,8 +309,9 @@ object Sign
 	  */
 	case object Negative extends Sign
 	{
-		override def isPositive = false
-		override def modifier = -1
+		override val isPositive = false
+		override val modifier = -1
+		
 		override def extreme = Min
 		override def end: End = First
 		

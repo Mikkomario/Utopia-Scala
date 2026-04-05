@@ -1,6 +1,8 @@
 package utopia.paradigm.shape.shape2d.area.polygon.c4.bounds
 
 import utopia.flow.collection.immutable.range.HasOrderedEnds
+import utopia.flow.operator.enumeration.Extreme
+import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y}
 import utopia.paradigm.shape.shape2d.area.Area2D
@@ -122,6 +124,15 @@ trait HasBounds extends HasSize with Area2D
 	  * @return The largest coordinate within this item's bounds along the specified axis
 	  */
 	def maxAlong(axis: Axis): Double = bounds(axis).max
+	/**
+	 * @param extreme Targeted extreme
+	 * @param axis Targeted axis
+	 * @return The most extreme coordinate within this item's bounds along the specified axis
+	 */
+	def extremeAlong(extreme: Extreme, axis: Axis) = extreme match {
+		case Max => maxAlong(axis)
+		case Min => minAlong(axis)
+	}
 	/**
 	  * @param axis Targeted axis
 	  * @return The center coordinate of this item along that axis
