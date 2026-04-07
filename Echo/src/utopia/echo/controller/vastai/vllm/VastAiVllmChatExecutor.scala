@@ -347,7 +347,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				
 				// Case: Some processes were idle => Stops them and reduces the target count accordingly
 				if (idle.nonEmpty) {
-					targetInstanceCountP.update { target => (target - idle.size) max 0 }
+					targetInstanceCountP.update { target => (target - idle.size - loading.size) max 0 }
 					debugLog(s"Shutting down ${ idle.size } idle processors and ${ loading.size } loading processors")
 					(idle.iterator ++ loading)
 						.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
@@ -365,6 +365,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 							// Shuts down the loading processes (we don't need more processes at this time)
 							if (loading.nonEmpty) {
 								debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
+								targetInstanceCountP.update { target => (target - loading.size) max 0 }
 								loading.foreach {
 									_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
 								}
@@ -1109,6 +1110,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					if (stopFlag.isSet)
 						Future.successful(RequestSendingFailed(
 							new IllegalStateException("This interface was stopped before this request could be handled")))
+					// FIXME: We're repeatedly arriving here (21 requests queued and looping)
 					else
 						push(request, tokens)
 				}
