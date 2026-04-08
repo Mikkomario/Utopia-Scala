@@ -23,6 +23,8 @@
   - Added `.started(Future)`
 - **Regex** (object)
   - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
+- **String** (via **StringExtensions**)
+  - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
 - **Value**
   - Added `.getModelOrString`
 ### Other changes

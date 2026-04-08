@@ -4,7 +4,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.{HasEnds, HasOrderedEnds, NumericSpan}
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 
@@ -869,21 +871,77 @@ object StringExtensions
 		def replaceAllExcept(regex: Regex, replacement: => String) = regex.replaceOthers(s, replacement)
 		
 		/**
+		 * @param options Strings that may resemble this one
+		 * @param allowedDifference Largest allowed difference between this string and the selected options.
+		 *
+		 *                          Differences come in two forms:
+		 *                             1. Character is missing from one of these strings (e.g. "apple" vs. "aple"), or
+		 *                             1. Character is swapped (e.g. "tyko" vs, "typo")
+		 *
+		 *                          Please note that case-difference (e.g. "A" vs "a")
+		 *                          does NOT constitute a difference in this function.
+		 *
+		 * @return A subset of 'options' that most resemble this string.
+		 *         If none of the specified options resembles this string (within 'allowedDifference'),
+		 *         returns an empty Seq.
+		 */
+		def mostSimilarValuesFrom(options: Iterable[String], allowedDifference: Int): Seq[String] =
+			mostSimilarValuesBy(options, allowedDifference)(Identity)
+		/**
+		 * @param options Items that may resemble this string, when converted
+		 * @param allowedDifference Largest allowed difference between this string and the selected options.
+		 *
+		 *                          Differences come in two forms:
+		 *                             1. Character is missing from one of these strings (e.g. "apple" vs. "aple"), or
+		 *                             1. Character is swapped (e.g. "tyko" vs, "typo")
+		 *
+		 *                          Please note that case-difference (e.g. "A" vs "a")
+		 *                          does NOT constitute a difference in this function.
+		 *
+		 * @param toComparable A function which converts a value into a string that may be compared with this one
+		 * @return A subset of 'options' that most resemble this string.
+		 *         If none of the specified options resembles this string (within 'allowedDifference'),
+		 *         returns an empty Seq.
+		 */
+		def mostSimilarValuesBy[A](options: Iterable[A], allowedDifference: Int)(toComparable: A => String): Seq[A] = {
+			// Finds similar values
+			val filtered = options.view.filter { option => isSimilarTo(toComparable(option), allowedDifference) }
+				.toOptimizedSeq
+			// Case: Further filtering is not needed or possible => Returns
+			if (allowedDifference <= 0 || filtered.hasSize < 2)
+				filtered
+			// Case: Further filtering may be possible => Continues recursively
+			else {
+				val furtherFiltered = mostSimilarValuesBy(filtered, allowedDifference - 1)(toComparable)
+				// Case: More strict filtering didn't yield results => Returns the less strict results
+				if (furtherFiltered.isEmpty)
+					filtered
+				// Case: More strict filtering yielded results => Returns those
+				else
+					furtherFiltered
+			}
+		}
+		
+		/**
 		  * @param other Another string
 		  * @param allowedDifference The maximum number of differences allowed between these strings in order for
 		  *                          this function to return true.
 		  *
 		  *                          Differences come in two forms:
-		  *                             1) Character is missing from one of these strings (e.g. "apple" vs. "aple"), or
-		  *                             2) Character is swapped (e.g. "tyko" vs, "typo")
+		  *                             1. Character is missing from one of these strings (e.g. "apple" vs. "aple"), or
+		  *                             1. Character is swapped (e.g. "tyko" vs, "typo")
 		  *
 		  *                          Please note that case-difference (e.g. "A" vs "a")
 		  *                          does NOT constitute a difference in this function.
 		  *
 		  * @return Whether these two strings no more than the specified number of differences.
 		  */
-		def isSimilarTo(other: String, allowedDifference: Int) =
-			areSimilar(Pair(s, other), Pair.twice(0), allowedDifference)
+		def isSimilarTo(other: String, allowedDifference: Int) = {
+			if (allowedDifference <= 0)
+				s ~== other
+			else
+				areSimilar(Pair(s, other), Pair.twice(0), allowedDifference)
+		}
 		private def areSimilar(strings: Pair[String], indices: Pair[Int], allowedDifference: Int): Boolean = {
 			// Used when the end of one string is reached
 			def lengthDifferenceResult = {
