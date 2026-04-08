@@ -37,6 +37,8 @@ object ApiHostingResult
 		
 		// IMPLEMENTED  -----------------
 		
+		override def toString = s"failed: ${ cause.getMessage }"
+		
 		override def failure: Option[Throwable] = Some(cause)
 	}
 	/**
@@ -50,6 +52,8 @@ object ApiHostingResult
 		
 		
 		// IMPLEMENTED  -----------------
+		
+		override def toString = "stopped"
 		
 		override def failure: Option[Throwable] = None
 	}
@@ -65,6 +69,8 @@ object ApiHostingResult
 		
 		
 		// IMPLEMENTED  -----------------
+		
+		override def toString = s"disconnected at $instanceStatus"
 		
 		override def failure: Option[Throwable] = None
 	}

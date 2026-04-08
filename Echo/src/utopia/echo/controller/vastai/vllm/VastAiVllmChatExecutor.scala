@@ -8,6 +8,7 @@ import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
 import utopia.echo.controller.client.VastAiApiClient
 import utopia.echo.controller.vastai.SelectOffer
+import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.maxRetries
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
 import utopia.echo.model.enumeration.ServiceState
 import utopia.echo.model.llm.{LlmDesignator, LlmVramUse}
@@ -49,10 +50,17 @@ import java.net.ServerSocket
 import java.nio.file.Path
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 object VastAiVllmChatExecutor
 {
+	// ATTRIBUTES   --------------------
+	
+	private val maxRetries = 8
+	
+	
+	// OTHER    ------------------------
+	
 	/**
 	 * Creates a new chat executor that utilizes multiple parallel Vast AI instances when executing requests
 	 * @param selectOffer Logic for selecting Vast AI offers to take
@@ -537,7 +545,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 						s"Maximum context size of $safeMaxContextSize is exceeded by $tokens"))
 				// Case: Suitable context size => Delegates processing to one of available clients
 				else
-					push(params, tokens)
+					push(Request(params, tokens))
 			
 			// Case: No context size known (never recommended) => Uses the backup executor, if available
 			case None =>
@@ -567,7 +575,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 	
 	// Notice: This request is pretty deeply recursive, being called from Processor
-	private def push(request: ChatParams, tokens: TokenCount): Future[RequestResult[BufferedOpenAiReply]] = {
+	private def push(request: Request): Future[RequestResult[BufferedOpenAiReply]] = {
 		// Case: Already stopped => Fails
 		if (stopFlag.isSet)
 			Future.successful(RequestSendingFailed(
@@ -578,9 +586,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			// Attempts to give the request to one of the processors, preferring those least used
 			processors.sortBy { _.pendingToActiveRatio }
 				.findMap { processor =>
-					processor.tryPush(request, tokens).map { resultFuture =>
+					processor.tryPush(request).map { resultFuture =>
 						// Activates more instances, if appropriate
-						adjustInstanceTargetIfAppropriate(pendingTokensCheckThresholdP, tokens.value,
+						adjustInstanceTargetIfAppropriate(pendingTokensCheckThresholdP, request.tokens.value,
 							instanceActivationPendingTokensThreshold.value, 5000,
 							processors.iterator.map { _.pendingTokens }.sum.toInt) {
 							currentTarget =>
@@ -604,11 +612,13 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 							//       => Applies backup logic for 400 context size issues
 							case Some(nextContextSize) =>
 								resultFuture.flatMap {
-									case Response.Failure(status, message, _) if status == BadRequest =>
-										debugLog(s"$message => Delegates the request to a processor with a larger context window")
-										log(s"Warning: $message => Delegated the request to a processor with a larger context window")
-										push(request, nextContextSize)
-									
+									case failure: Response.Failure if failure.status == BadRequest =>
+										debugLog(s"${ failure.message } => Delegates the request to a processor with a larger context window")
+										log(s"Warning: ${ failure.message } => Delegated the request to a processor with a larger context window")
+										request.asRetryWithIfPossible(failure.cause) match {
+											case Some(retry) => push(retry.withTokens(nextContextSize))
+											case None => Future.successful(failure)
+										}
 									case result => Future.successful(result)
 								}
 							// Case: No backup processor is available => Won't add recovery processes
@@ -618,7 +628,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				}
 				// Case: No processors are available => Queues this request
 				.getOrElse {
-					val task = new QueuedTask(request, tokens)
+					val task = new QueuedTask(request)
 					val queueSize = _queue.updateAndGet { _ :+ task }.size
 					
 					// Activates more instances, if appropriate
@@ -633,18 +643,17 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * Actually executes a request using a specific Vast AI instance.
 	 * Called from individual processors.
 	 * @param request Request to process
-	 * @param tokens Tokens required for processing this request
 	 * @param client Client that should handle this request
 	 * @param model Model hosted by the utilized instance
 	 * @param maxContextSize Maximum context size of the utilized instance
 	 * @return Future of the eventual request result
 	 */
-	private def push(request: ChatParams, tokens: TokenCount, client: RequestQueue, model: String,
+	private def push(request: Request, client: RequestQueue, model: String,
 	                 maxContextSize: TokenCount): Future[RequestResult[BufferedOpenAiReply]] =
 	{
 		// Converts the request into a full chat request
 		val apiRequest = BufferedOpenAiChatCompletionRequest(
-			request.toLlm(llmCache(model)).mapSetting(ContextTokens) { _.int match {
+			request.params.toLlm(llmCache(model)).mapSetting(ContextTokens) { _.int match {
 				case Some(maxTokens) => maxTokens min maxContextSize.value
 				case None => maxContextSize.value
 			} })
@@ -653,7 +662,16 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		// Causes such requests to be attempted again
 		client.push(apiRequest).future.flatMap {
 			// Case: Request was marked as deprecated at a lower process level => Attempts that request again
-			case RequestWasDeprecated if !apiRequest.deprecated && stopFlag.isNotSet => push(request, tokens)
+			case RequestWasDeprecated if !apiRequest.deprecated && stopFlag.isNotSet =>
+				request.asRetryIfPossible match {
+					case Some(retry) => push(retry)
+					// Case: Can't retry anymore => Returns a failure or a deprecation, depending on earlier results
+					case None =>
+						request.firstError match {
+							case Some(error) => Future.successful(RequestSendingFailed(error))
+							case None => Future.successful(RequestWasDeprecated)
+						}
+				}
 			// Case: Request completed or terminated for another reason, or this system stopped => Finishes
 			case result => Future.successful(result)
 		}
@@ -713,6 +731,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 *
 	 *         Yields whether the queue is now empty.
 	 */
+	// FIXME: This loops indefinitely without actually clearing the queue
 	private def clearQueue(): Future[Boolean] = {
 		// Checks the usable processors
 		val processors = this.processors.filter { _.usable }.sortBy { _.maxContextSize.getOrElse(TokenCount.zero) }
@@ -979,14 +998,19 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			val safeMaxContextSize = maxContextSize - contextSafetyMargin
 			debugLog(s"Starting a funnel of $safeMaxContextSize tokens")
 			val funnel = MappingFunnel(safeMaxContextSize.value) {
-				requestAndSize: (ChatParams, TokenCount) => requestAndSize._2.value } {
-				case (request, tokens) =>
+				request: Request => request.tokens.value } {
+				request =>
 					if (process.detailedState.isUsable) {
 						_lastRequestTime = Now
-						push(request, tokens, queue, model.name, safeMaxContextSize)
+						push(request, queue, model.name, safeMaxContextSize)
 					}
 					else
-						push(request, tokens)
+						request.asRetryWith(
+							new IllegalStateException(s"Unusable process state: ${ process.detailedState }")) match
+						{
+							case Success(retry) => push(retry)
+							case Failure(error) => Future.successful(RequestSendingFailed(error))
+						}
 			}
 			
 			// Takes notice when the funnel becomes full or only partially filled
@@ -1054,7 +1078,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		 * @return The currently available funnel, if applicable.
 		 *         None if no funnel is available at this time.
 		 */
-		private def funnel: Option[(MappingFunnel[(ChatParams, TokenCount), RequestResult[BufferedOpenAiReply]], TokenCount)] =
+		private def funnel: Option[(MappingFunnel[Request, RequestResult[BufferedOpenAiReply]], TokenCount)] =
 			funnelP.value.flatMap { _.toOption }
 		
 		
@@ -1085,18 +1109,17 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		/**
 		 * Attempts to give a request for this processor to handle
 		 * @param request Request to process
-		 * @param tokens Number of tokens / max context required
 		 * @return Request result future. None if this processor can't handle that request at this time.
 		 */
-		def tryPush(request: ChatParams, tokens: TokenCount) =
+		def tryPush(request: Request) =
 			funnel
 				// Makes sure the funnel can handle this request
 				.filter { case (_, maxContextSize) =>
-					!stopped && tokens <= maxContextSize && process.detailedState.isUsable }
-				.map { _._1.push(request -> tokens) }
+					!stopped && request.tokens <= maxContextSize && process.detailedState.isUsable }
+				.map { _._1.push(request) }
 	}
 	
-	private class QueuedTask(request: ChatParams, val tokens: TokenCount)
+	private class QueuedTask(request: Request)
 	{
 		// ATTRIBUTES   ---------------------------
 		
@@ -1104,15 +1127,21 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		val future: Future[RequestResult[BufferedOpenAiReply]] = promise.future.flatMap {
 			// Case: A processor became available => Gives it this request
 			case Some(processor) =>
-				processor.tryPush(request, tokens).getOrElse {
+				processor.tryPush(request).getOrElse {
+					log(s"The prepared processor couldn't receive the queued request of $tokens tokens")
+					
 					// Case: The processor couldn't receive this request (unexpected)
 					//       => Attempts again with another processor (recursive)
 					if (stopFlag.isSet)
 						Future.successful(RequestSendingFailed(
 							new IllegalStateException("This interface was stopped before this request could be handled")))
-					// FIXME: We're repeatedly arriving here (21 requests queued and looping)
 					else
-						push(request, tokens)
+						request.asRetryWith(
+							new IllegalStateException("The activated processor rejected this request")) match
+						{
+							case Success(retry) => push(retry)
+							case Failure(error) => Future.successful(RequestSendingFailed(error))
+						}
 				}
 			// Case: No processor could handle this request => Fails
 			case None =>
@@ -1127,9 +1156,67 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 		
 		
+		// COMPUTED ------------------------------
+		
+		def tokens = request.tokens
+		
+		
 		// OTHER    ------------------------------
 		
 		def resolveUsing(processor: Processor) = promise.success(Some(processor))
 		def fail() = promise.success(None)
+	}
+	
+	private case class Request(params: ChatParams, tokens: TokenCount, pastRetries: Int = 0,
+	                           firstError: Option[Throwable] = None)
+	{
+		// COMPUTED ----------------------
+		
+		/**
+		 * @return Whether this request may still be retried
+		 */
+		def mayBeRetried = pastRetries < maxRetries
+		
+		/**
+		 * Creates a copy of this request, representing another attempt
+		 * @return A copy of this request, marked as a retry. Failure if too many failures were encountered.
+		 */
+		def asRetry = {
+			if (pastRetries >= maxRetries)
+				Failure(firstError.getOrElse { new IllegalStateException("Too many retries") })
+			else
+				Success(copy(pastRetries = pastRetries + 1))
+		}
+		/**
+		 * @return If this request may still be retried, returns a copy marked as a retry
+		 */
+		def asRetryIfPossible = if (mayBeRetried) Some(copy(pastRetries = pastRetries + 1)) else None
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		 * Creates a copy of this request, representing another attempt
+		 * @param error Error to fail with, if maximum number of retries was encountered (call-by-name)
+		 * @return A copy of this request, marked as a retry. Failure if too many failures were encountered.
+		 */
+		def asRetryWith(error: => Throwable) = {
+			if (mayBeRetried)
+				Success(copy(pastRetries = pastRetries + 1, firstError = firstError.orElse(Some(error))))
+			else
+				Failure(firstError.getOrElse(error))
+		}
+		/**
+		 * @param error Error to record as the first encountered error, if applicable (call-by-name)
+		 * @return If this request may still be retried, returns a copy marked as a retry
+		 */
+		def asRetryWithIfPossible(error: => Throwable) = {
+			if (mayBeRetried)
+				Some(copy(pastRetries = pastRetries + 1, firstError = firstError.orElse(Some(error))))
+			else
+				None
+		}
+		
+		def withTokens(tokens: TokenCount) = copy(tokens = tokens)
 	}
 }

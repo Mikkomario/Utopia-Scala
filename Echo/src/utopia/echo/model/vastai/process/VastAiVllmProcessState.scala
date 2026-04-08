@@ -6,9 +6,13 @@ import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading}
 import utopia.echo.model.vastai.instance.{InstanceState, VastAiInstance}
 import utopia.echo.model.vastai.instance.offer.Offer
+import utopia.echo.model.vastai.process.ApiHostingResult.Disconnected
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, ApiSetup, InstanceAcquisition, Stopping}
 import utopia.flow.operator.ordering.SelfComparable
+import utopia.flow.util.StringExtensions._
+
+import scala.util.Failure
 
 /**
  * An enumeration for different states of an LLM-hosting Vast AI process
@@ -165,6 +169,8 @@ object VastAiVllmProcessState
 		override val isUsable: Boolean = false
 		override val availableInstance: Option[VastAiInstance] = None
 		
+		override def toString = "selecting offer"
+		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
 	}
 	/**
@@ -178,6 +184,8 @@ object VastAiVllmProcessState
 		override val isUsable: Boolean = false
 		override val availableInstance: Option[VastAiInstance] = None
 		
+		override def toString = "acquiring instance"
+		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = InstanceLoading(instance)
 	}
 	/**
@@ -190,6 +198,8 @@ object VastAiVllmProcessState
 		override val isUsable: Boolean = false
 		
 		override def availableInstance: Option[VastAiInstance] = Some(instance)
+		
+		override def toString = s"loading: ${ instance.status }"
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = InstanceLoading(instance)
 	}
@@ -209,6 +219,8 @@ object VastAiVllmProcessState
 		
 		override def availableInstance: Option[VastAiInstance] = Some(instance)
 		
+		override def toString = s"setting up API: ${ instance.status }"
+		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = SettingUpApi(instance)
 	}
 	/**
@@ -221,6 +233,8 @@ object VastAiVllmProcessState
 		override val isUsable: Boolean = false
 		
 		override def availableInstance: Option[VastAiInstance] = Some(instance)
+		
+		override def toString = s"starting API: ${ instance.status }"
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = StartingApi(instance)
 	}
@@ -239,6 +253,9 @@ object VastAiVllmProcessState
 		
 		override def isUsable: Boolean = instance.status.instanceIsUsable
 		override def availableInstance: Option[VastAiInstance] = Some(instance)
+		
+		override def toString = s"hosting API${
+			Some(instance.status).filterNot { _.instanceIsUsable }.mkString.prependIfNotEmpty(": ") }"
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = copy(instance = instance)
 	}
@@ -262,6 +279,8 @@ object VastAiVllmProcessState
 		
 		override def availableInstance: Option[VastAiInstance] = Some(instance)
 		
+		override def toString = s"stopping: ${ instance.status }, $requestsPending pending requests"
+		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = copy(instance = instance)
 		
 		
@@ -283,6 +302,8 @@ object VastAiVllmProcessState
 		override val isUsable: Boolean = false
 		override val availableInstance: Option[VastAiInstance] = None
 		
+		override def toString = s"destroying: $apiStatus"
+		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
 	}
 	/**
@@ -296,6 +317,8 @@ object VastAiVllmProcessState
 		override val phase: VastAiVllmProcessPhase = VastAiVllmProcessPhase.Stopped
 		override val isUsable: Boolean = false
 		override val availableInstance: Option[VastAiInstance] = None
+		
+		override def toString = s"stopped: $apiStatus => $finalInstanceProcessState"
 		
 		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
 	}
