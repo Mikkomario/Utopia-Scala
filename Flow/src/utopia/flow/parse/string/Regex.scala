@@ -6,6 +6,7 @@ import utopia.flow.error.RegexError
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.parse.string.Regex.{MatchesIteratorFactory, unbracketableChars}
 import utopia.flow.util.EitherExtensions._
+import utopia.flow.util.Mutate
 import utopia.flow.util.RangeExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -510,17 +511,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  */
 	// Implementation is based on Matcher.replaceAll(String)
 	// The main point of this function is to allow for the lazy initiation of the replacement
-	def replaceAll(str: String, replacement: View[String]) = withMatcher(str) { matcher =>
-		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile(Identity)
-		if (findResultsIterator.hasNext) {
-			val resultBuffer = new StringBuffer()
-			findResultsIterator.foreach { _ => matcher.appendReplacement(resultBuffer, replacement.value) }
-			matcher.appendTail(resultBuffer)
-			resultBuffer.toString
-		}
-		else
-			str
-	}
+	def replaceAll(str: String, replacement: View[String]) = _replaceAll(str) { _ => replacement.value }
 	
 	/**
 	 * Replaces the first match of this regular expression within a string
@@ -568,6 +559,7 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 		
 		resultBuilder.result()
 	}
+	
 	/**
 	  * @param str A string
 	  * @return A version of the string that only contains items NOT accepted by this regex
@@ -578,6 +570,14 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	  * @return A version of the string that only contains items accepted by this regex
 	  */
 	def filter(str: String) = matchesIteratorFrom(str).mkString
+	
+	/**
+	 * Modifies each match of this regular expression in a string
+	 * @param str String to modify
+	 * @param f A function which maps a match of this expression
+	 * @return Copy of 'str' where all matches have been mapped using 'f'
+	 */
+	def mapMatchesIn(str: String)(f: Mutate[String]) = _replaceAll(str) { matcher => f(matcher.group()) }
 	
 	/**
 	 * Extracts the matches of this regex from the specified string, returning both the extracted results and the
@@ -731,6 +731,18 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	 * @return A factory for accessing various iterator constructors, based on this regex + input string -combo
 	 */
 	def iterate(str: String) = new MatchesIteratorFactory(this.string, str, pattern.matcher(str))
+	
+	private def _replaceAll(str: String)(replacement: => Matcher => String) = withMatcher(str) { matcher =>
+		val findResultsIterator = Iterator.continually { matcher.find() }.takeWhile(Identity)
+		if (findResultsIterator.hasNext) {
+			val resultBuffer = new StringBuffer()
+			findResultsIterator.foreach { _ => matcher.appendReplacement(resultBuffer, replacement(matcher)) }
+			matcher.appendTail(resultBuffer)
+			resultBuffer.toString
+		}
+		else
+			str
+	}
 	
 	/**
 	 * A function which catches and rethrows errors thrown by a Matcher, proving more helpful error descriptions.

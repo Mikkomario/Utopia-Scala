@@ -830,6 +830,22 @@ object StringExtensions
 		}
 		
 		/**
+		 * @param string String to insert into this string
+		 * @param toIndex Index to which the specified string is inserted
+		 * @return A copy of this string including the inserted entry
+		 */
+		def inserted(string: String, toIndex: Int) = {
+			if (string.isEmpty)
+				s
+			else if (toIndex <= 0)
+				s"$string$s"
+			else {
+				val (before, after) = s.splitAt(toIndex)
+				s"$before$string$after"
+			}
+		}
+		
+		/**
 		  * @param regex A regular expression to filter with
 		  * @return A copy of this string that only contains segments accepted by that regular expression
 		  */

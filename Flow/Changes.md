@@ -21,9 +21,13 @@
   - Added `.recoverFromFailureWith(...)`
 - **QueuedAction** (object)
   - Added `.started(Future)`
-- **Regex** (object)
-  - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
+- **Regex**
+  - Object
+    - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
+  - Class
+    - Added `.mapMatchesIn(String)(...)`
 - **String** (via **StringExtensions**)
+  - Added `.inserted(String, Int)`
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
 - **Value**
   - Added `.getModelOrString`
