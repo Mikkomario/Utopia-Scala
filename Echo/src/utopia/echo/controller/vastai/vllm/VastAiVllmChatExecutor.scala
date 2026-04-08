@@ -329,7 +329,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * or the default context size.
 	 */
 	// A public-facing version of maxContextSizeP. Omits the safety margin, which is added to the incoming requests.
-	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin }
+	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin * 2 - 1 }
 	
 	/**
 	 * Contains futures of active regeneration processes.
@@ -514,7 +514,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	/**
 	 * Maximum request (context) size that is possible to handle without using backup executors
 	 */
-	def maxContextSize = safeMaxContextSize - contextSafetyMargin
+	def maxContextSize = safeMaxContextSize - contextSafetyMargin * 2 - 1
 	/**
 	 * @return Maximum context size used internally
 	 */
@@ -1167,6 +1167,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		def fail() = promise.success(None)
 	}
 	
+	// TODO: Possibly chain the errors
 	private case class Request(params: ChatParams, tokens: TokenCount, pastRetries: Int = 0,
 	                           firstError: Option[Throwable] = None)
 	{
