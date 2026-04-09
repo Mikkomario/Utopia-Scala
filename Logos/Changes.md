@@ -7,6 +7,7 @@
   - Added `.suffixRegex`
 ### Other changes
 - **FilterDomains** now normalizes URL input to not include the HTTP part
+- **Domain** now handles cases where backslashes are used instead of forward slashes
 
 ## v0.7 - 15.03.2026
 An intermediate update focusing on how domains are stored in the DB

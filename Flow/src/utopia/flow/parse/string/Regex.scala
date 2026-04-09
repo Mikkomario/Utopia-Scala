@@ -128,6 +128,10 @@ object Regex
 	 * A regular expression that matches a single (non-escaped) backslash
 	 */
 	lazy val backslash = apply("\\\\")
+	/**
+	 * A regular expression that matches a single forward slash, or a non-escaped backslash
+	 */
+	lazy val slash = (forwardSlash || backslash).withinParentheses
 	
 	/**
 	 * A regular expression that finds parenthesis ( ) content

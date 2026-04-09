@@ -30,7 +30,7 @@ object Link
 	 * A regular expression that matches to links
 	 */
 	lazy val regex = Domain.regex +
-		(Domain.forwardSlashRegex + pathCharacterRegex.anyTimes).withinParentheses.noneOrOnce +
+		(Regex.forwardSlash + pathCharacterRegex.anyTimes).withinParentheses.noneOrOnce +
 		paramPartRegex.noneOrOnce
 	
 	private lazy val parameterSeparatorRegex = Regex.escape('&').ignoringQuotations

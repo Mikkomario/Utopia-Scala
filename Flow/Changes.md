@@ -24,6 +24,7 @@
 - **Regex**
   - Object
     - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
+    - Added `.slash`
   - Class
     - Added `.mapMatchesIn(String)(...)`
 - **String** (via **StringExtensions**)

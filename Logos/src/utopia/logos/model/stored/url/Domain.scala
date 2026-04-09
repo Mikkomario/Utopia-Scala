@@ -15,6 +15,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	/**
 	  * A regular expression that matches a forward slash (/)
 	  */
+	@deprecated("Please use Regex.forwardSlash instead", "v0.7.1")
 	val forwardSlashRegex = Regex.escape('/')
 	private val colonRegex = Regex.escape(':')
 	/**
@@ -24,7 +25,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 	/**
 	 * A regular expression that identifies "http://" and "https://"
 	 */
-	val httpRegex = (Regex("http") + Regex("s").noneOrOnce + colonRegex + forwardSlashRegex.times(2)).withinParentheses
+	val httpRegex = (Regex("http") + Regex("s").noneOrOnce + colonRegex + Regex.slash.times(2)).withinParentheses
 	/**
 	 * A regular expression that finds "www."
 	 */
@@ -105,7 +106,7 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 			url
 		// Looks for the http(s) part (optional)
 		else {
-			val noControl = url.stripControlCharacters.trim.toLowerCase
+			val noControl = url.stripControlCharacters.trim.toLowerCase.replace('\\', '/')
 			// Case: Http(s) found or skipped => Valid
 			val modified = {
 				if (skipProtocol || httpRegex.existsIn(noControl))
