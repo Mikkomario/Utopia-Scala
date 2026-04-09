@@ -1,5 +1,7 @@
 # Utopia Reach - List of Changes
 
+## v1.7.2 (in development)
+
 ## v1.7.1 - 15.03.2026
 Supports **Flow v2.8**
 

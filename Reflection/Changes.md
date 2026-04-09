@@ -1,5 +1,7 @@
 # Utopia Reflection - List of Changes
 
+## v2.3.2 (in development)
+
 ## v2.3.1 - 15.03.2026
 Supports **Flow v2.8**
 

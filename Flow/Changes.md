@@ -13,6 +13,8 @@
 ### New methods
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **Iterator** (via **CollectionExtensions**)
+  - Added `.only()`
 - **Lazy** (object)
   - Added `.expiring`
 - **Pair**

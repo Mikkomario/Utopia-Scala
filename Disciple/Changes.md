@@ -2,7 +2,7 @@
 
 ## v1.9.3 (in development)
 ### Breaking changes
-- Updated to **Apache HttpClient v6**
+- Updated to **Apache HttpClient v5.6**
 
 ## v1.9.2 - 15.03.2026
 A minor update adding some quality-of-life changes, and support for some **Echo**-specific use-cases.

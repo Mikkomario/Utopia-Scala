@@ -3166,6 +3166,17 @@ object CollectionExtensions
 		// OTHER    ------------------------------
 		
 		/**
+		 * Finds the only remaining item in this iterator, if applicable.
+		 *
+		 * Notice: This operation advances this iterator by up to 2 items.
+		 *         If this iterator contains more than 1 item, the next 2 items are discarded.
+		 *
+		 * @return The only remaining item in this iterator.
+		 *         Yields None if this iterator contained more than one item, or no items.
+		 */
+		def only() = i.collectNext(2).only
+		
+		/**
 		 * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
 		 * @param n Number of items to make available
 		 * @return An iterator that provides access to the next 'n' items in this iterator. Wraps this iterator.
