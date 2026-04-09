@@ -28,7 +28,10 @@ object WindowContext
 	  *                            Default = false = use OS header.
 	  * @param fullScreen          Whether windows should be set to fill the whole screen whenever possible.
 	  *                            Default = false.
-	  * @param disableFocus        Whether windows shall not be allowed to gain focus.
+	  * @param alwaysOnTop        Whether windows should be created in "always on top" mode,
+	 *                           so that they block all other windows.
+	 *                           Default = false.
+	 * @param disableFocus        Whether windows shall not be allowed to gain focus.
 	  *                            Default = false.
 	  * @param ignoreScreenInsets  Whether windows should ignore the screen insets (such as the OS toolbar)
 	  *                            when positioning themselves.
@@ -41,10 +44,10 @@ object WindowContext
 	  */
 	def apply(actorHandler: ActorHandler, resizeLogic: WindowResizePolicy = Program,
 	          screenBorderMargins: Insets = Insets.zero, icon: Image = ComponentCreationDefaults.windowIcon,
-	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
-	          ignoreScreenInsets: Boolean = false, disableTransparency: Boolean = false): WindowContext =
+	          borderless: Boolean = false, fullScreen: Boolean = false, alwaysOnTop: Boolean = false,
+	          disableFocus: Boolean = false, ignoreScreenInsets: Boolean = false, disableTransparency: Boolean = false): WindowContext =
 		_WindowContext(actorHandler, resizeLogic, screenBorderMargins, icon, !borderless, fullScreen, !disableFocus,
-			!ignoreScreenInsets, !disableTransparency)
+			!ignoreScreenInsets, !disableTransparency, alwaysOnTop)
 	
 	
 	// NESTED   ------------------------
@@ -52,7 +55,7 @@ object WindowContext
 	private case class _WindowContext(actorHandler: ActorHandler, windowResizeLogic: WindowResizePolicy,
 	                                  screenBorderMargins: Insets, icon: Image, windowBordersEnabled: Boolean,
 	                                  fullScreenEnabled: Boolean, focusEnabled: Boolean, screenInsetsEnabled: Boolean,
-	                                  transparencyEnabled: Boolean)
+	                                  transparencyEnabled: Boolean, alwaysOnTopEnabled: Boolean)
 		extends WindowContext
 	{
 		override def self = this
@@ -65,6 +68,7 @@ object WindowContext
 		override def withFocusEnabled(enabled: Boolean) = copy(focusEnabled = enabled)
 		override def withScreenInsetsEnabled(enabled: Boolean) = copy(screenInsetsEnabled = enabled)
 		override def withTransparencyEnabled(enabled: Boolean) = copy(transparencyEnabled = enabled)
+		override def withAlwaysOnTopEnabled(enabled: Boolean): WindowContext = copy(alwaysOnTopEnabled = enabled)
 	}
 }
 

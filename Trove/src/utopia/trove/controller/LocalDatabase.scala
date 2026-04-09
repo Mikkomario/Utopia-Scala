@@ -217,8 +217,7 @@ object LocalDatabase
 		}
 		
 		// Determines, fires and returns the final event (also updates status)
-		val completionEvent = result match
-		{
+		val completionEvent = result match {
 			case Success(event) =>
 				_statusPointer.update { oldStatus =>
 					event match
@@ -250,7 +249,6 @@ object LocalDatabase
 	  * @return Asynchronous result, containing whether the database was successfully shut down (or was already stopped)
 	  */
 	def shutDownAsync()(implicit exc: ExecutionContext) =
-	{
 		_statusPointer.futureWhere { _.isCompleted }.map { status =>
 			// Only shuts down the database if there is one and its started
 			if (status.isStarted)
@@ -263,7 +261,6 @@ object LocalDatabase
 			else
 				Success(())
 		}
-	}
 	
 	/**
 	  * @param exc Implicit execution context
@@ -271,8 +268,7 @@ object LocalDatabase
 	  */
 	def shutDown()(implicit exc: ExecutionContext) = shutDownAsync().waitForResult()
 	
-	private def waitUntilNotProcessing()(implicit exc: ExecutionContext): Unit =
-	{
+	private def waitUntilNotProcessing(): Unit = {
 		if (isProcessing)
 			_statusPointer.futureWhere { _.isCompleted }.waitFor()
 	}
@@ -280,7 +276,6 @@ object LocalDatabase
 	private def start(charsetName: Option[String] = None, collateName: Option[String] = None,
 	                  listener: Option[DatabaseSetupListener] = None)
 	                 (implicit exc: ExecutionContext) =
-	{
 		Try {
 			// If currently processing another request, waits for that to complete first
 			waitUntilNotProcessing()
@@ -312,5 +307,4 @@ object LocalDatabase
 				listener.foreach { _.onDatabaseSetupEvent(DatabaseStarted) }
 			}
 		}
-	}
 }

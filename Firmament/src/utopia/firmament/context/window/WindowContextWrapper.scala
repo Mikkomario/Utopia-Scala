@@ -39,6 +39,7 @@ trait WindowContextWrapper[Base <: WindowContextCopyable[Base], +Repr] extends W
 	override def focusEnabled: Boolean = windowContext.focusEnabled
 	override def screenInsetsEnabled: Boolean = windowContext.screenInsetsEnabled
 	override def transparencyEnabled: Boolean = windowContext.transparencyEnabled
+	override def alwaysOnTopEnabled: Boolean = windowContext.alwaysOnTopEnabled
 	
 	override def withResizeLogic(logic: WindowResizePolicy): Repr = mapWindowContext { _.withResizeLogic(logic) }
 	override def withScreenBorderMargins(margins: Insets): Repr = mapWindowContext { _.withScreenBorderMargins(margins) }
@@ -48,6 +49,7 @@ trait WindowContextWrapper[Base <: WindowContextCopyable[Base], +Repr] extends W
 	override def withFocusEnabled(enabled: Boolean): Repr = mapWindowContext { _.withFocusEnabled(enabled) }
 	override def withScreenInsetsEnabled(enabled: Boolean): Repr = mapWindowContext { _.withScreenInsetsEnabled(enabled) }
 	override def withTransparencyEnabled(enabled: Boolean): Repr = mapWindowContext { _.withTransparencyEnabled(enabled) }
+	override def withAlwaysOnTopEnabled(enabled: Boolean): Repr = mapWindowContext { _.withAlwaysOnTopEnabled(enabled) }
 	
 	
 	// OTHER    ------------------

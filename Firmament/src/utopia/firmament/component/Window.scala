@@ -15,11 +15,11 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
-import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
@@ -156,7 +156,9 @@ object Window
 	  *                            Default = false = use OS header.
 	  * @param fullScreen          Whether this window should be set to fill the whole screen whenever possible.
 	  *                            Default = false.
-	  * @param disableFocus        Whether this window shall not be allowed to gain focus.
+	 * @param alwaysOnTop          Whether this window should always be kept above the other windows.
+	 *                             Default = false.
+	 * @param disableFocus        Whether this window shall not be allowed to gain focus.
 	  *                            Default = false.
 	  * @param ignoreScreenInsets  Whether this window should ignore the screen insets (such as the OS toolbar)
 	  *                            when positioning itself.
@@ -169,8 +171,8 @@ object Window
 	  *                            Default = false = transparency is always disabled.
 	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
 	  *                                 This concerns bounds updates that occur at two places:
-	  *                                 1) When this window is constructed (once), and
-	  *                                 2) Whenever this window becomes visible.
+	  *                                     1. When this window is constructed (once), and
+	  *                                     1. Whenever this window becomes visible.
 	  *
 	  *                                 Set this to false if you intend to perform your own window bounds optimization
 	  *                                 upon these two cases.
@@ -188,8 +190,8 @@ object Window
 	          icon: Image = ComponentCreationDefaults.windowIcon,
 	          maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	          prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
-	          borderless: Boolean = false, fullScreen: Boolean = false, disableFocus: Boolean = false,
-	          ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false,
+	          borderless: Boolean = false, fullScreen: Boolean = false, alwaysOnTop: Boolean = false,
+	          disableFocus: Boolean = false, ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false,
 	          disableAutoBoundsUpdates: Boolean = false)
 	         (implicit exc: ExecutionContext, logger: Logger) =
 	{
@@ -199,7 +201,7 @@ object Window
 		}
 		new Window(window, container, content, eventActorHandler, resizeLogic, screenBorderMargins,
 			getAnchor, positionAfterResize, icon,
-			maxInitializationWaitDuration, prepareForSizeChange, !borderless, fullScreen, !disableFocus,
+			maxInitializationWaitDuration, prepareForSizeChange, !borderless, fullScreen, !disableFocus, alwaysOnTop,
 			!ignoreScreenInsets, enableTransparency, disableAutoBoundsUpdates)
 	}
 	
@@ -247,8 +249,8 @@ object Window
 	  *                                      A warning is logged if this threshold is reached.
 	  * @param disableAutoBoundsUpdates Whether automatic window bounds updates should be disabled.
 	  *                                 This concerns bounds updates that occur at two places:
-	  *                                 1) When this window is constructed (once), and
-	  *                                 2) Whenever this window becomes visible.
+	  *                                     1. When this window is constructed (once), and
+	  *                                     1. Whenever this window becomes visible.
 	  *
 	  *                                 Set this to false if you intend to perform your own window bounds optimization
 	  *                                 upon these two cases.
@@ -267,8 +269,8 @@ object Window
 	              (implicit context: WindowContext, exc: ExecutionContext, logger: Logger) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
 			context.screenBorderMargins, getAnchor, positionAfterResize, context.icon, maxInitializationWaitDuration,
-			prepareForSizeChange, !context.windowBordersEnabled, context.fullScreenEnabled, !context.focusEnabled,
-			!context.screenInsetsEnabled, context.transparencyEnabled, disableAutoBoundsUpdates)
+			prepareForSizeChange, context.windowBordersDisabled, context.fullScreenEnabled, context.alwaysOnTopEnabled,
+			context.focusDisabled, context.screenInsetsDisabled, context.transparencyEnabled, disableAutoBoundsUpdates)
 }
 
 /**
@@ -338,7 +340,9 @@ object Window
   *                     Default = false.
   * @param isFocusable Whether this window is allowed to gain focus.
   *                    Default = true.
-  * @param respectScreenInsets Whether this window takes the screen insets (such as the OS toolbar) into account
+  * @param isAlwaysOnTop Whether this window should always be kept obove the other windows.
+ *                      Default = false.
+ * @param respectScreenInsets Whether this window takes the screen insets (such as the OS toolbar) into account
   *                            when positioning itself.
   *                            Set to false if you want to cover the toolbar (in some full-screen use-cases, for example).
   *                            Default = true.
@@ -368,7 +372,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
              maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
              prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
              val hasBorders: Boolean = true, isFullScreen: Boolean = false, val isFocusable: Boolean = true,
-             respectScreenInsets: Boolean = true, enableTransparency: Boolean = false,
+             isAlwaysOnTop: Boolean = false, respectScreenInsets: Boolean = true, enableTransparency: Boolean = false,
              disableAutoBoundsUpdates: Boolean = false)
             (implicit exc: ExecutionContext, logger: Logger)
 	extends CachingStackable
@@ -588,130 +592,134 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
 	
 	// These initial actions are performed in the AWT event thread
 	// This thread waits for the completion of these actions for some time, but not indefinitely
-	AwtEventThread.future {
-		// Starts tracking window state
-		component.addWindowListener(WindowStateListener)
-		
-		// Sets up the underlying window
-		component.setLayout(null)
-		component.setContentPane(container)
-		// Some of the functions are only available through the two separate sub-classes
-		wrapped match {
-			case Left(dialog) =>
-				dialog.setUndecorated(isBorderless)
-				dialog.setResizable(resizeLogic.allowsUserResize)
-			case Right(frame) =>
-				frame.setUndecorated(isBorderless)
-				frame.setResizable(resizeLogic.allowsUserResize)
-		}
-		component.setFocusableWindowState(isFocusable)
-		component.pack()
-		
-		// Sets transparent background if content doesn't have a background itself
-		// (only works in certain conditions. Doesn't work if this window is decorated)
-		if (enableTransparency && isBorderless && container.isBackgroundSet && container.getBackground.getAlpha < 255)
-			Try { component.setBackground(Color.black.withAlpha(0.0).toAwt) }
-		
-		// Initializes position and size
-		_positionPointer.value = Point.of(component.getLocation)
-		_sizePointer.value = Size(component.getSize)
-		
-		// Registers to update the state when the wrapped window updates
-		component.addComponentListener(WindowComponentStateListener)
-		
-		// Updates the window icon when appropriate
-		iconPointer.addListenerAndSimulateEvent(Image.empty) { e =>
-			// Is not interested in icon changes after this window has closed
-			if (hasClosed)
-				Detach
-			else {
-				// Copies the maximum size icon first
-				val original = e.newValue.downscaled
-				original.toAwt.foreach { maxImage =>
-					val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
-					AwtEventThread.async {
-						// Case: No smaller icons are allowed
-						if (maxSize.fitsWithin(minIconSize))
-							component.setIconImage(maxImage)
-						// Case: Multiple icon sizes allowed
-						else {
-							// Shrinks the original image until minimum size is met
-							component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
-								.takeWhile { _.size.existsDimensionWith(minIconSize) { _ >= _ } }
-								.flatMap { _.toAwt }.toVector).asJava)
+	AwtEventThread
+		.future {
+			// Starts tracking window state
+			component.addWindowListener(WindowStateListener)
+			
+			// Sets up the underlying window
+			component.setLayout(null)
+			component.setContentPane(container)
+			// Some of the functions are only available through the two separate subclasses
+			wrapped match {
+				case Left(dialog) =>
+					dialog.setUndecorated(isBorderless)
+					dialog.setResizable(resizeLogic.allowsUserResize)
+				case Right(frame) =>
+					frame.setUndecorated(isBorderless)
+					frame.setResizable(resizeLogic.allowsUserResize)
+			}
+			if (isAlwaysOnTop)
+				component.setAlwaysOnTop(true)
+			component.setFocusableWindowState(isFocusable)
+			component.pack()
+			
+			// Sets transparent background if content doesn't have a background itself
+			// (only works in certain conditions. Doesn't work if this window is decorated)
+			if (enableTransparency && isBorderless && container.isBackgroundSet && container.getBackground.getAlpha < 255)
+				Try { component.setBackground(Color.black.withAlpha(0.0).toAwt) }
+			
+			// Initializes position and size
+			_positionPointer.value = Point.of(component.getLocation)
+			_sizePointer.value = Size(component.getSize)
+			
+			// Registers to update the state when the wrapped window updates
+			component.addComponentListener(WindowComponentStateListener)
+			
+			// Updates the window icon when appropriate
+			iconPointer.addListenerAndSimulateEvent(Image.empty) { e =>
+				// Is not interested in icon changes after this window has closed
+				if (hasClosed)
+					Detach
+				else {
+					// Copies the maximum size icon first
+					val original = e.newValue.downscaled
+					original.toAwt.foreach { maxImage =>
+						val maxSize = Size(maxImage.getWidth, maxImage.getHeight)
+						AwtEventThread.async {
+							// Case: No smaller icons are allowed
+							if (maxSize.fitsWithin(minIconSize))
+								component.setIconImage(maxImage)
+							// Case: Multiple icon sizes allowed
+							else {
+								// Shrinks the original image until minimum size is met
+								component.setIconImages((maxImage +: Iterator.iterate(original * 0.7) { _ * 0.7 }
+									.takeWhile { _.size.existsDimensionWith(minIconSize) { _ >= _ } }
+									.flatMap { _.toAwt }.toVector).asJava)
+							}
 						}
 					}
+					Continue
 				}
-				Continue
 			}
-		}
-		
-		// Whenever this window becomes visible, updates content layout
-		// (layout updates are skipped while this window is not visible)
-		fullyVisibleFlag.addListener { e =>
-			if (hasClosed)
-				Detach
-			else {
-				if (e.newValue) {
-					AwtEventThread.async {
-						content.resetCachedSize()
-						resetCachedSize()
-						// Automatic bounds-updates may be disabled
-						if (disableAutoBoundsUpdates || !optimizeBounds()) {
-							updateLayout()
-							content.updateLayout()
-							component.repaint()
+			
+			// Whenever this window becomes visible, updates content layout
+			// (layout updates are skipped while this window is not visible)
+			fullyVisibleFlag.addListener { e =>
+				if (hasClosed)
+					Detach
+				else {
+					if (e.newValue) {
+						AwtEventThread.async {
+							content.resetCachedSize()
+							resetCachedSize()
+							// Automatic bounds-updates may be disabled
+							if (disableAutoBoundsUpdates || !optimizeBounds()) {
+								updateLayout()
+								content.updateLayout()
+								component.repaint()
+							}
+							// Marks this window as opened when becomes visible the first time
+							if (_openedFlag.isNotSet)
+								boundsUpdatingFlag.onceNotSet { _openedFlag.set() }
 						}
-						// Marks this window as opened when becomes visible the first time
-						if (_openedFlag.isNotSet)
-							boundsUpdatingFlag.onceNotSet { _openedFlag.set() }
 					}
+					Continue
 				}
-				Continue
+			}
+			
+			// Once this window is open, starts event handling
+			openedFuture.foreach { _ =>
+				// Starts mouse listening (which is active only while visible)
+				val mouseEventGenerator = new MouseEventGenerator(container)
+				eventActorHandler += mouseEventGenerator
+				// Mouse movement events are only enabled while this window is in focus (unless not focusable)
+				val movementsEnabledPointer = if (isFocusable) fullyVisibleAndFocusedFlag else fullyVisibleFlag
+				mouseEventGenerator.buttonHandler += MouseButtonStateListener.conditional(fullyVisibleFlag) { e =>
+					content.distributeMouseButtonEvent(e)
+				}
+				mouseEventGenerator.moveHandler += MouseMoveListener
+					.conditional(movementsEnabledPointer)(content.distributeMouseMoveEvent)
+				mouseEventGenerator.wheelHandler += MouseWheelListener
+					.conditional(fullyVisibleFlag)(content.distributeMouseWheelEvent)
+				CommonMouseEvents.addGenerator(mouseEventGenerator)
+				
+				// Starts key listening (if used)
+				KeyboardEvents ++= keyStateHandlerPointer.current
+				
+				// Schedules to set up the location adjustment -value, unless set already
+				if (hasBorders && locationAdjustmentP.isEmpty)
+					Delay(0.5.seconds) { setupLocationAdjustment() }
+				else
+					positionAfterResize.foreach { f => position = f(bounds) }
+				
+				// Quits event listening once this window closes
+				closeFuture.onComplete { _ =>
+					CommonMouseEvents.removeGenerator(mouseEventGenerator)
+					eventActorHandler -= mouseEventGenerator
+					mouseEventGenerator.stop()
+					KeyboardEvents --= keyStateHandlerPointer.current
+				}
 			}
 		}
-		
-		// Once this window is open, starts event handling
-		openedFuture.foreach { _ =>
-			// Starts mouse listening (which is active only while visible)
-			val mouseEventGenerator = new MouseEventGenerator(container)
-			eventActorHandler += mouseEventGenerator
-			// Mouse movement events are only enabled while this window is in focus (unless not focusable)
-			val movementsEnabledPointer = if (isFocusable) fullyVisibleAndFocusedFlag else fullyVisibleFlag
-			mouseEventGenerator.buttonHandler += MouseButtonStateListener.conditional(fullyVisibleFlag) { e =>
-				content.distributeMouseButtonEvent(e)
+		.waitFor(maxInitializationWaitDuration).failure
+			// Logs a warning if the window-initialization takes longer than the allowed block time
+			.foreach { e =>
+				if (maxInitializationWaitDuration.isPositive)
+					logger(e,
+						s"Warning: Window initialization process took more than ${
+							maxInitializationWaitDuration.description}. The process will be completed in another thread.")
 			}
-			mouseEventGenerator.moveHandler += MouseMoveListener
-				.conditional(movementsEnabledPointer)(content.distributeMouseMoveEvent)
-			mouseEventGenerator.wheelHandler += MouseWheelListener
-				.conditional(fullyVisibleFlag)(content.distributeMouseWheelEvent)
-			CommonMouseEvents.addGenerator(mouseEventGenerator)
-			
-			// Starts key listening (if used)
-			KeyboardEvents ++= keyStateHandlerPointer.current
-			
-			// Schedules to set up the location adjustment -value, unless set already
-			if (hasBorders && locationAdjustmentP.isEmpty)
-				Delay(0.5.seconds) { setupLocationAdjustment() }
-			else
-				positionAfterResize.foreach { f => position = f(bounds) }
-			
-			// Quits event listening once this window closes
-			closeFuture.onComplete { _ =>
-				CommonMouseEvents.removeGenerator(mouseEventGenerator)
-				eventActorHandler -= mouseEventGenerator
-				mouseEventGenerator.stop()
-				KeyboardEvents --= keyStateHandlerPointer.current
-			}
-		}
-	}.waitFor(maxInitializationWaitDuration).failure
-		// Logs a warning if the window-initialization takes longer than the allowed block time
-		.foreach { e =>
-			if (maxInitializationWaitDuration.isPositive)
-				logger(e,
-					s"Warning: Window initialization process took more than ${
-						maxInitializationWaitDuration.description}. The process will be completed in another thread.")
-		}
 	
 	// May set up preparations for window size changes
 	prepareForSizeChange.foreach { prepare =>

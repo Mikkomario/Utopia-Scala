@@ -16,11 +16,11 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.{AlwaysFalse, Fixed}
+import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer, OnceFlatteningPointer}
 import utopia.flow.view.template.eventful.Changing

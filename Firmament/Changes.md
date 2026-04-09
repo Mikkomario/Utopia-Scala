@@ -1,5 +1,9 @@
 # Utopia Firmament - List of Changes
 
+## v1.6.2 (in development)
+### New features
+- Added always-on-top support to **Window** and **WindowContext**
+
 ## v1.6.1 - 15.03.2026
 Supports **Flow v2.8**
 

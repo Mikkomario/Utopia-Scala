@@ -8,16 +8,16 @@ import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, Request, Timeout}
 import utopia.flow.async.process.Delay
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Duration
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
@@ -485,7 +485,7 @@ trait ApiClient
 	{
 		// Timeout is generated from the specified single duration
 		val fullTimeout = timeout.ifFinite match {
-			case Some(time) => Timeout(time, time * 3, time * 6)
+			case Some(time) => Timeout(read = time, manager = time * 3)
 			case None => Timeout.empty
 		}
 		// Body may or may not be specified

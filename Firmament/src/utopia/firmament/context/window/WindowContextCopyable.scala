@@ -23,6 +23,7 @@ trait WindowContextCopyable[+Repr] extends WindowContextPropsView with ScopeUsab
 	def withFocusEnabled(enabled: Boolean): Repr
 	def withScreenInsetsEnabled(enabled: Boolean): Repr
 	def withTransparencyEnabled(enabled: Boolean): Repr
+	def withAlwaysOnTopEnabled(enabled: Boolean): Repr
 	
 	
 	// COMPUTED ---------------------
@@ -96,6 +97,11 @@ trait WindowContextCopyable[+Repr] extends WindowContextPropsView with ScopeUsab
 	  * @return A copy of this context that only creates non-transparent windows
 	  */
 	def nonTransparent = withTransparencyEnabled(false)
+	
+	/**
+	 * @return A copy of this context, where "always on top" feature is enabled in windows, if supported by the OS.
+	 */
+	def alwaysOnTop = withAlwaysOnTopEnabled(true)
 	
 	
 	// OTHER    ---------------------

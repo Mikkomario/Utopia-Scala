@@ -46,13 +46,17 @@ trait WindowContextPropsView
 	  */
 	def focusEnabled: Boolean
 	/**
-	  * @return Whether the created windows should avoid overlap with the screen insets, i.e. the OS tool bar
+	  * @return Whether the created windows should avoid overlap with the screen insets, i.e. the OS toolbar
 	  */
 	def screenInsetsEnabled: Boolean
 	/**
 	  * @return Whether transparent windows should be enabled, when possible
 	  */
 	def transparencyEnabled: Boolean
+	/**
+	 * @return Whether the "always on top" feature should be enabled, if supported by the OS.
+	 */
+	def alwaysOnTopEnabled: Boolean
 	
 	
 	// COMPUTED ---------------------
@@ -78,4 +82,8 @@ trait WindowContextPropsView
 	  * @return Whether window transparency should always be disabled
 	  */
 	def transparencyDisabled = !transparencyEnabled
+	/**
+	 * @return Whether "always on top" should not be activated
+	 */
+	def alwaysOnTopDisabled = !alwaysOnTopEnabled
 }
