@@ -277,7 +277,8 @@ object Store
 					// Checks against the existing items,
 					// preparing the non-duplicates as new inserts and handling possible replacements & updates
 					val updatedBuilder = OptimizedIndexedSeq.newBuilder[(K, E)]
-					itemsIterator
+					// Makes sure the input is distinct
+					itemsIterator.distinctBy { _._1 }
 						.filter { case (key, item) =>
 							// Checks whether this item matches an existing version
 							cachedExisting.get(key).forall { existing =>

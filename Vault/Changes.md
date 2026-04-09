@@ -2,7 +2,9 @@
 
 ## v2.1.1 (in development)
 ### Breaking changes
-- The default connection target is now :mariadb instead of :mysql
+- The default connection target is now `:mariadb` instead of `:mysql`
+### Bugfixes
+- **Store** now ensures that input is distinct
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:
