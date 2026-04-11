@@ -25,10 +25,11 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcess
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecorder, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{AccessQueue, MappingFunnel}
-import utopia.flow.async.process.{Breakable, Delay, Loop, LoopingProcess}
+import utopia.flow.async.process.WaitTarget.WaitDuration
+import utopia.flow.async.process._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.After
@@ -39,7 +40,6 @@ import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now, Today}
 import utopia.flow.util.logging.Logger
-import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.async.Volatile
@@ -331,11 +331,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	// A public-facing version of maxContextSizeP. Omits the safety margin, which is added to the incoming requests.
 	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin * 2 - 1 }
 	
-	/**
-	 * Contains futures of active regeneration processes.
-	 */
-	private val regenerateFuturesP = Volatile.emptySeq[Future[Unit]]
-	
 	private val debugLogger = logDir.map { dir => KeptOpenWriter((dir/s"$Today-Vast-AI-log.txt").unique, 30.seconds) }
 	
 	/**
@@ -451,6 +446,44 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			Continue
 	}
 	
+	private val regeneratorWaitLock = new AnyRef
+	private val regenerator = LoopingProcess(waitLock = regeneratorWaitLock) { hurryFlag =>
+		// Case: Stopped => Exits this loop
+		if (stopFlag.isSet || hurryFlag.value)
+			None
+		else {
+			// Checks how much capacity there is for new processes
+			val capacity = cleanProcesses()
+			
+			// Case: No capacity => Waits until the next call (or checks after 5 mins)
+			if (capacity <= 0) {
+				debugLog("No capacity for generating")
+				Some(WaitDuration(5.minutes).breakable)
+			}
+			// Case: Capacity available => Starts a new instance
+			else {
+				// Waits until the new instance has been created
+				debugLog("Generating")
+				val continueDelay = startNewInstance().waitFor() match {
+					case Success(process) =>
+						process.completionFuture.onComplete { _ => WaitUtils.notify(regeneratorWaitLock) }
+						10.seconds
+					case Failure(error) =>
+						log(error, "Failed to start a Vast AI instance")
+						30.seconds
+				}
+				
+				// Schedules the next loop
+				// Case: More capacity is available => Continues to generate the next instance after a short delay
+				if (cleanProcesses() > 0)
+					Some(WaitDuration(continueDelay))
+				// Case: No more capacity => Waits until one of the processes completes (checks after 5 mins anyway)
+				else
+					Some(WaitDuration(5.minutes).breakable)
+			}
+		}
+	}
+	
 	
 	// INITIAL CODE -----------------------
 	
@@ -461,8 +494,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		if (stopFlag.isSet)
 			Detach
 		else {
-			if (e.newValue > e.oldValue)
-				regenerate()
+			if (e.newValue > e.oldValue) {
+				WaitUtils.notify(regeneratorWaitLock)
+				regenerator.runAsync()
+			}
 			Continue
 		}
 	}
@@ -555,14 +590,15 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	}
 	
 	override def stop(): Future[Any] = {
+		debugLog("Stop called")
+		val regeneratorStopFuture = regenerator.stop()
 		if (stopFlag.set()) {
-			debugLog("Stop called")
 			val processorStopFutures = processors.map { _.stop() }
 			_queue.popAll().foreach { _.fail() }
-			(processorStopFutures ++ regenerateFuturesP.value).future
+			(processorStopFutures :+ regeneratorStopFuture).future
 		}
 		else
-			regenerateFuturesP.value.future
+			regeneratorStopFuture
 	}
 	
 	
@@ -731,10 +767,29 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 *
 	 *         Yields whether the queue is now empty.
 	 */
-	// FIXME: This loops indefinitely without actually clearing the queue
+	// TODO: More tasks should be given to processors with less pending tokens
 	private def clearQueue(): Future[Boolean] = {
 		// Checks the usable processors
-		val processors = this.processors.filter { _.usable }.sortBy { _.maxContextSize.getOrElse(TokenCount.zero) }
+		val processors = {
+			val usable = this.processors.filter { _.usable }
+			// If there are multiple processors, selects those least used
+			val selected = {
+				if (usable.hasSize <= 3)
+					usable
+				else {
+					val sorted = usable.sortBy { _.pendingTokens }
+					// Selects all processors that have no pending tasks
+					val free = sorted.takeWhile { _.pendingTokens <= 0 }
+					val freeCount = free.size
+					// Always selects at least 3 processors
+					if (freeCount >= 3)
+						free
+					else
+						free ++ sorted.slice(freeCount, 3)
+				}
+			}
+			selected.sortBy { _.maxContextSize.getOrElse(TokenCount.zero) }
+		}
 		processors.lastOption.flatMap { _.maxContextSize } match {
 			case Some(maxProcessorSize) =>
 				// Collects the tasks to process
@@ -774,78 +829,18 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					}
 					
 					// After a short delay, continues to unqueue more tasks
-					Delay.future(2.5.seconds) { clearQueue() }
+					// Applies a longer delay, if all processors are busy
+					val delay = {
+						if (processors.exists { p => p.maxContextSize.exists { p.pendingTokens < _.value } })
+							1.seconds
+						else
+							10.seconds
+					}
+					Delay.future(delay) { clearQueue() }
 				}
 				
 			// Case: No clients are usable => Completes
 			case None => Future.successful(_queue.isEmpty)
-		}
-	}
-	
-	/**
-	 * An entry function for the recursive [[_regenerate]].
-	 */
-	private def regenerate() = regenerateFuturesP.update { previous =>
-		val result = _regenerate()
-		result.forFailure { log(_, "Instance regeneration failed") }
-		OptimizedIndexedSeq.concat(previous.view.filterNot { _.isCompleted }, Single(result))
-	}
-	/**
-	 * Fills the process pool with new processes, until targeted instance count is reached.
-	 * Continues recursively, keeping the pool filled.
-	 * @return A future that resolves once all processes have completed
-	 *         (usually some time after [[stop]]() has been called)
-	 */
-	private def _regenerate(): Future[Unit] = {
-		debugLog("Generating")
-		// Checks how much capacity there is for new processes
-		val capacity = cleanProcesses()
-		// Case: No capacity => Returns immediately
-		if (capacity <= 0) {
-			debugLog("No capacity")
-			Future.unit
-		}
-		// Case: Capacity for a single process
-		//       => Starts it and prepares to apply recursion when that process completes
-		else if (capacity == 1) {
-			// Starts a new process, when possible
-			val processFuture = startNewInstance()
-			processFuture.flatMap { process =>
-				// Once the process completes, cleans the process pool and attempts to generate more processes
-				process.completionFuture.flatMap { _ =>
-					if (cleanProcesses() > 0 && stopFlag.isNotSet) _regenerate() else Future.unit
-				}
-			}
-		}
-		// Case: Capacity for multiple processes => Starts them sequentially and waits until all have been started
-		else {
-			debugLog(s"Starts $capacity new Vast AI instances")
-			Iterator.continually { startNewInstance() }.take(capacity).future.flatMap {
-				// Case: All processes were started => Prepares to apply recursion as they are completed
-				case TryCatch.Success(newProcesses, failures) =>
-					failures.foreach { error =>
-						log(error, "Unexpected partial failure while creating new instances")
-					}
-					debugLog(s"Acquired ${ newProcesses.size } Vast AI instances")
-					newProcesses
-						// Cleans the process pool and tests for recursion after every completion
-						.map { _.completionFuture.flatMap { _ =>
-							if (cleanProcesses() > 0 && stopFlag.isNotSet) _regenerate() else Future.unit
-						} }
-						.future
-						// Combines the recursion results
-						.map {
-							case TryCatch.Success(_, failures) =>
-								failures.foreach { error =>
-									log(error, "Unexpected partial failure during wide regenerate()")
-								}
-							case TryCatch.Failure(error) => throw error
-						}
-				// Case: Process starting failed unexpectedly => Fails
-				case TryCatch.Failure(error) =>
-					debugLog(s"Failed to acquire Vast AI instances: ${ error.getMessage }")
-					Future.failed(error)
-			}
 		}
 	}
 	
