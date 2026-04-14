@@ -13,6 +13,8 @@
 ### New methods
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **IterableOnce** (via **CollectionExtensions**)
+  - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
 - **Lazy** (object)

@@ -26,6 +26,7 @@
 - **VastAiVllmProcessState**
   - Added `.isUnusable`
 ### Other changes
+- **StatelessBufferedReplyGeneratorLike** now supports request-deprecation
 - Added multiple new `.toModel` implementations and model parsing functions
 - Modified **TokenUsage**'s `.toString` implementation
 

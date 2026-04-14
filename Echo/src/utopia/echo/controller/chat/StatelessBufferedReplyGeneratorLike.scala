@@ -14,6 +14,8 @@ import utopia.echo.model.settings.{HasImmutableContextSizeLimits, HasImmutableMo
 import utopia.echo.model.tokenization.TokenCount
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.Mutate
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -135,11 +137,13 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 	 *                          Default = None = Applies [[expectedReplySize]].
 	 * @param expectedThinkSize A custom think size estimation for this request.
 	 *                          Default = None = Applies [[expectedThinkSize]].
+	 * @param deprecationView A view that, if it is set to true, should lead to withdrawal of this request.
+	 *                        Default = always false.
 	 * @return A future that will yield the LLM's reply, if successful
 	 */
 	def bufferedReplyFor(message: String, history: Seq[ChatMessage] = Empty,
-	                     expectedReplySize: Option[TokenCount] = None,
-	                     expectedThinkSize: Option[TokenCount] = None): Future[RequestResult[R]] =
+	                     expectedReplySize: Option[TokenCount] = None, expectedThinkSize: Option[TokenCount] = None,
+	                     deprecationView: View[Boolean] = AlwaysFalse): Future[RequestResult[R]] =
 	{
 		// Modifies the settings to include context size limits
 		val (appliedSettings, lazyTokenUsage) = applyLimitsTo(settings,
@@ -149,7 +153,8 @@ trait StatelessBufferedReplyGeneratorLike[+R <: BufferedReply, +Repr]
 		appliedSettings match {
 			case Success(settings) =>
 				val resultFuture = requestExecutor(ChatParams(User(message), conversationHistory = history,
-					settings = settings, reasoningEffort = if (llm.thinks) reasoningEffort else None))
+					settings = settings, reasoningEffort = if (llm.thinks) reasoningEffort else None,
+					deprecationView = deprecationView))
 				// Updates the token count estimator based on the acquired reply
 				resultFuture.forSuccess { (reply, _, _) =>
 					tokenCounter.feedback(lazyTokenUsage.value.newMessages, reply.tokenUsage.input)

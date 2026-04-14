@@ -22,6 +22,15 @@ object MappingFunnel
 	 * @param ordered Whether this funnel is ordered,
 	 *                meaning that the items must be processed in the same order in which they were queued.
 	 *                Default = false = items will be processed in an order which maximizes the utilized capacity.
+	 * @param prioritizeLarger Whether to prioritize larger items in the queue,
+	 *                         delaying some smaller items in the process.
+	 *                         Set this to true, if queue-usage is continuous / long-term,
+	 *                         in which use-cases the larger items are easily delayed, normally.
+	 *
+	 *                         Default = false = larger items have no special handling,
+	 *                         and the maximum throughput takes priority instead.
+	 *
+	 *                         NB: This parameter has no effect, if 'ordered' is set to true.
 	 * @param costOf A function which determines the mapping cost of an individual item.
 	 *               Not expected to yield negative values.
 	 * @param f A function which accepts an item and processes it asynchronously. Not expected to block.
@@ -31,9 +40,10 @@ object MappingFunnel
 	 * @tparam B Type of mapping output
 	 * @return A new mapping funnel
 	 */
-	def apply[A, B](capacity: Double, ordered: Boolean = false)(costOf: A => Double)(f: A => Future[B])
+	def apply[A, B](capacity: Double, ordered: Boolean = false, prioritizeLarger: Boolean = false)
+	               (costOf: A => Double)(f: A => Future[B])
 	               (implicit exc: ExecutionContext, log: Logger) =
-		new MappingFunnel[A, B](capacity, ordered)(costOf)(f)
+		new MappingFunnel[A, B](capacity, ordered, prioritizeLarger)(costOf)(f)
 }
 
 /**
@@ -45,25 +55,31 @@ object MappingFunnel
   * @since 17.03.2026, v2.8.1
   */
 // TODO: Merge common properties between this and ActionQueue under a common trait
-class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Double)(f: A => Future[B])
-                         (implicit exc: ExecutionContext, log: Logger)
+class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean, prioritizeLarger: Boolean = false)
+                           (costOf: A => Double)(f: A => Future[B])
+                           (implicit exc: ExecutionContext, log: Logger)
 	extends MaybeEmpty[MappingFunnel[A, B]]
 {
 	// ATTRIBUTES   ------------------
 	
 	/**
 	 * The main managed pointer.
-	 * Contains 2 parts:
+	 * Contains 3 parts:
 	 *      1. Queue for tasks that have not been started. Each contains:
 	 *          1. The item to map
 	 *          1. A promise that accepts the mapping result
 	 *          1. Required mapping capacity
 	 *      1. Mapping capacity reserved for the currently running mapping operations
+	 *      1. The capacity requirement of each currently running mapping operation separately.
+	 *         Only tracked if [[prioritizeLarger]] is true. Ordered from largest to smallest.
+	 *
+	 * NB: If [[ordered]] (FIFO) is false, the queue is ordered from the largest to smallest task
+	 *     (used in optimization).
 	 *
 	 * Variance is ignored, because usage is fully controlled / private, and items are only added via .push(A)
 	 */
-	private val queueAndCapacityP: EventfulVolatile[(Seq[(A @uncheckedVariance, Promise[B @uncheckedVariance], Double)], Double)] =
-		Volatile.eventful(Empty -> 0.0)
+	private val queueAndCapacityP: EventfulVolatile[(Seq[(A @uncheckedVariance, Promise[B @uncheckedVariance], Double)], Double, Seq[Double])] =
+		Volatile.eventful((Empty, 0.0, Empty))
 	
 	private val lazyQueueP = Lazy[Changing[Seq[(_, _, Double)]]] { queueAndCapacityP.lightMap { _._1 } }
 	private val lazyQueueSizeP = Lazy {
@@ -74,10 +90,10 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	}
 	private val lazyQueuedCapacityP = lazyQueueP.map { _.map { _.iterator.map { _._3 }.sum } }
 	private val lazyUtilizationP = Lazy {
-		queueAndCapacityP.map { case (queue, usedCapacity) => costOf(queue) + usedCapacity }
+		queueAndCapacityP.map { case (queue, usedCapacity, _) => costOf(queue) + usedCapacity }
 	}
 	private val lazyPendingToActiveRatioP = Lazy {
-		queueAndCapacityP.map { case (queue, usedCapacity) =>
+		queueAndCapacityP.map { case (queue, usedCapacity, _) =>
 			if (usedCapacity == 0)
 				0.0
 			else
@@ -142,7 +158,7 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	def utilization = lazyUtilizationP.current match {
 		case Some(p) => p.value
 		case None =>
-			val (queue, usedCapacity) = queueAndCapacityP.value
+			val (queue, usedCapacity, _) = queueAndCapacityP.value
 			costOf(queue) + usedCapacity
 	}
 	/**
@@ -160,7 +176,7 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	def pendingToActiveRatio = lazyPendingToActiveRatioP.current match {
 		case Some(p) => p.value
 		case None =>
-			val (queue, usedCapacity) = queueAndCapacityP.value
+			val (queue, usedCapacity, _) = queueAndCapacityP.value
 			if (usedCapacity == 0)
 				0.0
 			else
@@ -218,39 +234,89 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	def push(item: A): Future[B] = {
 		// Calculates the mapping cost
 		val requiredCapacity = costOf(item) min capacity
-		// Queues or prepares this item for processing
-		queueAndCapacityP.mutate { case (queue, usedCapacity) =>
-			// Case: There's immediate capacity for processing this item => Reserves capacity for it
-			if ((capacity - usedCapacity) >= requiredCapacity && (!ordered || queue.isEmpty))
-				None -> (queue -> (usedCapacity + requiredCapacity))
-			// Case: There's currently not enough capacity => Queues this item and yields a promise
-			else {
-				val promise = Promise[B]()
-				val updatedQueue = {
-					// Case: FIFO => Appends this item to the queue
+		// Case: No cost => Skips this funnel and runs the task immediately in the background
+		if (requiredCapacity <= 0)
+			f(item)
+		else {
+			// Queues or prepares this item for processing
+			queueAndCapacityP.mutate { case (queue, usedCapacity, processed) =>
+				// Checks whether the item should be processed immediately
+				val acceptImmediately = {
+					// Case: FIFO => Only processes the item, if there's nothing queued, and enough capacity
 					if (ordered)
-						queue :+ (item, promise, requiredCapacity)
-					// Case: Free ordering
-					//       => Inserts this item, so that the queue remains ordered from highest to lowest cost
-					else
-						queue.findIndexWhere { _._3 < requiredCapacity } match {
-							case Some(targetIndex) => queue.inserted((item, promise, requiredCapacity), targetIndex)
-							case None => queue :+ (item, promise, requiredCapacity)
+						queue.isEmpty && (capacity - usedCapacity) >= requiredCapacity
+					// Case: Empty => Processes immediately
+					else if (usedCapacity <= 0)
+						true
+					// Case: Full to at least some extent => Checks whether this item should be included now or later
+					else {
+						val availableCapacity = capacity - usedCapacity
+						// Case: Not enough capacity for this item => Queues it
+						if (availableCapacity < requiredCapacity)
+							false
+						// Case: Prioritizing larger items => Additional conditions must be met
+						else if (prioritizeLarger) {
+							val largestProcessed = processed.head
+							// Case: This item is larger (= prioritized) => Adds it now if it fits
+							if (requiredCapacity > largestProcessed)
+								availableCapacity >= requiredCapacity
+							// Case: Smaller item => Checks whether queued items should take priority
+							else
+								queue.iterator.map { _._3 }.takeWhile { _ > largestProcessed }.lastOption
+									.forall { nextQueued =>
+										// Case: A larger item has been queued
+										//       => Only processes this item, if ALL these conditions are met:
+										//              1. A large item is currently being processed
+										//              2. The remaining capacity can fit both this task
+										//                 AND the next large item
+										val availableAfterNext = capacity - nextQueued
+										largestProcessed >= availableAfterNext && requiredCapacity <= availableAfterNext
+									}
 						}
+						// Case: No prioritization => Processes immediately
+						else
+							true
+					}
 				}
-				Some(promise) -> (updatedQueue -> usedCapacity)
-			}
-		} match {
-			// Case: Task queued => Yields a future from the prepared promise
-			case Some(promise) => promise.future
-			// Case: Task should be run immediately => Performs the mapping
-			case None =>
-				val resultFuture = f(item)
-				// Once mapping completes, starts emptying the queue
-				// (except for 0 cost tasks, which have no effect on the queue)
-				if (requiredCapacity != 0)
+				
+				// Case: There's immediate capacity for processing this item => Reserves capacity for it
+				if (acceptImmediately) {
+					val nowProcessed = {
+						if (prioritizeLarger)
+							processed.insertedBeforeFirstWhere(requiredCapacity) { _ < requiredCapacity }
+						else
+							Empty
+					}
+					None -> (queue, usedCapacity + requiredCapacity, nowProcessed)
+				}
+				// Case: There's currently not enough capacity => Queues this item and yields a promise
+				else {
+					val promise = Promise[B]()
+					val updatedQueue = {
+						// Case: FIFO => Appends this item to the queue
+						if (ordered)
+							queue :+ (item, promise, requiredCapacity)
+						// Case: Free ordering
+						//       => Inserts this item, so that the queue remains ordered from highest to lowest cost
+						else
+							queue.findIndexWhere { _._3 < requiredCapacity } match {
+								case Some(targetIndex) => queue.inserted((item, promise, requiredCapacity), targetIndex)
+								case None => queue :+ (item, promise, requiredCapacity)
+							}
+					}
+					Some(promise) -> (updatedQueue, usedCapacity, processed)
+				}
+			} match {
+				// Case: Task queued => Yields a future from the prepared promise
+				case Some(promise) => promise.future
+				// Case: Task should be run immediately => Performs the mapping
+				case None =>
+					val resultFuture = f(item)
+					// Once mapping completes, starts emptying the queue
+					// (except for 0 cost tasks, which have no effect on the queue)
 					resultFuture.onComplete { _ => emptyQueue(requiredCapacity) }
-				resultFuture
+					resultFuture
+			}
 		}
 	}
 	
@@ -261,11 +327,18 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 	 */
 	private def emptyQueue(releasedCapacity: Double): Unit =
 		queueAndCapacityP
-			.mutate { case (queue, usedCapacity) =>
+			.mutate { case (queue, usedCapacity, processed) =>
 				val nowUsedCapacity = usedCapacity - releasedCapacity
+				val nowProcessed = {
+					if (prioritizeLarger)
+						processed.withoutFirstWhere { _ == releasedCapacity }
+					else
+						Empty
+				}
+				
 				// Case: No more tasks queued => Finishes
 				if (queue.isEmpty)
-					Empty -> (queue -> nowUsedCapacity)
+					Empty -> (queue, nowUsedCapacity, nowProcessed)
 				else {
 					// Checks which tasks may be run next
 					val availableCapacity = capacity - nowUsedCapacity
@@ -281,14 +354,55 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 						}
 						// Case: Free ordering => Takes as many tasks as can be fit into the current capacity
 						else {
+							val actuallyAvailableCapacity = {
+								// Case: Larger (than current) tasks are prioritized
+								//       => Makes sure new additions won't prevent the next larger item
+								//          from being executed ASAP
+								if (prioritizeLarger) {
+									nowProcessed.headOption match {
+										case Some(largestBeingProcessed) =>
+											val largestProcessed = largestBeingProcessed max releasedCapacity
+											val larger = queue.takeWhile { _._3 > largestProcessed }
+											// Case: No large(r) items have been queued => No adjustments are needed
+											if (larger.isEmpty)
+												availableCapacity
+											else {
+												val nextLarger = larger.last
+												// Case: A larger item has been queued, but can't be processed yet
+												//       => Reserves capacity for it
+												if (nextLarger._3 > availableCapacity) {
+													val capacityAfterLarger = capacity - nextLarger._3
+													// Case: Currently processing only smaller tasks
+													//       => Won't add any more tasks until the larger may be accepted
+													if (largestProcessed <= capacityAfterLarger)
+														0
+													// Case: Currently processing a semi-large task
+													//       => Accepts small tasks that can fit together
+													//          with the next large one
+													else
+														capacityAfterLarger
+												}
+												// Case: Larger items may be immediately processed => Continues normally
+												else
+													availableCapacity
+											}
+										// Case: Currently empty => No adjustments are needed
+										case None => availableCapacity
+									}
+								}
+								// Case: No such prioritization logic => Uses immediately available capacity
+								else
+									availableCapacity
+							}
+							
 							val minCost = queue.last._3
 							// Case: There's no capacity for any of the queued tasks => Finishes
-							if (availableCapacity < minCost)
+							if (actuallyAvailableCapacity < minCost)
 								Empty -> queue
 							// Case: There's capacity for one or more task
 							//       => Collects the next tasks, preferring those with the highest cost
 							else {
-								var remainingCapacity = availableCapacity
+								var remainingCapacity = actuallyAvailableCapacity
 								val takenItemsBuilder = OptimizedIndexedSeq.newBuilder[(A, Promise[B], Double)]
 								val remainingBuilder = OptimizedIndexedSeq.newBuilder[(A, Promise[B], Double)]
 								val itemsIter = queue.iterator
@@ -308,8 +422,28 @@ class MappingFunnel[-A, +B](capacity: Double, ordered: Boolean)(costOf: A => Dou
 							}
 						}
 					}
-					// Updates the queue and the used capacity, accordingly
-					nextItems -> (remainingItems -> (nowUsedCapacity + nextItems.iterator.map { _._3 }.sum))
+					// Calculates the new processing capacity
+					val (usedCapacity, processed) = nextItems.emptyOneOrMany match {
+						case None => nowUsedCapacity -> nowProcessed
+						case Some(Left(nextItem)) =>
+							val cost = nextItem._3
+							val nextProcessed = {
+								if (prioritizeLarger)
+									nowProcessed.insertedBeforeFirstWhere(cost) { _ < cost }
+								else
+									Empty
+							}
+							(nowUsedCapacity + cost, nextProcessed)
+						case Some(Right(nextItems)) =>
+							val nextProcessed = {
+								if (prioritizeLarger)
+									(nowProcessed ++ nextItems.view.map { _._3 }).reverseSorted
+								else
+									Empty
+							}
+							(nowUsedCapacity + nextItems.iterator.map { _._3 }.sum, nextProcessed)
+					}
+					nextItems -> (remainingItems, usedCapacity, processed)
 				}
 			}
 			// Starts all prepared tasks

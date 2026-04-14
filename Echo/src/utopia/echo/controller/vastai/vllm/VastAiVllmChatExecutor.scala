@@ -616,17 +616,38 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		if (stopFlag.isSet)
 			Future.successful(RequestSendingFailed(
 				new IllegalStateException("This request-execution interface was closed")))
+		// Case: Request was deprecated => Resolves it immediately
+		else if (request.params.deprecated)
+			Future.successful(RequestWasDeprecated)
 		else {
+			// Determines the processors to target
+			// In situations where most processors are loading,
+			// limits the accepted request volume and queues requests instead
+			// (so that we won't end up with 1M tokens in one processor and 10K in another later)
 			val processors = this.processors
+			val (unusableProcessors, usableProcessors) = processors.divideBy { _.usable }.toTuple
+			val targetProcessors = {
+				if (usableProcessors.isEmpty || usableProcessors.hasSize > unusableProcessors)
+					usableProcessors
+				else
+					usableProcessors.filter { _.pendingTokens <= instanceAccelerationPendingTokensThreshold.value }
+			}
 			
 			// Attempts to give the request to one of the processors, preferring those least used
-			processors.sortBy { _.pendingToActiveRatio }
+			targetProcessors.sortBy { _.pendingToActiveRatio }
 				.findMap { processor =>
 					processor.tryPush(request).map { resultFuture =>
 						// Activates more instances, if appropriate
 						adjustInstanceTargetIfAppropriate(pendingTokensCheckThresholdP, request.tokens.value,
 							instanceActivationPendingTokensThreshold.value, 5000,
-							processors.iterator.map { _.pendingTokens }.sum.toInt) {
+							current = {
+								// Counts the threshold based on the lowest used processor
+								val usableProcessors = processors.filter { _.usable }
+								usableProcessors.iterator.map { _.pendingTokens }.minOption match {
+									case Some(lowestUse) => lowestUse.toInt * usableProcessors.size
+									case None => 0
+								}
+							}) {
 							currentTarget =>
 								if (processors.size < currentTarget || processors.exists { _.phase < ApiHosting })
 									currentTarget * instanceAccelerationPendingTokensThreshold.value
@@ -663,16 +684,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					}
 				}
 				// Case: No processors are available => Queues this request
-				.getOrElse {
-					val task = new QueuedTask(request)
-					val queueSize = _queue.updateAndGet { _ :+ task }.size
-					
-					// Activates more instances, if appropriate
-					adjustInstanceTargetIfAppropriate(queueSizeCheckThresholdP, 1,
-						instanceActivationQueueSizeThreshold, 5, queueSize) { _ * instanceActivationQueueSizeThreshold }
-					
-					task.future
-				}
+				.getOrElse { queueRequest(request) }
 		}
 	}
 	/**
@@ -711,6 +723,17 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			// Case: Request completed or terminated for another reason, or this system stopped => Finishes
 			case result => Future.successful(result)
 		}
+	}
+	
+	private def queueRequest(request: Request) = {
+		val task = new QueuedTask(request)
+		val queueSize = _queue.updateAndGet { _ :+ task }.size
+		
+		// Activates more instances, if appropriate
+		adjustInstanceTargetIfAppropriate(queueSizeCheckThresholdP, 1,
+			instanceActivationQueueSizeThreshold, 5, queueSize) { _ * instanceActivationQueueSizeThreshold }
+		
+		task.future
 	}
 	
 	/**
@@ -767,25 +790,26 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 *
 	 *         Yields whether the queue is now empty.
 	 */
-	// TODO: More tasks should be given to processors with less pending tokens
 	private def clearQueue(): Future[Boolean] = {
 		// Checks the usable processors
 		val processors = {
 			val usable = this.processors.filter { _.usable }
+			val usableCount = usable.size
 			// If there are multiple processors, selects those least used
 			val selected = {
-				if (usable.hasSize <= 3)
+				if (usableCount <= 1)
 					usable
 				else {
+					val targetProcessors = (usableCount - 1) min 3
 					val sorted = usable.sortBy { _.pendingTokens }
 					// Selects all processors that have no pending tasks
 					val free = sorted.takeWhile { _.pendingTokens <= 0 }
 					val freeCount = free.size
-					// Always selects at least 3 processors
-					if (freeCount >= 3)
+					// Always selects at least X processors
+					if (freeCount >= targetProcessors)
 						free
 					else
-						free ++ sorted.slice(freeCount, 3)
+						free ++ sorted.slice(freeCount, targetProcessors)
 				}
 			}
 			selected.sortBy { _.maxContextSize.getOrElse(TokenCount.zero) }

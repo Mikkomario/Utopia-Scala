@@ -108,6 +108,30 @@ object CollectionExtensions
 		// OTHER    ---------------------------
 		
 		/**
+		 * @param item An item to insert
+		 * @param f A function which yields true at the item, *before* which 'item' should be inserted
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam B Type of the inserted item
+		 * @tparam To Type of the resulting collection
+		 * @return A copy of this collection, where 'item' has been inserted before the first match of 'f'.
+		 *         If no matches are found, yields a copy of this collection where the item has been appended.
+		 */
+		def insertedBeforeFirstWhere[B >: iter.A, To](item: B)(f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, B, To]) =
+			bf.fromSpecific(coll)(InsertBeforeIterator(ops, Iterator.single(item))(f))
+		/**
+		 * @param items Items to insert
+		 * @param f A function which yields true at the item, *before* which 'items' should be inserted
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam B Type of the inserted items
+		 * @tparam To Type of the resulting collection
+		 * @return A copy of this collection, where 'items' have been inserted before the first match of 'f'.
+		 *         If no matches are found, yields a copy of this collection where the items has been appended.
+		 */
+		def insertedAllBeforeFirstWhere[B >: iter.A, To](items: IterableOnce[B])(f: iter.A => Boolean)
+		                                             (implicit bf: BuildFrom[Repr, B, To]) =
+			bf.fromSpecific(coll)(InsertBeforeIterator(ops, items)(f))
+		
+		/**
 		  * Zips the contents of this collection with another collection and merges the two values using
 		  * the specified function.
 		  * @param other Another collection
@@ -1078,6 +1102,15 @@ object CollectionExtensions
 		// OTHER    --------------------------
 		
 		/**
+		 * @param f A function that yields true for the item to exclude
+		 * @param bf Implicit build-from for the resulting collection
+		 * @tparam To Type of the collection built
+		 * @return A copy of this collection without the first item for which 'f' yielded true
+		 */
+		def withoutFirstWhere[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) =
+			bf.fromSpecific(coll)(FilterFirstIterator(ops.iterator)(f))
+		
+		/**
 		 * Filters this collection so that only distinct values remain. Uses a special function to determine equality
 		 * @param equals    A function that determines whether two values are equal
 		 * @param buildFrom Builder for the new collection
@@ -1805,6 +1838,8 @@ object CollectionExtensions
 	// Used for operations that expose the underlying element type 'A'
 	class IterableOperations2[A, C](coll: C, ops: IterableOps[A, Iterable, _])
 	{
+		// COMPUTED ------------------------
+		
 		/**
 		  * @return Either
 		  *             Left: The only item within this collection, if the size of this collection is exactly 1, or
