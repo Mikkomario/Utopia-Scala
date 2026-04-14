@@ -8,11 +8,11 @@ import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.AppConfig
+import utopia.flow.util.{AppConfig, Version}
 import utopia.flow.util.console.ConsoleExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
-import utopia.scribe.api.database.access.logging.issue.AccessIssues
-import utopia.vault.database.{Connection, ConnectionPool}
+import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
+import utopia.scribe.api.util.ScribeContext
+import utopia.vault.database.{Connection, ConnectionPool, Tables}
 
 import java.nio.file.Path
 import scala.io.StdIn
@@ -48,6 +48,14 @@ object ScribeConsoleSettings
 		AppConfig("scribe", allowWorkingDirectoryAsAppDirectory = true).logToTry
 	}
 	
+	/**
+	 * Logging implementation that may be used as backup for the Scribe system
+	 */
+	lazy val backupLogger: Logger = logDirectory match {
+		case Some(dir) => new FileLogger(dir, 1.seconds, copyToSysErr = true)
+		case None => SysErrLogger
+	}
+	
 	
 	// COMPUTED --------------------
 	
@@ -81,15 +89,17 @@ object ScribeConsoleSettings
 	  * Initializes database connection settings and tests database accessibility
 	  * @param allowUserInteraction Whether this application should request DB access settings from the user,
 	 *                             if they haven't been specified
+	 * @param version Current (console) app version
 	 * @return Success containing the name of the targeted database, or a failure.
 	 *         If failure, the database can't be accessed.
 	  */
-	def setupDb(allowUserInteraction: Boolean = false) = {
+	def setupDb(allowUserInteraction: Boolean = false)(implicit version: Version) = {
 		config.flatMap { config =>
 			val defaultConnectionTarget = "jdbc:mariadb://localhost:3306/"
 			// Attempts to load previously specified settings
-			val loadResult = config("database").tryModel.flatMap { db =>
-				db("password").tryString.map { password =>
+			val loadResult = config("database").tryModel.filter { _.nonEmpty }.flatMap { db =>
+				db("password").tryString.filter { _.nonEmpty }.map { password =>
+					println("Using previously stored DB access settings")
 					val dbName = db("name").stringOr("scribe_db")
 					Connection.modifySettings { _.copy(
 						connectionTarget = db("address").stringOr(defaultConnectionTarget),
@@ -105,6 +115,7 @@ object ScribeConsoleSettings
 						default = true))
 					loadResult
 				else {
+					println("Setting up DB access")
 					// Requests DB access settings
 					val address = StdIn.readNonEmptyLine(
 						s"Please specify the DB connection address. Default = $defaultConnectionTarget")
@@ -133,15 +144,27 @@ object ScribeConsoleSettings
 						}
 				}
 			}
+			// Finalizes the setup by specifying the Scribe context and testing DB access
 			setupResult.flatMap { dbName =>
+				ScribeContext.setup(threadPool, cPool, new Tables(cPool), dbName, backupLogger = backupLogger,
+					version = version)
+				
 				// Tests DB access
-				cPool.tryWith { implicit c =>
-					AccessIssues.nonEmpty
+				println("Testing DB access")
+				val testResult = cPool.tryWith { implicit c =>
+					utopia.scribe.api.database.access.logging.issue.AccessIssues.nonEmpty
 					dbName
 				}
+				
+				// If DB couldn't be accessed, forgets the access settings
+				if (testResult.isFailure)
+					config.clear("database")
+				
+				testResult
 			}
 		}
 	}
 	@deprecated("Renamed to setupDb(Boolean)", "v1.2")
-	def initializeDbSettings(allowUserInteraction: Boolean = false) = setupDb(allowUserInteraction)
+	def initializeDbSettings(allowUserInteraction: Boolean = false)(implicit version: Version) =
+		setupDb(allowUserInteraction)
 }

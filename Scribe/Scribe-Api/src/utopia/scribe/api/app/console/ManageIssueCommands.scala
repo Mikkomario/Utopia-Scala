@@ -20,7 +20,7 @@ import utopia.vault.database.Connection
 
 import java.time.Instant
 import scala.io.StdIn
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 /**
  * Provides commands for managing the currently open issue
@@ -37,6 +37,15 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	private val resolutionModel = ResolutionDbModel
 	private val aliasModel = IssueAliasDbModel
 	
+	/**
+	 * A console command that shows the currently targeted database name
+	 */
+	val showDb = Command.withoutArguments("database", help = "Tells which database is currently targeted") {
+		ScribeConsoleSettings.dbName match {
+			case Success(dbName) => println(s"Currently targeting \"$dbName\"")
+			case Failure(error) => log(error, "Failed to access app configuration")
+		}
+	}
 	/**
 	 * A console command for changing the used database
 	 */
@@ -234,7 +243,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 			}
 	}
 	
-	private val staticCommands = Vector(changeDb, alias, changeSeverity)
+	private val staticCommands = Vector(showDb, changeDb, alias, changeSeverity)
 	private val conditionalCommands = Vector(comment, fixed, silence, follow)
 	
 	/**

@@ -11,8 +11,8 @@ import utopia.flow.util.Version
 import utopia.flow.util.console.Console
 import utopia.flow.util.logging.{FileLogger, Logger, SysErrLogger}
 import utopia.scribe.api.util.ScribeContext
+import utopia.vault.database.ConnectionPool
 import utopia.vault.database.columnlength.ColumnLengthRules
-import utopia.vault.database.{ConnectionPool, Tables}
 
 /**
   * A command-line application that provides an interface for checking issue status
@@ -23,10 +23,11 @@ object ScribeConsoleApp extends App
 {
 	// SETUP   -------------------
 	
-	private val version = Version(1, 2)
+	private implicit val version: Version = Version(1, 2)
 	
 	// Initializes settings and context (may fail)
-	private val dbName = ScribeConsoleSettings.setupDb(allowUserInteraction = true).get
+	ScribeConsoleSettings.logDirectory = "log"
+	ScribeConsoleSettings.setupDb(allowUserInteraction = true).get
 	
 	private implicit val jsonParser: JsonParser = ScribeConsoleSettings.jsonParser
 	private implicit val exc: ThreadPool = ScribeConsoleSettings.threadPool
@@ -35,8 +36,6 @@ object ScribeConsoleApp extends App
 		case None => SysErrLogger
 	}
 	private implicit val cPool: ConnectionPool = ScribeConsoleSettings.cPool
-	
-	ScribeContext.setup(exc, cPool, new Tables(cPool), dbName, backupLogger = log, version = version)
 	
 	// Loads column length rules, if possible
 	private val lengthRuleKeys = Vector("scribe", "length", "rule", "json")
