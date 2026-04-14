@@ -1,6 +1,5 @@
 package utopia.scribe.api.app.console
 
-import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.context.ThreadPool
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
@@ -24,21 +23,20 @@ object ScribeConsoleApp extends App
 {
 	// SETUP   -------------------
 	
+	private val version = Version(1, 2)
+	
 	// Initializes settings and context (may fail)
+	private val dbName = ScribeConsoleSettings.setupDb(allowUserInteraction = true).get
 	
-	ScribeConsoleSettings.initializeDbSettings().get
-	
-	private implicit val jsonParser: JsonParser = JsonBunny
-	private implicit val exc: ThreadPool = new ThreadPool("Scribe-Console", 3, 100,
-		10.seconds)(SysErrLogger)
+	private implicit val jsonParser: JsonParser = ScribeConsoleSettings.jsonParser
+	private implicit val exc: ThreadPool = ScribeConsoleSettings.threadPool
 	private implicit val log: Logger = ScribeConsoleSettings.logDirectory match {
 		case Some(dir) => new FileLogger(dir, 1.seconds, copyToSysErr = true)
 		case None => SysErrLogger
 	}
-	private implicit val cPool: ConnectionPool = new ConnectionPool(30)
+	private implicit val cPool: ConnectionPool = ScribeConsoleSettings.cPool
 	
-	ScribeContext.setup(exc, cPool, new Tables(cPool), ScribeConsoleSettings.dbName, backupLogger = log,
-		version = Version(1, 1))
+	ScribeContext.setup(exc, cPool, new Tables(cPool), dbName, backupLogger = log, version = version)
 	
 	// Loads column length rules, if possible
 	private val lengthRuleKeys = Vector("scribe", "length", "rule", "json")

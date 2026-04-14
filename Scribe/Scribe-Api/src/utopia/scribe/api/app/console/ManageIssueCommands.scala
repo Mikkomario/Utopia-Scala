@@ -1,7 +1,6 @@
 package utopia.scribe.api.app.console
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.mutable.DataType.{DurationType, InstantType}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
@@ -9,8 +8,9 @@ import utopia.flow.util.Version
 import utopia.flow.util.console.ConsoleExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.template.eventful.Changing
-import utopia.scribe.api.database.access.logging.issue.AccessIssue
+import utopia.scribe.api.database.access.logging.issue.{AccessIssue, AccessIssues}
 import utopia.scribe.api.database.access.management.aliasing.AccessIssueAlias
 import utopia.scribe.api.database.storable.management.{CommentDbModel, IssueAliasDbModel, ResolutionDbModel}
 import utopia.scribe.api.util.ScribeContext._
@@ -20,10 +20,10 @@ import utopia.vault.database.Connection
 
 import java.time.Instant
 import scala.io.StdIn
+import scala.util.Success
 
 /**
  * Provides commands for managing the currently open issue
- *
  * @author Mikko Hilpinen
  * @since 27.08.2025, v1.1
  */
@@ -36,6 +36,33 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 	private val commentModel = CommentDbModel
 	private val resolutionModel = ResolutionDbModel
 	private val aliasModel = IssueAliasDbModel
+	
+	/**
+	 * A console command for changing the used database
+	 */
+	val changeDb = Command("database:set", help = "Changes the targeted database")(
+		ArgumentSchema("database", "db", defaultDescription = "Requested")) {
+		args =>
+			args("database").string
+				.orElse {
+					StdIn.readNonEmptyLine("Specify the name of the database to target from now on (empty cancels)")
+				}
+				.foreach { dbName =>
+					val oldDbName = ScribeConsoleSettings.dbName
+					(ScribeConsoleSettings.dbName = dbName).logWithMessage("Failed to change the targeted database")
+					
+					connectionPool.tryWith { implicit c => AccessIssues.nonEmpty }.failure.foreach { error =>
+						log(error, s"Failed to access the specified database: $dbName")
+						oldDbName match {
+							case Success(oldDbName) =>
+								ScribeConsoleSettings.dbName = oldDbName
+								println(s"Set the database back to \"$oldDbName\", because \"$dbName\" couldn't be accessed")
+							
+							case _ => println("The database is currently inaccessible")
+						}
+					}
+				}
+	}
 	
 	/**
 	 * A console command for leaving a comment on the open issue
@@ -207,7 +234,7 @@ class ManageIssueCommands(openIssueP: Changing[Option[Int]])(implicit log: Logge
 			}
 	}
 	
-	private val staticCommands = Pair(alias, changeSeverity)
+	private val staticCommands = Vector(changeDb, alias, changeSeverity)
 	private val conditionalCommands = Vector(comment, fixed, silence, follow)
 	
 	/**
