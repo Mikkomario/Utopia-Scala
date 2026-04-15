@@ -102,7 +102,7 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	// ATTRIBUTES   -------------------------
 	
 	// Combines the transformation from the settings with the possible animated transformation
-	private lazy val appliedSettings = Animator.transformP match {
+	private val appliedSettings = Animator.transformP match {
 		case Some(transformP) =>
 			settings.mapTransformationPointer { customP =>
 				customP.mergeWith(transformP) { (custom, animated) =>
@@ -115,7 +115,7 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		case None => settings
 	}
 	
-	override protected lazy val wrapped = ViewImageLabel(hierarchy).withSettings(appliedSettings).apply(Animator.imageP)
+	override protected val wrapped = ViewImageLabel(hierarchy).withSettings(appliedSettings).apply(Animator.imageP)
 	
 	
 	// INITIAL CODE -------------------------
@@ -129,7 +129,7 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandl
 	{
 		// ATTRIBUTES   ---------------------
 		
-		private lazy val maxDuration = transformAnimation match {
+		private val maxDuration = transformAnimation match {
 			case Some(transformAnimation) => animation.duration max transformAnimation.duration
 			case None => animation.duration
 		}
@@ -137,20 +137,20 @@ class AnimatedImageLabel(hierarchy: ComponentHierarchy, actorHandler: ActorHandl
 		// If this is a one-time animation, supports pointer-locking
 		private val lockableAdvanceP = if (looping) None else Some(Pointer.lockable[Duration](Duration.zero))
 		private val advanceP = lockableAdvanceP.getOrElse { Pointer.eventful[Duration](Duration.zero) }
-		lazy val imageP = {
+		val imageP = {
 			if (transformAnimation.exists { _.duration > animation.duration })
 				advanceP.map(animation.repeating)
 			else
 				advanceP.map(animation.apply)
 		}
-		lazy val transformP = transformAnimation.map { transformAnimation =>
+		val transformP = transformAnimation.map { transformAnimation =>
 			if (transformAnimation.duration < animation.duration)
 				advanceP.map(transformAnimation.repeating)
 			else
 				advanceP.map(transformAnimation.apply)
 		}
 		
-		override lazy val handleCondition: Flag = {
+		override val handleCondition: Flag = {
 			if (looping)
 				hierarchy.linkedFlag
 			else

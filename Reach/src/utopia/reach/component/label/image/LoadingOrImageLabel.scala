@@ -72,13 +72,12 @@ class LoadingOrImageLabel(override val hierarchy: ComponentHierarchy, context: V
 					
 			// Case: May change between loading and default views => Uses a view-swapper
 			case None =>
-				Swapper.withContext(hierarchy, context).build(Mixed)
-					.apply(loadingFlag) { (factories, loading) =>
-						if (loading)
-							loadingLabelConstructor(factories(AnimatedImageLabel).withSettings(settings))
-						else
-							constructImageLabel(factories(ViewImageLabel).withSettings(settings))
-					}
+				Swapper.withContext(hierarchy, context).build(Mixed).apply(loadingFlag) { (factories, loading) =>
+					if (loading)
+						loadingLabelConstructor(factories(AnimatedImageLabel).withSettings(settings))
+					else
+						constructImageLabel(factories(ViewImageLabel).withSettings(settings))
+				}
 		}
 	}
 }
