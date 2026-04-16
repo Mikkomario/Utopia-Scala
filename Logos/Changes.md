@@ -1,5 +1,10 @@
 # Utopia Logos - List of Changes
 
+## v0.7.2 (in development)
+### New methods
+- **RequestPath**
+  - Added `.withDomain(Domain)`
+
 ## v0.7.1
 ### New methods
 - **Domain** (object)

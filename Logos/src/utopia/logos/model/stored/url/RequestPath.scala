@@ -2,11 +2,10 @@ package utopia.logos.model.stored.url
 
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.logos.database.access.single.url.path.DbSingleRequestPath
-import utopia.logos.model.factory.url.{RequestPathFactory, RequestPathFactoryWrapper}
+import utopia.logos.model.combined.url.DetailedRequestPath
+import utopia.logos.model.factory.url.RequestPathFactoryWrapper
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.vault.store.{FromIdFactory, StoredFromModelFactory, StoredModelConvertible}
-
-import java.time.Instant
 
 object RequestPath extends StoredFromModelFactory[RequestPathData, RequestPath]
 {
@@ -42,7 +41,15 @@ case class RequestPath(id: Int, data: RequestPathData)
 	override protected def wrappedFactory = data
 	
 	override def withId(id: Int) = copy(id = id)
-	
 	override protected def wrap(data: RequestPathData) = copy(data = data)
+	
+	
+	// OTHER    -----------------------
+	
+	/**
+	 * @param domain Domain to attach to this path
+	 * @return A copy of this path including the specified domain
+	 */
+	def withDomain(domain: Domain) = DetailedRequestPath(this, domain)
 }
 
