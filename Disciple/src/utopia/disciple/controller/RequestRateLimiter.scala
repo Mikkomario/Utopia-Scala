@@ -2,14 +2,14 @@ package utopia.disciple.controller
 
 import utopia.flow.async.process.{Breakable, Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.Now
+import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.flow.operator.Identity
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit.Second
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
-import utopia.flow.time.Duration
-import utopia.flow.time.TimeUnit.Second
-
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Random, Success, Try}
 
@@ -54,6 +54,8 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 	private val pendingRequests = Volatile.seq[Boolean => Future[_]]()
 	private val pendingClearedFuture = Volatile[Future[Unit]](Future.unit)
 	
+	private val lockedUntilP = Volatile.empty[Instant]
+	
 	private val randomizesResetDuration = maxRandomIncrease.isPositive
 	private var resetDuration = {
 		if (randomizesResetDuration)
@@ -77,11 +79,13 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 		// Case: No wait needed
 		if (times.size < maxRequestAmount)
 			None
-		// Case: Current requests full. Takes the first recent request and checks
-		// when enough time has passed since it was performed
+		// Case: Current requests full => Takes the first recent request and checks
+		//                                when enough time has passed since it was performed
 		else
 			Some(times(times.size - maxRequestAmount) + resetDuration).filter { _.isFuture }
 	}
+	
+	private def lockedUntil = lockedUntilP.updateAndGet { _.filter { _.isFuture } }
 	
 	private def randomResetDuration = baseResetDuration + maxRandomIncrease * Random.nextDouble()
 	
@@ -108,8 +112,9 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 	def push[A](makeRequest: => Future[A])(implicit exc: ExecutionContext) = {
 		// Checks whether the request can be performed immediately or whether it should be added to pending requests
 		// Case: Request can be performed immediately => does so and records when the request was performed
-		if (currentRequestCount < maxRequestAmount) {
-			requestTimes :+= Now
+		val now = Now.toInstant
+		if (lockedUntil.isEmpty && currentRequestCount < maxRequestAmount) {
+			requestTimes :+= now
 			makeRequest
 		}
 		// Case: Request can't be performed right now => delays it
@@ -138,7 +143,7 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 					while (pendingRequests.nonEmpty) {
 						// Waits the smallest possible time until performing the next request
 						// If the wait is interrupted, stops, cancelling all pending requests
-						val shouldContinue = nextAvailableRequestTime match {
+						val requestWaitSucceeded = nextAvailableRequestTime match {
 							case Some(nextWaitTarget) =>
 								val waitSucceeded = Wait(nextWaitTarget, waitLock)
 								// Randomizes the next wait duration, if that feature is enabled
@@ -147,6 +152,15 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 								
 							case None => true
 						}
+						// Waits for the locking to finish, if applicable
+						val shouldContinue = {
+							if (requestWaitSucceeded)
+								OptionsIterator.continually(lockedUntil).takeWhile { _ => pendingRequests.nonEmpty }
+									.map { Wait(_, waitLock) }.find { !_ }.forall(Identity)
+							else
+								false
+						}
+						
 						// Case: Normal operation => continues
 						if (shouldContinue) {
 							// Records request time and performs the request asynchronously
@@ -162,6 +176,20 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 			promise.future
 		}
 	}
+	
+	/**
+	 * Locks this system until the specified timestamp.
+	 * During this time, no requests are allowed through.
+	 * @param time Time until which requests should be prevented
+	 */
+	def lockUntil(time: Instant) = lockedUntilP.update {
+		case Some(existing) => Some(existing max time)
+		case None => Some(time)
+	}
+	/**
+	 * Removes any locking that may have been in place
+	 */
+	def removeLocking() = lockedUntilP.clear()
 	
 	private def randomizeResetDuration() = {
 		if (randomizesResetDuration)

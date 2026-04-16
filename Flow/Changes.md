@@ -1,6 +1,8 @@
 # Utopia Flow - List of Changes
 
-## v2.8.1 (in development)
+## v2.9 (in development)
+### Breaking changes
+- **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Deprecations
 - `Regex.whiteSpace` is now named `Regex.whitespace`
 ### Bugfixes
@@ -22,7 +24,7 @@
 - **Pair**
   - Added `.bestMatch(...)`
 - **PossiblyFailingFuture**
-  - Added `.recoverFromFailureWith(...)`
+  - Added `.mapFailure(...)`, `.flatMapFailure(...)`, `.flatMapFailureRepeatedly(...)` and `.recoverFromFailureWith(...)`
 - **QueuedAction** (object)
   - Added `.started(Future)`
 - **Regex**

@@ -1,6 +1,10 @@
 # Utopia Annex - List of Changes
 
-## v1.12.1 (in development)
+## v1.13 (in development)
+### Breaking changes
+- **ApiClient** now requires `tooManyRequestsRetrySettings: Option[TooManyRequestsRetrySettings]`
+### New Features
+- **ApiClient**s using **RequestRateLimiter** now support automated retries for 429 (too many requests) -responses
 ### New methods
 - **RequestResult**
   - Added `.forSuccess(...)` for **Future**'s containing **RequestResult**

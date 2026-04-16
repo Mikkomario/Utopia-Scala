@@ -37,6 +37,7 @@ class TestApiClient(executionContext: ExecutionContext, jsonParseLogic: JsonPars
 	override protected lazy val gateway: Gateway =
 		new Gateway(allowBodyParameters = false, allowJsonInUriParameters = true)
 	override protected val rateLimiter: Option[RequestRateLimiter] = None
+	override protected val tooManyRequestsRetrySettings: Option[ApiClient.TooManyRequestsRetrySettings] = None
 	
 	override lazy val valueResponseParser: ResponseParser[Response[Value]] =
 		ResponseParser.value.unwrapToResponse { v =>

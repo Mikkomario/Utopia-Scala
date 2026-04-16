@@ -3,7 +3,8 @@ package utopia.annex.controller
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.{Get, Post}
-import utopia.annex.controller.ApiClient.PreparedRequest
+import utopia.access.model.enumeration.Status.TooManyRequests
+import utopia.annex.controller.ApiClient.{PreparedRequest, TooManyRequestsRetrySettings}
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.{RequestResult, Response}
@@ -12,10 +13,12 @@ import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, Request, Timeout}
 import utopia.flow.async.process.Delay
+import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.Duration
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 
@@ -210,7 +213,12 @@ object ApiClient
 		def send[A](parser: ResponseParser[RequestResult[A]]) = {
 			// Applies request-rate limiting, if appropriate
 			api.rateLimiter match {
-				case Some(limiter) => limiter.push { _send(parser) }
+				case Some(limiter) =>
+					// Also applies 429 handling, if appropriate
+					api.tooManyRequestsRetrySettings match {
+						case Some(settings) => _send(parser, limiter, settings, settings.maxRetries)
+						case None => limiter.push { _send(parser) }
+					}
 				case None => _send(parser)
 			}
 		}
@@ -222,6 +230,47 @@ object ApiClient
 		  */
 		def send(): Future[RequestResult[Unit]] = send(api.emptyResponseParser)
 		
+		private def _send[A](parser: ResponseParser[RequestResult[A]], limiter: RequestRateLimiter,
+		                     settings: TooManyRequestsRetrySettings, remainingAttempts: Int): Future[RequestResult[A]] =
+		{
+			// Sends the request
+			val resultFuture = limiter.push { _send(parser) }
+			// Case: No retries are allowed => Won't modify the result
+			if (remainingAttempts <= 0)
+				resultFuture
+			// Case: Retries may be performed on 429 responses => Prepares handling for those
+			else
+				resultFuture.flatMap {
+					// Case: 429 response received => Applies a delay before attempting further requests, if possible
+					case result @ Response.Failure(status, _, headers) if status == TooManyRequests =>
+						val delay = headers.retryAfter.map { _.toDuration } match {
+							// Case: Retry-After specified in the response => Applies that, with restrictions
+							case Some(proposedRetryAfter) =>
+								val allowedRange = settings.appliedRetryAfterRange
+								// Case: Too long delay => Returns the original result (i.e. won't retry)
+								if (proposedRetryAfter > allowedRange.end)
+									None
+								// Case: OK delay => Applies the minimum delay, also
+								else
+									Some(allowedRange.start max proposedRetryAfter)
+									
+							// Case: No Retry-After specified => Applies the default value
+							case None => Some(settings.defaultDelay)
+						}
+						delay match {
+							case Some(delay) =>
+								// Locks the request queue during this time period,
+								// in order to ensure that no requests come through
+								limiter.lockUntil(Now + delay)
+								Delay.future(delay) { _send(parser, limiter, settings, remainingAttempts - 1) }
+							
+							case None => Future.successful(result)
+						}
+						
+					// Case: Not a 429 result => Returns
+					case result => Future.successful(result)
+				}
+		}
 		private def _send[A](parser: ResponseParser[RequestResult[A]]) = {
 			// Sends the request and handles possible request sending failures
 			api.gateway.responseFor(wrapped)(parser).map {
@@ -230,6 +279,15 @@ object ApiClient
 			}
 		}
 	}
+	
+	/**
+	 * Settings used for controlling retry attempts for 429 responses
+	 * @param maxRetries Maximum number of retries applied. Default = 3.
+	 * @param defaultDelay Delay applied by default / when no Retry-After header is present. Default = 5 seconds.
+	 * @param appliedRetryAfterRange Accepted Retry-After value range. Default = any value.
+	 */
+	case class TooManyRequestsRetrySettings(maxRetries: Int = 3, defaultDelay: Duration = 5.seconds,
+	                                        appliedRetryAfterRange: HasEnds[Duration] = Span(Duration.zero, Duration.infinite))
 }
 
 /**
@@ -262,6 +320,12 @@ trait ApiClient
 	 * @return Request rate limiter applied
 	 */
 	protected def rateLimiter: Option[RequestRateLimiter]
+	/**
+	 * @return Settings applied when handling 429 responses.
+	 *         Only applied if [[rateLimiter]] is specified.
+	 *         None if no retries should be made.
+	 */
+	protected def tooManyRequestsRetrySettings: Option[TooManyRequestsRetrySettings]
 	
 	/**
 	  * @return Domain address + the initial path common to all requests

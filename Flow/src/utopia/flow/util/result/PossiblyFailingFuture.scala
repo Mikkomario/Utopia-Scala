@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 17.12.2025, v2.8
  */
-trait PossiblyFailingFuture[A, T, +R[_]] extends Any
+trait PossiblyFailingFuture[A, T, +R[+_]] extends Any
 {
 	// ABSTRACT ---------------------------
 	
@@ -195,6 +195,72 @@ trait PossiblyFailingFuture[A, T, +R[_]] extends Any
 				case Failure(error) => Future.successful(failure[B](error))
 			}
 		}
+	
+	/**
+	 * If this future fails, maps the failure into a new result
+	 * @param f A function which accepts a failure and maps it to a new result (which might also be a failure)
+	 * @param exc Implicit execution context
+	 * @tparam B Type of mapping results, if successful
+	 * @return A mapped copy of this future
+	 */
+	def mapFailure[B >: A](f: MayHaveFailed[A] => MayHaveFailed[B])(implicit exc: ExecutionContext): Future[R[B]] =
+		wrapped.map { r =>
+			val result = wrap(r)
+			if (result.isFailure)
+				unwrap(f(result))
+			else
+				unwrap(result)
+		}
+	/**
+	 * If this future fails, maps the failure into a new result asynchronously
+	 * @param f A function which accepts a failure and maps it to future that yields a new result
+	 *          (which might also be a failure)
+	 * @param exc Implicit execution context
+	 * @tparam B Type of mapping results, if successful
+	 * @return A mapped copy of this future
+	 */
+	def flatMapFailure[B >: A](f: MayHaveFailed[A] => Future[MayHaveFailed[B]])(implicit exc: ExecutionContext) =
+		wrapped.flatMap { r =>
+			val result = wrap(r)
+			if (result.isFailure)
+				f(result).map(unwrap)
+			else
+				Future.successful(unwrap[B](result))
+		}
+		
+	/**
+	 * If this future fails, performs a modified attempt up to n times
+	 * @param maxAttempts Maximum number of retry attempts
+	 * @param f A function that accepts a failure and yields a new asynchronous result
+	 * @param executionContext Implicit execution context
+	 * @return A copy of this future that attempts recovery using 'f' up to 'maxAttempts' times
+	 */
+	def flatMapFailureRepeatedly(maxAttempts: Int)(f: MayHaveFailed[A] => Future[MayHaveFailed[A]])
+	                            (implicit executionContext: ExecutionContext): Future[R[A]] =
+	{
+		if (maxAttempts <= 0)
+			wrapped.map { r => unwrap(wrap(r)) }
+		else
+			_flatMapFailureRepeatedly(wrapped.map(wrap), maxAttempts)(f).map(unwrap)
+	}
+	private def _flatMapFailureRepeatedly(resultFuture: Future[MayHaveFailed[A]], remainingAttempts: Int)
+	                                     (f: MayHaveFailed[A] => Future[MayHaveFailed[A]])
+	                                     (implicit executionContext: ExecutionContext): Future[MayHaveFailed[A]] =
+	{
+		// Case: No retries remain => Yields the specified result future
+		if (remainingAttempts <= 0)
+			resultFuture
+		// Case: May retry => Prepares a retry, if appropriate
+		else
+			resultFuture.flatMap { originalResult =>
+				// Case: Failed => Retries recursively
+				if (originalResult.isFailure)
+					_flatMapFailureRepeatedly(f(originalResult), remainingAttempts - 1)(f)
+				// Case: Success => Exits the loop
+				else
+					Future.successful(originalResult)
+			}
+	}
 	
 	/**
 	 * @param f A mapping function applied to a failure. May yield a success or a failure.

@@ -1,6 +1,7 @@
 package utopia.echo.controller.client
 
 import utopia.access.model.Headers
+import utopia.annex.controller.ApiClient.TooManyRequestsRetrySettings
 import utopia.annex.controller.{ApiClient, QueueSystem, RequestQueue}
 import utopia.annex.model.request.RequestQueueable
 import utopia.annex.model.response.{RequestResult, Response}
@@ -46,10 +47,15 @@ object LlmServiceClient
   * @param apiKey API key sent along with the outgoing requests (default = empty = no API key)
   * @param maxParallelRequests Maximum number of requests that can be active/sent at once.
  *                            None if unlimited (default).
-  * @param offlineWaitThreshold A request duration after which a connection is considered offline (default = 7 minutes)
+  * @param rateLimiter Applied request-rate limiter (optional)
+ * @param tooManyRequestsRetrySettings Applied settings for handling 429 responses.
+ *                                     Only applied, if 'rateLimiter' is specified.
+ * @param offlineWaitThreshold A request duration after which a connection is considered offline (default = 7 minutes)
   */
 class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String = "",
                        maxParallelRequests: Option[Int] = None, rateLimiter: Option[RequestRateLimiter] = None,
+                       tooManyRequestsRetrySettings: TooManyRequestsRetrySettings = TooManyRequestsRetrySettings(
+	                       maxRetries = 2, defaultDelay = 15.seconds),
                        offlineWaitThreshold: Duration = 7.minutes)
                       (implicit log: Logger, exc: ExecutionContext)
 	extends RequestQueue
@@ -83,6 +89,9 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		// ATTRIBUTES   -----------------------
 		
 		override protected implicit val jsonParser: JsonParser = JsonBunny
+		
+		override protected val tooManyRequestsRetrySettings: Option[ApiClient.TooManyRequestsRetrySettings] =
+			Some(LlmServiceClient.this.tooManyRequestsRetrySettings)
 		
 		override val valueResponseParser: ResponseParser[Response[Value]] = newValueResponseParser
 		override val emptyResponseParser: ResponseParser[Response[Unit]] = newEmptyResponseParser

@@ -2,10 +2,12 @@ package utopia.echo.controller.client
 
 import utopia.access.model.Headers
 import utopia.annex.controller.ApiClient
+import utopia.annex.controller.ApiClient.TooManyRequestsRetrySettings
 import utopia.annex.model.response.Response
-import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, StringBody}
+import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.TimeExtensions._
@@ -35,6 +37,8 @@ class VastAiApiClient(override protected val gateway: Gateway, apiKey: String, a
 	
 	// API requests too frequent: endpoint threshold=4.5*1.0
 	override protected val rateLimiter: Option[RequestRateLimiter] = Some(RequestRateLimiter(1, 1.seconds))
+	override protected val tooManyRequestsRetrySettings: Option[ApiClient.TooManyRequestsRetrySettings] =
+		Some(TooManyRequestsRetrySettings(appliedRetryAfterRange = Span(1.seconds, 2.minutes)))
 	
 	
 	// IMPLEMENTED  ----------------------

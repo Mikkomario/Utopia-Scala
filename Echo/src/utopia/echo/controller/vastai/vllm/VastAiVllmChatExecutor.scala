@@ -880,7 +880,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		val process = VastAiVllmProcess(selectOffer, modelSize.modelSize, additionalReservedDisk, gateway,
 			installScriptPath, localPort = portCounter.next(), remotePort = remotePort, maxGpuUtil = maxGpuUtil,
 			setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
-			instanceLabel = label, debugLogger = debugLogger) {
+			statusCheckInterval = (30 max (maxInstanceCount * 2)).seconds, instanceLabel = label,
+			debugLogger = debugLogger) {
 			offer =>
 				val maxContextSize = contextSizeOn(offer.gpu.ram)
 				val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
