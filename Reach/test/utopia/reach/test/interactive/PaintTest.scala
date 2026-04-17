@@ -12,6 +12,7 @@ import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.reach.component.label.empty.ViewEmptyLabel
+import utopia.reach.container.wrapper.Framing
 import utopia.reach.test.ReachTestContext._
 import utopia.reach.window.ReachWindow
 
@@ -34,9 +35,14 @@ object PaintTest extends App
 	
 	private val colorP = CopyOnDemand { Hsl(Angle.circles(Random.nextDouble())): Color }
 	
-	private val window = ReachWindow.contentContextual.borderless.using(ViewEmptyLabel) { (_, labelF) =>
-		labelF.withCustomDrawer(BackgroundViewDrawer(colorP))(sizeP)
-	}
+	private val window = ReachWindow.contentContextual.borderless
+		.transparent.mapBackground { _.withAlpha(0) }
+		.alwaysOnTop.revalidatingAsync
+		.using(Framing) { (_, framingF) =>
+			framingF.build(ViewEmptyLabel) { labelF =>
+				labelF.withCustomDrawer(BackgroundViewDrawer(colorP))(sizeP)
+			}
+		}
 	
 	
 	// APP CODE --------------------------
