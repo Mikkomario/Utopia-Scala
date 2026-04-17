@@ -182,9 +182,14 @@ case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit ex
 			case c => Fixed(c.windowBackground)
 		}
 		
+		// Determines painting mode
+		// For transparent windows, paints everything through Swing
+		val paintThroughSwing = context.transparencyEnabled && !backgroundP.existsFixed { _.opaque }
+		
 		// Creates the canvas
 		val canvas = ReachCanvas(attachmentPointer, Right(absoluteWindowPositionPointer), backgroundP, context.cursors,
-			disableFocus = !context.focusEnabled) { _ => revalidation() } { createContent(_, windowPointer.readOnly) }
+			paintThroughSwing = paintThroughSwing, disableFocus = !context.focusEnabled) { _ => revalidation() } {
+			createContent(_, windowPointer.readOnly) }
 		canvasPointer.set(canvas)
 		
 		// Creates the window

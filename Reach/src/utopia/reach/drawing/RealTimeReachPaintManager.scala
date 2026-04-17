@@ -3,8 +3,10 @@ package utopia.reach.drawing
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.Positive
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.template.eventful.Flag
@@ -21,7 +23,6 @@ import utopia.reach.component.template.ReachComponent
 import java.awt.{Graphics2D, Toolkit}
 import javax.swing.RepaintManager
 import scala.annotation.unused
-import scala.collection.immutable.VectorBuilder
 import scala.util.Try
 
 object RealTimeReachPaintManager
@@ -66,7 +67,11 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 	private lazy val canvas = component.parentCanvas
 	private lazy val jComponent = canvas.component
 	
-	// Area being drawn currently -> queued areas
+	/**
+	 * A mutable pointer that contains 2 values:
+	 *      1. The area currently being drawn
+	 *      1. Areas to draw next, grouped by priority
+	 */
 	private val queuePointer = Volatile[(Option[Bounds], Map[Priority, Seq[Bounds]])](None -> Map())
 	private val bufferSizePointer = Volatile(Size.zero)
 	// TODO: Consider using a MutableImage as a buffer?
@@ -86,64 +91,71 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 		}
 	}
 	
+	/**
+	 * @return An iterator that removes target regions from [[queuePointer]].
+	 *         Yields first the high priority regions, preferring smaller regions.
+	 *
+	 *         Terminates once the queue has been fully cleared.
+	 *
+	 *         NB: Discards the processing item slot in the queue pointer.
+	 *             Assumes that said region has been completed when next() is called.
+	 */
+	private def unqueue = OptionsIterator.continually {
+		queuePointer.mutate { case (_, queue) =>
+			Priority.descending.findMap { priority =>
+				queue.get(priority).flatMap { options =>
+					options.emptyOneOrMany.map {
+						case Left(only) => (only, queue - priority)
+						case Right(options) =>
+							val next = options.minBy { _.area }
+							(next, queue + (priority -> options.filterNot { _ == next }))
+					}
+				}
+			} match {
+				case Some((next, remaining)) => (Some(next), Some(next) -> remaining)
+				case None => (None, None -> queue)
+			}
+		}
+	}
+	
 	
 	// IMPLEMENTED	---------------------------------
 	
 	// Ensures the buffer is up-to-date and then paints the component
 	override def paintWith(drawer: Drawer) = buffer().drawWith(drawer, component.position)
 	
-	override def repaint(region: Option[Bounds], priority: Priority) = region.map { _.ceil } match {
-		case Some(region) =>
-			// Extends the queue. May start the drawing process as well
-			val firstDrawArea = queuePointer.mutate { case (processing, queue) =>
-				// Case: No draw process currently active => starts drawing
-				if (processing.isEmpty)
-					Some(region) -> (Some(region) -> queue)
-				// Case: Draw process currently active => queues the region
-				else {
-					// Checks whether the region could be merged into one of the existing regions
-					val existingRegions = queue.getOrElse(priority, Empty)
-					val newRegions = {
-						if (existingRegions.isEmpty)
-							Single(region)
-						else {
-							val newRegionsBuilder = OptimizedIndexedSeq.newBuilder[Bounds]
-							var mergeSucceeded = false
-							existingRegions.foreach { b =>
-								if (mergeSucceeded)
-									newRegionsBuilder += b
-								else {
-									// Merge is considered successful is less than 10% of extra space is added
-									val merged = Bounds.around(Pair(region, b))
-									if (merged.area <= (region.area + b.area) * 1.1) {
-										mergeSucceeded = true
-										newRegionsBuilder += merged
-									}
-									else
-										newRegionsBuilder += b
-								}
-							}
-							if (!mergeSucceeded)
-								newRegionsBuilder += region
-							newRegionsBuilder.result()
-						}
-					}
-					None -> (processing -> (queue + (priority -> newRegions)))
+	override def repaint(region: Option[Bounds], priority: Priority) = {
+		lazy val componentSize = component.size
+		region.map { _.ceil }
+			// If the targeted region spans the whole component area, prepares a full repaint instead
+			.filterNot { region => region.leftX >= 0 && region.topY <= 0 &&
+				region.rightX >= componentSize.width && region.bottomY >= componentSize.height
+			} match
+		{
+			// Case: Painting a subregion => Queues and starts drawing, if appropriate
+			case Some(region) =>
+				// Extends the queue. May start the drawing process as well
+				val shouldDrawNow = queue(region, priority, placeForDrawing = true)
+				if (shouldDrawNow)
+					paintQueue(Some(region))
+			
+			// Case: Painting the whole component => Clears the queue and performs painting
+			case None =>
+				val componentBounds = Bounds(Point.origin, componentSize)
+				val shouldPaintNow = queuePointer.mutate { case (processing, _) =>
+					if (processing.nonEmpty)
+						false -> (processing -> Map(priority -> Single(componentBounds)))
+					else
+						true -> (Some(componentBounds) -> Map())
 				}
-			}
-			if (firstDrawArea.nonEmpty)
-				paintQueue(firstDrawArea)
-		case None =>
-			// Paints the whole component, clearing the queue
-			val componentBounds = Bounds(Point.origin, component.size)
-			val shouldPaintNow = queuePointer.mutate { case (processing, _) =>
-				if (processing.nonEmpty)
-					false -> (processing -> Map(priority -> Single(componentBounds)))
-				else
-					true -> (Some(componentBounds) -> Map())
-			}
-			if (shouldPaintNow)
-				paintQueue(None)
+				if (shouldPaintNow)
+					paintQueue(None)
+		}
+	}
+	
+	override def invalidate(region: Option[Bounds], priority: Priority): Unit = region match {
+		case Some(region) => queue(region, priority)
+		case None => resetBuffer()
 	}
 	
 	override def shift(originalArea: Bounds, transition: Vector2D) = {
@@ -208,6 +220,42 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 	  */
 	def resetBuffer() = bufferPointer.clear()
 	
+	private def queue(region: Bounds, priority: Priority, placeForDrawing: Boolean = false) =
+		queuePointer.mutate { case (processing, queue) =>
+			// Case: No draw process currently active & possible to start => Places this region on the drawing position
+			if (placeForDrawing && processing.isEmpty)
+				true -> (Some(region) -> queue)
+			// Case: Draw process currently active (or not requested to trigger) => Queues the region
+			else {
+				// Checks whether the region could be merged into one of the existing regions
+				val newRegions = queue.get(priority).filter { _.nonEmpty } match {
+					case Some(existingRegions) =>
+						val newRegionsBuilder = OptimizedIndexedSeq.newBuilder[Bounds]
+						var mergeSucceeded = false
+						existingRegions.foreach { b =>
+							if (mergeSucceeded)
+								newRegionsBuilder += b
+							else {
+								// Merge is considered successful is less than 10% of extra space is added
+								val merged = Bounds.around(Pair(region, b))
+								if (merged.area <= (region.area + b.area) * 1.1) {
+									mergeSucceeded = true
+									newRegionsBuilder += merged
+								}
+								else
+									newRegionsBuilder += b
+							}
+						}
+						if (!mergeSucceeded)
+							newRegionsBuilder += region
+						newRegionsBuilder.result()
+					
+					case None => Single(region)
+				}
+				false -> (processing, queue + (priority -> newRegions))
+			}
+		}
+	
 	// Checks whether component size has changed since the last draw. Invalidates the drawn buffer if so.
 	private def checkForSizeChanges() = {
 		val currentSize = component.size
@@ -216,9 +264,11 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 			bufferPointer.clear()
 	}
 	
-	// Makes sure the buffer is updated (prepares the buffer applies any queued updates)
-	// Accepts a region to flatten. None if whole image should be flattened.
-	// If Some(X), updates outside area X are not applied yet.
+	/**
+	 * Makes sure the buffer is updated; I.e. prepares the buffer by applying the queued updates.
+	 * @param region Region to buffer. If set to Some, ignores updates outside this region.
+	 * @return Component image to draw
+	 */
 	private def flatten(region: Option[Bounds] = None) = {
 		// Prepares the buffer
 		val (shouldAddUpdates, baseImage) = bufferPointer.mutate {
@@ -232,16 +282,25 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 		
 		// Applies or discards updates
 		if (shouldAddUpdates) {
-			// If the update buffer was overfilled (None), recreates the buffer completely
+			// Buffers the queued updates
+			// However, if the update buffer becomes full, discards the queued updates
+			if (unqueue.exists { bufferArea(_).nonInitialized })
+				queuePointer.update { _._1 -> Map() }
+			
+			// If the update buffer was overfilled (i.e. contains None), recreates the buffer completely
 			queuedUpdatesPointer.mutate {
 				// Case: Update buffer was not overfilled
 				case Some(updates) =>
 					// Checks for updates to apply, based on the targeted region
 					val (updatesToDelay, updatesToApply) = region match {
+						// Case: Targeting a subregion => Applies only updates that overlap with the targeted region
 						case Some(region) =>
 							updates
-								.divideBy { case (image, position) => Bounds(position, image.size).overlapsWith(region) }
+								.divideBy { case (image, position) =>
+									Bounds(position, image.size).overlapsWith(region)
+								}
 								.toTuple
+						// Case: Targeting the whole component region => Applies all updates
 						case None => Empty -> updates
 					}
 					// Calculates the new buffer state
@@ -259,14 +318,17 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 							baseImage
 					}
 					newImage -> Some(updatesToDelay)
-				// Case: There were too many updates
+					
+				// Case: There were too many updates => Buffers the whole component image
 				case None =>
 					val newImage = componentImage
 					bufferPointer.setOne(newImage)
 					newImage -> Some(Empty)
 			}
 		}
+		// Case: Whole component was repainted => Clears queued updates
 		else {
+			queuePointer.update { case (processing, _) => processing -> Map() }
 			queuedUpdatesPointer.setOne(Empty)
 			baseImage
 		}
@@ -274,57 +336,46 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 	
 	// Pass None if whole component should be painted
 	private def paintQueue(first: Option[Bounds]) = paint { drawer =>
-		var nextArea = first
-		do {
-			// Paints the next area, continues as long as areas can be pulled
-			nextArea match {
-				case Some(region) => paintArea(drawer, region)
-				case None => paintWith(drawer)
-			}
-			nextArea = queuePointer.mutate { case (_, queue) =>
-				// Picks the next highest priority area (preferring smaller areas)
-				// TODO: Refactor
-				Priority.descending.find(queue.contains) match {
-					case Some(targetPriority) =>
-						val options = queue(targetPriority)
-						if (options.size > 1) {
-							val next = options.minBy { _.area }
-							Some(next) -> (Some(next), queue + (targetPriority -> options.filterNot { _ == next }))
-						}
-						else
-							options.headOption -> (options.headOption, queue - targetPriority)
-					// Case: No more queues left
-					case None => None -> (None, queue)
-				}
-			}
+		first match {
+			case Some(region) => paintArea(drawer, region)
+			case None => paintWith(drawer)
 		}
-		while (nextArea.nonEmpty)
+		unqueue.foreach { paintArea(drawer, _) }
+	}
+	private def paintArea(drawer: Drawer, region: Bounds) = {
+		// Buffers the targeted area
+		val buffered = bufferArea(region)
+		// Draws the buffered area using the drawer
+		drawer.clippedToBounds(region).use { d => buffered.value.drawWith(d, component.position + region.position) }
 	}
 	
-	private def paintArea(drawer: Drawer, region: Bounds) = {
-		// First draws the component region to a separate image
-		val buffered = {
+	/**
+	 * Buffers an area, so that it will be ready for the next (full) buffer update
+	 * @param region Targeted region
+	 * @return A lazily initialized view of the visualized targeted region.
+	 *         Not initialized, if buffering was not applied (in case of too many updates)
+	 */
+	private def bufferArea(region: Bounds) = {
+		// Draws the component region to a separate image
+		val buffered = Lazy {
 			val base = component.regionToImage(region)
 			background match {
 				case Some(bg) => base.withBackground(bg)
 				case None => base
 			}
 		}
-		// Draws the buffered area using the drawer
-		drawer.clippedToBounds(region).use { d => buffered.drawWith(d, component.position + region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
-		queuedUpdatesPointer.update {
-			case Some(queue) =>
-				// If the queue reaches maximum size, invalidates it
-				if (queue.size < maxQueueSize)
-					Some(OptimizedIndexedSeq.concat(
-						queue.view.filterNot { case (image, position) => region.contains(Bounds(position, image.size)) },
-						Single(buffered -> region.position)
-					))
-				else
-					None
-			case None => None
-		}
+		queuedUpdatesPointer.update { _.flatMap { queue =>
+			// If the queue reaches maximum size, invalidates it
+			if (queue.size < maxQueueSize)
+				Some(OptimizedIndexedSeq.concat(
+					queue.view.filterNot { case (image, position) => region.contains(Bounds(position, image.size)) },
+					Single(buffered.value -> region.position)
+				))
+			else
+				None
+		} }
+		buffered
 	}
 	
 	private def paint(f: Drawer => Unit) = {

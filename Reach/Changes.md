@@ -1,6 +1,11 @@
 # Utopia Reach - List of Changes
 
 ## v1.7.2 (in development)
+### New features
+- **ReachCanvas** now supports a more Swing-reliant painting mode, 
+  which is activated automatically when created through `.forSwing(...)`, 
+  or when placed inside a transparent **ReachWindow**.
+  - (The previous painting logic didn't function properly on transparent windows)
 
 ## v1.7.1 - 15.03.2026
 Supports **Flow v2.8**

@@ -95,7 +95,6 @@ trait ReachCanvasLike
 	  * Requests a repaint for this whole canvas element
 	  */
 	def repaint() = currentPainter.foreach { _.repaintAll() }
-	
 	/**
 	  * Repaints a part of this canvas
 	  * @param area Area to paint again

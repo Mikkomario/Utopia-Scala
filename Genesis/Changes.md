@@ -1,6 +1,8 @@
 # Utopia Genesis - List of Changes
 
-## v4.2.4 (in development)
+## v4.3 (in development)
+### Breaking changes
+- **PaintManager**s are now required to implement `.invalidate(...)`
 ### New features
 - Added **Chart** for drawing point charts
 

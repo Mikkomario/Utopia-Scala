@@ -247,16 +247,16 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visibleFlag:
 	
 	// Repainting is clipped and possibly delayed
 	override def repaint(region: Option[Bounds], priority: Priority) = clip(region).foreach { region =>
-		region match {
-			case Some(region) => layers.foreach { _.queueBufferUpdate(region, priority) }
-			case None => layers.foreach { _.resetBuffer() }
-		}
+		_invalidate(region, priority)
 		requestParentRepaint(region, priority)
 	}
 	
 	override def draw(drawer: Drawer, bounds: Bounds) =
 		_paint(drawer, (bounds.position - drawBounds.position).toVector)
 	override def paintWith(drawer: Drawer) = _paint(drawer)
+	
+	override def invalidate(region: Option[Bounds], priority: Priority): Unit =
+		clip(region).foreach { _invalidate(_, priority) }
 	
 	// TODO: Optimize at some point
 	override def shift(originalArea: Bounds, transition: Vector2D) = {
@@ -278,6 +278,12 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visibleFlag:
 	
 	
 	// OTHER    ---------------------------
+	
+	// Assumes that 'region' has been clipped already
+	private def _invalidate(region: Option[Bounds], priority: Priority): Unit = region match {
+		case Some(region) => layers.foreach { _.queueBufferUpdate(region, priority) }
+		case None => layers.foreach { _.resetBuffer() }
+	}
 	
 	private def requestParentRepaint(subRegion: Option[Bounds], priority: Priority = Normal) = {
 		// Checks whether an FPS-limit applies to this priority
@@ -337,10 +343,14 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visibleFlag:
 	private def updateDrawBounds(pointer: Pointer[Bounds]) =
 		pointer.value = Bounds.around(layers.flatMap { _.drawBounds })
 	
-	// Determines the targeted region after clipping
-	// Contains None if repaint is not needed (i.e. outside of clip)
-	// Contains Some(Some) if a sub-region should be repainted
-	// Contains Some(None) if everything should be repainted
+	/**
+	 * Determines the targeted region after clipping
+	 * @param region Targeted region. None if targeting whole area.
+	 * @return Yields one of the following 3 options:
+	 *              - None: if repaint is not needed (i.e. 'region' is outside of clip)
+	 *              - Some(Some): if a sub-region should be repainted
+	 *              - Some(None): if everything should be repainted
+	 */
 	private def clip(region: Option[Bounds]) = clipPointer match {
 		case Some(clipPointer) =>
 			region match {
@@ -362,7 +372,9 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visibleFlag:
 		// ATTRIBUTES   -------------------
 		
 		private val buffer = MutableImage.empty
-		// Contains the queued area to repaint
+		/**
+		 * A pointer that contains the queued area to repaint
+		 */
 		private val queuedBufferUpdatePointer = Pointer.empty[Bounds]
 		
 		private val itemsPointer = groupedItemsPointer.map { _(level) }
@@ -489,6 +501,11 @@ class DrawableHandler(clipPointer: Option[Changing[Bounds]] = None, visibleFlag:
 					}
 			}
 		}
+		/**
+		 * Prepares a buffer update
+		 * @param region Targeted region
+		 * @param priority Applied repaint priority
+		 */
 		def queueBufferUpdate(region: Bounds, priority: Priority) = {
 			// Case: High priority => Pre-draws the buffer
 			if (priority >= preDrawPriority) {

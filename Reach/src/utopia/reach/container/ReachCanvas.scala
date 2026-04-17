@@ -22,7 +22,7 @@ import utopia.flow.view.mutable.caching.ResettableLazy
 import utopia.flow.view.mutable.eventful.{AssignableOnce, EventfulPointer, IndirectPointer, ResettableFlag}
 import utopia.flow.view.mutable.{Resettable, Switch}
 import utopia.flow.view.template.eventful.{Changing, Flag}
-import utopia.genesis.graphics.{Drawer, FontMetricsWrapper}
+import utopia.genesis.graphics.{Drawer, FontMetricsWrapper, Priority}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.consume.ConsumeChoice.{Consume, Preserve}
 import utopia.genesis.handling.event.keyboard.Key.{Shift, Tab}
@@ -65,7 +65,11 @@ object ReachCanvas
 	  * @param enableAwtDoubleBuffering Whether AWT double buffering should be allowed.
 	  *                                 Setting this to true might make the painting less responsive.
 	  *                                 Default = false = disable AWT double buffering.
-	  * @param disableFocus             Whether this canvas shall not be allowed to gain or manage focus.
+	 * @param paintThroughSwing Whether all painting should be performed in the Swing repaint loop.
+	 *                          False (default), if directly paint-to-graphics may be applied.
+	 *                          Set this to true in use-cases where direct painting is not supported by the OS,
+	 *                          e.g. when using transparent windows.
+	 * @param disableFocus             Whether this canvas shall not be allowed to gain or manage focus.
 	  *                                 Default = false = focus is enabled.
 	  * @param revalidateImplementation Implementation for the revalidate() function.
 	  *                                 Accepts this ReachCanvas instance.
@@ -87,7 +91,8 @@ object ReachCanvas
 	def apply[C <: ReachComponent, R](attachmentPointer: Flag,
 	                                  absoluteParentPositionView: => Either[View[Point], Changing[Point]],
 	                                  backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
-	                                  enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+	                                  enableAwtDoubleBuffering: Boolean = false, paintThroughSwing: Boolean = false,
+	                                  disableFocus: Boolean = false)
 	                                 (revalidateImplementation: ReachCanvas => Unit)
 	                                 (createContent: ComponentHierarchy => Creation[C, R])
 	                                 (implicit exc: ExecutionContext, log: Logger) =
@@ -97,7 +102,7 @@ object ReachCanvas
 		// The canvas is created in the AWT event thread
 		val canvas = AwtEventThread.blocking {
 			new ReachCanvas(contentPointer, attachmentPointer, absoluteParentPositionView, backgroundPointer,
-				cursors, enableAwtDoubleBuffering, disableFocus)(revalidateImplementation)
+				cursors, enableAwtDoubleBuffering, paintThroughSwing, disableFocus)(revalidateImplementation)
 		}
 		// Then creates the content, using the canvas' component hierarchy
 		val newContent = createContent(canvas.hierarchy)
@@ -136,7 +141,11 @@ object ReachCanvas
 	  * @param enableAwtDoubleBuffering   Whether AWT double buffering should be allowed.
 	  *                                   Setting this to true might make the painting less responsive.
 	  *                                   Default = false = disable AWT double buffering.
-	  * @param disableFocus               Whether this canvas shall not be allowed to gain or manage focus.
+	 * @param allowDirectPaint Whether direct painting outside the Swing repaint loop should be allowed.
+	 *                         Default = false.
+	 *                         Set this to true in use-cases that support direct painting;
+	 *                         Notice, however, that that's not always the case (e.g. in case of transparent windows).
+	 * @param disableFocus               Whether this canvas shall not be allowed to gain or manage focus.
 	  *                                   Default = false = focus is enabled.
 	  *                                   content component that this canvas will wrap.
 	  *                                   May return an additional result, which will be returned by this function also.
@@ -155,8 +164,8 @@ object ReachCanvas
 	def forSwing[C <: ReachComponent, R](actorHandler: ActorHandler, backgroundPointer: Changing[Color],
 	                                     cursors: Option[CursorSet] = None,
 	                                     revalidateListener: ReachCanvas => Unit = _ => (),
-	                                     enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false,
-	                                     disableMouse: Boolean = false)
+	                                     enableAwtDoubleBuffering: Boolean = false, allowDirectPaint: Boolean = false,
+	                                     disableFocus: Boolean = false, disableMouse: Boolean = false)
 	                                    (createContent: ComponentHierarchy => Creation[C, R])
 	                                    (implicit exc: ExecutionContext, log: Logger) =
 	{
@@ -182,11 +191,12 @@ object ReachCanvas
 			}
 			// Creates the canvas
 			val canvas = apply(attachmentPointer, Left(absoluteParentPositionView), backgroundPointer, cursors,
-				enableAwtDoubleBuffering, disableFocus) { canvas =>
-				// The revalidation is performed synchronously, and doesn't necessarily alter canvas size in any way
-				canvas.resetCachedSize()
-				revalidateListener(canvas)
-				canvas.updateLayout()
+				enableAwtDoubleBuffering, paintThroughSwing = !allowDirectPaint, disableFocus = disableFocus) {
+				canvas =>
+					// The revalidation is performed synchronously, and doesn't necessarily alter canvas size in any way
+					canvas.resetCachedSize()
+					revalidateListener(canvas)
+					canvas.updateLayout()
 			}(createContent)
 			componentPointer.set(canvas.component)
 			val tracker = new SwingAttachmentTracker(actorHandler, canvas, attachmentPointer,
@@ -280,7 +290,11 @@ object ReachCanvas
   * @param enableAwtDoubleBuffering Whether AWT double buffering should be allowed.
   *                                 Setting this to true might make the painting less responsive.
   *                                 Default = false = disable AWT double buffering.
-  * @param disableFocus Whether this canvas shall not be allowed to gain or manage focus.
+  * @param paintThroughSwing Whether all painting should be performed in the Swing repaint loop.
+ *                          False (default), if directly paint-to-graphics may be applied.
+ *                          Set this to true in use-cases where direct painting is not supported by the OS,
+ *                          e.g. when using transparent windows.
+ * @param disableFocus Whether this canvas shall not be allowed to gain or manage focus.
   *                     Default = false = focus is enabled.
   * @param revalidateImplementation Implementation for the revalidate() function.
   *                                 Should:
@@ -294,7 +308,8 @@ object ReachCanvas
 class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], val linkedFlag: Flag,
                             absoluteParentPositionView: => Either[View[Point], Changing[Point]],
                             backgroundPointer: Changing[Color], cursors: Option[CursorSet] = None,
-                            enableAwtDoubleBuffering: Boolean = false, disableFocus: Boolean = false)
+                            enableAwtDoubleBuffering: Boolean = false, paintThroughSwing: Boolean = false,
+                            disableFocus: Boolean = false)
                            (revalidateImplementation: ReachCanvas => Unit)
                            (implicit exc: ExecutionContext)
 	extends ReachCanvasLike with Stackable
@@ -511,7 +526,18 @@ class ReachCanvas protected(contentPointer: Changing[Option[ReachComponent]], va
 	// Repaints everything within this canvas
 	override def repaint() = {
 		currentPainter.foreach { _.resetBuffer() }
-		super[ReachCanvasLike].repaint()
+		if (paintThroughSwing)
+			component.repaint()
+		else
+			super[ReachCanvasLike].repaint()
+	}
+	override def repaint(area: Bounds, priority: Priority): Unit = {
+		if (paintThroughSwing) {
+			currentPainter.foreach { _.invalidate(Some(area), priority) }
+			component.repaint(area.toAwt)
+		}
+		else
+			super.repaint(area, priority)
 	}
 	
 	// Distributes the events via the canvas content element, but transforms the coordinates relative to this canvas

@@ -42,6 +42,13 @@ trait PaintManager
 	def repaint(region: Option[Bounds] = None, priority: Priority = Normal): Unit
 	
 	/**
+	 * Prepares an area, so that it's repainted on the next call to [[paintWith]].
+	 * @param region Region to repaint later
+	 * @param priority Requested repaint priority
+	 */
+	def invalidate(region: Option[Bounds] = None, priority: Priority = Normal): Unit
+	
+	/**
 	  * Shifts a sub-region in the managed area to a new location
 	  * @param originalArea The targeted sub-region
 	  * @param transition   Amount of translation applied to the region
@@ -66,7 +73,6 @@ trait PaintManager
 	  *                 implementation dependent.
 	  */
 	def repaintRegion(region: Bounds, priority: Priority = Normal) = repaint(Some(region), priority)
-	
 	/**
 	  * Requests a repaint of the managed region
 	  * @param priority Requested priority for handling this repaint call. Higher priority requests should result in
