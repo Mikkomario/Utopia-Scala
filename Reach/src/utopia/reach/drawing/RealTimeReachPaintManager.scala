@@ -2,7 +2,7 @@ package utopia.reach.drawing
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -107,7 +107,7 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 						if (existingRegions.isEmpty)
 							Single(region)
 						else {
-							val newRegionsBuilder = new VectorBuilder[Bounds]()
+							val newRegionsBuilder = OptimizedIndexedSeq.newBuilder[Bounds]
 							var mergeSucceeded = false
 							existingRegions.foreach { b =>
 								if (mergeSucceeded)
@@ -273,33 +273,32 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 	}
 	
 	// Pass None if whole component should be painted
-	private def paintQueue(first: Option[Bounds]) = {
-		paint { drawer =>
-			var nextArea = first
-			do {
-				// Paints the next area, continues as long as areas can be pulled
-				nextArea match {
-					case Some(region) => paintArea(drawer, region)
-					case None => paintWith(drawer)
-				}
-				nextArea = queuePointer.mutate { case (_, queue) =>
-					// Picks the next highest priority area (preferring smaller areas)
-					Priority.descending.find(queue.contains) match {
-						case Some(targetPriority) =>
-							val options = queue(targetPriority)
-							if (options.size > 1) {
-								val next = options.minBy { _.area }
-								Some(next) -> (Some(next), queue + (targetPriority -> options.filterNot { _ == next }))
-							}
-							else
-								options.headOption -> (options.headOption, queue - targetPriority)
-						// Case: No more queues left
-						case None => None -> (None, queue)
-					}
+	private def paintQueue(first: Option[Bounds]) = paint { drawer =>
+		var nextArea = first
+		do {
+			// Paints the next area, continues as long as areas can be pulled
+			nextArea match {
+				case Some(region) => paintArea(drawer, region)
+				case None => paintWith(drawer)
+			}
+			nextArea = queuePointer.mutate { case (_, queue) =>
+				// Picks the next highest priority area (preferring smaller areas)
+				// TODO: Refactor
+				Priority.descending.find(queue.contains) match {
+					case Some(targetPriority) =>
+						val options = queue(targetPriority)
+						if (options.size > 1) {
+							val next = options.minBy { _.area }
+							Some(next) -> (Some(next), queue + (targetPriority -> options.filterNot { _ == next }))
+						}
+						else
+							options.headOption -> (options.headOption, queue - targetPriority)
+					// Case: No more queues left
+					case None => None -> (None, queue)
 				}
 			}
-			while (nextArea.nonEmpty)
 		}
+		while (nextArea.nonEmpty)
 	}
 	
 	private def paintArea(drawer: Drawer, region: Bounds) = {
@@ -311,15 +310,17 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 				case None => base
 			}
 		}
-		// Draws the buffered area using the drawer (may also draw the cursor)
+		// Draws the buffered area using the drawer
 		drawer.clippedToBounds(region).use { d => buffered.drawWith(d, component.position + region.position) }
 		// Queues the buffer to be drawn when component will be fully painted next time
 		queuedUpdatesPointer.update {
 			case Some(queue) =>
 				// If the queue reaches maximum size, invalidates it
 				if (queue.size < maxQueueSize)
-					Some(queue.filterNot { case (image, position) =>
-						region.contains(Bounds(position, image.size)) } :+ (buffered -> region.position))
+					Some(OptimizedIndexedSeq.concat(
+						queue.view.filterNot { case (image, position) => region.contains(Bounds(position, image.size)) },
+						Single(buffered -> region.position)
+					))
 				else
 					None
 			case None => None
@@ -345,7 +346,6 @@ class RealTimeReachPaintManager(component: ReachComponent, background: => Option
 			}
 		}
 	}
-	
 	// Doesn't perform any preparation, as in paint
 	private def draw(f: Drawer => Unit) = {
 		// Paints using the component's own graphics instance (which may not be available)
