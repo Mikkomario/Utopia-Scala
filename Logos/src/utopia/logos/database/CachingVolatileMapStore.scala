@@ -22,7 +22,10 @@ abstract class CachingVolatileMapStore[I, K, V]
 	// ATTRIBUTES   -------------------------
 	
 	private val cachedMapsP: Volatile[WeakList[Map[K, V]]] = Volatile(WeakList.empty)
-	private val storeLock = new AnyRef
+	/**
+	 * Lock synchronized while storing data
+	 */
+	protected val storeLock = new AnyRef
 	
 	
 	// ABSTRACT -----------------------------

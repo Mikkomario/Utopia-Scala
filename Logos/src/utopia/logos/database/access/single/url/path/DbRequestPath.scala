@@ -4,6 +4,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.logos.database.access.single.url.domain.DbDomain
 import utopia.logos.database.factory.url.RequestPathDbFactory
 import utopia.logos.database.storable.url.RequestPathDbModel
+import utopia.logos.database.store.DomainDb
 import utopia.logos.model.cached.Link
 import utopia.logos.model.partial.url.RequestPathData
 import utopia.logos.model.stored.url.RequestPath
@@ -12,6 +13,7 @@ import utopia.vault.nosql.access.single.model.SingleRowModelAccess
 import utopia.vault.nosql.template.Indexed
 import utopia.vault.nosql.view.UnconditionalView
 import utopia.vault.sql.Condition
+import utopia.vault.store.StoreResult
 
 /**
   * Used for accessing individual request paths
@@ -51,16 +53,22 @@ object DbRequestPath extends SingleRowModelAccess[RequestPath] with Unconditiona
 	 * Makes sure the specified link's request path & domain exist in the DB
 	 * @param link Link whose request path is targeted
 	 * @param connection Implicit DB connection
-	 * @return If this path already existed in the DB, returns its ID (right).
-	 *         Otherwise returns the newly inserted request path (left).
+	 * @return The stored request path
 	 */
 	def storeFrom(link: Link)(implicit connection: Connection) = {
-		DbDomain.matching(link.domain).idOrInsert() match {
-			// Case: Domain already existed in the DB => Looks whether this request path also exists
-			case Right(domainId) => matching(domainId, link.path).idOrInsert()
-			
+		val domain = DomainDb.store(link.domain)
+		val existing = {
 			// Case: Domain didn't exist in the DB => Inserts a new path without checking for duplicates
-			case Left(domain) => Left(model.insert(RequestPathData(domain.id, link.path)))
+			if (domain.isNew)
+				None
+			// Case: Domain already existed in the DB => Looks whether this request path also exists
+			else
+				matching(domain.id, link.path).pull
+		}
+		existing match {
+			case Some(existing) => StoreResult.existed(existing.withDomain(domain))
+			case None =>
+				StoreResult.inserted(model.insert(RequestPathData(domain.id, link.path)).withDomain(domain))
 		}
 	}
 	

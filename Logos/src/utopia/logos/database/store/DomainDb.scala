@@ -5,12 +5,13 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.UncertainBoolean
 import utopia.flow.util.UncertainBoolean.CertainBoolean
 import utopia.logos.database.CachingVolatileMapStore
-import utopia.logos.database.access.url.domain.AccessDomains
+import utopia.logos.database.access.url.domain.{AccessDomain, AccessDomains}
 import utopia.logos.database.storable.url.DomainDbModel
 import utopia.logos.model.partial.url.DomainData
 import utopia.logos.model.stored.url.Domain
 import utopia.vault.database.{Connection, References}
 import utopia.vault.sql.{OrderBy, Update, Where}
+import utopia.vault.store.StoreResult
 
 /**
  * An interface for interacting with domain information in the DB
@@ -42,14 +43,7 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 		access.withUrls(values).toMapBy { _.url }
 	
 	override protected def insertAndMap(values: Seq[String])(implicit connection: Connection): Map[String, Domain] =
-		model.insertFrom(values.map { d =>
-			if (d.startsWith("http")) {
-				val isHttps = d.lift(4).contains('s')
-				Domain.removeHttp(d) -> CertainBoolean(isHttps)
-			}
-			else
-				d -> UncertainBoolean
-		}) { case (url, isHttps) => DomainData(url, isHttps = isHttps) } {
+		model.insertFrom(values.map(prepareInsert)) { case (url, isHttps) => DomainData(url, isHttps = isHttps) } {
 			case (inserted, (url, _)) => url.toLowerCase -> inserted }.toMap
 	
 	override protected def idOf(value: Domain): Int = value.id
@@ -89,6 +83,24 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 	
 	
 	// OTHER    ------------------------------
+	
+	/**
+	 * Stores an individual domain URL to the DB
+	 * @param url A domain URL. Expected to be standardized / valid.
+	 * @param connection Implicit DB connection
+	 * @return Store result, which may contain an existing domain entry
+	 */
+	def store(url: String)(implicit connection: Connection) = {
+		val standardized = standardize(url)
+		storeLock.synchronized {
+			AccessDomain.withUrl(standardized).pull match {
+				case Some(existing) => StoreResult.existed(existing)
+				case None =>
+					val (urlToStore, isHttps) = prepareInsert(url)
+					StoreResult.inserted(model.insert(DomainData(url = urlToStore, isHttps = isHttps)))
+			}
+		}
+	}
 	
 	/**
 	 * Cleans all domain entries, which include http:// or https:// in their URLs in the DB.
@@ -152,5 +164,14 @@ object DomainDb extends CachingVolatileMapStore[String, String, Domain]
 					access(duplicateIds).delete()
 				}
 		}
+	}
+	
+	private def prepareInsert(url: String) = {
+		if (url.startsWith("http")) {
+			val isHttps = url.lift(4).contains('s')
+			Domain.removeHttp(url) -> CertainBoolean(isHttps)
+		}
+		else
+			url -> UncertainBoolean
 	}
 }

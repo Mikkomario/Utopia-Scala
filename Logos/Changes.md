@@ -1,7 +1,11 @@
 # Utopia Logos - List of Changes
 
-## v0.7.2 (in development)
+## v0.8 (in development)
+### Breaking changes
+- **DbRequestPath**'s `.storeFrom(...)` now yields **StoreResult** instead of **Either**
 ### New methods
+- **DomainDb**
+  - Added `.store(String)`
 - **RequestPath**
   - Added `.withDomain(Domain)`
 
