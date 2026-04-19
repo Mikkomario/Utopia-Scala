@@ -4,6 +4,7 @@
 ### Breaking changes
 - Updated to **Apache HttpClient v5.6**
 ### New features
+- **Gateway** now supports custom redirect strategies
 - **RequestRateLimiter** now supports temporary lockdowns using `.lockUntil(Instant)` and `.removeLocking()`
 
 ## v1.9.2 - 15.03.2026

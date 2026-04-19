@@ -6,6 +6,7 @@ import org.apache.hc.client5.http.config.{ConnectionConfig, RequestConfig}
 import org.apache.hc.client5.http.entity.UrlEncodedFormEntity
 import org.apache.hc.client5.http.impl.classic.{HttpClientBuilder, HttpClients}
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
+import org.apache.hc.client5.http.protocol.RedirectStrategy
 import org.apache.hc.client5.http.ssl.{ClientTlsStrategyBuilder, NoopHostnameVerifier}
 import org.apache.hc.core5.http.message.BasicNameValuePair
 import org.apache.hc.core5.http.{Header, HttpEntity}
@@ -76,6 +77,7 @@ object Gateway
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	 * @param dnsResolver A custom DNS resolver to use (optional)
+	 * @param redirectStrategy Redirect strategy to apply (optional)
 	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = false).
 	  *                            Use false if you wish to force parameters to uri parameters.
 	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to JSON values before
@@ -97,10 +99,11 @@ object Gateway
 	          parameterEncoding: Option[Codec] = None,
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
 	          responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
+	          redirectStrategy: Option[RedirectStrategy] = None,
 	          allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
 	          disableTrustStoreVerification: Boolean = false) =
 		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, connectionTimeout, parameterEncoding,
-			requestInterceptors, responseInterceptors, dnsResolver, Identity, allowBodyParameters,
+			requestInterceptors, responseInterceptors, dnsResolver, redirectStrategy, Identity, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 	
 	/**
@@ -114,6 +117,7 @@ object Gateway
 	  * @param requestInterceptors  Interceptors that access and potentially modify all outgoing requests (default = empty)
 	  * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
 	 * @param dnsResolver A custom DNS resolver to use (optional)
+	 * @param redirectStrategy Redirect strategy to apply (optional)
 	 * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = false).
 	  *                            Use false if you wish to force parameters to uri parameters.
 	  * @param allowJsonInUriParameters Whether uri parameters should be allowed to be converted to JSON values before
@@ -136,11 +140,12 @@ object Gateway
 	           parameterEncoding: Option[Codec] = None,
 	           requestInterceptors: Seq[RequestInterceptor] = Empty,
 	           responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
+	           redirectStrategy: Option[RedirectStrategy] = None,
 	           allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
 	           disableTrustStoreVerification: Boolean = false)
 	          (customizeClient: HttpClientBuilder => HttpClientBuilder) =
 		new Gateway(maxConnectionsPerRoute, maxConnectionsTotal, maximumTimeout, connectionTimeout, parameterEncoding,
-			requestInterceptors, responseInterceptors, dnsResolver, customizeClient, allowBodyParameters,
+			requestInterceptors, responseInterceptors, dnsResolver, redirectStrategy, customizeClient, allowBodyParameters,
 			allowJsonInUriParameters, disableTrustStoreVerification)
 }
 
@@ -158,6 +163,7 @@ object Gateway
   * @param requestInterceptors Interceptors that access and potentially modify all outgoing requests (default = empty)
   * @param responseInterceptors Interceptors that access and potentially modify all incoming responses (default = empty)
   * @param dnsResolver A custom DNS resolver to use (optional)
+ * @param redirectStrategy Redirect strategy to apply (optional)
  * @param customizeClient A function for customizing the http client when it is first created (default = identity)
   * @param allowBodyParameters Whether parameters could be moved to request body when body is omitted (default = true).
   *                            Use false if you wish to force parameters to uri parameters.
@@ -179,6 +185,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
               parameterEncoding: Option[Codec] = None,
               requestInterceptors: Seq[RequestInterceptor] = Empty,
               responseInterceptors: Seq[ResponseInterceptor] = Empty, dnsResolver: Option[DnsResolver] = None,
+              redirectStrategy: Option[RedirectStrategy] = None,
               customizeClient: HttpClientBuilder => HttpClientBuilder = Identity,
               allowBodyParameters: Boolean = false, allowJsonInUriParameters: Boolean = false,
               disableTrustStoreVerification: Boolean = false)
@@ -198,6 +205,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 		    
 		    // Specifies the connection timeout
 		    connectionTimeout.ifFinite.foreach { timeout =>
+			    println(s"Setting connection timeout to ${ timeout.description }")
 			    builder.setDefaultConnectionConfig(
 				    ConnectionConfig.custom().setConnectTimeout(timeout.toMillis, TimeUnit.MILLISECONDS).build())
 		    }
@@ -213,8 +221,11 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	
 	// TODO: Add customizable timeouts (see https://www.baeldung.com/httpclient-timeout)
 	// TODO: Shouldn't this be closed at some point?
-    private val client = customizeClient(
-	    HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)).build()
+    private val client = {
+	    val builder = HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)
+	    redirectStrategy.foreach(builder.setRedirectStrategy)
+	    customizeClient(builder).build()
+    }
 	
 	
 	// COMPUTED ----------------------
@@ -248,6 +259,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	  *         Otherwise, returns the value of 'consumeResponse' function.
 	  */
 	def makeBlockingRequest[R](request: Request)(consumeResponse: StreamedResponse => R)(implicit log: Logger) = {
+		println("Making a (blocking) request")
 		// Intercepts the request, if appropriate
 		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
 		val response = Try {
@@ -263,8 +275,10 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 						val millis = threshold.toMillis
 						timeoutType match {
 							case ReadTimeout =>
+								println(s"Setting read timeout to ${ threshold.description }")
 								builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 							case ManagerTimeout =>
+								println(s"Setting connection request timeout to ${ threshold.description }")
 								builder.setConnectionRequestTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 							case _ => ()
 						}
@@ -275,24 +289,33 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 			
 			// Performs the request and acquires a response, if possible
 			// TODO: Could specify host here
+			println("Executing the request")
 			val rawResponse = client.executeOpen(null, base, null)
+			println("Request executed => Wrapping results to a StreamedResponse")
 			StreamedResponse(
 				status = Status(rawResponse.getCode),
 				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
 			) {
+				println("Reading the response body")
 				// Acquires the response body as a stream, if possible
 				Try { Option(rawResponse.getEntity).map { _.getContent } }
 					// Logs possible encountered errors
 					.logWithMessage("Failed to open the response body").flatten
 					// Makes sure the received stream is not empty
 					.flatMap { _.notEmpty }
-			} { rawResponse.closeQuietly().logWithMessage("Failed to close the response body") }
+				
+			} {
+				println("Closing the response")
+				rawResponse.closeQuietly().logWithMessage("Failed to close the response body")
+			}
 		}
+		println("Response constructed")
 		
 		// Intercepts the response before passing it to the parser
 		val interceptedResponse = responseInterceptors.foldLeft(response) { (r, i) => i.intercept(r, req) }
 		
 		// Processes the response, if one was successfully acquired
+		println("Consuming the response")
 		interceptedResponse.map(consumeResponse)
 	}
 	/**
