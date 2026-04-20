@@ -2,13 +2,13 @@
   <library name="httpclient" type="repository">
     <properties maven-id="org.apache.httpcomponents.client5:httpclient5:RELEASE" />
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.6.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.4.jar!/" />
       <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.4.jar!/" />
       <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.36.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.6-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/Disciple/lib/httpclient5-5.6.1-javadoc.jar!/" />
       <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-5.4-javadoc.jar!/" />
       <root url="jar://$PROJECT_DIR$/Disciple/lib/httpcore5-h2-5.4-javadoc.jar!/" />
       <root url="jar://$PROJECT_DIR$/Disciple/lib/slf4j-api-1.7.36-javadoc.jar!/" />

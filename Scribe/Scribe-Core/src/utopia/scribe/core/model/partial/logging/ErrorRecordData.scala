@@ -13,10 +13,10 @@ object ErrorRecordData extends FromModelFactoryWithSchema[ErrorRecordData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("exceptionType", StringType, Single("exception_type"), 
-			isOptional = true), PropertyDeclaration("stackTraceId", IntType, Single("stack_trace_id")), 
-			PropertyDeclaration("causeId", IntType, Single("cause_id"), isOptional = true)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("exceptionType", StringType, Single("exception_type"), isOptional = true),
+		PropertyDeclaration("stackTraceId", IntType, Single("stack_trace_id")),
+		PropertyDeclaration("causeId", IntType, Single("cause_id"), isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -40,13 +40,11 @@ case class ErrorRecordData(exceptionType: String, stackTraceId: Int, causeId: Op
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("exceptionType" -> exceptionType, "stackTraceId" -> stackTraceId, "causeId" -> causeId))
+	override def toModel = Model(Vector("exceptionType" -> exceptionType, "stackTraceId" -> stackTraceId,
+		"causeId" -> causeId))
 	
 	override def withCauseId(causeId: Int) = copy(causeId = Some(causeId))
-	
 	override def withExceptionType(exceptionType: String) = copy(exceptionType = exceptionType)
-	
 	override def withStackTraceId(stackTraceId: Int) = copy(stackTraceId = stackTraceId)
 }
 
