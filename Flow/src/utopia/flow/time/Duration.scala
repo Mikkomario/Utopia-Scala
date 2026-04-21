@@ -457,7 +457,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	 */
 	def tryLength = lazyLength.value
 	/**
-	 * @throws ArithmeticException If this duration is infinite or undefined
+	 * @throws java.lang.ArithmeticException If this duration is infinite or undefined
 	 * @return The length and unit of this duration.
 	 */
 	@throws[ArithmeticException]("If this duration is not finite")
@@ -490,7 +490,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	 */
 	def tryToJava = lazyJava.value
 	/**
-	 * @throws ArithmeticException if this duration was infinite or undefined
+	 * @throws java.lang.ArithmeticException if this duration was infinite or undefined
 	 * @return A [[java.time.Duration]] based on this duration
 	 */
 	@throws[ArithmeticException]("If this duration is infinite or undefined")
@@ -556,7 +556,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	}
 	/**
 	 * Converts this duration into a [[FiniteDuration]]
-	 * @throws ArithmeticException If this duration was not finite
+	 * @throws java.lang.ArithmeticException If this duration was not finite
 	 * @return A finite Scala duration based on this instance
 	 */
 	@throws[ArithmeticException]("If this duration is not finite")
@@ -735,7 +735,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	
 	/**
 	 * @param unit Targeted unit
-	 * @throws ArithmeticException If this duration is infinite or undefined
+	 * @throws java.lang.ArithmeticException If this duration is infinite or undefined
 	 * @return Number of instances of the specified unit in this duration, rounded down
 	 */
 	@throws[ArithmeticException]("If this duration is infinite or undefined")
@@ -745,7 +745,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	}
 	/**
 	 * @param unit Targeted unit
-	 * @throws ArithmeticException If this duration is infinite or undefined
+	 * @throws java.lang.ArithmeticException If this duration is infinite or undefined
 	 * @return Number of instances of the specified unit in this duration, in decimal precision
 	 */
 	@throws[ArithmeticException]("If this duration is infinite or undefined")
@@ -757,7 +757,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	 * Calculates the remainder of some unit conversion and converts it to a specific unit.
 	 * @param in Unit in which the result is given
 	 * @param after Unit for which the remainder is calculated
-	 * @throws ArithmeticException If this duration is infinite or undefined
+	 * @throws java.lang.ArithmeticException If this duration is infinite or undefined
 	 * @return The remainder of this duration (in 'in'), after it has been rounded to the specified unit ('after')
 	 */
 	@throws[ArithmeticException]("If this duration is infinite or undefined")
@@ -788,7 +788,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	 */
 	def roundTo(unit: TimeUnit) = tryLength match {
 		case Success((length, myUnit)) =>
-			if (myUnit >= unit) this else Duration(unit.countPreciselyIn(length, myUnit).round.toLong, unit)
+			if (myUnit >= unit) this else Duration(unit.countPreciselyIn(length, myUnit).round, unit)
 		case _ => this
 	}
 	
@@ -817,7 +817,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	/**
 	 * Calculates the ratio between two durations
 	 * @param divider Another duration
-	 * @throws ArithmeticException If dividing by zero
+	 * @throws java.lang.ArithmeticException If dividing by zero
 	 * @return The ratio between these durations
 	 */
 	@throws[ArithmeticException]("If dividing by zero")

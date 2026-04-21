@@ -495,6 +495,13 @@ object StringExtensions
 		def notStartingWith(prefix: String, ignoreCase: Boolean = false) =
 			if (s.startsWith(prefix, ignoreCase)) s.drop(prefix.length) else s
 		/**
+		 * @param prefixes Prefixes that are not allowed
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Copy of this string, not starting with any of the specified prefixes.
+		 */
+		def notStartingWithAnyOf(prefixes: IterableOnce[String], ignoreCase: Boolean = false) =
+			prefixes.iterator.foldLeft(s) { _.notStartingWith(_, ignoreCase) }
+		/**
 		  * @param suffix                   A suffix with which the resulting string will end
 		  * @param enablePartialReplacement Whether the suffix and this string may partially overlap, causing
 		  *                                 only a portion of the suffix to be appended.
@@ -530,6 +537,13 @@ object StringExtensions
 		  */
 		def notEndingWith(suffix: String, ignoreCase: Boolean = false) =
 			if (s.endsWith(suffix, ignoreCase)) s.dropRight(suffix.length) else s
+		/**
+		 * @param suffixes Suffixes that are not allowed
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return Copy of this string, not ending with any of the specified suffixes.
+		 */
+		def notEndingWithAnyOf(suffixes: IterableOnce[String], ignoreCase: Boolean = false) =
+			suffixes.iterator.foldLeft(s) { _.notEndingWith(_, ignoreCase) }
 		/**
 		 * @param edge Edge to place on both sides of this string
 		 * @param ignoreCase Whether to ignore case differences (default = false)

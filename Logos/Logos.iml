@@ -12,7 +12,7 @@
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Vault" />
     <orderEntry type="library" name="emoji-java" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
     <orderEntry type="module" module-name="Vault-Disconnected" />
+    <orderEntry type="library" name="scala-sdk-2.13.18" level="application" />
   </component>
 </module>
