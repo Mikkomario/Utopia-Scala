@@ -3,7 +3,7 @@ package utopia.disciple.controller
 import utopia.flow.async.process.{Breakable, Wait, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.operator.Identity
+import utopia.flow.operator.{Identity, ScopeUsable}
 import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.TimeUnit.Second
@@ -43,7 +43,7 @@ object RequestRateLimiter
   */
 class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
                          maxRandomIncrease: Duration = Duration.zero)
-	extends Breakable
+	extends Breakable with ScopeUsable[RequestRateLimiter]
 {
 	// ATTRIBUTES   --------------------------------
 	
@@ -91,6 +91,8 @@ class RequestRateLimiter(maxRequestAmount: Int, baseResetDuration: Duration,
 	
 	
 	// IMPLEMENTED  --------------------------------
+	
+	override def self: RequestRateLimiter = this
 	
 	override def stop() = {
 		// Fails all pending requests and hurries the clearance process to its completion
