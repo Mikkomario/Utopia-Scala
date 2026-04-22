@@ -42,6 +42,12 @@ object AsyncExtensions
 	 */
 	trait FutureSuccess[A] extends Any with PossiblyFailingFuture[A, A, Try]
 	{
+		override def unwrapped(implicit exc: ExecutionContext) = wrapped
+		override def toTryFuture(implicit exc: ExecutionContext) =
+			wrapped.map(Success.apply).recover { case error => Failure(error) }
+		override def toFutureTryCatch(implicit exc: ExecutionContext): Future[TryCatch[A]] =
+			wrapped.map { TryCatch.Success(_) }.recover { case error => TryCatch.Failure(error) }
+		
 		override protected def wrap(result: A): MayHaveFailed[A] = AlwaysSuccess(result)
 		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
 		
@@ -56,6 +62,18 @@ object AsyncExtensions
 				case Success(future) => future.map(Success.apply)
 				case Failure(error) => TryFuture.failure(error)
 			}
+		
+		override def mapSuccess[B](f: A => B)(implicit exc: ExecutionContext) =
+			wrapped.map { a => Success(f(a)) }
+		override def flatMapSuccess[B](f: A => Future[B])(implicit exc: ExecutionContext) =
+			wrapped.flatMap { f(_).map(Success.apply) }
+		override def mapOrFail[B](f: A => MayHaveFailed[B])(implicit exc: ExecutionContext) =
+			wrapped.map { f(_).toTry }
+		override def flatMapOrFail[B](f: A => Future[MayHaveFailed[B]])(implicit exc: ExecutionContext) =
+			wrapped.flatMap { f(_).map { _.toTry } }
+		override def tryMap[B](f: A => Try[B])(implicit exc: ExecutionContext) = wrapped.map(f)
+		override def tryFlatMap[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
+			wrapped.flatMap(f)
 	}
 	/**
 	 * Used for providing [[PossiblyFailingFutures]] functions for all futures,

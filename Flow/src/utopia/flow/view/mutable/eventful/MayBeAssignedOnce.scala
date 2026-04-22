@@ -1,11 +1,12 @@
 package utopia.flow.view.mutable.eventful
 
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.Fixed
-import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
+import utopia.flow.view.immutable.eventful.{AlwaysFalse, AlwaysTrue, Fixed}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, Flag}
 
 import scala.concurrent.{Future, Promise}
 
@@ -62,6 +63,27 @@ object MayBeAssignedOnce
 		private var _locked = false
 		
 		override lazy val readOnly: Changing[Option[A]] = ChangingWrapper(this)
+		
+		override lazy val setFlag: Flag = {
+			if (_value.isDefined)
+				AlwaysTrue
+			else if (_locked)
+				AlwaysFalse
+			else {
+				val flag = LockableFlag()
+				addListenerAndSimulateEvent(None) { e =>
+					if (e.newValue.isDefined) {
+						flag.set()
+						Detach
+					}
+					else
+						Continue
+				}
+				addChangingStoppedListener { flag.lock() }
+				
+				flag
+			}
+		}
 		
 		override lazy val finalStateFuture: Future[Option[A]] = {
 			if (mayChange) {
@@ -134,6 +156,8 @@ object MayBeAssignedOnce
 		
 		override def locked: Boolean = _locked
 		
+		override def setFlag: Flag = AlwaysTrue
+		
 		override def finalStateFuture: Future[Option[A]] = Future.successful(value)
 		override def future: Future[A] = Future.successful(_value)
 		
@@ -158,6 +182,8 @@ object MayBeAssignedOnce
 		// IMPLEMENTED  --------------------
 		
 		override def value: Option[A] = None
+		
+		override def setFlag: Flag = AlwaysFalse
 		
 		override def finalStateFuture: Future[Option[A]] = Future.successful(None)
 		override def future: Future[A] =

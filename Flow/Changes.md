@@ -2,6 +2,7 @@
 
 ## v2.9 (in development)
 ### Breaking changes
+- **AssignableOnce** now requires the implementation of `setFlag: Flag`
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Deprecations
 - `Regex.whiteSpace` is now named `Regex.whitespace`
@@ -12,6 +13,7 @@
 - Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
   except supporting variable cost / "width".
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
+- Parallel mapping now supports custom builders
 ### New methods
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
@@ -40,7 +42,7 @@
 - **Value**
   - Added `.getModelOrString`
 ### Other changes
-- Parallel mapping now supports custom builders
+- Added overrides for some **PossiblyFailingFuture** functions in regular futures
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:

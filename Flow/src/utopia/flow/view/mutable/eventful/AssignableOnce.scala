@@ -6,10 +6,10 @@ import utopia.flow.event.model.Destiny.{MaySeal, Sealed}
 import utopia.flow.event.model.{AfterEffect, ChangeEvent, Destiny}
 import utopia.flow.operator.Identity
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.eventful.Fixed
+import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
 import utopia.flow.view.mutable.MaybeAssignable
 import utopia.flow.view.template.MaybeSet
-import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, MayStopChanging}
+import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper, Flag, MayStopChanging}
 
 import scala.concurrent.{Future, Promise}
 
@@ -53,6 +53,12 @@ object AssignableOnce
 		
 		override lazy val readOnly: Changing[Option[A]] = if (_value.isDefined) this else ChangingWrapper(this)
 		
+		override lazy val setFlag: Flag = {
+			if (_value.isDefined)
+				AlwaysTrue
+			else
+				lightMap { _.isDefined }
+		}
 		override lazy val future = findMapFuture(Identity)
 		
 		
@@ -87,6 +93,8 @@ object AssignableOnce
 		override val value: Option[A] = Some(v)
 		override val isSet = true
 		override val destiny = Sealed
+		
+		override val setFlag: Flag = AlwaysTrue
 		override lazy val future: Future[A] = Future.successful(v)
 		
 		
@@ -116,6 +124,10 @@ trait AssignableOnce[A]
 {
 	// ABSTRACT -----------------------------
 	
+	/**
+	 * @return A flag that is set once a value has been assigned
+	 */
+	def setFlag: Flag
 	/**
 	  * @return Future that resolves once this pointer is set / completed
 	  */
@@ -148,8 +160,17 @@ trait AssignableOnce[A]
 	def isEmpty = !isCompleted
 	
 	/**
+	 * @return A flag that is set once a value has been assigned
+	 */
+	def nonEmptyFlag = setFlag
+	/**
+	 * @return A flag that is set while this pointer is empty
+	 */
+	def emptyFlag = !setFlag
+	
+	/**
 	  * @return The value set to this pointer
-	  * @throws IllegalStateException If this pointer hasn't been set
+	  * @throws java.lang.IllegalStateException If this pointer hasn't been set
 	  */
 	@throws[IllegalStateException]("No value has been set yet")
 	def get = value.getOrElse { throw new IllegalStateException("Called get before the value was set") }
@@ -194,7 +215,7 @@ trait AssignableOnce[A]
 	/**
 	  * Specifies the value in this pointer
 	  * @param value Value for this pointer to hold
-	  * @throws IllegalStateException If this pointer has already been set
+	  * @throws java.lang.IllegalStateException If this pointer has already been set
 	  */
 	@throws[IllegalStateException]("If this pointer has already been set")
 	override def set(value: A) = testValue(value) {
