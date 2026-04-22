@@ -205,7 +205,6 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 		    
 		    // Specifies the connection timeout
 		    connectionTimeout.ifFinite.foreach { timeout =>
-			    println(s"Setting connection timeout to ${ timeout.description }")
 			    builder.setDefaultConnectionConfig(
 				    ConnectionConfig.custom().setConnectTimeout(timeout.toMillis, TimeUnit.MILLISECONDS).build())
 		    }
@@ -259,7 +258,6 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	  *         Otherwise, returns the value of 'consumeResponse' function.
 	  */
 	def makeBlockingRequest[R](request: Request)(consumeResponse: StreamedResponse => R)(implicit log: Logger) = {
-		println("Making a (blocking) request")
 		// Intercepts the request, if appropriate
 		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
 		val response = Try {
@@ -274,11 +272,8 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 					.foreach { case (timeoutType, threshold) =>
 						val millis = threshold.toMillis
 						timeoutType match {
-							case ReadTimeout =>
-								println(s"Setting read timeout to ${ threshold.description }")
-								builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
+							case ReadTimeout => builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 							case ManagerTimeout =>
-								println(s"Setting connection request timeout to ${ threshold.description }")
 								builder.setConnectionRequestTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
 							case _ => ()
 						}
@@ -289,14 +284,11 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 			
 			// Performs the request and acquires a response, if possible
 			// TODO: Could specify host here
-			println("Executing the request")
 			val rawResponse = client.executeOpen(null, base, null)
-			println("Request executed => Wrapping results to a StreamedResponse")
 			StreamedResponse(
 				status = Status(rawResponse.getCode),
 				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
 			) {
-				println("Reading the response body")
 				// Acquires the response body as a stream, if possible
 				Try { Option(rawResponse.getEntity).map { _.getContent } }
 					// Logs possible encountered errors
@@ -305,17 +297,14 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 					.flatMap { _.notEmpty }
 				
 			} {
-				println("Closing the response")
 				rawResponse.closeQuietly().logWithMessage("Failed to close the response body")
 			}
 		}
-		println("Response constructed")
 		
 		// Intercepts the response before passing it to the parser
 		val interceptedResponse = responseInterceptors.foldLeft(response) { (r, i) => i.intercept(r, req) }
 		
 		// Processes the response, if one was successfully acquired
-		println("Consuming the response")
 		interceptedResponse.map(consumeResponse)
 	}
 	/**

@@ -36,6 +36,7 @@
 - **String** (via **StringExtensions**)
   - Added `.inserted(String, Int)`
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
+  - Added `.notSurroundedWith(String, Boolean)`
 - **Value**
   - Added `.getModelOrString`
 ### Other changes

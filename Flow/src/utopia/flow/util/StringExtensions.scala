@@ -557,6 +557,20 @@ object StringExtensions
 			else
 				startingWith(edge, ignoreCase).endingWith(edge, ignoreCase)
 		}
+		/**
+		 * @param edge Edges that are not allowed
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return If this string is surrounded by the specified edge string, returns this string without said edge.
+		 *         Otherwise returns this string.
+		 */
+		def notSurroundedWith(edge: String, ignoreCase: Boolean = false) = {
+			if (startsWith(edge, ignoreCase = ignoreCase) && endsWith(edge, ignoreCase = ignoreCase)) {
+				val removeLen = edge.length
+				s.slice(removeLen, s.length - removeLen)
+			}
+			else
+				s
+		}
 		
 		/**
 		 * If this string is shorter than the specified length, prepends it with 'elem' until it reaches that length.
