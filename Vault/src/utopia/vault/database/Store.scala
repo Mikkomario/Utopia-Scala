@@ -1,8 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.collection.template.MapAccess
+import utopia.flow.collection.immutable.{OptimizedIndexedSeq, PartialMapView}
 import utopia.flow.operator.Identity
 import utopia.flow.operator.MaybeEmpty.collectionMayBeEmpty
 import utopia.flow.util.EitherExtensions._
@@ -250,7 +249,7 @@ object Store
 									// Case: The item is a new version => Replaces the old version with it
 									if (isNewVersion) {
 										val lazyInserted = Lazy { model.insert(toData(item)) }
-										replacer.replace(MapAccess { _ => lazyInserted.value })
+										replacer.replace(PartialMapView.alwaysYieldFrom(lazyInserted))
 										insertedResult(item, lazyInserted.value)
 									}
 									// Case: Duplicate => Yields the existing item
@@ -277,6 +276,13 @@ object Store
 					// Checks against the existing items,
 					// preparing the non-duplicates as new inserts and handling possible replacements & updates
 					val updatedBuilder = OptimizedIndexedSeq.newBuilder[(K, E)]
+					// Applies the performed updates to the result map, if appropriate
+					// (initialized lazily after new items have been iterated over)
+					lazy val updatedResultsView = (updatedBuilder.result().notEmpty match {
+						case Some(updated) => (cachedExisting ++ updated).view
+						case None => cachedExisting.view
+					}).mapValues(existingResult)
+					
 					// Makes sure the input is distinct
 					itemsIterator.distinctBy { _._1 }
 						.filter { case (key, item) =>
@@ -307,29 +313,26 @@ object Store
 							}
 							// Performs the replacement, if appropriate
 							replaceHandler.foreach { replacer =>
-								val lazyInsertedMap = lazyInserted
-									.map { _.iterator.map { case (key, _, inserted) => key -> inserted }.toMap[Any, S] }
-								replacer.replace(MapAccess.wrap[Any, S](lazyInsertedMap))
+								replacer.replace(PartialMapView.wrapLazily {
+									lazyInserted.value.iterator
+										.map { case (key, _, inserted) => key -> inserted }.toMap[Any, S]
+								})
 							}
-							// Applies the performed updates to the result map, if appropriate
-							val existingResultView = (updatedBuilder.result().notEmpty match {
-								case Some(updated) => (cachedExisting ++ updated).view
-								case None => cachedExisting.view
-							}).mapValues(existingResult)
 							// Converts the insertion results into store-results
 							// If the insert was not performed yet, it is performed here
 							// Combines the existing and inserted results into a map
 							View
 								.concat(
-									existingResultView,
+									updatedResultsView,
 									lazyInserted.value.view.map { case (key, item, inserted) =>
 										key -> insertedResult(item, inserted)
 									}
 								)
 								.toMap
 						
-						// Case: None of the specified items were new => Returns the existing items
-						case None => cachedExisting.view.mapValues(existingResult).toMap
+						// Case: None of the specified items were new
+						//       => Returns the existing items, with potential updates included
+						case None => updatedResultsView.toMap
 					}
 				
 				// Case: There were no items to store => Yields an empty map

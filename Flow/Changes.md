@@ -26,6 +26,8 @@
   - Added `.expiring`
 - **Pair**
   - Added `.bestMatch(...)`
+- **PartialMapView** (object)
+  - Added multiple new constructors
 - **PossiblyFailingFuture**
   - Added `.mapFailure(...)`, `.flatMapFailure(...)`, `.flatMapFailureRepeatedly(...)` and `.recoverFromFailureWith(...)`
 - **QueuedAction** (object)

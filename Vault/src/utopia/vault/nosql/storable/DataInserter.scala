@@ -67,11 +67,11 @@ trait DataInserter[+DbModel <: Storable, +Complete, -Data] extends Inserter[Data
 	  * @return Merge results
 	  */
 	override def insertFrom[O, R](data: Seq[O])(extractData: O => Data)(mergeBack: (Complete, O) => R)
-	                    (implicit connection: Connection) =
+	                             (implicit connection: Connection) =
 	{
 		val extractedData = data.map(extractData)
 		val ids = _insert(extractedData)
-		ids.zipWithIndex.map { case (id, i) => mergeBack(complete(id, extractedData(i)), data(i)) }
+		ids.view.zipWithIndex.map { case (id, i) => mergeBack(complete(id, extractedData(i)), data(i)) }.toOptimizedSeq
 	}
 	
 	

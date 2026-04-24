@@ -1,7 +1,10 @@
 package utopia.vault.database
 
-import utopia.flow.collection.immutable.{IntSet, OptimizedIndexedSeq}
-import utopia.flow.collection.template.MapAccess
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{IntSet, OptimizedIndexedSeq, PartialMapView}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.vault.context.VaultContext
 import utopia.vault.database.ReplaceHandler.MappingReplaceHandler
 import utopia.vault.nosql.targeting.columns.AccessColumnValue
 import utopia.vault.nosql.view.{TimeDeprecatableView, ViewManyByIntIds}
@@ -130,7 +133,7 @@ object ReplaceHandler
 				Left(false)
 		}
 		
-		override def replace(inserted: MapAccess[Any, Any])(implicit connection: Connection): Unit = {
+		override def replace(inserted: PartialMapView[Any, Any])(implicit connection: Connection): Unit = {
 			// Deprecates the rows matching the collected IDs
 			rootAccess(idsToReplaceBuilder.result()).deprecate()
 			idsToReplaceBuilder.clear()
@@ -144,7 +147,7 @@ object ReplaceHandler
 		                        (implicit connection: Connection): Either[Boolean, E] =
 			delegate.handleMatch(key, f(newItem), existingItem)
 		
-		override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit =
+		override def replace(inserted: PartialMapView[Any, S])(implicit connection: Connection): Unit =
 			delegate.replace(inserted)
 	}
 	
@@ -172,11 +175,22 @@ object ReplaceHandler
 				Left(false)
 		}
 		
-		override def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit = {
-			// Performs the replacements. Safely assumes that at least one replacement was prepared.
-			replace(replacementsBuilder.result().map { case (key, existing) => inserted(key) -> existing },
-				connection)
-			replacementsBuilder.clear()
+		override def replace(inserted: PartialMapView[Any, S])(implicit connection: Connection): Unit = {
+			// Performs the replacements.
+			replacementsBuilder.result().notEmpty.foreach { replacements =>
+				replacements
+					.flatMap { case (key, existing) =>
+						val result = inserted.get(key).map { _ -> existing }
+						// Case: No key matched an inserted item (unexpected) => Omits it and logs a warning
+						if (result.isEmpty)
+							VaultContext.log("No inserted value matched the existing item's key", Model.from(
+								"key" -> key.toString,
+								"inserted" -> inserted.valuesIterator.map { _.toString }.toOptimizedSeq))
+						result
+					}
+					.notEmpty.foreach { replace(_, connection) }
+				replacementsBuilder.clear()
+			}
 		}
 	}
 	
@@ -188,7 +202,7 @@ object ReplaceHandler
 			update(newItem, existingItem, connection).toRight(false)
 		
 		// Replacement is never needed when using this approach
-		override def replace(inserted: MapAccess[Any, Any])(implicit connection: Connection): Unit = ()
+		override def replace(inserted: PartialMapView[Any, Any])(implicit connection: Connection): Unit = ()
 	}
 }
 
@@ -236,7 +250,7 @@ trait ReplaceHandler[-In, E, -S]
 	 *
 	 * @param connection Implicit DB connection
 	 */
-	def replace(inserted: MapAccess[Any, S])(implicit connection: Connection): Unit
+	def replace(inserted: PartialMapView[Any, S])(implicit connection: Connection): Unit
 	
 	
 	// OTHER    ------------------------

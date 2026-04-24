@@ -2,6 +2,8 @@ package utopia.flow.collection.immutable
 
 import utopia.flow.collection.immutable.PartialMapView.{FlatKeyMappedMapView, FlatMappedValuesView, KeyMappedMapView, MappedValuesView}
 import utopia.flow.collection.template.MapAccess
+import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 
 import scala.collection.MapView
 
@@ -26,6 +28,36 @@ object PartialMapView
 	 */
 	def wrap[K, V](mapView: MapView[K, V]): PartialMapView[K, V] = new MapViewWrapper[K, V](mapView)
 	
+	/**
+	 * @param createMap A function which constructs the map to wrap, once it is needed
+	 * @tparam K Type of the keys accepted
+	 * @tparam V Type of the values yielded
+	 * @return A map view that initializes the specified map lazily
+	 */
+	def wrapLazily[K, V](createMap: => Map[K, V]) = wrapView { Lazy { wrap(createMap) } }
+	
+	/**
+	 * Wraps a map view -view
+	 * @param view View that yields the map view delegate
+	 * @tparam K Type of keys accepted
+	 * @tparam V Type of values yielded
+	 * @return A map view that wraps the specified view
+	 */
+	def wrapView[K, V](view: View[PartialMapView[K, V]]): PartialMapView[K, V] = new ViewWrapper[K, V](view)
+	
+	/**
+	 * @param value Value to yield for every call
+	 * @tparam V Type of the stored value
+	 * @return A new map view that always yields the specified value
+	 */
+	def alwaysYield[V](value: V): PartialMapView[Any, V] = alwaysYieldFrom(View.fixed(value))
+	/**
+	 * @param valueView View to the value to yield for every call
+	 * @tparam V Type of the stored value
+	 * @return A new map view that always yields the specified value
+	 */
+	def alwaysYieldFrom[V](valueView: View[V]): PartialMapView[Any, V] = new ValueViewWrapper[V](valueView)
+	
 	
 	// NESTED   -------------------------
 	
@@ -46,6 +78,26 @@ object PartialMapView
 		override def get(key: K): Option[V] = wrapped.get(key)
 		
 		override def contains(key: K): Boolean = wrapped.contains(key)
+	}
+	
+	private class ViewWrapper[-K, +V](view: View[PartialMapView[K, V]]) extends PartialMapView[K, V]
+	{
+		override def valuesIterator: Iterator[V] = view.valueIterator.flatMap { _.valuesIterator }
+		
+		override def apply(key: K): V = view.value(key)
+		override def get(key: K): Option[V] = view.value.get(key)
+		
+		override def contains(key: K): Boolean = view.value.contains(key)
+	}
+	
+	private class ValueViewWrapper[+V](valueView: View[V]) extends PartialMapView[Any, V]
+	{
+		override def valuesIterator: Iterator[V] = valueView.valueIterator
+		
+		override def apply(key: Any): V = valueView.value
+		override def get(key: Any): Option[V] = Some(valueView.value)
+		
+		override def contains(key: Any): Boolean = true
 	}
 	
 	private class KeyMappedMapView[-KE, -KO, +V](wrapped: PartialMapView[KO, V])(f: KE => KO)

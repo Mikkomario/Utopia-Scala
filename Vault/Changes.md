@@ -5,6 +5,7 @@
 - The default connection target is now `:mariadb` instead of `:mysql`
 ### Bugfixes
 - **Store** now ensures that input is distinct
+- Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:
