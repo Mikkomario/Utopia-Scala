@@ -1,9 +1,7 @@
 package utopia.flow.util.logging
 
 import utopia.flow.collection.mutable.builder.CompoundingSeqBuilder
-import utopia.flow.util.StringExtensions._
-
-import scala.collection.immutable.VectorBuilder
+import utopia.flow.generic.model.immutable.Model
 
 /**
  * "Logs" errors and other entries by queueing them for later processing.
@@ -15,27 +13,29 @@ class LogQueue extends Logger
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val builder = new CompoundingSeqBuilder[(Option[Throwable], String)]()
+	private val builder = new CompoundingSeqBuilder[(Option[Throwable], String, Model)]()
 	
 	
 	// COMPUTED ---------------------------
 	
 	/**
-	 * Accesses the queued log entries without unqueing any.
+	 * Accesses the queued log entries without enqueueing any.
 	 * @return All queued log entries so far.
 	 */
-	def queued = builder.toVector
+	def queued = builder.currentState
 	
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def apply(error: Option[Throwable], message: String): Unit = builder += (error -> message)
+	//noinspection ScalaUnnecessaryParentheses
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
+		builder += ((error, message, details))
 	
 	
 	// OTHER    ---------------------------
 	
 	/**
-	 * Removes and returns all of the queued log entries
+	 * Removes and returns all the queued log entries
 	 */
 	def popAll() = {
 		val res = builder.result()
@@ -47,7 +47,8 @@ class LogQueue extends Logger
 	 * Logs all queued log entries. Won't remove any of them, however.
 	 * @param log Logger to process the queued entries with.
 	 */
-	def logAllUsing(log: Logger) = queued.foreach { case (error, message) => log(error, message) }
+	def logAllUsing(log: Logger) =
+		queued.foreach { case (error, message, details) => log(error, message, details) }
 	/**
 	 * Logs all queued log entries. Won't remove any of them, however.
 	 * @param log Logger to process the queued entries with.
@@ -61,7 +62,7 @@ class LogQueue extends Logger
 	 */
 	def popAndLogAllUsing(log: Logger) = {
 		val res = popAll()
-		res.foreach { case (error, message) => log(error, message) }
+		res.foreach { case (error, message, details) => log(error, message, details) }
 		res
 	}
 	/**
@@ -76,13 +77,11 @@ class LogQueue extends Logger
 	 * @return All collected throwables
 	 */
 	def popErrorsAndLogMessagesUsing(log: Logger) = {
-		val res = popAll()
-		val errorsBuilder = new VectorBuilder[Throwable]()
-		res.foreach { case (error, message) =>
-			error.foreach { errorsBuilder += _ }
-			message.ifNotEmpty.foreach { log(_) }
+		popAll().flatMap { case (error, message, details) =>
+			if (message.nonEmpty || details.nonEmpty)
+				log(message, details)
+			error
 		}
-		errorsBuilder.result()
 	}
 	/**
 	 * @param log Implicit logging implementation used for handling recorded messages
@@ -94,17 +93,14 @@ class LogQueue extends Logger
 	 * @param log Logging implementation used for handling recorded throwables
 	 * @return All messages which were not associated with a throwable
 	 */
-	def popMessagesAndLogErrorsUsing(log: Logger) = {
-		val res = popAll()
-		val messagesBuilder = new VectorBuilder[String]()
-		res.foreach { case (error, message) =>
-			error match {
-				case Some(error) => log(error, message)
-				case None => message.ifNotEmpty.foreach { messagesBuilder += _ }
-			}
+	def popMessagesAndLogErrorsUsing(log: Logger) =
+		popAll().flatMap { case (error, message, details) =>
+			error.foreach { log(_, message, details) }
+			if (message.nonEmpty || details.nonEmpty)
+				Some(message -> details)
+			else
+				None
 		}
-		messagesBuilder.result()
-	}
 	/**
 	 * @param log Implicit logging implementation used for handling recorded throwables
 	 * @return All messages which were not associated with a throwable

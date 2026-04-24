@@ -1,6 +1,7 @@
 package utopia.flow.util.logging
 
 import utopia.flow.error.ErrorExtensions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
@@ -15,6 +16,7 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
 import utopia.flow.time.Duration
+
 import scala.io.Codec
 
 object FileLogger
@@ -63,7 +65,7 @@ class FileLogger(private var dir: Path = "log", groupDuration: Duration = Durati
 	
 	// IMPLEMENTED    -----------------------------
 	
-	override def apply(error: Option[Throwable], message: String) = {
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit = {
 		// The header is different for consecutive messages
 		val header = {
 			val now = Now.toInstant
@@ -76,11 +78,13 @@ class FileLogger(private var dir: Path = "log", groupDuration: Duration = Durati
 		// Prints to the file
 		val fileWriteResult = writer { w =>
 			w.println(header)
+			details.propertiesIterator.foreach { detail => w.println(s"\t- ${ detail.name }: ${ detail.value }") }
 			error.foreach { _.printStackTrace(w) }
 		}
 		// May print to sysErr also
 		if (fileWriteResult.isFailure || copyToSysErr) {
 			printErr(header)
+			details.propertiesIterator.foreach { detail => printErr(s"\t- ${ detail.name }: ${ detail.value }") }
 			error.foreach { e => printErr(e.stackTraceString) }
 		}
 		// Also records writing errors

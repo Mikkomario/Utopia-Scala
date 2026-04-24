@@ -1,5 +1,6 @@
 package utopia.flow.util.logging
 
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.ScopeUsable
 import utopia.flow.view.immutable.View
 
@@ -14,7 +15,7 @@ object Logger
 	  * @param f Function to convert
 	  * @return A new logger based on the specified function
 	  */
-	implicit def apply(f: (Option[Throwable], String) => Unit): Logger = new LoggerFunction(f)
+	implicit def apply(f: (Option[Throwable], String, Model) => Unit): Logger = new LoggerFunction(f)
 	
 	implicit def scopeUsableLogger(l: Logger): ScopeUsable[Logger] = ScopeUsable(l)
 	
@@ -31,9 +32,9 @@ object Logger
 	
 	// NESTED   ---------------------------
 	
-	private class LoggerFunction(f: (Option[Throwable], String) => Unit) extends Logger
+	private class LoggerFunction(f: (Option[Throwable], String, Model) => Unit) extends Logger
 	{
-		override def apply(error: Option[Throwable], message: String) = f(error, message)
+		override def apply(error: Option[Throwable], message: String, details: Model): Unit = f(error, message, details)
 	}
 }
 
@@ -49,12 +50,24 @@ trait Logger
 	/**
 	 * @param error Error to log, if applicable
 	 * @param message Message to log, which may be empty
+	 * @param details Additional details about this entry. May be empty.
 	 */
-	def apply(error: Option[Throwable], message: String): Unit
+	def apply(error: Option[Throwable], message: String, details: Model): Unit
 	
 	
 	// OTHER    --------------------------
 	
+	/**
+	 * @param error Error to log, if applicable
+	 * @param message Message to log
+	 */
+	def apply(error: Option[Throwable], message: String): Unit = apply(error, message, Model.empty)
+	/**
+	 * @param error Error to log
+	 * @param message Message to log
+	 * @param details Additional details about this entry
+	 */
+	def apply(error: Throwable, message: String, details: Model): Unit = apply(Some(error), message, details)
 	/**
 	 * Logs an error
 	 * @param error Error to log
@@ -67,8 +80,18 @@ trait Logger
 	  */
 	def apply(error: Throwable): Unit = apply(Some(error), "")
 	/**
+	 * @param message A message to log
+	 * @param details Details to include
+	 */
+	def apply(message: String, details: Model): Unit = apply(None, message, details)
+	/**
 	 * Logs a (warning) message
 	 * @param message Message to log
 	 */
-	def apply(message: String): Unit = apply(None, message)
+	def apply(message: String): Unit = apply(message, Model.empty)
+	/**
+	 * Logs details with no message
+	 * @param details Details to log
+	 */
+	def apply(details: Model): Unit = apply("", details)
 }

@@ -227,7 +227,7 @@ class EmailReader[A](settings: ReadSettings,
 	                 deletionRule: DeletionRule = NeverDelete) =
 	{
 		// Catches certain failures using a special logger
-		implicit val log: CollectSingleFailureLogger = CollectSingleFailureLogger.ignoringMessages()
+		implicit val log: CollectSingleFailureLogger = CollectSingleFailureLogger.ignoringMessages
 		// Performs the iteration
 		val primaryResult = iterateBlocking(targetFolders, skipMessageCount,
 			deletionRule) { _.take(maxMessageCount).toTry }

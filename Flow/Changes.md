@@ -2,6 +2,7 @@
 
 ## v2.9 (in development)
 ### Breaking changes
+- **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **AssignableOnce** now requires the implementation of `setFlag: Flag`
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Deprecations

@@ -24,7 +24,7 @@ object RecordableErrorTest extends App
 	println(error)
 	println()
 	
-	implicit val log: Logger = Logger { (error, message) =>
+	implicit val log: Logger = Logger { (error, message, _) =>
 		error.foreach { e =>
 			e.printStackTrace()
 			println(RecordableError(e).get)

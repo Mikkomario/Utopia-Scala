@@ -1,5 +1,6 @@
 package utopia.vault.context
 
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.vault.database.{ConnectionPool, Tables}
 
@@ -49,9 +50,9 @@ object VaultContext
 		
 	private object VaultLogger extends Logger
 	{
-		override def apply(error: Option[Throwable], message: String): Unit = ifInitialized match {
-			case Some(context) => context.log(error, message)
-			case None => SysErrLogger(error, message)
+		override def apply(error: Option[Throwable], message: String, details: Model): Unit = ifInitialized match {
+			case Some(context) => context.log(error, message, details)
+			case None => SysErrLogger(error, message, details)
 		}
 	}
 }

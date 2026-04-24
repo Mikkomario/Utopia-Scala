@@ -1,5 +1,6 @@
 package utopia.flow.util.logging
 
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.view.immutable.View
 
 object DelegatingLogger
@@ -18,5 +19,6 @@ object DelegatingLogger
   */
 class DelegatingLogger(delegateView: View[Logger]) extends Logger
 {
-	override def apply(error: Option[Throwable], message: String): Unit = delegateView.value.apply(error, message)
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit =
+		delegateView.value(error, message, details)
 }

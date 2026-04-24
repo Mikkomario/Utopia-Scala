@@ -1,6 +1,5 @@
 package utopia.reach.window
 
-import utopia.firmament.component.input.Input
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.view.immutable.View
@@ -155,5 +154,4 @@ object InputField
   * @author Mikko Hilpinen
   * @since 6.4.2023, v0.6
   */
-// TODO: When Input gets removed, replace it with View here. Can't do that before v1.8, however.
-trait InputField extends ReachComponent with FocusRequestable with Input[Either[LocalizedString, Value]]
+trait InputField extends ReachComponent with FocusRequestable with View[Either[LocalizedString, Value]]

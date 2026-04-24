@@ -1,5 +1,7 @@
 package utopia.flow.util.logging
 
+import utopia.flow.generic.model.immutable.Model
+
 /**
  * This logging interface simply writes errors to System.err
  * @author Mikko Hilpinen
@@ -17,9 +19,12 @@ object SysErrLogger extends Logger
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def apply(error: Option[Throwable], message: String) = {
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit = {
 		if (message.nonEmpty)
 			System.err.println(message)
+		details.propertiesIterator.foreach { detail =>
+			System.err.println(s"\t- ${ detail.name }: ${ detail.value }")
+		}
 		error.foreach { _.printStackTrace() }
 	}
 }

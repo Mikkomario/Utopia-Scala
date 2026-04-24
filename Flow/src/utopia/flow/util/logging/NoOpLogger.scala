@@ -1,5 +1,7 @@
 package utopia.flow.util.logging
 
+import utopia.flow.generic.model.immutable.Model
+
 /**
   * A logger that ignores all errors and warnings
   * @author Mikko Hilpinen
@@ -7,5 +9,5 @@ package utopia.flow.util.logging
   */
 object NoOpLogger extends Logger
 {
-	override def apply(error: Option[Throwable], message: String) = ()
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit = ()
 }

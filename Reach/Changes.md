@@ -6,6 +6,8 @@
   which is activated automatically when created through `.forSwing(...)`, 
   or when placed inside a transparent **ReachWindow**.
   - (The previous painting logic didn't function properly on transparent windows)
+### Other changes
+- **InputField** now longer extends **Input**, but now only extends **View**
 
 ## v1.7.1 - 15.03.2026
 Supports **Flow v2.8**

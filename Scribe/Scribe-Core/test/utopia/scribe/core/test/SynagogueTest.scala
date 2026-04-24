@@ -14,7 +14,7 @@ import scala.util.Try
 object SynagogueTest extends App
 {
 	private implicit val synagogue: Synagogue = new Synagogue()
-	private val failingLogger = Logger { (_, m) =>
+	private val failingLogger = Logger { (_, m, _) =>
 		throw new IllegalStateException(s"Test failure (expected) - $m")
 	}
 	synagogue.register(failingLogger, priority = true)

@@ -1,7 +1,8 @@
 package utopia.flow.util.logging
 
-import utopia.flow.time.{Duration, Now}
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.logging.TimedSysErrLogger.timeFormat
 
@@ -49,7 +50,7 @@ class TimedSysErrLogger(bundleDuration: Duration) extends Logger
 	
 	// IMPLEMENTED  ---------------------
 	
-	override def apply(error: Option[Throwable], message: String): Unit = {
+	override def apply(error: Option[Throwable], message: String, details: Model): Unit = {
 		// Determines whether a new separated group of entries should be started,
 		// or whether to append the previous list of entries
 		val t = Now.toLocalDateTime
@@ -62,6 +63,9 @@ class TimedSysErrLogger(bundleDuration: Duration) extends Logger
 			System.err.println(s"$message (${ (t - lastLogTime).description })")
 		
 		lastLogTime = t
+		
+		// Writes details
+		details.propertiesIterator.foreach { detail => System.err.println(s"\t- ${ detail.name }: ${ detail.value }") }
 		
 		// Prints the stack trace, if appropriate
 		error.foreach { _.printStackTrace() }
