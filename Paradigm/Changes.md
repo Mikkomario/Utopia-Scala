@@ -4,6 +4,8 @@
 ### New methods
 - **HasBounds**
   - Added `.extremeAlong(Extreme, Axis2D)`
+### Other changes
+- Built with Scala v2.13.18
 
 ## v1.8.1 - 15.03.2026
 A very minor update, mostly focusing on supporting the latest **Flow** changes.

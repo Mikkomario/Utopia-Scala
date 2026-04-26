@@ -4,6 +4,8 @@
 Supports **Flow v2.9**
 ### Breaking changes
 - **EmailSender**'s `.send(...)` now requires an implicit **Scheduler**
+### Other changes
+- Built with Scala v2.13.18
 
 ## v1.1.6 - 15.03.2026
 Supports **Flow v2.8**

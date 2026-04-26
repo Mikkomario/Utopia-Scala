@@ -3,6 +3,8 @@
 ## v1.2.2 (in development)
 ### Bugfixes
 - Throwable collection logging now includes an example from the collected failures
+### Other changes
+- Built with Scala v2.13.18
 
 ## v1.2.1 - 15.03.2026
 A new build supporting **Flow v2.8**

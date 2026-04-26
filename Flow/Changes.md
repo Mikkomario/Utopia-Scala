@@ -57,6 +57,7 @@
 - **Value**
   - Added `.getModelOrString`
 ### Other changes
+- Built with Scala v2.13.18
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 
 ## v2.8 - 15.03.2026

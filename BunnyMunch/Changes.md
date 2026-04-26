@@ -1,5 +1,8 @@
 # Utopia BunnyMunch - List of Changes
 
+## v1.0.10 (in development)
+Built with Scala v2.13.18
+
 ## v1.0.9 - 15.03.2026
 A new build supporting **Flow v2.8**
 

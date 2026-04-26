@@ -1,5 +1,8 @@
 # Reach in Reflection - List of Changes
 
+## v1.0.7 (in development)
+Built with Scala v2.13.18
+
 ## v1.0.6 - 01.11.2025
 This version supports **Reach v1.7**.
 

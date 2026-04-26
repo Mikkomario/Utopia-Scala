@@ -7,6 +7,7 @@
 - **Gateway** now supports custom redirect strategies
 - **RequestRateLimiter** now supports temporary lockdowns using `.lockUntil(Instant)` and `.removeLocking()`
 ### Other changes
+- Built with Scala v2.13.18
 - **RequestRateLimiter** now extends **ScopeUsable**
 
 ## v1.9.2 - 15.03.2026

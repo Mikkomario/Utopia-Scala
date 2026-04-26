@@ -9,6 +9,7 @@
   or when placed inside a transparent **ReachWindow**.
   - (The previous painting logic didn't function properly on transparent windows)
 ### Other changes
+- Built with Scala v2.13.18
 - **InputField** now longer extends **Input**, but now only extends **View**
 
 ## v1.7.1 - 15.03.2026

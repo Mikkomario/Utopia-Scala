@@ -1,5 +1,8 @@
 # Utopia Ambassador - List of Changes
 
+## v2.3.4 (in development)
+Built with Scala v2.13.18
+
 ## v2.3.3 - 15.03.2026
 Supports **Vault v2.1**
 

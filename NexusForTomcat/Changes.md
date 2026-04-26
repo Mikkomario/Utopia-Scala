@@ -1,5 +1,8 @@
 # Utopia Nexus for Tomcat - List of changes
 
+## v1.3.5 (in development)
+Built with Scala v2.13.18
+
 ## v1.3.4 - 15.03.2026
 In this update, I rewrote every class offered, focusing on **Nexus v2** support and asynchronous request -handling.
 ### Breaking changes

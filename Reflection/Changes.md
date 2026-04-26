@@ -3,6 +3,8 @@
 ## v2.4 (in development)
 ### Breaking changes
 - Various window-related classes now require implicit **Scheduler** access
+### Other changes
+- Built with Scala v2.13.18
 
 ## v2.3.1 - 15.03.2026
 Supports **Flow v2.8**

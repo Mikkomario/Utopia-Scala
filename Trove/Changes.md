@@ -1,5 +1,8 @@
 # Utopia Trove - List of Changes
 
+## v1.1.15 (in development)
+Built with Scala v2.13.18
+
 ## v1.1.14 - 15.03.2026
 Supports **Flow v2.8**
 

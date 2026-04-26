@@ -1,5 +1,8 @@
 # Utopia Nexus - List of Changes
 
+## v2.0.1 (in development)
+Built with Scala v2.13.18
+
 ## v2.0 - 15.03.2026
 This update rewrote every class in this project. The main ideas are the same, but brought up-to-date. 
 See the below list of changes for more information.

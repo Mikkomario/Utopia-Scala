@@ -8,6 +8,7 @@
 ### New features
 - Added always-on-top support to **Window** and **WindowContext**
 ### Other changes
+- Built with Scala v2.13.18
 - **InputWithPointer** now extends **View** instead of **Input**
 
 ## v1.6.1 - 15.03.2026

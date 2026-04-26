@@ -1,5 +1,8 @@
 # Utopia Conflict - List of Changes
 
+## v1.6.3 (in development)
+Built with Scala v2.13.18
+
 ## v1.6.2 - 15.03.2026
 Supports **Flow v2.8**
 

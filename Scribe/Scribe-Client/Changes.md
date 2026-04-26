@@ -3,6 +3,8 @@
 ## v1.1 (in development)
 ### Breaking changes
 - **MasterScribe** now requires an implicit **Scheduler**
+### Other changes
+- Built with Scala v2.13.18
 
 ## v1.0.7 - 15.03.2026
 Supports **Flow v2.8**

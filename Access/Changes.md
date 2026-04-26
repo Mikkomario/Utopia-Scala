@@ -5,6 +5,7 @@
 - **Headers**
   - Added `.retryAfter`
 ### Other changes
+- Built with Scala v2.13.18
 - Added multiple new **Status** values
 
 ## v1.7 - 15.03.2026

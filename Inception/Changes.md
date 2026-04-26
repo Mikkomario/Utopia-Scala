@@ -1,5 +1,8 @@
 # Utopia Inception - List of Changes
 
+## v2.3.7 (in development)
+Built with Scala v2.13.18
+
 ## v2.3.6
 Built with Scala v2.13.14
 

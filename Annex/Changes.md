@@ -9,6 +9,8 @@
 ### New methods
 - **RequestResult**
   - Added `.forSuccess(...)` for **Future**'s containing **RequestResult**
+### Other changes
+- Built with Scala v2.13.18
 
 ## v1.12 - 15.03.2026
 This update focuses on the **RequestResult** trait, especially in combination with **Future**. 

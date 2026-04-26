@@ -5,6 +5,8 @@
 - **PaintManager**s are now required to implement `.invalidate(...)`
 ### New features
 - Added **Chart** for drawing point charts
+### Other changes
+- Built with Scala v2.13.18
 
 ## v4.2.3 - 15.03.2026
 Supports **Flow v2.8**

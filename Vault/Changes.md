@@ -6,6 +6,8 @@
 ### Bugfixes
 - **Store** now ensures that input is distinct
 - Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items
+### Other changes
+- Built with Scala v2.13.18
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:

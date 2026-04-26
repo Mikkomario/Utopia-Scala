@@ -8,6 +8,8 @@
   - Added `.store(String)`
 - **RequestPath**
   - Added `.withDomain(Domain)`
+### Other changes
+- Built with Scala v2.13.18
 
 ## v0.7.1
 ### New methods
