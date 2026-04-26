@@ -1,5 +1,9 @@
 # Utopia Scribe Client - list of changes
 
+## v1.1 (in development)
+### Breaking changes
+- **MasterScribe** now requires an implicit **Scheduler**
+
 ## v1.0.7 - 15.03.2026
 Supports **Flow v2.8**
 

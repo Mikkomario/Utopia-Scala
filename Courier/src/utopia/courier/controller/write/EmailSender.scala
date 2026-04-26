@@ -3,7 +3,9 @@ package utopia.courier.controller.write
 import utopia.courier.controller.write.EmailSender.CustomMimeMessage
 import utopia.courier.model.write.WriteSettings
 import utopia.courier.model.{Authentication, Email}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Loop
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.NotEmpty
 import utopia.flow.util.StringExtensions._
@@ -12,7 +14,6 @@ import java.util.Date
 import javax.mail.internet.{InternetAddress, MimeBodyPart, MimeMessage, MimeMultipart}
 import javax.mail.{Authenticator, PasswordAuthentication, Session, Transport}
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 import scala.util.Try
 
 object EmailSender
@@ -72,12 +73,13 @@ class EmailSender(settings: WriteSettings, defaultMaxSendAttemptsPerMessage: Int
 	  * @param maxAttempts Maximum number of attempts to send the message (default = instance default)
 	  * @param durationBetweenAttempts Wait duration between repeated send attempts (default = instance default)
 	  * @param exc Implicit execution context
-	  * @return Future of the send completion, including whether the sending failed or succeeded. Please note that
+	  * @param scheduler Implicit scheduler for timing the retries
+	 * @return Future of the send completion, including whether the sending failed or succeeded. Please note that
 	  *         a success doesn't necessarily mean that the message was successfully delivered.
 	  */
 	def send(email: Email, maxAttempts: Int = defaultMaxSendAttemptsPerMessage,
 	          durationBetweenAttempts: Duration = defaultDurationBetweenAttempts)
-	         (implicit exc: ExecutionContext) =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler) =
 		Loop.tryRepeatedly(durationBetweenAttempts, maxAttempts) { sendBlocking(email) }
 	
 	/**

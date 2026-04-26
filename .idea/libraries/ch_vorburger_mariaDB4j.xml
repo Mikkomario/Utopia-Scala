@@ -1,6 +1,6 @@
 <component name="libraryTable">
   <library name="ch.vorburger.mariaDB4j" type="repository">
-    <properties maven-id="ch.vorburger.mariaDB4j:mariaDB4j:RELEASE" />
+    <properties maven-id="ch.vorburger.mariaDB4j:mariaDB4j:3.3.1" />
     <CLASSES>
       <root url="jar://$MAVEN_REPOSITORY$/ch/vorburger/mariaDB4j/mariaDB4j/3.3.1/mariaDB4j-3.3.1.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/ch/vorburger/mariaDB4j/mariaDB4j-core/3.3.1/mariaDB4j-core-3.3.1.jar!/" />

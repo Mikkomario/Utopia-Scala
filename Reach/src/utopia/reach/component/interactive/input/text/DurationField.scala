@@ -7,9 +7,11 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalString._
 import utopia.firmament.localization.{Language, LocalizedString, Localizer}
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.collection.immutable.{Pair, Single}
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.eventful.{AlwaysTrue, Fixed}
@@ -26,9 +28,6 @@ import utopia.reach.component.label.text.selectable.{SelectableTextLabelSettings
 import utopia.reach.component.template.{PartOfComponentHierarchy, ReachComponentWrapper}
 import utopia.reach.container.multi.ViewStack
 import utopia.reach.focus.{FocusListener, ManyFocusableWrapper}
-
-import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 /**
   * Common trait for duration field factories and settings
@@ -319,10 +318,10 @@ case class ContextualDurationFieldFactory(hierarchy: ComponentHierarchy, context
 	
 	/**
 	  * Creates a new duration input field
-	  * @param exc Implicit execution context for delayed focus transfer events
+	  * @param scheduler Implicit scheduler for delayed focus transfer events
 	  * @return A new duration input field
 	  */
-	def apply()(implicit exc: ExecutionContext) = new DurationField(hierarchy, context, settings)
+	def apply()(implicit scheduler: Scheduler) = new DurationField(hierarchy, context, settings)
 }
 
 /**
@@ -355,7 +354,7 @@ object DurationField extends DurationFieldSetup()
   */
 class DurationField(override val hierarchy: ComponentHierarchy, context: VariableTextContext,
                     settings: DurationFieldSettings = DurationFieldSettings.default)
-				   (implicit exc: ExecutionContext)
+				   (implicit scheduler: Scheduler)
 	extends ReachComponentWrapper with InputWithPointer[Duration, Changing[Duration]] with ManyFocusableWrapper
 {
 	import DurationField.language
@@ -486,7 +485,7 @@ class DurationField(override val hierarchy: ComponentHierarchy, context: Variabl
 								// Focus transfer is slightly delayed to avoid duplicate key event triggering
 								if (event.newValue.length == maxLength &&
 									event.oldValue.length != maxLength && sourceField.hasFocus)
-									process.Delay(focusTransferDelay) { targetField.requestFocus() }
+									process.Delay.after(focusTransferDelay) { targetField.requestFocus() }
 							}
 						}
 					}

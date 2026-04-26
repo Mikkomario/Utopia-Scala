@@ -7,6 +7,7 @@ import utopia.flow.view.template.eventful.Flag
 
 import scala.concurrent.ExecutionContext
 
+// TODO: Refactor these constructors
 object DelayedProcess
 {
 	// OTHER    --------------------------
@@ -106,9 +107,7 @@ abstract class DelayedProcess(waitLock: AnyRef = new AnyRef, shutdownReaction: O
 {
 	// ATTRIBUTES   ----------------------
 	
-	private val currentWait = Lazy.volatile.resettable {
-		new Wait(nextDelayTarget, waitLock, shutdownReaction, isRestartable = false)
-	}
+	private val currentWait = Lazy.volatile.resettable { new Wait(nextDelayTarget, waitLock, isRestartable = false) }
 	
 	
 	// ABSTRACT --------------------------

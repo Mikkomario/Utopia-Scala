@@ -95,6 +95,7 @@ object Selectable
  * @author Mikko Hilpinen
   * @since 23.4.2019, Reflection v1+
   */
+// TODO: After v1.6.2 has been released, replace Interaction extension with Pointer
 trait Selectable[S, C] extends Selection[S, C] with Interaction[S]
 {
 	// COMPUTED	------------------

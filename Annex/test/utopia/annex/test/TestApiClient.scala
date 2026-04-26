@@ -8,6 +8,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.{Body, StringBody}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.{JsonParser, JsonReader}
@@ -19,8 +20,8 @@ import scala.util.{Failure, Success}
 object TestApiClient
 {
 	def apply(rootPath: String = "http://localhost:9999/test/api/v1")
-	         (implicit exc: ExecutionContext, log: Logger, jsonParser: JsonParser) =
-		new TestApiClient(exc, jsonParser, log, rootPath)
+	         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, jsonParser: JsonParser) =
+		new TestApiClient(exc, scheduler, log, rootPath)
 }
 
 /**
@@ -28,8 +29,9 @@ object TestApiClient
   * @author Mikko Hilpinen
   * @since 17.07.2024, v1.8
   */
-class TestApiClient(executionContext: ExecutionContext, jsonParseLogic: JsonParser = JsonReader,
-                    logger: Logger = SysErrLogger, override val rootPath: String = "http://localhost:9999/test/api/v1")
+class TestApiClient(protected override val exc: ExecutionContext, protected override val scheduler: Scheduler,
+                    protected override val log: Logger = SysErrLogger, override val rootPath: String = "http://localhost:9999/test/api/v1")
+                   (implicit protected override val jsonParser: JsonParser = JsonReader)
 	extends ApiClient
 {
 	// ATTRIBUTES   ----------------------
@@ -48,16 +50,12 @@ class TestApiClient(executionContext: ExecutionContext, jsonParseLogic: JsonPars
 			case Success(v) => v("error", "message", "description", "details").stringOr(v.getString)
 			case Failure(error) =>
 				val msg = "Failed to parse the response body"
-				logger(error, "Failed to parse the response body")
+				log(error, "Failed to parse the response body")
 				msg
 		})
 	
 	
 	// IMPLEMENTED  ----------------------
-	
-	override protected implicit def exc: ExecutionContext = executionContext
-	override protected implicit def log: Logger = logger
-	override protected implicit def jsonParser: JsonParser = jsonParseLogic
 	
 	override protected def modifyOutgoingHeaders(original: Headers): Headers = original.mapAcceptedTypes { accepted =>
 		if (accepted.isEmpty) Single(Application.json) else accepted

@@ -8,6 +8,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, StringBody}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Wait
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.{JsonParser, JsonReader}
@@ -62,6 +63,7 @@ object RequestRateLimitTest extends App
 	private object Client extends ApiClient
 	{
 		override protected implicit val exc: ExecutionContext = TestContext.exc
+		override protected implicit val scheduler: Scheduler = TestContext.scheduler
 		override protected implicit val log: Logger = TestContext.log
 		override protected implicit val jsonParser: JsonParser = JsonReader
 		

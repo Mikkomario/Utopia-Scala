@@ -9,7 +9,7 @@ import utopia.echo.controller.client.{LlmServiceClient, OllamaClient}
 import utopia.echo.controller.tokenization.{EstimateTokenCount, TokenCounter}
 import utopia.echo.model.enumeration.DeepSeekModel
 import utopia.echo.model.llm.LlmDesignator
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.json.JsonParser
@@ -33,6 +33,7 @@ object EchoTestContext
 	
 	implicit val log: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Echo")
+	implicit val scheduler: Scheduler = Scheduler.newInstance
 	implicit val jsonParser: JsonParser = JsonBunny
 	implicit val tokenCounter: TokenCounter = EstimateTokenCount
 	

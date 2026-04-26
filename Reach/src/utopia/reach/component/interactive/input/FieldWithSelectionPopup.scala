@@ -11,6 +11,7 @@ import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.StackLength
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
@@ -439,7 +440,8 @@ case class ContextualFieldWithSelectionPopupFactory(hierarchy: ComponentHierarch
 	                             (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 	                             (makeRightHintLabel: ExtraFieldCreationContext[C] =>
 										 Option[Open[ReachComponent, Any]])
-	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
+	                             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger,
+	                              scheduler: Scheduler) =
 		new FieldWithSelectionPopup[A, C, D, P](hierarchy, context, emptyFlag, contentPointer,
 			valuePointer, settings, sameItemCheck)(makeField)(makeDisplay)(makeRightHintLabel)
 }
@@ -496,7 +498,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 (makeField: FieldCreationContext => C)
 (makeDisplay: (ComponentHierarchy, VariableTextContext, A) => D)
 (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]])
-(implicit scrollingContext: ScrollingContext, exc: ExecutionContext)
+(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, scheduler: Scheduler)
 	extends ReachComponentWrapper with FocusableWithStateWrapper
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], P]
 {
@@ -826,7 +828,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable, D <: ReachC
 			popup.visible = false
 			// On tabulator press, yields focus afterwards
 			if (event.index == Tab.index)
-				Delay(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
+				Delay.after(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
 		}
 	}
 }

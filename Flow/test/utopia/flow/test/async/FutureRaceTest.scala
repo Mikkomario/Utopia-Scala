@@ -1,13 +1,12 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.context.ThreadPool
 import utopia.flow.async.process
 import utopia.flow.async.process.Delay
+import utopia.flow.test.TestContext._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
  * Tests future race feature
@@ -16,8 +15,6 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 object FutureRaceTest extends App
 {
-	implicit val logger: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("test-main")
 	val immediate = Future { 1 }
 	immediate.waitFor()
 	

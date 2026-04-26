@@ -5,8 +5,8 @@ import utopia.flow.async.context.AccessQueue
 import utopia.flow.async.process.Delay
 import utopia.flow.test.TestContext._
 import utopia.flow.time.Now
-import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.view.mutable.async.Volatile
 
 /**
  * Tests AccessQueue with multiple accessors

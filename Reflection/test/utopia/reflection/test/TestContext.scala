@@ -4,7 +4,7 @@ import utopia.firmament.context.base.StaticBaseContext
 import utopia.firmament.context.{AnimationContext, ScrollingContext}
 import utopia.firmament.localization.{Language, Localizer, NoLocalization}
 import utopia.firmament.model.Margins
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.handling.event.keyboard.KeyboardEvents
@@ -37,6 +37,7 @@ object TestContext
 	val baseContext: StaticBaseContext = StaticBaseContext(actorHandler, font, colorScheme, margins)
 	
 	implicit val exc: ExecutionContext = new ThreadPool("Reflection")
+	implicit val scheduler: Scheduler = Scheduler.newInstance
 	KeyboardEvents.specifyExecutionContext(exc)
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler)

@@ -3,13 +3,14 @@ package utopia.flow.test.async
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{CloseHook, ThreadPool}
 import utopia.flow.async.process.ProcessState.{Completed, Running, Stopped}
+import utopia.flow.async.process.ShutdownReaction.SkipDelay
 import utopia.flow.async.process.{DelayedProcess, Wait}
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.VolatileFlag
-
 import utopia.flow.time.Duration
+
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -30,7 +31,6 @@ object DelayTest extends App
 		assert(passed > minPassed)
 		assert(passed < maxPassed)
 	}
-	
 	val flag = VolatileFlag()
 	
 	// Tests asynchronous delay
@@ -74,11 +74,13 @@ object DelayTest extends App
 	assert(flag.isSet)
 	
 	// Test CloseHook interactions
+	println(s"\n${ Now.toLocalTime }: Testing close-hook interaction")
 	val flag2 = VolatileFlag()
 	val flag3 = VolatileFlag()
 	val flag4 = VolatileFlag()
 	val d3 = DelayedProcess.rigid(2.0.seconds) { flag2.set() }
 	val d4 = DelayedProcess.hurriable(5.0.seconds) { p =>
+		println("D4 running")
 		assert(p.value)
 		flag3.set()
 	}
@@ -86,6 +88,10 @@ object DelayTest extends App
 		assert(!p.value)
 		flag4.set()
 	}
+	
+	println(s"d3 = $d3\nd4 = $d4\nd5 = $d5")
+	
+	assert(d4.shutdownReaction.contains(SkipDelay))
 	
 	waitStart = Now
 	d3.runAsync()

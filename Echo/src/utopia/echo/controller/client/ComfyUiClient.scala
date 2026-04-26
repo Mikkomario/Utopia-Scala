@@ -6,6 +6,7 @@ import utopia.disciple.controller.Gateway
 import utopia.echo.controller.client.ComfyUiClient.waitInterval
 import utopia.echo.model.comfyui.request.{GetWorkResult, RequestWork}
 import utopia.echo.model.comfyui.workflow.node.WorkflowNode
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Wait
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.time.TimeExtensions._
@@ -27,7 +28,7 @@ object ComfyUiClient
  */
 class ComfyUiClient(gateway: Gateway = Gateway(), serverAddress: String = "http://localhost:8188",
                     clientId: String = RequestWork.defaultClientId, maxParallelRequests: Int = 4)
-                   (implicit log: Logger, exc: ExecutionContext)
+                   (implicit log: Logger, exc: ExecutionContext, scheduler: Scheduler)
 	extends LlmServiceClient(gateway, serverAddress, maxParallelRequests = Some(maxParallelRequests),
 		offlineWaitThreshold = 30.seconds)
 {

@@ -64,7 +64,6 @@ object CloseHook
 	  * @param breakable Breakable item
 	  */
 	def +=(breakable: Breakable) = breakables.update { _ :+ breakable }
-	
 	/**
 	  * Removes a breakable from the list of breakables to stop when the JVM closes.
 	  * @param breakable Breakable item to remove

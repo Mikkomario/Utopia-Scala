@@ -8,6 +8,7 @@ import utopia.firmament.drawing.template.CustomDrawer
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.model.enumeration.{SizeCategory, StackLayout}
 import utopia.firmament.model.stack.{StackLength, StackSize}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.immutable.range.NumericSpan
@@ -28,7 +29,7 @@ import utopia.paradigm.enumeration.{Alignment, Axis2D}
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.Dimensions
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
-import utopia.reach.component.factory.{ContextualMixed, ContextualComponentFactories, Mixed}
+import utopia.reach.component.factory.{ContextualComponentFactories, ContextualMixed, Mixed}
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.CanDisplayPopupWrapper
 import utopia.reach.component.interactive.input._
@@ -517,7 +518,8 @@ case class FieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy, context
 	 * @return A prepared factory
 	 * @see [[withPopupContext]], which does the same with explicit context
 	 */
-	def contextual(implicit popupContext: ReachWindowContext, scrollContext: ScrollingContext, exc: ExecutionContext) =
+	def contextual(implicit popupContext: ReachWindowContext, scrollContext: ScrollingContext, exc: ExecutionContext,
+	               scheduler: Scheduler) =
 		withPopupContext(popupContext)
 	
 	
@@ -539,14 +541,15 @@ case class FieldWithSelectionPopupFactory(hierarchy: ComponentHierarchy, context
 	 * @param exc Implicit execution context
 	 * @return A prepared factory
 	 */
-	def withPopupContext(context: ReachWindowContext)(implicit scrollContext: ScrollingContext, exc: ExecutionContext) =
+	def withPopupContext(context: ReachWindowContext)
+	                    (implicit scrollContext: ScrollingContext, exc: ExecutionContext, scheduler: Scheduler) =
 		new PreparedFieldFactory(context)
 		
 	
 	// NESTED   ------------------------
 	
 	class PreparedFieldFactory(popupContext: ReachWindowContext)
-	                          (implicit scrollContext: ScrollingContext, exc: ExecutionContext)
+	                          (implicit scrollContext: ScrollingContext, exc: ExecutionContext, scheduler: Scheduler)
 	{
 		/**
 		 * Creates a new field that opens a pop-up window for item selection
@@ -622,7 +625,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
                                                                      makeItemView: (ContextualMixed[VariableTextContext], Changing[A], Flag, Int) => ReachComponent)
                                                                     (implicit eq: EqualsFunction[A],
                                                                      scrollingContext: ScrollingContext,
-                                                                     exc: ExecutionContext)
+                                                                     exc: ExecutionContext, scheduler: Scheduler)
 	extends ReachComponentWrapper with FocusableWithStateWrapper
 		with SelectionWithPointers[Option[A], EventfulPointer[Option[A]], Seq[A], Changing[Seq[A]]]
 		with CanDisplayPopupWrapper

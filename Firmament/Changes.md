@@ -1,8 +1,14 @@
 # Utopia Firmament - List of Changes
 
-## v1.6.2 (in development)
+## v1.7 (in development)
+### Breaking changes
+- **Window** now requires implicit **Scheduler** access
+### Deprecations
+- Deprecated **Interaction** trait in favor of **Pointer**
 ### New features
 - Added always-on-top support to **Window** and **WindowContext**
+### Other changes
+- **InputWithPointer** now extends **View** instead of **Input**
 
 ## v1.6.1 - 15.03.2026
 Supports **Flow v2.8**

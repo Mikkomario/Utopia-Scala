@@ -1,7 +1,9 @@
 # Utopia Courier - List of Changes
 
-## v1.1.7 (in development)
+## v1.2 (in development)
 Supports **Flow v2.9**
+### Breaking changes
+- **EmailSender**'s `.send(...)` now requires an implicit **Scheduler**
 
 ## v1.1.6 - 15.03.2026
 Supports **Flow v2.8**

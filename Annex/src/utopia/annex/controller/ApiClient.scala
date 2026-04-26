@@ -12,6 +12,7 @@ import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, Request, Timeout}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
 import utopia.flow.generic.factory.FromModelFactory
@@ -32,7 +33,8 @@ object ApiClient
 	  * Provides an interface for receiving the response in various alternative forms.
 	  * @param wrapped Wrapped request
 	  */
-	class PreparedRequest(api: ApiClient, wrapped: Request)(implicit exc: ExecutionContext, log: Logger)
+	class PreparedRequest(api: ApiClient, wrapped: Request)
+	                     (implicit exc: ExecutionContext, log: Logger, scheduler: Scheduler)
 	{
 		// COMPUTED -----------------------
 		
@@ -262,7 +264,7 @@ object ApiClient
 								// Locks the request queue during this time period,
 								// in order to ensure that no requests come through
 								limiter.lockUntil(Now + delay)
-								Delay.future(delay) { _send(parser, limiter, settings, remainingAttempts - 1) }
+								Delay.futureAfter(delay) { _send(parser, limiter, settings, remainingAttempts - 1) }
 							
 							case None => Future.successful(result)
 						}
@@ -303,6 +305,10 @@ trait ApiClient
 	  * @return Implicit execution context used in asynchronous operations (mostly in asynchronous requests)
 	  */
 	protected implicit def exc: ExecutionContext
+	/**
+	 * @return Scheduler used in timed events (e.g. 429 retry delays)
+	 */
+	protected implicit def scheduler: Scheduler
 	/**
 	  * @return A logging implementation used for recording parsing failures and non-critical errors
 	  */

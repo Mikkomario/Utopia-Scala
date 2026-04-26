@@ -1,13 +1,10 @@
 package utopia.flow.test.async
 
-import utopia.flow.async.context.ThreadPool
 import utopia.flow.async.process.{Delay, Wait}
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.test.TestContext._
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.eventful.EventfulPointer
-
-import scala.concurrent.ExecutionContext
 
 /**
  * Tests asynchronous change views (AsyncMirror and DelayedView)
@@ -16,8 +13,6 @@ import scala.concurrent.ExecutionContext
  */
 object AsyncViewTest extends App
 {
-	implicit val logger: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("AsyncViewTest")
 	val delay = 0.1.seconds
 	val waitLock = new AnyRef
 	

@@ -12,7 +12,10 @@
   - Accepted process recorder is also different
 - **LlmServiceClient**'s `maxParallelRequests` parameter is now **Option** instead of **Int**, 
   and requests are no longer limited by default.
+- **LlmServiceClient** now requires `scheduler: Scheduler`
+  - All existing implementations accept this as an implicit parameter
 - **VastAiVllmProcess** now accepts `maxParallelRequests: Option[Int]`
+- Vast AI process classes now require implicit **Scheduler** access
 ### New features
 - Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**
 ### New methods

@@ -7,7 +7,7 @@ import utopia.annex.model.request.{ApiRequest, Persisting}
 import utopia.annex.model.response.RequestNotSent.RequestWasDeprecated
 import utopia.annex.model.response.{RequestFailure, RequestResult}
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.async.context.CloseHook
+import utopia.flow.async.context.{CloseHook, Scheduler}
 import utopia.flow.async.process.{Loop, PostponingProcess}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
@@ -15,14 +15,13 @@ import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.generic.model.template.HasValues
-import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.operator.Identity
 import utopia.flow.parse.file.container.SaveTiming.OnlyOnTrigger
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.result.TryExtensions._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.{Mutate, NotEmpty}
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.EventfulPointer
@@ -84,7 +83,7 @@ object MasterScribe
 	          requestStoreLocation: Option[Path] = None,
 	          issueDeprecationDurations: Map[Severity, Duration] = Map(),
 	          maxLogVelocity: Option[(Int, Duration)] = None, modifyIssue: Mutate[ClientIssue] = Identity)
-	         (implicit exc: ExecutionContext): MasterScribe =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler): MasterScribe =
 		new _MasterScribe(queueSystem, loggingEndpointPath, backupLogger, issueBundleDuration, requestStoreLocation,
 			issueDeprecationDurations, maxLogVelocity, modifyIssue)
 	
@@ -116,7 +115,7 @@ object MasterScribe
 	                            issueDeprecationDurations: Map[Severity, Duration] = Map(),
 	                            maxLogVelocity: Option[(Int, Duration)],
 	                            modifyIssue: Mutate[ClientIssue] = Identity)
-	                           (implicit exc: ExecutionContext)
+	                           (implicit exc: ExecutionContext, scheduler: Scheduler)
 		extends MasterScribe
 	{
 		// ATTRIBUTES   --------------------------
@@ -160,13 +159,10 @@ object MasterScribe
 		
 		// Starts resetting the issue counter after the first issue has been recorded (optional feature)
 		maxLogVelocity.foreach { case (maxCount, resetInterval) =>
-			resetInterval.ifFinite.foreach { resetInterval =>
+			if (resetInterval.isFinite)
 				pendingIssuesPointer.once { _.nonEmpty } { _ =>
-					Loop.regularly(resetInterval, waitFirst = true) {
-						issueCounter.setIf { _ < maxCount }(0)
-					}
+					Loop.regularly(resetInterval, waitFirst = true) { issueCounter.setIf { _ < maxCount }(0) }
 				}
-			}
 		}
 		
 		
@@ -238,7 +234,7 @@ object MasterScribe
 			// Case: Issues to send => Sends them and records the result, if failure
 			case Some(issues) => requestQueue.push(new PostIssuesRequest(issues)).map { handlePostResult(issues, _) }
 			// Case: No issues to send => Resolves immediately
-			case None => Future.successful(())
+			case None => Future.unit
 		}
 		
 		override def addLoggingLimitReachedListener(listener: MaximumLogLimitReachedListener): Unit = {
@@ -362,7 +358,7 @@ object MasterScribe
 		// Immediately relays the issues to the specified logger
 		override def accept(issue: ClientIssue): Unit = logger(issue.toString)
 		
-		override def sendPendingIssues(): Future[Unit] = Future.successful(())
+		override def sendPendingIssues(): Future[Unit] = Future.unit
 		
 		override def addLoggingLimitReachedListener(listener: MaximumLogLimitReachedListener): Unit = ()
 	}

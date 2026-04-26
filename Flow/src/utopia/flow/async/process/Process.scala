@@ -193,19 +193,21 @@ abstract class Process(protected val waitLock: AnyRef = new AnyRef,
 			val reaction = shutdownReaction.map { new ShutDownAction(_) }
 			reaction.foreach { CloseHook += _ }
 			// Runs this process (catches and prints errors)
-			Iterator.continually {
-				Try { runOnce() }.failure.foreach { logger(_, "Asynchronous process threw an uncatched exception") }
-				// Updates the state afterwards
-				_statePointer.updateAndGet { currentState =>
-					// For looping processes, continues one more run
-					if (currentState == Looping)
-						Running
-					else if (currentState.isBroken)
-						Stopped
-					else
-						Completed
+			Iterator
+				.continually {
+					Try { runOnce() }.failure.foreach { logger(_, "Asynchronous process threw an exception") }
+					// Updates the state afterwards
+					_statePointer.updateAndGet { currentState =>
+						// For looping processes, continues one more run
+						if (currentState == Looping)
+							Running
+						else if (currentState.isBroken)
+							Stopped
+						else
+							Completed
+					}
 				}
-			}.takeWhile { _.isNotFinal }.foreach { _ => () }
+				.takeWhile { _.isNotFinal }.foreach { _ => () }
 			reaction.foreach { CloseHook -= _ }
 		}
 	}

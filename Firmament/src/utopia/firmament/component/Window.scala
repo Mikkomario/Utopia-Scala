@@ -10,6 +10,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.NumericSpan
@@ -179,7 +180,8 @@ object Window
 	  *
 	  *                                 Default = false = window automatically updates its bounds
 	  * @param exc                 Implicit execution context
-	  * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
+	 * @param scheduler Implicit scheduler for timed events
+	 * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
 	  *               as well as possible window initialization warnings.
 	  * @return A new window
 	  */
@@ -193,7 +195,7 @@ object Window
 	          borderless: Boolean = false, fullScreen: Boolean = false, alwaysOnTop: Boolean = false,
 	          disableFocus: Boolean = false, ignoreScreenInsets: Boolean = false, enableTransparency: Boolean = false,
 	          disableAutoBoundsUpdates: Boolean = false)
-	         (implicit exc: ExecutionContext, logger: Logger) =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler, logger: Logger) =
 	{
 		val window = parent match {
 			case Some(parent) => Left(new JDialog(parent, title.wrapped))
@@ -256,7 +258,9 @@ object Window
 	  *                                 upon these two cases.
 	  *
 	  *                                 Default = false = window automatically updates its bounds
-	  * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
+	  * @param exc Implicit execution context to use
+	 * @param scheduler Implicit scheduler for timed events
+	 * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
 	  *               as well as possible window initialization warnings.
 	  * @return A new window
 	  */
@@ -266,7 +270,7 @@ object Window
 	               prepareForSizeChange: Option[(Size, Flag) => Unit] = None,
 	               maxInitializationWaitDuration: Duration = Window.maxInitializationWaitDurationDefault,
 	               disableAutoBoundsUpdates: Boolean = false)
-	              (implicit context: WindowContext, exc: ExecutionContext, logger: Logger) =
+	              (implicit context: WindowContext, exc: ExecutionContext, scheduler: Scheduler, logger: Logger) =
 		apply(container, content, context.actorHandler, parent, title, context.windowResizeLogic,
 			context.screenBorderMargins, getAnchor, positionAfterResize, context.icon, maxInitializationWaitDuration,
 			prepareForSizeChange, context.windowBordersDisabled, context.fullScreenEnabled, context.alwaysOnTopEnabled,
@@ -361,7 +365,8 @@ object Window
   *
   *                                 Default = false = window automatically updates its bounds
   * @param exc Implicit execution context
-  * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
+  * @param scheduler Implicit scheduler for timed events
+ * @param logger Implicit logging implementation used for handling non-critical (recoverable) errors,
   *               as well as possible window initialization warnings.
   */
 class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt.Container, content: Stackable,
@@ -374,7 +379,7 @@ class Window(protected val wrapped: Either[JDialog, JFrame], container: java.awt
              val hasBorders: Boolean = true, isFullScreen: Boolean = false, val isFocusable: Boolean = true,
              isAlwaysOnTop: Boolean = false, respectScreenInsets: Boolean = true, enableTransparency: Boolean = false,
              disableAutoBoundsUpdates: Boolean = false)
-            (implicit exc: ExecutionContext, logger: Logger)
+            (implicit exc: ExecutionContext, scheduler: Scheduler, logger: Logger)
 	extends CachingStackable
 {
 	// ATTRIBUTES   ----------------

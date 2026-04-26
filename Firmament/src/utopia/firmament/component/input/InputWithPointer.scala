@@ -1,6 +1,7 @@
 package utopia.firmament.component.input
 
 import utopia.flow.event.listener.ChangeListener
+import utopia.flow.view.immutable.View
 import utopia.flow.view.template.eventful.Changing
 
 /**
@@ -8,7 +9,7 @@ import utopia.flow.view.template.eventful.Changing
   * @author Mikko Hilpinen
   * @since 29.6.2019, Reflection v1+
   */
-trait InputWithPointer[+A, +P <: Changing[A]] extends Input[A]
+trait InputWithPointer[+A, +P <: Changing[A]] extends View[A]
 {
 	// ABSTRACT	-----------------
 	

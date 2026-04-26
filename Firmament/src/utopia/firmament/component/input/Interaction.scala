@@ -5,6 +5,7 @@ package utopia.firmament.component.input
   * @author Mikko Hilpinen
   * @since 22.4.2019, Reflection v1+
   */
+@deprecated("Deprecated for removal. Please use Pointer instead", "v1.6.2")
 trait Interaction[A] extends Input[A]
 {
 	/**

@@ -6,6 +6,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.RowGroups
 import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -67,6 +68,10 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	  * @return Execution context for asynchronous tasks
 	  */
 	protected def executionContext: ExecutionContext
+	/**
+	 * @return Scheduler used for timed events
+	 */
+	protected def scheduler: Scheduler
 	
 	/**
 	  * @return Blueprints for the fields that are used in producing input in this dialog. The blueprints should be
@@ -101,20 +106,18 @@ trait InputWindow[+A] extends InteractionWindow[A]
 	{
 		implicit val logger: Logger = SysErrLogger
 		implicit val exc: ExecutionContext = executionContext
+		implicit val sch: Scheduler = scheduler
 		
-		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, ButtonColor.secondary)(() =>
-		{
+		val okButton = new DialogButtonBlueprint[A](okButtonText, okButtonIcon, ButtonColor.secondary)(() => {
 			// Checks the results. If failed, returns focus to an item and displays a message
-			produceResult match
-			{
+			produceResult match {
 				case Right(result) => Some(result) -> true
 				case Left((component, message)) =>
 					// Moves the focus
 					component.requestFocusInWindow()
 					
 					// Creates the notification pop-up
-					val popup =
-					{
+					val popup = {
 						implicit val context: StaticTextContext = popupContext
 						val dismissButton = ImageButton.contextualWithoutAction(closeIcon.asButton.contextual)
 						val popupContent = Stack.buildRowWithContext(layout = Center) { row =>
@@ -139,16 +142,14 @@ trait InputWindow[+A] extends InteractionWindow[A]
 		(okButton +: additionalButtons) :+ cancelButton
 	}
 	
-	override protected def dialogContent =
-	{
+	override protected def dialogContent = {
 		implicit val context: StaticTextContext = fieldLabelContext
 		
-		// Uses one segmented group for each row group group
+		// Uses one segmented group for each row group-group
 		val rows = fields.map { groups =>
 			val segmentGroup = new SegmentGroup()
 			groups.mapRows { row =>
-				val fieldInRow =
-				{
+				val fieldInRow = {
 					if (row.spansWholeRow)
 						row.field
 					else

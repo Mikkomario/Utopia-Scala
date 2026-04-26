@@ -4,6 +4,7 @@ import utopia.firmament.context.color.ColorContext
 import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.model.enumeration.SizeCategory
 import utopia.firmament.model.enumeration.SizeCategory.Small
+import utopia.flow.async.context.Scheduler
 import utopia.flow.util.logging.Logger
 import utopia.genesis.util.Screen
 import utopia.paradigm.color.ColorLevel.Standard
@@ -35,7 +36,8 @@ object NotificationWindow
 	 * @param log Implicit logging implementation to use
 	 * @return A new factory for creating notification windows
 	 */
-	def contextual(implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger) =
+	def contextual(implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext,
+	               scheduler: Scheduler, log: Logger) =
 		withContext(windowContext)
 		
 	
@@ -44,7 +46,7 @@ object NotificationWindow
 	// Implicitly converts this object to a factory instance, when required implicit context is available
 	implicit def objectToFactory(o: NotificationWindow.type)
 	                            (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext,
-	                             log: Logger): NotificationWindowFactory =
+	                             scheduler: Scheduler, log: Logger): NotificationWindowFactory =
 		o.contextual
 		
 	
@@ -56,7 +58,8 @@ object NotificationWindow
 	 * @param log Implicit logging implementation to use
 	 * @return A new factory for creating notification windows
 	 */
-	def withContext(context: StaticReachContentWindowContext)(implicit exc: ExecutionContext, log: Logger) =
+	def withContext(context: StaticReachContentWindowContext)
+	               (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
 		NotificationWindowFactory(context, None, Standard, Alignment.Right, Small, closeEasily = false)
 	
 	
@@ -65,7 +68,7 @@ object NotificationWindow
 	case class NotificationWindowFactory(override val context: StaticReachContentWindowContext,
 	                                     background: Option[ColorRole], preferredShade: ColorLevel,
 	                                     alignment: Alignment, distanceToComponent: SizeCategory, closeEasily: Boolean)
-	                                    (implicit exc: ExecutionContext, log: Logger)
+	                                    (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger)
 		extends ReachContentWindowContextualFactory[NotificationWindowFactory]
 			with FromAlignmentFactory[NotificationWindowFactory] with FromColorRoleFactory[NotificationWindowFactory]
 			with FromShadeFactory[NotificationWindowFactory]

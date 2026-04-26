@@ -9,8 +9,8 @@ import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, StringBody}
-import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
+import utopia.flow.async.context.{ActionQueue, Scheduler}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.time.Duration
@@ -29,11 +29,12 @@ object LlmServiceClient
 	 *                            None (default), if parallel request count should not be limited (not recommended).
 	 * @param log Implicit logging implementation
 	 * @param exc Implicit execution context
+	 * @param scheduler Implicit scheduler for timed events
 	 * @return a new LLM service client
 	 */
 	def deepSeek(apiKey: String, gateway: Gateway = Gateway(maxConnectionsPerRoute = 4),
 	             maxParallelRequests: Option[Int] = None)
-	            (implicit log: Logger, exc: ExecutionContext) =
+	            (implicit log: Logger, exc: ExecutionContext, scheduler: Scheduler) =
 		new LlmServiceClient(gateway, "https://api.deepseek.com", apiKey, maxParallelRequests,
 			offlineWaitThreshold = 10.minutes)
 }
@@ -57,7 +58,7 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
                        tooManyRequestsRetrySettings: TooManyRequestsRetrySettings = TooManyRequestsRetrySettings(
 	                       maxRetries = 2, defaultDelay = 15.seconds),
                        offlineWaitThreshold: Duration = 7.minutes)
-                      (implicit log: Logger, exc: ExecutionContext)
+                      (implicit log: Logger, exc: ExecutionContext, scheduler: Scheduler)
 	extends RequestQueue
 {
 	// ATTRIBUTES   ------------------------
@@ -101,6 +102,7 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		
 		override protected implicit def log: Logger = LlmServiceClient.this.log
 		override protected implicit def exc: ExecutionContext = LlmServiceClient.this.exc
+		override protected implicit def scheduler: Scheduler = LlmServiceClient.this.scheduler
 		
 		override protected def gateway = LlmServiceClient.this.gateway
 		override protected def rateLimiter: Option[RequestRateLimiter] = LlmServiceClient.this.rateLimiter

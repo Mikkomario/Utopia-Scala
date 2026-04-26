@@ -10,6 +10,7 @@ import utopia.echo.model.request.ollama.generate.Prompt
 import utopia.echo.model.request.ollama.llm.{CreateModelRequest, ListModelsRequest, ShowModelRequest}
 import utopia.echo.model.response.ollama.llm.StreamedStatus
 import utopia.flow.async.TryFuture
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.time.TimeExtensions._
@@ -36,10 +37,11 @@ object OllamaClient
 	 *                      Default = "http://localhost:11434/api", the default local Ollama url.
 	 * @param log Implicit logging interface
 	 * @param exc Implicit execution context
+	 * @param scheduler Implicit scheduler for timed events
 	 * @return A new Ollama client
 	 */
 	def using(gateway: Gateway, serverAddress: String = localServerAddress)
-	         (implicit log: Logger, exc: ExecutionContext) =
+	         (implicit log: Logger, exc: ExecutionContext, scheduler: Scheduler) =
 		new OllamaClient(gateway, serverAddress)
 	
 	/**
@@ -50,16 +52,16 @@ object OllamaClient
 	 * @param responseInterceptors Interceptors for logging and/or modifying incoming responses (optional)
 	 * @param log Implicit logging interface
 	 * @param exc Implicit execution context
+	 * @param scheduler Implicit scheduler for timed events
 	 * @return A new Ollama client
 	 */
 	def apply(serverAddress: String = localServerAddress,
 	          requestInterceptors: Seq[RequestInterceptor] = Empty,
 	          responseInterceptors: Seq[ResponseInterceptor] = Empty)
-	         (implicit log: Logger, exc: ExecutionContext) =
+	         (implicit log: Logger, exc: ExecutionContext, scheduler: Scheduler) =
 		using(
 			Gateway(maxConnectionsPerRoute = 1, maximumTimeout = Timeout(15.minutes, 15.minutes),
-				requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors,
-				allowBodyParameters = false, allowJsonInUriParameters = false),
+				requestInterceptors = requestInterceptors, responseInterceptors = responseInterceptors),
 			serverAddress)
 }
 
@@ -69,7 +71,7 @@ object OllamaClient
   * @since 11.07.2024, v1.0
   */
 class OllamaClient(gateway: Gateway, serverAddress: String = "http://localhost:11434/api")
-                  (implicit log: Logger, exc: ExecutionContext)
+                  (implicit log: Logger, exc: ExecutionContext, scheduler: Scheduler)
 	extends LlmServiceClient(gateway, serverAddress, maxParallelRequests = Some(1))
 {
 	// COMPUTED ----------------------------

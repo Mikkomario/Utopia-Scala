@@ -1,6 +1,6 @@
 package utopia.flow.async.process
 
-import utopia.flow.async.process.ShutdownReaction.Cancel
+import utopia.flow.async.process.ShutdownReaction.{Cancel, DelayShutdown, SkipDelay}
 import utopia.flow.async.process.WaitTarget.{NoWait, WeeklyTime}
 import utopia.flow.time.{Duration, WeekDay}
 import utopia.flow.util.logging.Logger
@@ -9,9 +9,21 @@ import utopia.flow.view.template.eventful.Flag
 
 import java.time.LocalTime
 import scala.concurrent.ExecutionContext
+import scala.language.implicitConversions
 
 object LoopingProcess
 {
+	// ATTRIBUTES   -------------------------
+	
+	val factory = LoopingProcessFactory()
+	
+	
+	// IMPLICIT -----------------------------
+	
+	// Implicitly converts this object into a factory instance
+	implicit def objectAsFactory(o: LoopingProcess.type): LoopingProcessFactory = o.factory
+	
+	
 	// OTHER    -----------------------------
 	
 	/**
@@ -26,78 +38,155 @@ object LoopingProcess
 	  * @param exc Implicit execution context
 	  * @return A new looping process
 	  */
+	@deprecated("Please use .regularly(Duration) instead", "v2.9")
 	def static[U](interval: Duration, waitLock: AnyRef = new AnyRef, waitFirst: Boolean = false,
 	              isRestartable: Boolean = true)
-	             (f: => Flag => U)
+	             (f: Flag => U)
 	             (implicit exc: ExecutionContext, logger: Logger) =
-		apply(View.fixed(if (waitFirst) interval else NoWait), waitLock, isRestartable = isRestartable) { p =>
-			f(p)
-			Some(interval)
-		}
-	
-	/**
-	  * Creates a new infinite looping process that iterates once every day
-	  * @param runTime Time of day when this process should be run
-	  * @param isRestartable Whether this loop should be restartable (default = true)
-	  * @param f The function that will be called regularly. Accepts a pointer that shows whether the function should
-	  *          hurry to complete itself.
-	  * @param exc Implicit execution context
-	  * @return A new looping process
-	  */
-	def daily[U](runTime: LocalTime, isRestartable: Boolean = true)
-	            (f: => Flag => U)
-	            (implicit exc: ExecutionContext, logger: Logger) =
-		apply(View.fixed(runTime), isRestartable = isRestartable) { p =>
-			f(p)
-			Some(runTime)
-		}
-	/**
-	  * Creates a new infinite looping process that iterates once a week
-	  * @param day Weekday on which the function should be called
-	  * @param time Time of day at which the function should be called (on targeted weekday)
-	  * @param isRestartable Whether this loop should be restartable (default = true)
-	  * @param f A function to all once every week. Accepts a pointer that shows whether the function should
-	  *          hurry to complete itself.
-	  * @param exc Implicit execution context
-	  * @tparam U Arbitrary result type
-	  * @return A new process that loops weekly
-	  */
-	def weekly[U](day: WeekDay, time: LocalTime, isRestartable: Boolean = true)
-	             (f: => Flag => U)
-	             (implicit exc: ExecutionContext, logger: Logger) =
-	{
-		val target = WeeklyTime(day, time)
-		apply(View.fixed(target), isRestartable = isRestartable) { p =>
-			f(p)
-			Some(target)
-		}
-	}
-	
-	/**
-	 * Creates a new looping process
-	 * @param startDelayView A view that yields the delay applied before the first iteration (default = no delay)
-	 * @param waitLock Wait lock to use (optional)
-	 * @param shutdownReaction How this loop should react to JVM shutdown (default = stop / cancel everything)
-	 * @param isRestartable Whether this loop should be restartable (default = true)
-	 * @param f The function that will be called regularly. Accepts a pointer that shows whether the function should
-	 *          hurry to complete itself. Returns the next wait target or None if this loop should be broken
-	 *          afterwards.
-	 * @param exc Implicit execution context
-	 * @return A new looping process
-	 */
-	def apply(startDelayView: View[WaitTarget] = View.fixed(NoWait), waitLock: AnyRef = new AnyRef,
-	          shutdownReaction: ShutdownReaction = Cancel, isRestartable: Boolean = true)
-	         (f: => Flag => Option[WaitTarget])
-	         (implicit exc: ExecutionContext, logger: Logger): LoopingProcess =
-		new FunctionalLoop(startDelayView, waitLock, shutdownReaction, isRestartable)(f)
+		LoopingProcessFactory(waitLock = waitLock, isRestartable = isRestartable).regularly(interval, waitFirst)(f)
 	
 	
 	// NESTED   -----------------------------
 	
-	private class FunctionalLoop(startDelayView: View[WaitTarget], waitLock: AnyRef, shutdownReaction: ShutdownReaction,
-	                             override val isRestartable: Boolean)
-	                            (f: => Flag => Option[WaitTarget])
-	                            (implicit exc: ExecutionContext, logger: Logger)
+	case class LoopingProcessFactory(startDelayView: Option[View[WaitTarget]] = None,
+	                                 waitLock: AnyRef = new AnyRef, shutdownReaction: ShutdownReaction = Cancel,
+	                                 isRestartable: Boolean = false, startsImmediately: Boolean = false)
+	{
+		/**
+		 * @return A copy of this factory which starts the created loops immediately
+		 */
+		def started = copy(startsImmediately = true)
+		/**
+		 * @return A copy of this factory which allows the loops to repeat once they've finished or been stopped
+		 */
+		def restartable = copy(isRestartable = true)
+		
+		/**
+		 * @return A copy of this factory that executes the repeated action once before allowing JVM to shut down.
+		 *         The delay itself is skipped, however.
+		 */
+		def executingOnShutdown = withShutdownReaction(SkipDelay)
+		/**
+		 * @return A copy of this factory that executes the repeated action once before allowing JVM to shut down.
+		 *         Full delay will be applied.
+		 */
+		def delayingShutdown = withShutdownReaction(DelayShutdown)
+		
+		/**
+		 * @param delay Delay to apply before the first run
+		 * @return A copy of this factory applying the specified delay before the first loop iteration
+		 */
+		def after(delay: WaitTarget): LoopingProcessFactory = after(View.fixed(delay))
+		/**
+		 * @param delayView A view to the delay to apply before the first run
+		 * @return A copy of this factory applying the specified delay before the first loop iteration
+		 */
+		def after(delayView: View[WaitTarget]) = copy(startDelayView = Some(delayView))
+		
+		/**
+		 * @param waitLock Wait lock to use for possibly skipping the loop delay
+		 * @return A copy of this loop using the specified wait lock
+		 */
+		def withWaitLock(waitLock: AnyRef) = copy(waitLock = waitLock)
+		
+		/**
+		 * @param shutdownReaction Reaction to apply to JVM shutdown
+		 * @return A copy of this factory applying the specified shutdown reaction
+		 */
+		def withShutdownReaction(shutdownReaction: ShutdownReaction) =
+			copy(shutdownReaction = shutdownReaction)
+		
+		/**
+		 * Creates a new infinite looping process that iterates once every day
+		 * @param runTime Time of day when this process should be run
+		 * @param andImmediately Whether the first iteration of this loop should be performed immediately
+		 *                       (causing the first delay to be less than 24 hours).
+		 *                       Default = false = first iteration is at 'runTime' today or tomorrow.
+		 * @param f The function that will be called regularly. Accepts a pointer that shows whether the function should
+		 *          hurry to complete itself.
+		 * @param exc Implicit execution context
+		 * @return A new looping process
+		 */
+		def daily[U](runTime: LocalTime, andImmediately: Boolean = false)(f: Flag => U)
+		            (implicit exc: ExecutionContext, logger: Logger) =
+			_regularly(runTime, waitFirst = !andImmediately)(f)
+		/**
+		 * Creates a new infinite looping process that iterates once a week
+		 * @param day Weekday on which the function should be called
+		 * @param time Time of day at which the function should be called (on targeted weekday)
+		 * @param andImmediately Whether the first iteration of this loop should be performed immediately.
+		 *                       Default = false.
+		 * @param f A function to all once every week. Accepts a pointer that shows whether the function should
+		 *          hurry to complete itself.
+		 * @param exc Implicit execution context
+		 * @tparam U Arbitrary result type
+		 * @return A new process that loops weekly
+		 */
+		def weekly[U](day: WeekDay, time: LocalTime, andImmediately: Boolean = false)(f: Flag => U)
+		             (implicit exc: ExecutionContext, logger: Logger) =
+			_regularly(WeeklyTime(day, time), waitFirst = !andImmediately)(f)
+		
+		/**
+		 * Creates a new looping process
+		 * @param interval Interval between loop iterations
+		 * @param waitFirst Whether to wait 'interval' before the first loop iteration.
+		 *                  If set to true, overrides any previously specified starting delay.
+		 *                  Default = false.
+		 * @param f A function to call on each loop iteration.
+		 *          Receives a pointer that contains true while this process should hurry to complete itself.
+		 * @param exc Implicit execution context
+		 * @param log Implicit logging implementation
+		 * @return A new looping process.
+		 */
+		def regularly[U](interval: Duration, waitFirst: Boolean = false)(f: Flag => U)
+		                (implicit exc: ExecutionContext, log: Logger) =
+			_regularly(interval, waitFirst)(f)
+		
+		/**
+		 * Creates a new looping process
+		 * @param f A function to call on each loop iteration.
+		 *          Yields the wait target for the next loop iteration.
+		 *          Receives a pointer that contains true while this process should hurry to complete itself.
+		 * @param exc Implicit execution context
+		 * @param log Implicit logging implementation
+		 * @return A new looping process.
+		 */
+		def continuously(f: Flag => WaitTarget)(implicit exc: ExecutionContext, log: Logger) =
+			apply { hurryFlag => Some(f(hurryFlag)) }
+		/**
+		 * Creates a new looping process
+		 * @param f A function to call on each loop iteration.
+		 *          Yields the wait target for the next loop iteration. Yields None if the loop should finish.
+		 *          Receives a pointer that contains true while this process should hurry to complete itself.
+		 * @param exc Implicit execution context
+		 * @param log Implicit logging implementation
+		 * @return A new looping process.
+		 */
+		def apply(f: Flag => Option[WaitTarget])(implicit exc: ExecutionContext, log: Logger): LoopingProcess = {
+			val loop = new _LoopingProcess(startDelayView.getOrElse(View.fixed(NoWait)), waitLock, shutdownReaction,
+				isRestartable)(f)
+			if (startsImmediately)
+				loop.runAsync()
+			loop
+		}
+		
+		private def _regularly[U](target: WaitTarget, waitFirst: Boolean = false)(f: Flag => U)
+		                         (implicit exc: ExecutionContext, log: Logger) =
+		{
+			val factory = {
+				if (waitFirst)
+					after(target)
+				else
+					this
+			}
+			factory.continuously { hurryFlag => f(hurryFlag); target }
+		}
+	}
+	
+	private class _LoopingProcess(startDelayView: View[WaitTarget], waitLock: AnyRef,
+	                              shutdownReaction: ShutdownReaction, override val isRestartable: Boolean)
+	                             (f: Flag => Option[WaitTarget])
+	                             (implicit exc: ExecutionContext, logger: Logger)
 		extends LoopingProcess(startDelayView, waitLock, shutdownReaction)
 	{
 		override protected def iteration() = f(hurryFlag)

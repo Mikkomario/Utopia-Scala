@@ -3,6 +3,7 @@ package utopia.reach.component.template
 import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.logging.Logger
@@ -443,7 +444,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	                                         display: Boolean = false)
 	                                        (createContent: (ComponentHierarchy, Changing[Option[Window]]) => Creation[C, R])
 	                                        (implicit context: ReachWindowContext, exc: ExecutionContext,
-	                                             log: Logger): WindowCreationResult[C, R] =
+	                                         scheduler: Scheduler, log: Logger): WindowCreationResult[C, R] =
 	{
 		val window = ReachWindow.contextual.anchoredTo(this, alignment, margin, title, matchEdgeLength, keepAnchored)(
 			createContent)

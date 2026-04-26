@@ -2,9 +2,21 @@
 
 ## v2.9 (in development)
 ### Breaking changes
+- Added a new **Scheduler** system, used by **Delay** and **Loop**
+  - Rewrote **Delay** constructors; The new system is based on factories, and uses **Scheduler** when possible.
+  - Rewrote **Loop** constructors
+    - The new constructors are based on factories
+    - The new constructors are based on **Scheduler** and yield **Future** instead of **LoopingProcess**
+  - Rewrote **LoopingProcess** constructors
+    - The new constructors are based on factories
+    - By default, the processes are no longer restartable (!)
+  - The new **Scheduler** system uses fewer threads than the original implementations di
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **AssignableOnce** now requires the implementation of `setFlag: Flag`
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
+### Bugfixes
+- Fixed an issue in **WeakList**'s `:+` function, which always discarded live items (opposite of the desired effect)
+- Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 ### Deprecations
 - `Regex.whiteSpace` is now named `Regex.whitespace`
 ### Bugfixes

@@ -26,8 +26,8 @@ object ShutdownReaction
 	  */
 	case object DelayShutdown extends ShutdownReaction
 	{
-		override def finishBeforeShutdown = true
-		override def skipWait = false
+		override val finishBeforeShutdown = true
+		override val skipWait = false
 	}
 	/**
 	  * A reaction where the shutdown is delayed until the associated process has completed.
@@ -35,8 +35,8 @@ object ShutdownReaction
 	  */
 	case object SkipDelay extends ShutdownReaction
 	{
-		override def finishBeforeShutdown = true
-		override def skipWait = true
+		override val finishBeforeShutdown = true
+		override val skipWait = true
 	}
 	/**
 	  * A reaction that cancels the pending process when the shutdown process initiates, provided that the
@@ -44,7 +44,7 @@ object ShutdownReaction
 	  */
 	case object Cancel extends ShutdownReaction
 	{
-		override def finishBeforeShutdown = false
-		override def skipWait = true
+		override val finishBeforeShutdown = false
+		override val skipWait = true
 	}
 }

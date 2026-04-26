@@ -141,7 +141,7 @@ class MouseEventGenerator(c: Component, activeCondition: Changing[Boolean] = Alw
         lazyButtonHandler.current.foreach { _.clear() }
         lazyWheelHandler.current.foreach { _.clear() }
         stopFlag.set()
-        Future.successful(())
+        Future.unit
     }
     
     override def act(duration: Duration) = {

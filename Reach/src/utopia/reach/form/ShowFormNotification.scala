@@ -5,6 +5,7 @@ import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.SizeCategory.VerySmall
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.logging.Logger
 import utopia.paradigm.color.ColorLevel.Standard
@@ -52,7 +53,8 @@ object ShowFormNotification
 	 */
 	def apply(context: ColorContext, color: ColorRole = ColorRole.Failure, icon: SingleColorIcon = SingleColorIcon.empty,
 	          closeIcon: SingleColorIcon = SingleColorIcon.empty, preferredShade: ColorLevel = Standard)
-	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ShowFormNotification =
+	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, scheduler: Scheduler,
+	          log: Logger): ShowFormNotification =
 		build(context, color, preferredShade) { notificationComponent(_, _, icon, closeIcon) }
 	
 	/**
@@ -72,7 +74,8 @@ object ShowFormNotification
 	 */
 	def build(context: ColorContext, color: ColorRole = ColorRole.Failure, preferredShade: ColorLevel = Standard)
 	         (f: (ContextualMixed[StaticTextContext], LocalizedString) => ReachComponent)
-	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ShowFormNotification =
+	         (implicit windowContext: StaticReachContentWindowContext, exc: ExecutionContext, scheduler: Scheduler,
+	          log: Logger): ShowFormNotification =
 	{
 		// Prepares a factory for constructing the notification windows
 		lazy val windowF = NotificationWindow.contextual.withBackground(color, preferredShade).closingEasily

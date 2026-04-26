@@ -7,6 +7,7 @@ import utopia.annex.model.response.Response
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.model.request.{Body, StringBody}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.parse.json.JsonParser
@@ -24,7 +25,8 @@ import scala.concurrent.ExecutionContext
  * @since 25.02.2026, v1.5
  */
 class VastAiApiClient(override protected val gateway: Gateway, apiKey: String, apiVersion: Int = 0)
-                     (implicit override protected val exc: ExecutionContext, override protected val log: Logger,
+                     (implicit override protected val exc: ExecutionContext,
+                      override protected val scheduler: Scheduler, override protected val log: Logger,
                       override protected val jsonParser: JsonParser)
 	extends ApiClient
 {

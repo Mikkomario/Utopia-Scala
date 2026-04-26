@@ -3,6 +3,7 @@ package utopia.reach.component.template.focus
 import utopia.firmament.component.Window
 import utopia.firmament.component.Window.JWindow
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.async.context.Scheduler
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.Positive
 import utopia.flow.util.logging.Logger
@@ -202,11 +203,11 @@ trait Focusable extends ReachComponent with FocusRequestable
 	                                              display: Boolean = false)
 	                                             (createContent: (ComponentHierarchy, Changing[Option[Window]]) => Creation[C, R])
 	                                             (implicit context: ReachWindowContext, exc: ExecutionContext,
-	                                                  log: Logger): WindowCreationResult[C, R] =
+	                                              scheduler: Scheduler, log: Logger): WindowCreationResult[C, R] =
 	{
 		// Always enables focus on the created windows
 		val window = createWindow[C, R](alignment, margin, title, matchEdgeLength, keepAnchored,
-			display)(createContent)(context.focusable, exc, log)
+			display)(createContent)(context.focusable, exc, scheduler, log)
 		registerOwnershipOf(window.component)
 		window
 	}

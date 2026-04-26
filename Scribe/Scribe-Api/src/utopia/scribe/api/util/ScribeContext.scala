@@ -1,8 +1,9 @@
 package utopia.scribe.api.util
 
+import utopia.flow.async.context.Scheduler
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Version
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.logging.{DelegatingLogger, Logger, SysErrLogger}
 import utopia.flow.view.mutable.Pointer
 import utopia.scribe.api.controller.logging.Scribe
 import utopia.scribe.core.model.enumeration.Severity
@@ -10,6 +11,7 @@ import utopia.vault.database.{ConnectionPool, Tables}
 
 import scala.concurrent.ExecutionContext
 import utopia.flow.time.Duration
+import utopia.flow.view.immutable.View
 
 /**
   * A set of settings which must be initialized before the program is used
@@ -22,6 +24,12 @@ object ScribeContext
 	
 	private val settingsPointer = Pointer.empty[Settings]
 	
+	/**
+	 * @return Logging implementation to use when this system is not available.
+	 *         Also logs errors within this system.
+	 */
+	val backupLogger = DelegatingLogger(View { settingOr { _.backupLogger }(SysErrLogger) })
+	
 	
 	// IMPLICIT -------------------------
 	
@@ -29,6 +37,10 @@ object ScribeContext
 	  * @return Execution context used for Scribe features
 	  */
 	implicit def exc: ExecutionContext = settings.exc
+	/**
+	 * @return Scheduler used for timed Scribe features
+	 */
+	implicit def scheduler: Scheduler = settings.scheduler
 	/**
 	  * @return Database connection pool used for Scribe features
 	  */
@@ -55,12 +67,6 @@ object ScribeContext
 	  */
 	def databaseName = settings.dbName
 	
-	/**
-	  * @return Logging implementation to use when this system is not available.
-	  *         Also logs errors within this system.
-	  */
-	def backupLogger = settingOr { _.backupLogger }(SysErrLogger)
-	
 	/*
 	  * @return Maximum amount of logging entries to allow within a specific time period,
 	  *         and the duration within which this counter should be reset.
@@ -74,7 +80,8 @@ object ScribeContext
 	/**
 	  * Initializes this context
 	  * @param exc The execution context to use
-	  * @param cPool The database connection pool to use
+	  * @param scheduler Scheduler to use for timed events
+	 * @param cPool The database connection pool to use
 	  * @param tables The root Tables instance that should be used when accessing database tables
 	  * @param databaseName Name of the database used for Scribe features (default = utopia_scribe_db)
 	  * @param version Current software version (default = v1.0)
@@ -94,12 +101,11 @@ object ScribeContext
 	  *                               Please note that this may result in huge amount of log entries under certain
 	  *                               circumstances.
 	  */
-	def setup(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, databaseName: String = "utopia_scribe_db",
-	          version: Version = Version(1), backupLogger: Logger = SysErrLogger,
-	          maximumLoggingVelocity: Option[(Int, Duration)] = None) =
+	def setup(exc: ExecutionContext, scheduler: Scheduler, cPool: ConnectionPool, tables: Tables,
+	          databaseName: String = "utopia_scribe_db", version: Version = Version(1),
+	          backupLogger: Logger = SysErrLogger, maximumLoggingVelocity: Option[(Int, Duration)] = None) =
 	{
-		settingsPointer.value = Some(Settings(exc, cPool, tables, databaseName, version, backupLogger/*,
-			maximumLoggingVelocity*/))
+		settingsPointer.value = Some(Settings(exc, scheduler, cPool, tables, databaseName, version, backupLogger))
 		// Sets up maximum logging limit, also
 		maximumLoggingVelocity.foreach { case (maxLogCount, resetInterval) =>
 			Scribe.setupLoggingLimit(maxLogCount, resetInterval)
@@ -124,7 +130,7 @@ object ScribeContext
 	
 	// NESTED   -------------------------
 	
-	private case class Settings(exc: ExecutionContext, cPool: ConnectionPool, tables: Tables, dbName: String,
-	                            version: Version, backupLogger: Logger/*,
+	private case class Settings(exc: ExecutionContext, scheduler: Scheduler, cPool: ConnectionPool, tables: Tables,
+	                            dbName: String, version: Version, backupLogger: Logger/*,
 	                            maxLoggingVelocity: Option[(Int, Duration)]*/)
 }

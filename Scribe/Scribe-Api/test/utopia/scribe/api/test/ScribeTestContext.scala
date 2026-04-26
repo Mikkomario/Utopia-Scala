@@ -1,7 +1,7 @@
 package utopia.scribe.api.test
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.time.TimeExtensions._
@@ -26,6 +26,7 @@ import scala.io.StdIn
 object ScribeTestContext
 {
 	implicit val exc: ExecutionContext = new ThreadPool("Scribe-Test")(SysErrLogger)
+	implicit val scheduler: Scheduler = Scheduler.newInstance(exc, SysErrLogger)
 	implicit val cPool: ConnectionPool = new ConnectionPool(25, 5, 5.seconds)
 	implicit val jsonParser: JsonParser = JsonBunny
 	
@@ -36,7 +37,7 @@ object ScribeTestContext
 	
 	Connection.modifySettings { _.copy(user = dbUser, password = dbPassword, defaultDBName = Some(databaseName)) }
 	
-	ScribeContext.setup(exc, cPool, new Tables(cPool), databaseName, version = Version(1, 2, 4))
+	ScribeContext.setup(exc, scheduler, cPool, new Tables(cPool), databaseName, version = Version(1, 2, 4))
 	HandleError.default = Rethrow
 	ColumnLengthRules.loadFrom("Scribe/Scribe-Core/data/length-rules/scribe-length-rules-v0.1.json",
 		"utopia_scribe_db")

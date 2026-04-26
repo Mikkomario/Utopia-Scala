@@ -38,7 +38,7 @@ object ModelTest extends App
 	
 	// 2) model with default value
 	val model2 = mutable.MutableModel.using(generator2)
-	assert(model2.existing("Test").isEmpty)
+	assert(model2.existingProperty("Test").isEmpty)
 	assert(model2("Test").content.get == 0)
 	
 	// 3) immutable model with no default value

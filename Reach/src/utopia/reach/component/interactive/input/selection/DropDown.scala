@@ -5,6 +5,7 @@ import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.localization.{Display, LocalizedString}
 import utopia.firmament.model.enumeration.StackLayout.Leading
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
@@ -16,8 +17,8 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.event.consume.ConsumeChoice.Preserve
 import utopia.genesis.handling.event.keyboard.Key.{DownArrow, RightArrow, Space}
 import utopia.genesis.handling.event.mouse.{MouseButtonStateEvent, MouseButtonStateListener, MouseEvent}
-import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.factory.ContextualComponentFactories.CCF
+import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.factory.contextual.VariableTextContextualFactory
 import utopia.reach.component.hierarchy.ComponentHierarchy
 import utopia.reach.component.interactive.input.FieldWithPopup
@@ -95,8 +96,8 @@ case class DropDownFactory(hierarchy: ComponentHierarchy, context: VariableTextC
 	def apply[A](contentPointer: Changing[Seq[A]], valuePointer: EventfulPointer[Option[A]] = Pointer.eventful.empty,
 	             display: Display[Option[A]] = Display.identity.optional)
 	            (makeItemView: (ContextualMixed[VariableTextContext], Changing[A], Flag, Int) => ReachComponent)
-	            (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, windowContext: ReachWindowContext,
-	             equals: EqualsFunction[A] = EqualsFunction.default) =
+	            (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, scheduler: Scheduler,
+	             windowContext: ReachWindowContext, equals: EqualsFunction[A] = EqualsFunction.default) =
 	{
 		// Prepares the settings & properties
 		val emptyFlag: Flag = valuePointer.lightMap { _.isEmpty }
@@ -144,8 +145,8 @@ case class DropDownFactory(hierarchy: ComponentHierarchy, context: VariableTextC
 	  */
 	def labels[A](contentPointer: Changing[Seq[A]], valuePointer: EventfulPointer[Option[A]] = EventfulPointer.empty,
 	              display: Display[A] = Display.identity)
-	             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, windowContext: ReachWindowContext,
-	              equals: EqualsFunction[A] = EqualsFunction.default) =
+	             (implicit scrollingContext: ScrollingContext, exc: ExecutionContext, scheduler: Scheduler,
+	              windowContext: ReachWindowContext, equals: EqualsFunction[A] = EqualsFunction.default) =
 		withSettings(settings.withSelectionLayout(Leading))
 			.apply[A](contentPointer, valuePointer, display.optional) {
 				(factories, contentP, _, _) => factories(ViewTextLabel).apply(contentP, display)

@@ -42,7 +42,7 @@ object AwtUtils
 		}
 		// Case: Window was already closed => Resolves immediately
 		else
-			Future.successful(())
+			Future.unit
 	}
 	
 	

@@ -7,6 +7,7 @@ import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.{HotKey, WindowButtonBlueprint}
 import utopia.flow.async.AsyncExtensions.RichFuture
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.util.logging.Logger
@@ -40,18 +41,23 @@ trait InteractionWindowFactory[A]
 	// ABSTRACT	-----------------------
 	
 	/**
-	  * @return Context used when creating windows.
+	 * @return Execution context used for performing asynchronous tasks
+	 */
+	protected implicit def executionContext: ExecutionContext
+	/**
+	 * @return Scheduler for executing timed events
+	 */
+	protected implicit def scheduler: Scheduler
+	/**
+	 * @return A logging implementation for encountered errors
+	 */
+	protected implicit def log: Logger
+	
+	/**
+	 * @return Context used when creating windows.
 	 *         Defines the default settings to use for the content as well.
-	  */
+	 */
 	protected def windowContext: StaticReachContentWindowContext
-	/**
-	  * @return Execution context used for performing asynchronous tasks
-	  */
-	protected def executionContext: ExecutionContext
-	/**
-	  * @return A logging implementation for encountered errors
-	  */
-	protected def log: Logger
 	
 	/**
 	  * @return Title displayed on this dialog
@@ -112,9 +118,6 @@ trait InteractionWindowFactory[A]
 	  */
 	def display(parentWindow: Option[JWindow] = None): WindowCreationResult[ReachComponent, Future[A]] = {
 		implicit val wc: StaticReachContentWindowContext = windowContext
-		implicit val exc: ExecutionContext = executionContext
-		implicit val log: Logger = this.log
-		
 		val resultPromise = Promise[A]()
 		// When this function finishes, this pointer contains the actually used condition
 		// (the condition is built incrementally)

@@ -24,8 +24,9 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState._
 import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessRecord, VastAiVllmProcessState}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
-import utopia.flow.async.process.{Delay, Loop, Process, Wait}
+import utopia.flow.async.process.{Delay, LoopingProcess, Process, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.parse.file.FileExtensions._
@@ -123,7 +124,7 @@ object VastAiVllmProcess
 	          noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
 	          instanceLabel: String = "", debugLogger: Option[KeptOpenWriter] = None)
 	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
-	         (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient) =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, client: VastAiApiClient) =
 		new VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk, gateway, installScriptPath, localPort,
 			remotePort, maxGpuUtil, maxParallelRequests, extraStartupArgs, setupTimeout, recoveryTimeout,
 			noResponseTimeout, statusCheckInterval, instanceLabel, debugLogger)(chooseImage)
@@ -183,7 +184,8 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
                         noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
                         instanceLabel: String = "", debugLogger: Option[KeptOpenWriter] = None)
                        (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
-                       (implicit exc: ExecutionContext, log: Logger, vastAiClient: VastAiApiClient)
+                       (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger,
+                        vastAiClient: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
 	// ATTRIBUTES   ------------------------
@@ -868,13 +870,14 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			}
 	}
 	
+	// TODO: Refactor to use Scheduler / Loop instead
 	private def monitorRequestTimeouts(queue: LockingRequestQueue, getInstanceStatus: => InstanceStatus) = {
 		if (noResponseTimeout.isFinite) {
 			// Compares timeout against the earliest request queue time, or the earliest recorded request start time
 			// This is in order to avoid timeouts for requests that have been queued (but not running) for a long time
 			debugLog(s"${ vastAiProcess.instanceId.mkString }: Starts monitoring request timeouts")
 			val lastRecordedStartTimeP = Volatile(Now.toInstant)
-			val process = Loop.after(noResponseTimeout) {
+			val process = LoopingProcess.started.after(noResponseTimeout) { _ =>
 				queue.pendingRequests.notEmpty match {
 					// Case: One or more requests are being executed => Checks if any of them are too old
 					case Some(requests) =>

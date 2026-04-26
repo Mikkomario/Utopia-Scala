@@ -2,7 +2,8 @@
 
 ## v1.13 (in development)
 ### Breaking changes
-- **ApiClient** now requires `tooManyRequestsRetrySettings: Option[TooManyRequestsRetrySettings]`
+- **ApiClient** now requires `tooManyRequestsRetrySettings: Option[TooManyRequestsRetrySettings]` 
+  and `scheduler: Scheduler`
 ### New Features
 - **ApiClient**s using **RequestRateLimiter** now support automated retries for 429 (too many requests) -responses
 ### New methods

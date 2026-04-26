@@ -1,6 +1,7 @@
 package utopia.firmament.component.input
 
 import utopia.firmament.component.display.Pool
+import utopia.flow.view.immutable.View
 
 object Selection
 {
@@ -28,7 +29,7 @@ object Selection
   * @tparam S the type of selection
   * @tparam C The type of selection pool
   */
-trait Selection[+S, +C] extends Input[S] with Pool[C]
+trait Selection[+S, +C] extends View[S] with Pool[C]
 {
 	// COMPUTED	-----------------
 	

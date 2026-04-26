@@ -17,10 +17,8 @@ object LoopInterruptionTest extends App
 	private val waitLock = new AnyRef
 	private val counter = Volatile(0)
 	
-	private val loop = LoopingProcess(waitLock = waitLock) { _ =>
-		counter.update { _ + 1 }
-		Some(2.seconds)
-	}
+	private val loop = LoopingProcess.restartable.withWaitLock(waitLock)
+		.regularly(2.seconds) { _ => counter.update { _ + 1 } }
 	
 	println("Starting the test...")
 	assert(counter.value == 0)

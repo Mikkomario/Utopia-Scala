@@ -32,7 +32,7 @@ object ClearUnreferencedData
 	                 (implicit exc: ExecutionContext, connectionPool: ConnectionPool, logger: Logger) =
 	{
 		val deleter = new ClearUnreferencedData(tables.map { _ -> Set() })
-		LoopingProcess.daily(at) { _ =>
+		LoopingProcess.restartable.daily(at) { _ =>
 			connectionPool.tryWith { implicit c => deleter()  }
 				.failure.foreach { logger(_, "ClearUnreferencedData failed") }
 		}

@@ -130,5 +130,5 @@ class WeakList[+A <: AnyRef](refs: Iterable[WeakReference[A]])
       * @return A new list with the specified item added (weakly referenced)
       */
     def :+[B >: A <: AnyRef](item: B) =
-	    new WeakList(OptimizedIndexedSeq.concat(refs.view.filter { _.isEnqueued }, Single(WeakReference(item))))
+	    new WeakList(OptimizedIndexedSeq.concat(refs.view.filter { _.get != null }, Single(WeakReference(item))))
 }

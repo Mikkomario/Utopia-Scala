@@ -19,7 +19,7 @@ object VolatileFlagFutureTest extends App
 	private val future = flag.future
 	println(".future returned")
 	
-	Delay(3.seconds, shutdownReaction = DelayShutdown) {
+	Delay.delayingShutdown(3.seconds) {
 		println("Setting flag")
 		flag.set()
 	}

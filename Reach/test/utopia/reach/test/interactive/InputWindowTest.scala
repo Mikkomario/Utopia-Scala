@@ -6,6 +6,7 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.{RowGroup, RowGroups}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -14,7 +15,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.AlwaysTrue
 import utopia.flow.view.mutable.eventful.EventfulPointer
-import utopia.flow.view.template.eventful.{Changing, Flag}
+import utopia.flow.view.template.eventful.Flag
 import utopia.genesis.util.ScreenExtensions._
 import utopia.paradigm.color.ColorRole
 import utopia.paradigm.color.ColorRole.Secondary
@@ -70,6 +71,7 @@ object InputWindowTest extends App
 		// IMPLEMENTED	-------------------------
 		
 		override implicit protected def log: Logger = ReachTestContext.log
+		override protected implicit def scheduler: Scheduler = ReachTestContext.scheduler
 		
 		override protected def inputTemplate = {
 			val nameErrorPointer = EventfulPointer(LocalizedString.empty)

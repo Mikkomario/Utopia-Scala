@@ -48,10 +48,10 @@ object AnimatedTransitionTest extends App
 	new SingleFrameSetup(actorHandler, frame).start()
 	
 	// Displays the component after 0.5 seconds
-	process.Delay(0.5.seconds) {
+	process.Delay.after(0.5.seconds) {
 		transitionWrapper.isShown = true
 		// Hides it again after 5 seconds
-		process.Delay(5.seconds) {
+		process.Delay.after(5.seconds) {
 			// Closes frame once visibility has been changed
 			(transitionWrapper.isShown = false).foreach { _ => frame.close() }
 		}

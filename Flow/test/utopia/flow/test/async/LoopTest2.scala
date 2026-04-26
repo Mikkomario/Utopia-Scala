@@ -1,18 +1,14 @@
 package utopia.flow.test.async
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.context.{CloseHook, ThreadPool}
+import utopia.flow.async.context.CloseHook
 import utopia.flow.async.process.ProcessState.{Completed, Running, Stopped}
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.async.process.{LoopingProcess, Wait}
-import utopia.flow.time.Now
+import utopia.flow.test.TestContext._
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.mutable.async.Volatile
-
-import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
-import utopia.flow.view.immutable.View
 
 /**
   * Tests LoopingProcess and Loop
@@ -21,10 +17,7 @@ import utopia.flow.view.immutable.View
   */
 object LoopTest2 extends App
 {
-	implicit val logger: Logger = SysErrLogger
-	implicit val exc: ExecutionContext = new ThreadPool("test")
-	
-	println("Running DelayTest...")
+	println("Running LoopTest...")
 	
 	var waitStart = Now.toInstant
 	def testTime(minPassed: Duration, maxPassed: Duration) = {
@@ -35,7 +28,7 @@ object LoopTest2 extends App
 	
 	// Tests temporary async looping
 	val counter = Volatile(0)
-	val l1 = LoopingProcess(View.fixed(0.5.seconds)) { _ =>
+	val l1 = LoopingProcess.restartable.after(0.5.seconds) { _ =>
 		val newVal = counter.updateAndGet { _ + 1 }
 		if (newVal < 3)
 			Some(WaitDuration(0.3.seconds))
@@ -59,11 +52,13 @@ object LoopTest2 extends App
 	assert(counter.value == 3)
 	
 	// Tests loop stopping
+	println("\nTesting loop-stopping")
 	counter.value = 0
 	waitStart = Now
+	assert(l1.state == Completed, l1.state)
 	l1.runAsync()
 	Wait(0.2.seconds)
-	assert(l1.state == Running)
+	assert(l1.state == Running, l1.state)
 	assert(counter.value == 0)
 	assert(l1.stop().waitFor().get == Stopped)
 	testTime(0.1.seconds, 0.3.seconds)

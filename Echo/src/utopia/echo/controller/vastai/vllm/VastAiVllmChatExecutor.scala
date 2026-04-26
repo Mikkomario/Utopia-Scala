@@ -24,7 +24,7 @@ import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted, Stopping}
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecorder, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.context.{AccessQueue, MappingFunnel}
+import utopia.flow.async.context.{AccessQueue, MappingFunnel, Scheduler}
 import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.async.process._
 import utopia.flow.collection.CollectionExtensions._
@@ -126,6 +126,7 @@ object VastAiVllmChatExecutor
 	 *                             Optional if vLLM is started automatically by the image / template.
 	 * @param thinks A function used for determining, which of the used models should be marked as "thinking"
 	 * @param exc Implicit execution context
+	 * @param scheduler Implicit scheduler for timed events
 	 * @param vastAiClient Implicit Vast AI -interfacing client
 	 * @param log Implicit logging implementation
 	 * @return a new executor interface
@@ -144,7 +145,7 @@ object VastAiVllmChatExecutor
 	          label: String = "chat-executor", logDir: Option[Path] = None, startsLazily: Boolean = false)
 	         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
 	         (thinks: String => Boolean)
-	         (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger) =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient, log: Logger) =
 		new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, coreInstanceCount, maxInstanceCount,
 			instanceActivationQueueSizeThreshold, instanceActivationPendingTokensThreshold,
 			instanceAccelerationPendingTokensThreshold, maxConnectionsPerInstance, additionalReservedDisk,
@@ -239,7 +240,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
                              logDir: Option[Path] = None, startsLazily: Boolean = false)
                             (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
                             (thinks: String => Boolean)
-                            (implicit exc: ExecutionContext, vastAiClient: VastAiApiClient, log: Logger)
+                            (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
+                             log: Logger)
 	extends BufferingChatRequestExecutor[BufferedOpenAiReply] with Breakable
 {
 	// ATTRIBUTES   -----------------------
@@ -340,7 +342,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private val idleShutdownProcess = {
 		if (idleShutdownThreshold.isFinite || partialUseShutdownThreshold.isFinite)
-			Some(LoopingProcess(View(idleShutdownThreshold)) { _ =>
+			Some(LoopingProcess.restartable.after(idleShutdownThreshold) { _ =>
 				// Checks whether any processes are currently idle or only partially used
 				val now = Now.toInstant
 				val idleThreshold = now - idleShutdownThreshold
@@ -447,7 +449,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	}
 	
 	private val regeneratorWaitLock = new AnyRef
-	private val regenerator = LoopingProcess(waitLock = regeneratorWaitLock) { hurryFlag =>
+	private val regenerator = LoopingProcess.restartable.withWaitLock(regeneratorWaitLock) { hurryFlag =>
 		// Case: Stopped => Exits this loop
 		if (stopFlag.isSet || hurryFlag.value)
 			None

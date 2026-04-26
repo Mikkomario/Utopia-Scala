@@ -1,14 +1,15 @@
 package utopia.scribe.api.controller.logging
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.process.{Loop, Process}
+import utopia.flow.async.process.Loop
+import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.time.{Duration, Now}
+import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.scribe.api.database.access.logging.issue.IssueDb
 import utopia.scribe.api.util.ScribeContext
@@ -23,26 +24,43 @@ import utopia.scribe.core.model.post.logging.ClientIssue
 import utopia.vault.database.Connection
 import utopia.vault.util.DatabaseActionQueue
 
+import scala.concurrent.Future
+
 object Scribe
 {
 	// ATTRIBUTES   ---------------------
 	
-	private lazy val loggingQueue = {
+	/**
+	 * Queue for performing DB logging
+	 */
+	private val loggingQueue = {
 		implicit val backupLogger: Logger = ScribeContext.backupLogger
 		DatabaseActionQueue()
 	}
-	// Counts the number of logging entries in order to apply a maximum limit
-	private val logCounter = Volatile.eventful(0)(SysErrLogger)
-	// Maximum allowed logCounter value. None if not limited.
+	/**
+	 * Counts the number of logging entries in order to apply a maximum limit.
+	 * Updated manually.
+	 */
+	private val logCounter = Volatile.eventful(0)(ScribeContext.backupLogger)
+	/**
+	 * Maximum allowed logCounter value. None if not limited.
+	 */
 	private var logLimit: Option[Int] = None
-	// Process for resetting the logging counter regularly
-	// None until initialized
-	// Also contains the repeat interval, in case it needs to be modified
-	private var counterResetLoop: Option[(Duration, Process)] = None
+	/**
+	 * Interval between log counter resets
+	 */
+	private var counterResetInterval = Duration.infinite
+	/**
+	 * A pointer that contains the last log-counter reset-loop completion.
+	 * Contains an unresolved future while said loop is running.
+	 */
+	private val counterResetLoopP = Volatile(Future.unit)
 	
 	private var limitListeners: Seq[MaximumLogLimitReachedListener] = Empty
 	
-	// Contains the latest timestamp when the counter reached 0 or 1
+	/**
+	 * A pointer that contains the latest timestamp when the counter reached 0 or 1
+	 */
 	private val firstLogTimePointer = logCounter.incrementalMap { _ => Now.toInstant } { (previous, event) =>
 		if (event.newValue <= 1) Now.toInstant else previous
 	}
@@ -90,25 +108,22 @@ object Scribe
 	  *
 	  *                          Default = false.
 	  */
+	// TODO: Refactor to use Scheduler / Loop instead (we need to store the interval somewhere and request it between iterations)
 	def setupLoggingLimit(maxLogCount: Int, resetInterval: Duration, resetAfterReached: Boolean = false) = {
+		// Updates the settings
 		logLimit = Some(maxLogCount)
-		resetInterval.ifFinite match {
-			// Case: Reset interval specified => Starts a reset process (unless identical process is already running)
-			case Some(interval) =>
-				if (counterResetLoop.forall { _._1 != interval }) {
-					// Cancels the previous reset process, if applicable
-					counterResetLoop.foreach { _._2.stop() }
-					// Starts the new process
-					implicit val logger: Logger = backupLogger
-					val loop = Loop.regularly(interval) {
-						logCounter.setIf { _ < maxLogCount || resetAfterReached }(0)
-					}
-					counterResetLoop = Some(interval -> loop)
+		counterResetInterval = resetInterval
+		
+		// Starts a new counter-reset loop, if appropriate
+		counterResetLoopP.setIf { _.isCompleted } {
+			if (counterResetInterval.isFinite)
+				Loop.after(resetInterval) {
+					logCounter.setIf { _ < maxLogCount || resetAfterReached }(0)
+					counterResetInterval.ifFinite.map { WaitDuration(_) }
 				}
-			// Case: Counter should never be reset => Cancels any existing reset process
-			case None =>
-				counterResetLoop.foreach { _._2.stop() }
-				counterResetLoop = None
+			// Case: No reset is applied => Won't start any loops
+			else
+				Future.unit
 		}
 	}
 	

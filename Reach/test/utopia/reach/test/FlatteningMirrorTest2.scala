@@ -1,22 +1,17 @@
 package utopia.reach.test
 
-import ReachTestContext._
 import utopia.firmament.component.Window
 import utopia.firmament.model.stack.StackSize
 import utopia.flow.async.process.{Delay, Wait}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.{ChangeEvent, ChangeResponse}
-import utopia.flow.event.model.ChangeResponse.Continue
-import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.immutable.eventful.AlwaysFalse
-import utopia.flow.view.mutable.Resettable
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.ResettableFlag
 import utopia.flow.view.template.eventful.Flag
 import utopia.paradigm.shape.shape2d.vector.size.Size
-import utopia.reach.component.factory.ContextualMixed
 import utopia.reach.component.label.empty.EmptyLabel
+import utopia.reach.test.ReachTestContext._
 import utopia.reach.window.ReachWindow
 
 /**
@@ -63,24 +58,22 @@ object FlatteningMirrorTest2 extends App
 	// OTHER    ---------------------------
 	
 	private def show() = {
-		popupP.mutate { popup =>
-			popup match {
-				// Case: Pop-up already created => Displays it
-				case Some(popup) =>
-					if (!popup.visible)
-						Delay(0.1.seconds) { popup.display() }
-					popup -> Some(popup)
-				
-				// Case: No pop-up available yet => Creates and displays a new window
-				case None =>
-					val popup = createPopup()
-					Delay(0.3.seconds) {
-						println("----")
-						println("Actually displaying the window")
-						popup.display()
-					} // FIXME: Display immediately (this delay is for testing)
-					popup -> Some(popup)
-			}
+		popupP.mutate {
+			// Case: Pop-up already created => Displays it
+			case Some(popup) =>
+				if (!popup.visible)
+					Delay(0.1.seconds) { popup.display() }
+				popup -> Some(popup)
+			
+			// Case: No pop-up available yet => Creates and displays a new window
+			case None =>
+				val popup = createPopup()
+				Delay(0.3.seconds) {
+					println("----")
+					println("Actually displaying the window")
+					popup.display()
+				} // FIXME: Display immediately (this delay is for testing)
+				popup -> Some(popup)
 		}
 	}
 	private def createPopup(): Window = {
@@ -101,9 +94,7 @@ object FlatteningMirrorTest2 extends App
 	
 	private def startListening() = {
 		println(s"Popup initially visible = ${ popupVisibleFlag.value }")
-		Delay(1.seconds) {
-			println(s"Popup visible after delay = ${ popupVisibleFlag.value }")
-		}
+		Delay.after(1.seconds) { println(s"Popup visible after delay = ${ popupVisibleFlag.value }") }
 		popupVisibleFlag.addListenerAndSimulateEvent(false)(VisibilityListener)
 	}
 	

@@ -1,6 +1,8 @@
 # Utopia Reach - List of Changes
 
-## v1.7.2 (in development)
+## v1.8 (in development)
+### Breaking changes
+- Various component constructors now require an implicit **Scheduler**
 ### New features
 - **ReachCanvas** now supports a more Swing-reliant painting mode, 
   which is activated automatically when created through `.forSwing(...)`, 

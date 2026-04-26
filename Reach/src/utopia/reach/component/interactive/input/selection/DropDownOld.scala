@@ -4,6 +4,7 @@ import utopia.firmament.component.display.Refreshable
 import utopia.firmament.context.ScrollingContext
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.localization.{Display, LocalizedString}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Single
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.time.Now
@@ -88,7 +89,7 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	 display: Display[Option[A]] = Display.identity.optional,
 	 sameItemCheck: Option[EqualsFunction[A]] = None)
 	(makeDisplay: (ComponentHierarchy, VariableTextContext, A) => C)
-	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger) =
+	(implicit scrollingContext: ScrollingContext, exc: ExecutionContext, log: Logger, scheduler: Scheduler) =
 	{
 		val isEmptyPointer = valuePointer.map { _.isEmpty }
 		val actualPromptPointer = promptPointer.notFixedWhere { _.isEmpty } match {
@@ -147,7 +148,7 @@ case class ContextualDropDownFactory(hierarchy: ComponentHierarchy,
 	                                     display: Display[A] = Display.identity,
 	                                     sameItemCheck: Option[EqualsFunction[A]] = None)
 	                                       (implicit scrollingContext: ScrollingContext, exc: ExecutionContext,
-	                                        log: Logger) =
+	                                        scheduler: Scheduler, log: Logger) =
 	{
 		apply[A, MutableViewTextLabel[A], P](contentPointer, valuePointer, display.optional,
 			sameItemCheck) {

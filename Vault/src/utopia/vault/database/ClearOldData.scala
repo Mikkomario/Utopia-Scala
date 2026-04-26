@@ -55,7 +55,7 @@ object ClearOldData
 	             (implicit exc: ExecutionContext, connectionPool: ConnectionPool, logger: Logger) =
 	{
 		val clearer = new ClearOldData(rules)
-		LoopingProcess.daily(at) { _ =>
+		LoopingProcess.restartable.daily(at) { _ =>
 			connectionPool.tryWith { implicit connection => clearer() }
 				.failure.foreach { logger(_, "ClearOldData call failed") }
 		}

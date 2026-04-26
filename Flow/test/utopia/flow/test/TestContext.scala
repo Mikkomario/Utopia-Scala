@@ -1,9 +1,9 @@
 package utopia.flow.test
 
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.time.WeekDays
 import utopia.flow.time.WeekDays.MondayToSunday
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.logging.{Logger, TimedSysErrLogger}
 
 import scala.concurrent.ExecutionContext
 
@@ -14,7 +14,8 @@ import scala.concurrent.ExecutionContext
   */
 object TestContext
 {
-	implicit val log: Logger = SysErrLogger
+	implicit val log: Logger = TimedSysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Test")
+	implicit val scheduler: Scheduler = Scheduler.newInstance
 	implicit val weekdays: WeekDays = MondayToSunday
 }

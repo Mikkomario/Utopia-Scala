@@ -6,6 +6,7 @@ import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy.Program
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
@@ -45,11 +46,11 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[Pro
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def display(parentWindow: Option[JWindow] = None)(implicit exc: ExecutionContext, logger: Logger) =
+	def display(parentWindow: Option[JWindow] = None)
+	           (implicit exc: ExecutionContext, logger: Logger, scheduler: Scheduler) =
 	{
 		// Presents the window only if there is some loading still to be done
-		if (progressPointer.value.progress < 1)
-		{
+		if (progressPointer.value.progress < 1) {
 			val loadingStarted = Instant.now()
 			val window = Window(content, parentWindow, title, Program, context.margins.medium, getAnchor = _.centerLeft)
 			
@@ -69,24 +70,22 @@ class LoadingWindow(loadingLabel: => AwtStackable, progressPointer: Changing[Pro
 			}
 		}
 		else
-			Future.successful(())
+			Future.unit
 	}
-	
 	/**
 	  * Displays this window during the loading process
 	  * @param window Window that will host this window
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def displayOver(window: JWindow)(implicit exc: ExecutionContext, logger: Logger) =
+	def displayOver(window: JWindow)(implicit exc: ExecutionContext, logger: Logger, scheduler: Scheduler) =
 		display(Some(window))
-	
 	/**
 	  * Displays this window during the loading process
 	  * @param window Window that will host this window
 	  * @param exc Implicit execution context
 	  * @return A future that completes when the loading process has been completed
 	  */
-	def displayOver(window: Window[_])(implicit exc: ExecutionContext, logger: Logger): Future[Unit] =
+	def displayOver(window: Window[_])(implicit exc: ExecutionContext, logger: Logger, scheduler: Scheduler): Future[Unit] =
 		displayOver(window.component)
 }

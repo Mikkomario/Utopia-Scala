@@ -9,6 +9,7 @@ import utopia.firmament.context.text.StaticTextContext
 import utopia.firmament.context.window.WindowContext
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.stack.LengthExtensions._
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.ShutdownReaction.Cancel
 import utopia.flow.async.process.WaitTarget.{Until, UntilNotified, WaitDuration}
 import utopia.flow.async.process.{DelayedProcess, PostponingProcess, Process, WaitTarget}
@@ -54,7 +55,8 @@ object ReachWindow
 	// IMPLICIT ---------------------------
 	
 	implicit def autoFactory(f: ReachWindow.type)
-	                        (implicit c: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+	                        (implicit c: StaticReachContentWindowContext, exc: ExecutionContext, scheduler: Scheduler,
+	                         log: Logger): ReachContentWindowFactory =
 		f.contentContextual
 	
 	
@@ -66,7 +68,7 @@ object ReachWindow
 	  * @param log Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def contextual(implicit context: ReachWindowContext, exc: ExecutionContext, log: Logger) =
+	def contextual(implicit context: ReachWindowContext, exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
 		withContext(context)
 	/**
 	  * @param context Implicit popup window creation context
@@ -74,7 +76,8 @@ object ReachWindow
 	  * @param log     Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def contentContextual(implicit context: StaticReachContentWindowContext, exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+	def contentContextual(implicit context: StaticReachContentWindowContext, exc: ExecutionContext,
+	                      scheduler: Scheduler, log: Logger): ReachContentWindowFactory =
 		contextual.withContentContext(context)
 	
 	
@@ -86,7 +89,7 @@ object ReachWindow
 	  * @param log     Implicit logging execution
 	  * @return A new Reach window factory that uses the specified context
 	  */
-	def withContext(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger) =
+	def withContext(context: ReachWindowContext)(implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
 		ContextualReachWindowFactory(context)
 	/**
 	 * @param context Window creation context
@@ -94,7 +97,8 @@ object ReachWindow
 	 * @param log     Implicit logging execution
 	 * @return A new Reach window factory that uses the specified context
 	 */
-	def withContext(context: StaticReachContentWindowContext)(implicit exc: ExecutionContext, log: Logger): ReachContentWindowFactory =
+	def withContext(context: StaticReachContentWindowContext)
+	               (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger): ReachContentWindowFactory =
 		ContextualReachWindowFactory(context).withContentContext(context)
 	/**
 	  * @param actorHandler Actor handler to use
@@ -103,11 +107,13 @@ object ReachWindow
 	  * @param log Implicit logging implementation
 	  * @return A new reach window factory that uses the default context
 	  */
-	def apply(actorHandler: ActorHandler, background: Color)(implicit exc: ExecutionContext, log: Logger) =
+	def apply(actorHandler: ActorHandler, background: Color)
+	         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
 		withContext(ReachWindowContext(WindowContext(actorHandler), background))
 }
 
-case class ContextualReachWindowFactory(context: ReachWindowContext)(implicit exc: ExecutionContext, log: Logger)
+case class ContextualReachWindowFactory(context: ReachWindowContext)
+                                       (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger)
 	extends ReachWindowContextWrapper[ReachWindowContext, ContextualReachWindowFactory, ReachContentWindowFactory]
 {
 	// ATTRIBUTES   ---------------

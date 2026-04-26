@@ -5,6 +5,7 @@
 - The Scribe Console settings are no longer read from a JSON file, but from an app configuration file instead 
   (using **AppConfig**)
   - Database access settings are requested on the first app startup
+- **ScribeContext** now requires a **Scheduler**
 
 ## v1.1.1 - 15.03.2026
 Supports **Flow v2.8**, **Vault v2.1** and **Nexus v2.0**

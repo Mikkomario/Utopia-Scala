@@ -4,6 +4,7 @@ import utopia.firmament.component.Window
 import utopia.firmament.context.text.VariableTextContext
 import utopia.firmament.image.SingleColorIcon
 import utopia.firmament.localization.LocalizedString
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.event.model.ChangeResponse.Continue
@@ -431,7 +432,7 @@ case class FieldWithPopupFactory(hierarchy: ComponentHierarchy, context: Variabl
 	 * @return A prepared copy of this factory
 	 * @see [[withPopupContext]]
 	 */
-	def contextual(implicit popupContext: ReachWindowContext, exc: ExecutionContext) =
+	def contextual(implicit popupContext: ReachWindowContext, exc: ExecutionContext, scheduler: Scheduler) =
 		withPopupContext(popupContext)
 	
 	
@@ -451,13 +452,14 @@ case class FieldWithPopupFactory(hierarchy: ComponentHierarchy, context: Variabl
 	 * @param exc Implicit execution context
 	 * @return A prepared copy of this factory
 	 */
-	def withPopupContext(context: ReachWindowContext)(implicit exc: ExecutionContext) =
+	def withPopupContext(context: ReachWindowContext)(implicit exc: ExecutionContext, scheduler: Scheduler) =
 		new PreparedFieldWithPopupFactory(context)
 	
 	
 	// NESTED   ---------------------------
 	
-	class PreparedFieldWithPopupFactory(popupContext: ReachWindowContext)(implicit exc: ExecutionContext)
+	class PreparedFieldWithPopupFactory(popupContext: ReachWindowContext)
+	                                   (implicit exc: ExecutionContext, scheduler: Scheduler)
 	{
 		/**
 		 * Creates a new field.
@@ -559,7 +561,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
                                                         (makeField: FieldCreationContext => C)
                                                         (makeRightHintLabel: ExtraFieldCreationContext[C] => Option[Open[ReachComponent, Any]])
                                                         (makePopupContent: ContextualMixed[VariableReachContentWindowContext] => ReachComponent)
-                                                        (implicit exc: ExecutionContext)
+                                                        (implicit exc: ExecutionContext, scheduler: Scheduler)
 	extends ReachComponentWrapper with FocusableWithStateWrapper with CanDisplayPopup
 {
 	// ATTRIBUTES	------------------------------
@@ -861,7 +863,7 @@ class FieldWithPopup[C <: ReachComponent with Focusable](override val hierarchy:
 				popup.visible = false
 				// On tabulator press, yields focus afterwards
 				if (event.index == Tab.index)
-					Delay(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
+					Delay.after(0.1.seconds) { yieldFocus(if (event.keyboardState(Shift)) Negative else Positive) }
 			}
 		}
 	}

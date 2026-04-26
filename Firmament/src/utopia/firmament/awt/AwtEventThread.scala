@@ -1,19 +1,19 @@
 package utopia.firmament.awt
 
 import utopia.flow.async.AsyncExtensions._
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.async.process.{Delay, WaitUtils}
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.time.Now
+import utopia.flow.time.{Duration, Now}
 import utopia.flow.time.TimeExtensions._
+import utopia.flow.util.logging.{DelegatingLogger, Logger, SysErrLogger}
 import utopia.flow.util.result.TryExtensions._
-import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
 import javax.swing.SwingUtilities
 import scala.concurrent.Promise
-import utopia.flow.time.Duration
 import scala.util.Try
 
 /**
@@ -25,20 +25,24 @@ object AwtEventThread
 {
 	// ATTRIBUTES	------------------------
 	
+	private val loggerP = Pointer[Logger](SysErrLogger)
+	/**
+	 * The logging implementation used for handling errors that would otherwise be thrown to the AWT event thread.
+	 */
+	implicit val logger: Logger = DelegatingLogger(loggerP)
+	
 	/**
 	  * Whether debugging mode should be enabled
 	  */
 	var debugMode = false
-	/**
-	  * The logging implementation used for handling errors that would otherwise be thrown to the AWT event thread.
-	  */
-	implicit var logger: Logger = SysErrLogger
 	
 	private lazy val taskKeepDuration = 3.seconds
 	private lazy val tasks = Volatile.emptySeq[TaskWrapper[_]]
 	
 	
 	// COMPUTED	----------------------------
+	
+	def logger_=(logger: Logger) = loggerP.value = logger
 	
 	/**
 	  * @return A string representation of the current state of this interface. Only works while debug mode is active.
@@ -150,9 +154,10 @@ object AwtEventThread
 	// NESTED	----------------------------
 	
 	private object TaskWrapper {
-		private lazy val exc = new ThreadPool("AwtEventThreadMonitor", coreSize = 0, maxSize = 10)(SysErrLogger)
+		private lazy val exc = new ThreadPool("AwtEventThreadMonitor", coreSize = 0, maxSize = 10)(logger)
+		private lazy val scheduler = Scheduler.newInstance(exc, logger)
 	}
-	
+	// Used in debug mode only
 	private class TaskWrapper[U](operation: => U, onFailure: Throwable => Unit) extends Runnable
 	{
 		// ATTRIBUTES	--------------------
@@ -192,10 +197,10 @@ object AwtEventThread
 				startTime = Some(Now)
 				val t = Thread.currentThread()
 				val waitLock = new AnyRef
-				Delay(3.seconds, waitLock) {
+				Delay.withWaitLock(waitLock)(3.seconds) {
 					if (_endTime.isEmpty)
 						t.interrupt()
-				}(TaskWrapper.exc, SysErrLogger)
+				}(TaskWrapper.exc, logger, TaskWrapper.scheduler)
 				operation
 				_endTime = Some(Now)
 				WaitUtils.notify(waitLock)

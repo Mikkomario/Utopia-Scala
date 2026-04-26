@@ -1,7 +1,7 @@
 package utopia.annex.test
 
 import utopia.annex.controller.{QueueSystem, RequestQueue}
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.time.WeekDays
 import utopia.flow.time.WeekDays.MondayToSunday
@@ -18,6 +18,7 @@ object TestClientContext
 {
 	implicit val logger: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Test")
+	implicit val scheduler: Scheduler = Scheduler.newInstance
 	implicit val weekdays: WeekDays = MondayToSunday
 	implicit val jsonParser: JsonParser = JsonReader
 	

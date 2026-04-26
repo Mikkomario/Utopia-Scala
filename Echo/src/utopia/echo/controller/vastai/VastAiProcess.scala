@@ -8,6 +8,7 @@ import utopia.echo.model.vastai.instance.{LiveInstance, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiProcessState
 import utopia.echo.model.vastai.process.VastAiProcessState._
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.ShutdownReaction.SkipDelay
 import utopia.flow.async.process.{Delay, Process}
 import utopia.flow.event.listener.ChangeListener
@@ -42,6 +43,7 @@ object VastAiProcess
 	 *                        Acquires an instance (ID) to use.
 	 *                        May yield a failure, in which case this process terminates in state [[Failed]].
 	 * @param exc Implicit execution context
+	 * @param scheduler Implicit scheduler for timed events
 	 * @param log Implicit logging implementation
 	 * @param client Implicit Vast AI client interface
 	 * @return A new process
@@ -49,7 +51,7 @@ object VastAiProcess
 	def apply(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveStatusCheckFailures: Option[Int] = None,
 	          debugLogger: Option[KeptOpenWriter] = None)
 	         (acquireInstance: Flag => Future[Try[Int]])
-	         (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient) =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, client: VastAiApiClient) =
 		new VastAiProcess(statusUpdateInterval, maxConsecutiveStatusCheckFailures, debugLogger)(acquireInstance)
 }
 
@@ -72,7 +74,7 @@ object VastAiProcess
 class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveStatusCheckFailures: Option[Int] = None,
                     debugLogger: Option[KeptOpenWriter] = None)
                    (acquireInstance: Flag => Future[Try[Int]])
-                   (implicit exc: ExecutionContext, log: Logger, client: VastAiApiClient)
+                   (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, client: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
 	// ATTRIBUTES   -------------------------

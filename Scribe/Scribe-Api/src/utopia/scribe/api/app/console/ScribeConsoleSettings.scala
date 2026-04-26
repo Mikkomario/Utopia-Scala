@@ -1,7 +1,7 @@
 package utopia.scribe.api.app.console
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
@@ -34,6 +34,10 @@ object ScribeConsoleSettings
 	 * Execution context to use in the console
 	 */
 	implicit val threadPool: ThreadPool = new ThreadPool("Scribe-Console", 3, 100, 10.seconds)(SysErrLogger)
+	/**
+	 * Scheduler to use in the console
+	 */
+	implicit val scheduler: Scheduler = Scheduler.newInstance(threadPool, SysErrLogger)
 	/**
 	 * DB connection pool to use in the console.
 	 * Please use this only if [[setupDb]] yields a success.
@@ -146,8 +150,8 @@ object ScribeConsoleSettings
 			}
 			// Finalizes the setup by specifying the Scribe context and testing DB access
 			setupResult.flatMap { dbName =>
-				ScribeContext.setup(threadPool, cPool, new Tables(cPool), dbName, backupLogger = backupLogger,
-					version = version)
+				ScribeContext.setup(threadPool, scheduler, cPool, new Tables(cPool), dbName,
+					backupLogger = backupLogger, version = version)
 				
 				// Tests DB access
 				println("Testing DB access")

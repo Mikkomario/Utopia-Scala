@@ -6,7 +6,9 @@ import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.enumeration.WindowResizePolicy
 import utopia.firmament.model.enumeration.WindowResizePolicy.{Program, User}
 import utopia.firmament.model.stack.StackSize
+import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process
+import utopia.flow.time.Duration
 import utopia.genesis.image.Image
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -16,7 +18,6 @@ import utopia.reflection.container.swing.{AwtContainerRelated, Panel}
 
 import javax.swing.JFrame
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 object Frame
 {
@@ -182,9 +183,14 @@ class Frame[C <: ReflectionStackable with AwtContainerRelated](override val cont
     
     /**
      * Sets it so that JVM will exit once this frame closes
+     * @param exc Implicit execution context
+     */
+    def setToExitOnClose()(implicit exc: ExecutionContext) = closeFuture.onComplete { _ => System.exit(0) }
+    /**
+     * Sets it so that JVM will exit once this frame closes
       * @param delay Delay after window closing before closing the JVM
       * @param exc Implicit execution context
      */
-    def setToExitOnClose(delay: Duration = Duration.zero)(implicit exc: ExecutionContext) =
+    def setToExitOnClose(delay: Duration)(implicit exc: ExecutionContext, scheduler: Scheduler) =
         closeFuture.onComplete { _ => process.Delay(delay) { System.exit(0) } }
 }

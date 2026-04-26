@@ -6,7 +6,7 @@ import utopia.firmament.context.{AnimationContext, ScrollingContext}
 import utopia.firmament.localization.{Language, Localizer, NoLocalization}
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.WindowResizePolicy.UserAndProgram
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.collection.immutable.range.{NumericSpan, Span}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.{Logger, SysErrLogger}
@@ -40,6 +40,7 @@ object ReachTestContext
 	
 	implicit val log: Logger = SysErrLogger
 	implicit val exc: ExecutionContext = new ThreadPool("Reach")
+	implicit val scheduler: Scheduler = Scheduler.newInstance
 	implicit val defaultLanguage: Language = Language.english
 	implicit val localizer: Localizer = NoLocalization
 	implicit val adjustment: Adjustment = Adjustment(0.25)
