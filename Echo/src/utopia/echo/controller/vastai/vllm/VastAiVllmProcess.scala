@@ -207,6 +207,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	
 	// Collects timestamps of various events, for the final result
 	private var _startTime = Now.toInstant
+	private var _loadCompletionTime: Option[Instant] = None
 	private var hostingStartTime: Option[Instant] = None
 	private var stopTime: Option[Instant] = None
 	
@@ -303,6 +304,10 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	 *         If this process hasn't been started, returns the time when it was created.
 	 */
 	def startTime = _startTime
+	/**
+	 * @return Time when the instance was fully loaded. None if not loaded (yet).
+	 */
+	def loadCompletionTime = _loadCompletionTime
 	
 	/**
 	 * @return The current (detailed) state of this process
@@ -447,6 +452,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 				.logWithMessage("Failure while waiting for instance to load, timeout or stop").getOrElse(false))
 				vastAiProcess.instancePointerFuture.waitForResult()
 					.flatMap { instancePointer =>
+						_loadCompletionTime = Some(Now)
 						debugLog(s"${ instancePointer.value.id }: Instance loaded")
 						instancePointer.value.ssh
 							.toTry {
@@ -501,8 +507,8 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			// Records the completion of this process
 			debugLog(s"${ vastAiProcess.instanceId.mkString }: Records process completion")
 			recordP.set(VastAiVllmProcessRecord(
-				hostingResult, started = startTime, terminated = Now, apiStarted = hostingStartTime,
-				stopped = stopTime, offer = offerP.value))
+				hostingResult, started = startTime, terminated = Now, loaded = _loadCompletionTime,
+				apiStarted = hostingStartTime, stopped = stopTime, offer = offerP.value))
 		}
 	}
 	

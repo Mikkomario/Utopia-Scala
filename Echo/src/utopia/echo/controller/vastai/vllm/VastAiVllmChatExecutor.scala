@@ -41,7 +41,6 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now, Today}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
-import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.mutable.{Pointer, Settable}
@@ -925,10 +924,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			process.detailedStatePointer.addListenerAndSimulateEvent(NotStarted) { e =>
 				e.newValue match {
 					case HostingApi(instance, _, _, _) =>
-						recorder.onApiSetup(instance, process.startTime)
+						recorder.onApiSetup(instance, process.startTime, process.loadCompletionTime.getOrElse(Now))
 						Detach
 					case state if state.phase > ApiHosting => Detach
-					case _ => Continue
+					case state => Continue
 				}
 			}
 			process.recordFuture.foreach(recorder.onProcessCompleted)

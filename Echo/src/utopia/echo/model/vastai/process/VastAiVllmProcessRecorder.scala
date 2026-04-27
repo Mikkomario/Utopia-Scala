@@ -16,8 +16,9 @@ trait VastAiVllmProcessRecorder
 	 * This method should be called whenever a vLLM API is successfully hosted
 	 * @param instance Instance on which the API was hosted
 	 * @param started Time when the instance was started
+	 * @param loaded Time when the instance was fully loaded
 	 */
-	def onApiSetup(instance: VastAiInstance, started: Instant): Unit
+	def onApiSetup(instance: VastAiInstance, started: Instant, loaded: Instant): Unit
 	
 	/**
 	 * This method should be called whenever a Vast AI + vLLM process completes,
