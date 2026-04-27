@@ -3,7 +3,9 @@ package utopia.flow.async.process
 import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.WaitTarget.{NoWait, WaitDuration, WeeklyTime}
 import utopia.flow.time.{Duration, WeekDay}
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.template.eventful.Changing
 
 import java.time.{Instant, LocalTime}
 import scala.concurrent.{ExecutionContext, Future}
@@ -109,6 +111,26 @@ object Loop
 			}
 		
 		/**
+		 * Starts a new loop where trigger times are based on a pointer
+		 * @param targetPointer A pointer that yields this loop's next trigger time
+		 * @param f A function called whenever the 'targetPointer's value is reached.
+		 *          Yields a future that contains whether another iteration should be performed.
+		 * @param scheduler Implicit scheduler
+		 * @param exc Implicit execution context
+		 * @return A future that resolves once / if this loop finishes.
+		 *         Yields the last result of 'f'.
+		 *         If this loop was never started (because 'targetPointer' was fixed at None), immediately yields false.
+		 */
+		def atVariableIntervals(targetPointer: Changing[Option[Instant]])(f: => Future[Boolean])
+		                       (implicit scheduler: Scheduler, exc: ExecutionContext) =
+		{
+			if (targetPointer.existsFixed { _.isEmpty })
+				Future.successful(false)
+			else
+				_variable(targetPointer)(f)
+		}
+		
+		/**
 		 * Performs the specified operation repeatedly until it succeeds
 		 * or until a specific amount of attempts has been made
 		 * @param firstInterval Interval between the first and the second attempt
@@ -169,6 +191,35 @@ object Loop
 						case Some(nextTarget) => _async(nextTarget)(f)
 						case None => Future.unit
 					}
+				}
+			}
+		private def _variable(targetP: Changing[Option[Instant]])(f: => Future[Boolean])
+		                     (implicit exc: ExecutionContext, scheduler: Scheduler): Future[Boolean] =
+			scheduler.scheduleVariable(targetP) {
+				f.flatMap { shouldContinue =>
+					// Case: Requested to continue => Seeks for a possible continue state
+					if (shouldContinue)
+						targetP.fixedValue match {
+							// Case: Pointer got fixed => Only continues if the final value is current or future
+							case Some(fixedTarget) =>
+								fixedTarget.filterNot { _.isPast } match {
+									case Some(target) => scheduler.schedule(target)(f)
+									case None => Future.successful(true)
+								}
+							// Case: Pointer is variable => Continues once there exists a current or future target value
+							//                              (i.e. won't trigger based on static past values)
+							case None =>
+								// Case: The current target is in the past, or not specified
+								//       => Waits for a new value before continuing looping
+								if (targetP.value.forall { _.isPast })
+									targetP.nextFuture.flatMap { _ => _variable(targetP)(f) }
+								// Case: The current target is in the future => Continues looping immediately
+								else
+									_variable(targetP)(f)
+						}
+					// Case: Should no longer continue => Resolves
+					else
+						Future.successful(false)
 				}
 			}
 	}

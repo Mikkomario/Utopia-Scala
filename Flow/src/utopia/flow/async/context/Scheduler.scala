@@ -123,8 +123,10 @@ object Scheduler
 				targetTimePointer.addListener(updateVariableQueueTimeListener)
 				nextVariableQueueTimeP.update()
 				
-				// If this task ever becomes canceled, removes it from the queue
-				targetTimePointer.onceFixedAt(None) { variableQueueP.update { _.filter { _._1 != targetTimePointer } } }
+				// If this task ever becomes canceled, removes it from the queue and marks it as interrupted
+				targetTimePointer.onceFixedAt(None) {
+					variableQueueP.mutate { _.findAndPop { _._1 != targetTimePointer } }.foreach { _._2(false) }
+				}
 				
 				promise.future
 			}
