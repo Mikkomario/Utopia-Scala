@@ -476,10 +476,8 @@ class TwoThreadBuffer[A](capacity: Int)(implicit exc: ExecutionContext, log: Log
 		// Once closed, locks the remaining input size and declares this output as no longer filling
 		// FIXME: It looks like this doesn't happen
 		closedFlag.onceSet {
-			_declaredFilledFlag.value = true
-			remainingInputSizeP.value = 0
-			_declaredFilledFlag.lock()
-			remainingInputSizeP.lock()
+			_declaredFilledFlag.setAndLock(true)
+			remainingInputSizeP.setAndLock(0)
 		}
 		
 		

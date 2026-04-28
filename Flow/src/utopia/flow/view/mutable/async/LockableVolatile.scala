@@ -55,10 +55,11 @@ abstract class LockableVolatile[A](implicit listenerLogger: Logger)
 	
 	override def locked: Boolean = lockFlag.value
 	
-	override def lock(): Unit = {
+	override def lock(): Unit = lockFlag.synchronized {
 		if (lockFlag.set())
 			declareChangingStopped()
 	}
+	override def restrictLockingWhile[B](f: => B): B = lockFlag.synchronized(f)
 	
 	override protected def declareChangingStopped(): Unit =
 		changingStoppedListenersP.popAll().foreach { _.onChangingStopped() }

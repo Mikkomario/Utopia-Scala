@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.model.{AfterEffect, ChangeEvent}
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.immutable.eventful.FlagView
+import utopia.flow.view.mutable.Settable
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Flag}
 
 object ResettableLockableFlag
@@ -27,7 +28,8 @@ object ResettableLockableFlag
 		// ATTRIBUTES   -----------------------
 		
 		private var _value = initialValue
-		private var _locked = false
+		private val lockLock = new AnyRef
+		private val lockFlag = Settable()
 		
 		override lazy val view: Flag = new FlagView(this)
 		
@@ -35,10 +37,10 @@ object ResettableLockableFlag
 		// IMPLEMENTED  -----------------------
 		
 		override def value: Boolean = _value
-		override def locked: Boolean = _locked
+		override def locked: Boolean = lockFlag.isSet
 		
 		override def toString = {
-			if (_locked) {
+			if (locked) {
 				if (_value)
 					"Flag.set.locked"
 				else
@@ -49,11 +51,10 @@ object ResettableLockableFlag
 		}
 		
 		override def lock(): Unit = {
-			if (!locked) {
-				_locked = true
+			if (lockLock.synchronized { lockFlag.set() })
 				declareChangingStopped()
-			}
 		}
+		override def restrictLockingWhile[B](f: => B): B = lockLock.synchronized(f)
 		
 		override protected def assignToUnlocked(newValue: Boolean): Unit = {
 			val oldValue = _value

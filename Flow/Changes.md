@@ -12,11 +12,13 @@
     - By default, the processes are no longer restartable (!)
   - The new **Scheduler** system uses fewer threads than the original implementations di
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
+- **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
 - **AssignableOnce** now requires the implementation of `setFlag: Flag`
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Bugfixes
 - Fixed an issue in **WeakList**'s `:+` function, which always discarded live items (opposite of the desired effect)
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
+- Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
 ### Deprecations
 - `Regex.whiteSpace` is now named `Regex.whitespace`
 ### Bugfixes
@@ -36,6 +38,8 @@
   - Added `.only()`
 - **Lazy** (object)
   - Added `.expiring`
+- **LockablePointer**
+  - Added `.setAndLock(...)`, `.trySetAndLock(...)`, `.updateAndLock(...)` and `.tryUpdateAndLock(...)`
 - **Pair**
   - Added `.bestMatch(...)`
 - **PartialMapView** (object)
@@ -58,6 +62,7 @@
   - Added `.getModelOrString`
 ### Other changes
 - Built with Scala v2.13.18
+- Added synchronization to **LockablePointer**'s locking behavior
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 
 ## v2.8 - 15.03.2026

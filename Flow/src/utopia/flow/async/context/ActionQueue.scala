@@ -18,6 +18,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
+import utopia.flow.view.mutable.eventful.LockablePointer
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import scala.annotation.tailrec
@@ -293,13 +294,7 @@ object ActionQueue
 				//       => Listens to process start & completion, updating the pointer
 				case Some(Left(promise)) =>
 					val pointer = Pointer.lockable[BasicProcessState](NotStarted)
-					startFuture.onComplete { _ =>
-						pointer.value = Running
-						promise.future.onComplete { _ =>
-							pointer.value = Completed
-							pointer.lock()
-						}
-					}
+					startAndCompleteStatePointerWith(pointer, startFuture, promise.future)
 					pointer
 				// Case: This action has already started
 				case Some(Right(future)) =>
@@ -309,39 +304,24 @@ object ActionQueue
 					// Case: This action is still running => Listens to the future completion, updating the pointer
 					else {
 						val pointer = Pointer.lockable[BasicProcessState](Running)
-						future.onComplete { _ =>
-							pointer.value = Completed
-							pointer.lock()
-						}
+						completeStatePointerWith(pointer, future)
 						pointer
 					}
 				// Case: No promise or future has been prepared yet => Waits until one is prepared
 				case None =>
 					val pointer = Volatile.lockable[BasicProcessState](NotStarted)
 					wrappedPointer.onceNotEmpty {
-						// Case: Prepared as a promise => Listens to process start & completion (WET WET)
-						case Left(promise) =>
-							startFuture.onComplete { _ =>
-								pointer.value = Running
-								promise.future.onComplete { _ =>
-									pointer.value = Completed
-									pointer.lock()
-								}
-							}
+						// Case: Prepared as a promise => Listens to process start & completion
+						case Left(promise) => startAndCompleteStatePointerWith(pointer, startFuture, promise.future)
 						// Case: Prepared as the final future => Listens to its completion
 						case Right(future) =>
 							// Case: Already completed => Finalizes the pointer
-							if (future.isCompleted) {
-								pointer.value = Completed
-								pointer.lock()
-							}
+							if (future.isCompleted)
+								pointer.setAndLock(Completed)
 							// Case: Not yet resolved => Updates once the future resolves
 							else {
 								pointer.value = Running
-								future.onComplete { _ =>
-									pointer.value = Completed
-									pointer.lock()
-								}
+								completeStatePointerWith(pointer, future)
 							}
 					}
 					pointer
@@ -443,6 +423,18 @@ object ActionQueue
 				false
 			}
 		}
+		
+		
+		// OTHER    ------------------------
+		
+		private def startAndCompleteStatePointerWith(statePointer: LockablePointer[BasicProcessState],
+		                                             startFuture: Future[Any], completionFuture: => Future[Any]) =
+			startFuture.onComplete { _ =>
+				statePointer.value = Running
+				completeStatePointerWith(statePointer, completionFuture)
+			}
+		private def completeStatePointerWith(statePointer: LockablePointer[BasicProcessState], future: Future[Any]) =
+			future.onComplete { _ => statePointer.setAndLock(Completed) }
 	}
 	
 	private abstract class AbstractActionQueue(implicit override val exc: ExecutionContext, override val log: Logger)

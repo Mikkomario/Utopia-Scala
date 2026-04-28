@@ -4,7 +4,7 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.event.model.{AfterEffect, ChangeEvent}
 import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.mutable.{LoggingPointerFactory, MaybeAssignable}
+import utopia.flow.view.mutable.{LoggingPointerFactory, MaybeAssignable, Settable}
 import utopia.flow.view.template.eventful.{AbstractMayStopChanging, Changing, ChangingWrapper}
 
 object LockablePointer extends LoggingPointerFactory[LockablePointer]
@@ -29,7 +29,8 @@ object LockablePointer extends LoggingPointerFactory[LockablePointer]
 		// ATTRIBUTES   -------------------------
 		
 		private var _value = initialValue
-		private var _locked = false
+		private val lockLock = new AnyRef
+		private val lockFlag = Settable()
 		
 		override lazy val readOnly: Changing[A] = ChangingWrapper(this)
 		
@@ -37,14 +38,15 @@ object LockablePointer extends LoggingPointerFactory[LockablePointer]
 		// IMPLEMENTED  -------------------------
 		
 		override def value: A = _value
-		override def locked = _locked
+		override def locked = lockFlag.isSet
 		
-		override def toString = if (_locked) s"Pointer(${ _value }).locked" else s"Pointer(${ _value }).lockable"
+		override def toString = if (locked) s"Pointer(${ _value }).locked" else s"Pointer(${ _value }).lockable"
 		
 		override def lock() = {
-			_locked = true
-			declareChangingStopped()
+			if (lockLock.synchronized { lockFlag.set() })
+				declareChangingStopped()
 		}
+		override def restrictLockingWhile[B](f: => B): B = lockLock.synchronized(f)
 		
 		override protected def assignToUnlocked(newValue: A): Unit = {
 			val oldValue = _value
@@ -72,6 +74,14 @@ object LockablePointer extends LoggingPointerFactory[LockablePointer]
 trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeAssignable[A]
 {
 	// ABSTRACT -----------------------------
+	
+	/**
+	 * Prevents this pointer from locking (by other threads) during a function call
+	 * @param f A function to run
+	 * @tparam B Type of 'f' result
+	 * @return 'f' result
+	 */
+	def restrictLockingWhile[B](f: => B): B
 	
 	/**
 	 * Assigns a new value to this pointer, also firing change events.
@@ -104,6 +114,10 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeA
 	  */
 	override def trySet(value: => A) = ifUnlocked { assignToUnlocked(value) }
 	
+	// Makes sure the state won't change during functions which assume an unlocked state
+	override protected def failIfLocked[B](f: => B): B = restrictLockingWhile { super.failIfLocked(f) }
+	override protected def ifUnlocked[U](f: => U): Boolean = restrictLockingWhile { super.ifUnlocked(f) }
+	
 	
 	// OTHER    ----------------------------
 	
@@ -114,4 +128,43 @@ trait LockablePointer[A] extends Lockable[A] with EventfulPointer[A] with MaybeA
 	  * @return Whether this pointer was still unlocked and 'f' was called.
 	  */
 	def tryUpdate(f: Mutate[A]) = ifUnlocked { update(f) }
+	
+	/**
+	 * Assigns a value to this pointer, and then locks this pointer
+	 * @param value Value to assign (call-by-name)
+	 */
+	@throws[IllegalStateException]("If this pointer has been locked")
+	def setAndLock(value: => A) = failIfLocked {
+		assignToUnlocked(value)
+		lock()
+	}
+	/**
+	 * If this pointer is unlocked, assigns it a final value and then locks it
+	 * @param value Value to assign, if unlocked (call-by-name)
+	 * @return Whether this pointer was updated
+	 */
+	def trySetAndLock(value: => A) = ifUnlocked {
+		assignToUnlocked(value)
+		lock()
+	}
+	
+	/**
+	 * Updates the value of this pointer, and then locks it
+	 * @param f Function used for updating this pointer's value
+	 * @throws java.lang.IllegalStateException If this pointer has already been locked
+	*/
+	@throws[IllegalStateException]("If this pointer has been locked")
+	def updateAndLock(f: Mutate[A]) = failIfLocked {
+		update(f)
+		lock()
+	}
+	/**
+	 * If this pointer is unlocked, updates its value and locks it
+	 * @param f Function used for updating this pointer's value, if possible
+	 * @return Whether this pointer was updated
+	 */
+	def tryUpdateAndLock(f: Mutate[A]) = ifUnlocked {
+		update(f)
+		lock()
+	}
 }

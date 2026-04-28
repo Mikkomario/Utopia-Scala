@@ -23,7 +23,7 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 		.map { _ -> Volatile.lockable.emptySeq[ChangeListener[A]] }.toMap
 	private val _hasListenersFlag = {
 		// TODO: Refactor this flag, so that the change events are generated
-		//  as after-effects in the applicable listener pointer
+		//  as after-effects in the applicable listener pointer (needs a new flag class, probably)
 		val nonEmptyPointers = listenerPointers.valuesIterator.map { _.strongMap { _.nonEmpty } }.toOptimizedSeq
 		val nonEmptyFlag = Flag.resettable.lockable()
 		val updateFlagListener = ChangeListener.onAnyChange { nonEmptyFlag.value = nonEmptyPointers.exists { _.value } }
@@ -32,7 +32,7 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 		nonEmptyFlag
 	}
 	
-	private var stopListeners: Seq[ChangingStoppedListener] = Empty
+	private val stopListenersP = Volatile.emptySeq[ChangingStoppedListener]
 	
 	
 	// COMPUTED -----------------------------
@@ -68,21 +68,14 @@ abstract class OptimizedChanging[A] extends ChangingWithListeners[A] with MaySto
 	}
 	
 	override protected def declareChangingStopped(): Unit = {
-		listenerPointers.valuesIterator.foreach { p =>
-			if (p.unlocked) {
-				p.clear()
-				p.lock()
-			}
-		}
+		// Clears and locks all listener pointers
+		listenerPointers.valuesIterator.foreach { _.trySetAndLock(Empty) }
 		_hasListenersFlag.lock()
-		if (stopListeners.nonEmpty) {
-			stopListeners.foreach { _.onChangingStopped() }
-			stopListeners = Empty
-		}
+		stopListenersP.popAll().foreach { _.onChangingStopped() }
 	}
 	
 	override protected def _addChangingStoppedListener(listener: => ChangingStoppedListener): Unit =
-		stopListeners :+= listener
+		stopListenersP :+= listener
 	
 	
 	// OTHER    ----------------------------

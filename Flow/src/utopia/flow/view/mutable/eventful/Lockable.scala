@@ -57,7 +57,7 @@ trait Lockable[+A] extends MayStopChanging[A]
 	 * Fails if this pointer has been locked
 	 * @param f A function to call if this pointer is unlocked
 	 * @tparam B Type of 'f' results
-	 * @throws IllegalStateException If this pointer has been locked
+	 * @throws java.lang.IllegalStateException If this pointer has been locked
 	 * @return Results of 'f'
 	 */
 	@throws[IllegalStateException]("If this pointer has been locked")
