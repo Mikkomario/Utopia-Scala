@@ -33,6 +33,7 @@
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
 - **IterableOnce** (via **CollectionExtensions**)
+  - Added `.groupMapMap(...)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
