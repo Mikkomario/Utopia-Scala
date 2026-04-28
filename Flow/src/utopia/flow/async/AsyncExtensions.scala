@@ -74,6 +74,9 @@ object AsyncExtensions
 		override def tryMap[B](f: A => Try[B])(implicit exc: ExecutionContext) = wrapped.map(f)
 		override def tryFlatMap[B](f: A => Future[Try[B]])(implicit exc: ExecutionContext) =
 			wrapped.flatMap(f)
+		
+		override def forFailure[U](f: Throwable => U)(implicit exc: ExecutionContext) =
+			wrapped.onComplete { _.failure.foreach(f) }
 	}
 	/**
 	 * Used for providing [[PossiblyFailingFutures]] functions for all futures,
