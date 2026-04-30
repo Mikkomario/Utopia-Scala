@@ -54,6 +54,7 @@
     - Added `.whitespaceOrNewline`, which matches the previous `.whiteSpace`
     - Added `.slash`
   - Class
+    - Added `.countMatchesIn(String)`
     - Added `.mapMatchesIn(String)(...)`
 - **String** (via **StringExtensions**)
   - Added `.inserted(String, Int)`

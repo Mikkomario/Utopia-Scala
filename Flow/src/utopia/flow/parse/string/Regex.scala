@@ -576,6 +576,12 @@ case class Regex(string: String) extends MaybeEmpty[Regex]
 	def filter(str: String) = matchesIteratorFrom(str).mkString
 	
 	/**
+	 * @param str A string
+	 * @return Number of matches of this regular expression in the specified string
+	 */
+	def countMatchesIn(str: String) = startIndexIteratorIn(str).size
+	
+	/**
 	 * Modifies each match of this regular expression in a string
 	 * @param str String to modify
 	 * @param f A function which maps a match of this expression
