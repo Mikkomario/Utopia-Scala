@@ -1,0 +1,387 @@
+{
+  "author": "Mikko Hilpinen",
+  "project": "Scribe",
+  "version": "v1.2.2",
+  "db_package": "utopia.scribe.api.database",
+  "model_package": "utopia.scribe.core.model",
+  "models_without_vault": true,
+  "index_prefix": "sc",
+  "enums": [
+    {
+      "name": "Severity",
+      "name_plural": "Severities",
+      "doc": "Represents the level of severity associated with some problem or error situation",
+      "id_name": "level",
+      "default": "Unrecoverable",
+      "values": [
+        {
+          "name": "Debug",
+          "doc": "An entry used for debugging purposes only. Practically insignificant."
+        },
+        {
+          "name": "Info",
+          "doc": "Information about the application's state and/or behavior which may be of use. Doesn't necessarily indicate a real problem."
+        },
+        {
+          "name": "Warning",
+          "doc": "Information about the application's state and/or behavior which probably indicates a presence of a problem.\nDoesn't necessarily require action."
+        },
+        {
+          "name": "Recoverable",
+          "doc": "Indicates a process failure which is either partial or which may possibly be recovered from automatically.\nDoesn't require immediate action, but may be important to review and fix eventually."
+        },
+        {
+          "name": "Unrecoverable",
+          "doc": "Represents a failure that prematurely terminated some process in a way that progress or data was lost or halted.\nTypically the program performance is immediately affected by these kinds of problems."
+        },
+        {
+          "name": "Critical",
+          "doc": "Represents a failure that severely or entirely disables the program's intended behavior.\nShould be resolved as soon as possible."
+        }
+      ]
+    }
+  ],
+  "classes": {
+    "logging": [
+      {
+        "name": "StackTraceElementRecord",
+        "access": "error.stack",
+        "doc": "Represents a single error stack trace line.\nA stack trace indicates how an error propagated through the program flow before it was recorded.",
+        "combo_index": ["fileName", "className", "methodName", "lineNumber"],
+        "props": [
+          {
+            "name": "fileName",
+            "type": "NonEmptyString(48)",
+            "limit": 1048,
+            "doc": "Name of the file in which this event was recorded",
+            "with": "inFile"
+          },
+          {
+            "name": "className",
+            "type": "String(48)",
+            "limit": 1048,
+            "doc": "Name of the class in which this event was recorded. \nEmpty if the class name is identical with the file name.",
+            "with": "inClass"
+          },
+          {
+            "name": "methodName",
+            "type": "String(48)",
+            "limit": 255,
+            "doc": "Name of the method where this event was recorded. Empty if unknown.",
+            "with": "inMethod"
+          },
+          {
+            "name": "lineNumber",
+            "type": "Option[Int]",
+            "doc": "The code line number where this event was recorded. None if not available.",
+            "with": "atLine"
+          },
+          {
+            "name": "causeId",
+            "ref": "stack_trace_element_record",
+            "type": "Option[Int]",
+            "doc": "Id of the stack trace element that originated this element. I.e. the element directly before this element. \nNone if this is the root element.",
+            "with": "following",
+            "in": "followingStacks"
+          }
+        ]
+      },
+      {
+        "name": "ErrorRecord",
+        "access": "error",
+        "doc": "Represents a single error or exception thrown during program runtime",
+        "combo_index": ["exceptionType", "stackTraceId"],
+        "props": [
+          {
+            "name": "exceptionType",
+            "type": "NonEmptyString(32)",
+            "limit": 255,
+            "doc": "The name of this exception type. Typically the exception class name.",
+            "with": "ofType"
+          },
+          {
+            "name": "stackTraceId",
+            "ref": "stack_trace_element_record",
+            "doc": "Id of the topmost stack trace element that corresponds to this error record",
+            "with": "withStack"
+          },
+          {
+            "name": "causeId",
+            "ref": "error_record",
+            "type": "Option[Int]",
+            "doc": "Id of the underlying error that caused this error/failure. None if this error represents the root problem.",
+            "with": "causedBy",
+            "in": "causedByErrors"
+          }
+        ]
+      },
+      {
+        "name": "Issue",
+        "doc": "Represents a type of problem or an issue that may occur during a program's run",
+        "has_many_combos": true,
+        "combos": [
+          {
+            "name": "VaryingIssue",
+            "children": "IssueVariant",
+            "child_alias": "variant",
+            "children_alias": "variants",
+            "doc": "Combines an issue with its different variants"
+          }
+        ],
+        "combo_index": ["severity", "context"],
+        "props": [
+          {
+            "name": "context",
+            "type": "NonEmptyString(96)",
+            "doc": "Program context where this issue occurred or was logged. Should be unique.",
+            "limit": 255,
+            "with": "inContext"
+          },
+          {
+            "name": "severity",
+            "name_plural": "severities",
+            "type": "Enum[Severity]",
+            "doc": "The estimated severity of this issue",
+            "with": "ofSeverity",
+            "in": "ofSeverities"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this issue first occurred or was first recorded"
+          }
+        ]
+      },
+      {
+        "name": "IssueVariant",
+        "access": "issue.variant",
+        "doc": "Represents a specific setting where a problem or an issue occurred",
+        "combos": [
+          {
+            "name": "ContextualIssueVariant",
+            "child": "Issue",
+            "parent_alias": "variant",
+            "is_always_linked": true,
+            "doc": "Adds standard issue information to an issue variant"
+          },
+          {
+            "name": "IssueVariantInstances",
+            "name_plural": "IssueVariantInstances",
+            "children": "IssueOccurrence",
+            "is_always_linked": true,
+            "parent_alias": "variant",
+            "child_alias": "occurrence",
+            "children_alias": "occurrences",
+            "doc": "Adds specific occurrence/instance information to a single issue variant"
+          }
+        ],
+        "combo_index": ["issueId", "version", "errorId"],
+        "props": [
+          {
+            "ref": "issue",
+            "doc": "Id of the issue that occurred",
+            "with": "ofIssue"
+          },
+          {
+            "type": "Version",
+            "doc": "The program version in which this issue (variant) occurred",
+            "with": "affectingVersion"
+          },
+          {
+            "name": "errorId",
+            "ref": "error_record",
+            "type": "Option[Int]",
+            "doc": "Id of the error / exception that is associated with this issue (variant). None if not applicable.",
+            "with": "withError"
+          },
+          {
+            "name": "details",
+            "name_plural": "details",
+            "type": "Model(128)",
+            "limit": 2040,
+            "doc": "Details about this case and/or setting."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this case or variant was first encountered"
+          }
+        ]
+      },
+      {
+        "name": "IssueOccurrence",
+        "access": "issue.occurrence",
+        "doc": "Represents one or more specific occurrences of a recorded issue",
+        "combo_index": ["latest", "earliest"],
+        "props": [
+          {
+            "name": "caseId",
+            "ref": "issue_variant",
+            "doc": "Id of the issue variant that occurred",
+            "with": "ofVariant"
+          },
+          {
+            "name": "errorMessages",
+            "name_plural": "errorMessages",
+            "type": "Seq[String]",
+            "limit": 6400,
+            "doc": "Error messages listed in the stack trace. \nIf multiple occurrences are represented, contains data from the latest occurrence."
+          },
+          {
+            "name": "details",
+            "name_plural": "details",
+            "type": "model(128)",
+            "limit": 4096,
+            "doc": "Additional details concerning these issue occurrences.\nIn case of multiple occurrences, contains only the latest entry for each detail."
+          },
+          {
+            "name": "count",
+            "type": "Int",
+            "default": 1,
+            "doc": "Number of issue occurrences represented by this entry"
+          },
+          {
+            "name": "occurrencePeriod",
+            "type": "Span[Instant]",
+            "doc": "The first and last time this set of issues occurred",
+            "default": {
+              "code": "Span.singleValue[Instant](Now)",
+              "references": ["utopia.flow.collection.immutable.range.Span", "utopia.flow.time.Now"]
+            },
+            "parts": [
+              {
+                "name": "earliest",
+                "column_name": "first_occurrence"
+              },
+              {
+                "name": "latest",
+                "column_name": "last_occurrence"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "management": [
+      {
+        "name": "IssueAlias",
+        "name_plural": "IssueAliases",
+        "access": "aliasing",
+        "doc": "Assigns a more human-readable name to an issue. May also be used to adjust issue severity.",
+        "props": [
+          {
+            "ref": "issue",
+            "doc": "ID of the described issue",
+            "with": "ofIssue"
+          },
+          {
+            "name": "alias",
+            "type": "String(32-640)",
+            "doc": "Alias given to the issue. Empty if no alias is given."
+          },
+          {
+            "name": "newSeverity",
+            "type": "Option[Enum[Severity]]",
+            "doc": "New severity level assigned for the issue. None if severity is not modified."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this alias was given",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "Comment",
+        "table": "issue_comment",
+        "doc": "Comments an issue",
+        "props": [
+          {
+            "name": "issueId",
+            "ref": "issue",
+            "doc": "ID of the commented issue",
+            "with": "onIssue"
+          },
+          {
+            "name": "text",
+            "type": "NonEmptyString(255-2048)",
+            "doc": "The text contents of this comment"
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this comment was recorded"
+          }
+        ]
+      },
+      {
+        "name": "Resolution",
+        "table": "issue_resolution",
+        "doc": "Marks an issue as resolved (or to be ignored) in some way",
+        "props": [
+          {
+            "name": "resolvedIssueId",
+            "ref": "issue",
+            "doc": "ID of the resolved issue",
+            "with": "ofIssue"
+          },
+          {
+            "name": "commentId",
+            "ref": "issue_comment",
+            "type": "Option[Int]",
+            "doc": "ID of the comment added to this resolution, if applicable",
+            "with": "withComment"
+          },
+          {
+            "name": "versionThreshold",
+            "type": "Option[Version]",
+            "doc": "The last version number (inclusive), to which silencing may apply, and for which notifications are NOT generated. \nNone if not restricted by version."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this resolution was registered"
+          },
+          {
+            "name": "deprecates",
+            "name_plural": "deprecateAt",
+            "type": "Option[Instant]",
+            "index": true,
+            "doc": "Time when this resolution expires, was removed or was broken. May be in the future."
+          },
+          {
+            "name": "silences",
+            "name_plural": "silence",
+            "type": "Boolean",
+            "doc": "Whether the issue should not be reported while this resolution is active."
+          },
+          {
+            "name": "notifies",
+            "name_plural": "notify",
+            "type": "Boolean",
+            "index": true,
+            "doc": "Whether a notification should be generated if this resolution is broken. \nNote: Only one notification may be generated in total."
+          }
+        ]
+      },
+      {
+        "name": "IssueNotification",
+        "access": "notification",
+        "doc": "Represents a notification generated based on a reappeared issue",
+        "props": [
+          {
+            "name": "resolutionId",
+            "ref": "issue_resolution",
+            "doc": "ID of the resolution on which this notification is based",
+            "with": "fromResolution"
+          },
+          {
+            "type": "creation"
+          },
+          {
+            "name": "closed",
+            "name_plural": "closureTimes",
+            "type": "deprecation",
+            "doc": "Time when this notification was closed / marked as read"
+          }
+        ]
+      }
+    ]
+  }
+}

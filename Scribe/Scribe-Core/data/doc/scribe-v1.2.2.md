@@ -1,0 +1,222 @@
+# Scribe
+Version: **v1.2.2**  
+Updated: 2026-05-01
+
+## Table of Contents
+- [Enumerations](#enumerations)
+  - [Severity](#severity)
+- [Packages & Classes](#packages-and-classes)
+  - [Logging](#logging)
+    - [Error Record](#error-record)
+    - [Issue](#issue)
+    - [Issue Occurrence](#issue-occurrence)
+    - [Issue Variant](#issue-variant)
+    - [Stack Trace Element Record](#stack-trace-element-record)
+  - [Management](#management)
+    - [Comment](#comment)
+    - [Issue Alias](#issue-alias)
+    - [Issue Notification](#issue-notification)
+    - [Resolution](#resolution)
+
+## Enumerations
+Below are listed all enumerations introduced in Scribe, in alphabetical order  
+
+### Severity
+Represents the level of severity associated with some problem or error situation
+
+Key: `level: Int`  
+Default Value: **Unrecoverable**
+
+**Values:**
+- **Debug** (1) - An entry used for debugging purposes only. Practically insignificant.
+- **Info** (2) - Information about the application's state and/or behavior which may be of use. Doesn't necessarily indicate a real problem.
+- **Warning** (3) - Information about the application's state and/or behavior which probably indicates a presence of a problem.
+Doesn't necessarily require action.
+- **Recoverable** (4) - Indicates a process failure which is either partial or which may possibly be recovered from automatically.
+Doesn't require immediate action, but may be important to review and fix eventually.
+- **Unrecoverable** (5) - Represents a failure that prematurely terminated some process in a way that progress or data was lost or halted.
+Typically the program performance is immediately affected by these kinds of problems.
+- **Critical** (6) - Represents a failure that severely or entirely disables the program's intended behavior.
+Should be resolved as soon as possible.
+
+Utilized by the following 1 classes:
+- [Issue](#issue)
+
+## Packages and Classes
+Below are listed all classes introduced in Scribe, grouped by package and in alphabetical order.  
+There are a total number of 2 packages and 9 classes
+
+### Logging
+This package contains the following 5 classes: [Error Record](#error-record), [Issue](#issue), [Issue Occurrence](#issue-occurrence), [Issue Variant](#issue-variant), [Stack Trace Element Record](#stack-trace-element-record)
+
+#### Error Record
+Represents a single error or exception thrown during program runtime
+
+##### Details
+- Uses a **combo index**: `exception_type` => `stack_trace_id`
+
+##### Properties
+Error Record contains the following 3 properties:
+- **Exception Type** - `exceptionType: String` - The name of this exception type. Typically the exception class name.
+- **Stack Trace Id** - `stackTraceId: Int` - Id of the topmost stack trace element that corresponds to this error record
+  - Refers to [Stack Trace Element Record](#stack-trace-element-record)
+- **Cause Id** - `causeId: Option[Int]` - Id of the underlying error that caused this error/failure. None if this error represents the root problem.
+  - Refers to [Error Record](#error-record)
+
+##### Referenced from
+- [Error Record](#error-record).`causeId`
+- [Issue Variant](#issue-variant).`errorId`
+
+#### Issue
+Represents a type of problem or an issue that may occur during a program's run
+
+##### Details
+- Combines with possibly multiple [Issue Variants](#issue-variant), creating a **Varying Issue**
+- **Chronologically** indexed
+- Uses a **combo index**: `severity_level` => `context`
+- Uses **index**: `created`
+
+##### Properties
+Issue contains the following 3 properties:
+- **Context** - `context: String` - Program context where this issue occurred or was logged. Should be unique.
+- **Severity** - `severity: Severity` - The estimated severity of this issue
+- **Created** - `created: Instant` - Time when this issue first occurred or was first recorded
+
+##### Referenced from
+- [Comment](#comment).`issueId`
+- [Issue Alias](#issue-alias).`issueId`
+- [Issue Variant](#issue-variant).`issueId`
+- [Resolution](#resolution).`resolvedIssueId`
+
+#### Issue Occurrence
+Represents one or more specific occurrences of a recorded issue
+
+##### Details
+- Uses a **combo index**: `last_occurrence` => `first_occurrence`
+
+##### Properties
+Issue Occurrence contains the following 5 properties:
+- **Case Id** - `caseId: Int` - Id of the issue variant that occurred
+  - Refers to [Issue Variant](#issue-variant)
+- **Error Messages** - `errorMessages: Seq[String]` - Error messages listed in the stack trace. 
+If multiple occurrences are represented, contains data from the latest occurrence.
+- **Details** - `details: Model` - Additional details concerning these issue occurrences.
+In case of multiple occurrences, contains only the latest entry for each detail.
+- **Count** - `count: Int`, `1` by default - Number of issue occurrences represented by this entry
+- **Occurrence Period** - `occurrencePeriod: Span[Instant]`, `Span.singleValue[Instant](Now)` by default - The first and last time this set of issues occurred
+
+#### Issue Variant
+Represents a specific setting where a problem or an issue occurred
+
+##### Details
+- Combines with [Issue](#issue), creating a **Contextual Issue Variant**
+- Combines with multiple [Issue Occurrences](#issue-occurrence), creating a **Issue Variant Instances**
+- **Chronologically** indexed
+- Uses a **combo index**: `issue_id` => `version` => `error_id`
+- Uses **index**: `created`
+
+##### Properties
+Issue Variant contains the following 5 properties:
+- **Issue Id** - `issueId: Int` - Id of the issue that occurred
+  - Refers to [Issue](#issue)
+- **Version** - `version: Version` - The program version in which this issue (variant) occurred
+- **Error Id** - `errorId: Option[Int]` - Id of the error / exception that is associated with this issue (variant). None if not applicable.
+  - Refers to [Error Record](#error-record)
+- **Details** - `details: Model` - Details about this case and/or setting.
+- **Created** - `created: Instant` - Time when this case or variant was first encountered
+
+##### Referenced from
+- [Issue Occurrence](#issue-occurrence).`caseId`
+
+#### Stack Trace Element Record
+Represents a single error stack trace line.
+A stack trace indicates how an error propagated through the program flow before it was recorded.
+
+##### Details
+- Uses a **combo index**: `file_name` => `class_name` => `method_name` => `line_number`
+
+##### Properties
+Stack Trace Element Record contains the following 5 properties:
+- **File Name** - `fileName: String` - Name of the file in which this event was recorded
+- **Class Name** - `className: String` - Name of the class in which this event was recorded. 
+Empty if the class name is identical with the file name.
+- **Method Name** - `methodName: String` - Name of the method where this event was recorded. Empty if unknown.
+- **Line Number** - `lineNumber: Option[Int]` - The code line number where this event was recorded. None if not available.
+- **Cause Id** - `causeId: Option[Int]` - Id of the stack trace element that originated this element. I.e. the element directly before this element. 
+None if this is the root element.
+  - Refers to [Stack Trace Element Record](#stack-trace-element-record)
+
+##### Referenced from
+- [Error Record](#error-record).`stackTraceId`
+- [Stack Trace Element Record](#stack-trace-element-record).`causeId`
+
+### Management
+This package contains the following 4 classes: [Comment](#comment), [Issue Alias](#issue-alias), [Issue Notification](#issue-notification), [Resolution](#resolution)
+
+#### Comment
+Comments an issue
+
+##### Details
+- **Chronologically** indexed
+- Uses **index**: `created`
+
+##### Properties
+Comment contains the following 3 properties:
+- **Issue Id** - `issueId: Int` - ID of the commented issue
+  - Refers to [Issue](#issue)
+- **Text** - `text: String` - The text contents of this comment
+- **Created** - `created: Instant` - Time when this comment was recorded
+
+##### Referenced from
+- [Resolution](#resolution).`commentId`
+
+#### Issue Alias
+Assigns a more human-readable name to an issue. May also be used to adjust issue severity.
+
+##### Details
+
+##### Properties
+Issue Alias contains the following 4 properties:
+- **Issue Id** - `issueId: Int` - ID of the described issue
+  - Refers to [Issue](#issue)
+- **Alias** - `alias: String` - Alias given to the issue. Empty if no alias is given.
+- **New Severity** - `newSeverity: Option[Severity]` - New severity level assigned for the issue. None if severity is not modified.
+- **Created** - `created: Instant` - Time when this alias was given
+
+#### Issue Notification
+Represents a notification generated based on a reappeared issue
+
+##### Details
+- Fully **versioned**
+- Uses 2 database **indices**: `created`, `closed`
+
+##### Properties
+Issue Notification contains the following 3 properties:
+- **Resolution Id** - `resolutionId: Int` - ID of the resolution on which this notification is based
+  - Refers to [Resolution](#resolution)
+- **Created** - `created: Instant` - Time when this issue notification was added to the database
+- **Closed** - `closed: Option[Instant]` - Time when this notification was closed / marked as read
+
+#### Resolution
+Marks an issue as resolved (or to be ignored) in some way
+
+##### Details
+- **Chronologically** indexed
+- Uses 3 database **indices**: `created`, `deprecates`, `notifies`
+
+##### Properties
+Resolution contains the following 7 properties:
+- **Resolved Issue Id** - `resolvedIssueId: Int` - ID of the resolved issue
+  - Refers to [Issue](#issue)
+- **Comment Id** - `commentId: Option[Int]` - ID of the comment added to this resolution, if applicable
+  - Refers to [Comment](#comment)
+- **Version Threshold** - `versionThreshold: Option[Version]` - The last version number (inclusive), to which silencing may apply, and for which notifications are NOT generated. 
+None if not restricted by version.
+- **Created** - `created: Instant` - Time when this resolution was registered
+- **Deprecates** - `deprecates: Option[Instant]` - Time when this resolution expires, was removed or was broken. May be in the future.
+- **Silences** - `silences: Boolean` - Whether the issue should not be reported while this resolution is active.
+- **Notifies** - `notifies: Boolean` - Whether a notification should be generated if this resolution is broken. 
+Note: Only one notification may be generated in total.
+
+##### Referenced from
+- [Issue Notification](#issue-notification).`resolutionId`
