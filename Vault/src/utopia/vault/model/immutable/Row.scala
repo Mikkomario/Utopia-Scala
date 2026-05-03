@@ -111,6 +111,12 @@ case class Row(models: Map[String, Model]) extends MaybeEmpty[Row]
 	}
 	
 	/**
+	 * @param column A column
+	 * @return Whether this row contains data for that column
+	 */
+	def contains(column: Column) = models.get(column.tableName).exists { _.contains(column.name) }
+	
+	/**
 	 * @param table Table to which an alias was given
 	 * @param alias Alias that was given to the specified table
 	 * @return A copy of this row mapping the aliased content back to the table name

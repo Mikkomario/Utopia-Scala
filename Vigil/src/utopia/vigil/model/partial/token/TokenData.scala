@@ -17,13 +17,14 @@ object TokenData extends FromModelFactoryWithSchema[TokenData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("templateId", IntType, Single("template_id")), 
-			PropertyDeclaration("hash", StringType), PropertyDeclaration("parentId", IntType, 
-			Single("parent_id"), isOptional = true), PropertyDeclaration("name", StringType, 
-			isOptional = true), PropertyDeclaration("created", InstantType, isOptional = true), 
-			PropertyDeclaration("expires", InstantType, isOptional = true), PropertyDeclaration("revoked", 
-			InstantType, isOptional = true)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("templateId", IntType, Single("template_id")),
+		PropertyDeclaration("hash", StringType),
+		PropertyDeclaration("parentId", IntType, Single("parent_id"), isOptional = true),
+		PropertyDeclaration("name", StringType, isOptional = true),
+		PropertyDeclaration("created", InstantType, isOptional = true),
+		PropertyDeclaration("expires", InstantType, isOptional = true),
+		PropertyDeclaration("revoked", InstantType, isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -47,8 +48,8 @@ object TokenData extends FromModelFactoryWithSchema[TokenData]
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-case class TokenData(templateId: Int, hash: String, parentId: Option[Int] = None, name: String = "", 
-	created: Instant = Now, expires: Option[Instant] = None, revoked: Option[Instant] = None) 
+case class TokenData(templateId: Int, hash: String, parentId: Option[Int] = None, name: String = "",
+                     created: Instant = Now, expires: Option[Instant] = None, revoked: Option[Instant] = None)
 	extends TokenFactory[TokenData] with ModelConvertible
 {
 	// COMPUTED	--------------------
@@ -57,7 +58,6 @@ case class TokenData(templateId: Int, hash: String, parentId: Option[Int] = None
 	  * Whether this token has already been deprecated
 	  */
 	def isDeprecated = revoked.isDefined
-	
 	/**
 	  * Whether this token is still valid (not deprecated)
 	  */
@@ -66,22 +66,15 @@ case class TokenData(templateId: Int, hash: String, parentId: Option[Int] = None
 	
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("templateId" -> templateId, "hash" -> hash, "parentId" -> parentId, "name" -> name, 
-			"created" -> created, "expires" -> expires, "revoked" -> revoked))
+	override def toModel = Model(Vector("templateId" -> templateId, "hash" -> hash, "parentId" -> parentId,
+		"name" -> name, "created" -> created, "expires" -> expires, "revoked" -> revoked))
 	
 	override def withCreated(created: Instant) = copy(created = created)
-	
 	override def withExpires(expires: Instant) = copy(expires = Some(expires))
-	
 	override def withHash(hash: String) = copy(hash = hash)
-	
 	override def withName(name: String) = copy(name = name)
-	
 	override def withParentId(parentId: Int) = copy(parentId = Some(parentId))
-	
 	override def withRevoked(revoked: Instant) = copy(revoked = Some(revoked))
-	
 	override def withTemplateId(templateId: Int) = copy(templateId = templateId)
 }
 

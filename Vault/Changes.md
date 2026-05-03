@@ -6,6 +6,9 @@
 ### Bugfixes
 - **Store** now ensures that input is distinct
 - Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items
+### New methods
+- **Row**
+  - Added `.contains(Column)`
 ### Other changes
 - Built with Scala v2.13.18
 

@@ -1,7 +1,7 @@
 package utopia.vigil.database.access.token
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.nosql.view.{NullDeprecatableView, TimelineView}
+import utopia.vault.nosql.view.{DeprecatableView, TimelineView}
 import utopia.vault.sql.Condition
 import utopia.vigil.database.storable.token.TokenDbModel
 
@@ -10,7 +10,7 @@ import utopia.vigil.database.storable.token.TokenDbModel
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-trait FilterTokens[+Repr] extends NullDeprecatableView[Repr] with TimelineView[Repr]
+trait FilterTokens[+Repr] extends TimelineView[Repr] with DeprecatableView[Repr]
 {
 	// COMPUTED	--------------------
 	
@@ -32,21 +32,18 @@ trait FilterTokens[+Repr] extends NullDeprecatableView[Repr] with TimelineView[R
 	  * @return Copy of this access point that only includes tokens with the specified parent id
 	  */
 	def createdUsing(parentId: Int) = filter(model.parentId.column <=> parentId)
-	
 	/**
 	  * @param parentIds Targeted parent ids
 	  * @return Copy of this access point that only includes tokens where parent id is within the specified 
 	  * value set
 	  */
-	def createdUsingTokens(parentIds: IterableOnce[Int]) = filter(Condition.indexIn(model.parentId, 
-		parentIds))
+	def createdUsingTokens(parentIds: IterableOnce[Int]) = filter(Condition.indexIn(model.parentId, parentIds))
 	
 	/**
 	  * @param templateId template id to target
 	  * @return Copy of this access point that only includes tokens with the specified template id
 	  */
 	def fromTemplate(templateId: Int) = filter(model.templateId.column <=> templateId)
-	
 	/**
 	  * @param templateIds Targeted template ids
 	  * @return Copy of this access point that only includes tokens where template id is within the specified 
@@ -60,7 +57,6 @@ trait FilterTokens[+Repr] extends NullDeprecatableView[Repr] with TimelineView[R
 	  * @return Copy of this access point that only includes tokens with the specified hash
 	  */
 	def withHash(hash: String) = filter(model.hash.column <=> hash)
-	
 	/**
 	  * @param hashes Targeted hashes
 	  * @return Copy of this access point that only includes tokens where hash is within the specified value 

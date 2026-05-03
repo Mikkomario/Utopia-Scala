@@ -1,7 +1,7 @@
 package utopia.vigil.database.access.token
 
 import utopia.vault.nosql.targeting.columns.HasValues
-import utopia.vault.nosql.targeting.one.{AccessOneDeprecatingRoot, AccessOneWrapper, TargetingOne}
+import utopia.vault.nosql.targeting.one.{AccessOneDeprecatingRoot, AccessOneWrapper, OneDeprecatingRoot, TargetingOne}
 import utopia.vigil.model.stored.token.Token
 
 object AccessToken extends AccessOneDeprecatingRoot[AccessToken[Token]]
@@ -9,6 +9,11 @@ object AccessToken extends AccessOneDeprecatingRoot[AccessToken[Token]]
 	// ATTRIBUTES	--------------------
 	
 	override val all = AccessTokens.all.head
+	
+	/**
+	 * Access to individual tokens, only yielding their ID references
+	 */
+	lazy val idRefs = OneDeprecatingRoot(AccessTokens.idRefs.all.head)
 }
 
 /**

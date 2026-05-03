@@ -3,7 +3,7 @@ package utopia.vigil.database.access.token
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many.{AccessManyDeprecatingRoot, AccessRowsWrapper, AccessWrapper, DeprecatingWrapRowAccess, TargetingMany, TargetingManyLike, TargetingManyRows, TargetingTimeline, WrapOneToManyAccess}
 import utopia.vault.nosql.targeting.one.TargetingOne
-import utopia.vigil.database.reader.token.TokenDbReader
+import utopia.vigil.database.reader.token.{TokenDbReader, TokenIdRefsDbReader}
 import utopia.vigil.database.storable.token.TokenDbModel
 import utopia.vigil.model.stored.token.Token
 
@@ -14,6 +14,11 @@ object AccessTokens
 	// ATTRIBUTES	--------------------
 	
 	override val all = apply(TokenDbReader).all
+	
+	/**
+	 * Access that only pulls the token ID references
+	 */
+	lazy val idRefs = apply(TokenIdRefsDbReader)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -52,7 +57,6 @@ case class AccessTokenRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessTokenRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessToken(target)
 }
 
@@ -71,7 +75,6 @@ case class AccessCombinedTokens[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedTokens(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessToken(target)
 }
 

@@ -86,6 +86,7 @@ object ScopeTarget
  * @author Mikko Hilpinen
  * @since 01.05.2026, v0.1
  */
+// TODO: Add contains / handling of child scopes
 trait ScopeTarget
 {
 	// ABSTRACT --------------------------
