@@ -27,7 +27,6 @@ trait FilterTokenScopes[+Repr] extends FilterScopeRights[Repr]
 	  * @return Copy of this access point that only includes token scopes with the specified token id
 	  */
 	def ofToken(tokenId: Int) = filter(model.tokenId.column <=> tokenId)
-	
 	/**
 	  * @param tokenIds Targeted token ids
 	  * @return Copy of this access point that only includes token scopes where token id is within the 

@@ -43,7 +43,7 @@ object TokenTemplateScopeDbModel
 	override lazy val created = property("created")
 	
 	/**
-	  * Database property used for interacting with usables
+	  * Database property used for interacting with usable
 	  */
 	override lazy val usable = property("usable")
 	

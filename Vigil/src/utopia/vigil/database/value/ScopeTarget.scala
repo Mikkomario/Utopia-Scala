@@ -1,42 +1,30 @@
 package utopia.vigil.database.value
 
-import utopia.vault.database.value.LazyDbValue
-import utopia.vigil.database.VigilContext._
-import utopia.vigil.database.access.scope.AccessScope
-
-import scala.collection.mutable
+import utopia.flow.collection.immutable.Tree
+import utopia.flow.collection.mutable.iterator.OptionsIterator
+import utopia.vault.store.HasId
+import utopia.vigil.controller.api.context.Scopes
+import utopia.vigil.model.stored.scope.Scope
 
 object ScopeTarget
 {
-	// ATTRIBUTES   -----------------------
-	
-	private val cachedById = mutable.Map[Int, ScopeTarget]()
-	private val cachedByKey = mutable.Map[String, ScopeTarget]()
-	
-	
 	// OTHER    ---------------------------
 	
 	/**
 	 * @param scopeId ID of the targeted scope
 	 * @return A scope target matching that ID
 	 */
-	def id(scopeId: Int): ScopeTarget = {
-		if (scopeId > 0)
-			cachedById.getOrElseUpdate(scopeId, new ScopeId(scopeId))
-		else
-			InvalidScope
+	def id(scopeId: Int): ScopeTarget = Scopes.nodeForId(scopeId) match {
+		case Some(node) => new NodeWrapper(node)
+		case None => InvalidScope
 	}
 	/**
 	 * @param key Key of the targeted scope (case-insensitive)
 	 * @return A scope target matching that key
 	 */
-	def apply(key: String): ScopeTarget = {
-		if (key.isEmpty)
-			InvalidScope
-		else {
-			val lowerKey = key.toLowerCase
-			cachedByKey.getOrElseUpdate(lowerKey, new ScopeKey(lowerKey))
-		}
+	def apply(key: String): ScopeTarget = Scopes.nodeForKey(key) match {
+		case Some(node) => new NodeWrapper(node)
+		case None => InvalidScope
 	}
 	
 	
@@ -47,37 +35,28 @@ object ScopeTarget
 	 */
 	object InvalidScope extends ScopeTarget
 	{
-		override val isValid: LazyDbValue[Boolean] = LazyDbValue.initialized(false)
-		override val id: LazyDbValue[Int] = LazyDbValue.initialized(-1)
-		override val key: LazyDbValue[String] = LazyDbValue.initialized("")
+		override val isValid: Boolean = false
+		override val id: Int = -1
+		override val key: String = ""
+		
+		override val parentId: Option[Int] = None
+		override val childrenIterator: Iterator[ScopeTarget] = Iterator.empty
 	}
 	
-	private class ScopeId(_id: Int) extends ScopeTarget
+	private class NodeWrapper(node: Tree[Scope]) extends ScopeTarget
 	{
-		override val id: LazyDbValue[Int] = LazyDbValue.initialized(_id)
-		override val key: LazyDbValue[String] = LazyDbValue.lookUp { implicit c =>
-			val key = AccessScope(_id).key.pull
-			if (key.nonEmpty)
-				cachedByKey += (key.toLowerCase -> this)
-			key
-		}
+		// ATTRIBUTES   --------------------
 		
-		override val isValid: LazyDbValue[Boolean] = key.lightMap { _.nonEmpty }
-	}
-	
-	private class ScopeKey(_key: String) extends ScopeTarget
-	{
-		override val key: LazyDbValue[String] = LazyDbValue.initialized(_key)
-		override val id: LazyDbValue[Int] = LazyDbValue.lookUp { implicit c =>
-			AccessScope.forKey(_key).id.pull match {
-				case Some(id) =>
-					cachedById += (id -> this)
-					id
-				case None => -1
-			}
-		}
+		override val isValid: Boolean = true
 		
-		override val isValid: LazyDbValue[Boolean] = id.lightMap { _ > 0 }
+		
+		// IMPLEMENTED  --------------------
+		
+		override def id: Int = node.id
+		override def key: String = node.nav.key
+		
+		override def parentId: Option[Int] = node.nav.parentId
+		override def childrenIterator: Iterator[ScopeTarget] = node.children.iterator.map { new NodeWrapper(_) }
 	}
 }
 
@@ -86,26 +65,71 @@ object ScopeTarget
  * @author Mikko Hilpinen
  * @since 01.05.2026, v0.1
  */
-// TODO: Add contains / handling of child scopes
-trait ScopeTarget
+trait ScopeTarget extends HasId[Int]
 {
 	// ABSTRACT --------------------------
 	
 	/**
-	 * @return A pointer that contains whether this is a valid scope
+	 * @return Whether this is a valid scope
 	 */
-	def isValid: LazyDbValue[Boolean]
+	def isValid: Boolean
 	/**
-	 * @return A pointer that contains the ID of this scope
+	 * @return The key / identifier of this scope
 	 */
-	def id: LazyDbValue[Int]
+	def key: String
+	
 	/**
-	 * @return A pointer that contains the key / identifier of this scope
+	 * @return ID of the scope directly above this scope
 	 */
-	def key: LazyDbValue[String]
+	def parentId: Option[Int]
+	/**
+	 * @return An iterator that yields the scopes directly under this scope
+	 */
+	def childrenIterator: Iterator[ScopeTarget]
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	 * @return Scope directly above this one
+	 */
+	def parent: Option[ScopeTarget] = parentId.map(ScopeTarget.id)
+	
+	/**
+	 * @return An iterator that yields IDs of the scopes above this one,
+	 *         starting from the closes and ending in the root scope.
+	 *         Empty if this is a root scope.
+	 */
+	def parentIdsIterator = OptionsIterator.iterate(parentId) { ScopeTarget.id(_).parentId }
+	/**
+	 * @return An iterator that yields the parent scopes, starting from the closes and ending in the root scope.
+	 *         Empty if this is a root scope.
+	 */
+	def parentsIterator = OptionsIterator.iterate(parent) { _.parent }
 	
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def toString: String = key.value
+	override def toString: String = key
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	 * @param other Another scope
+	 * @return Whether this scope is contained within the specified scope
+	 */
+	def isUnder(other: ScopeTarget): Boolean = parentIdsIterator.contains(other.id)
+	/**
+	 * @param other Another scope
+	 * @return Whether this scope contains the specified scope
+	 */
+	def contains(other: ScopeTarget) = other.isUnder(this)
+	
+	/**
+	 * @param grantedScopeIds A set of scope IDs
+	 * @return Whether this scope, or one of the parent scopes, is included in the specified set
+	 */
+	def isContainedWithin(grantedScopeIds: Set[Int]): Boolean =
+		grantedScopeIds.contains(id) || parentIdsIterator.exists(grantedScopeIds.contains)
 }
