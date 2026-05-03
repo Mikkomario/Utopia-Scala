@@ -1,31 +1,63 @@
 package utopia.vigil.database.value
 
-import utopia.flow.collection.immutable.Tree
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Tree}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.vault.store.HasId
-import utopia.vigil.controller.api.context.Scopes
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.view.mutable.eventful.CopyOnDemand
+import utopia.vault.store.{EqualsById, HasId}
+import utopia.vigil.database.VigilContext._
+import utopia.vigil.database.access.scope.AccessScopes
 import utopia.vigil.model.stored.scope.Scope
 
 object ScopeTarget
 {
+	// ATTRIBUTES   -----------------------
+	
+	/**
+	 * A pointer that contains all registered scopes. May be updated / refreshed.
+	 */
+	private val _pointer = CopyOnDemand { connectionPool.logging { implicit c => AccessScopes.pull }.getOrElse(Empty) }
+	/**
+	 * A pointer that contains all registered scopes as trees.
+	 */
+	private val treesP = _pointer.strongMap { scopes =>
+		implicit val eq: EqualsFunction[Scope] = EqualsById
+		scopes.iterator.filter { _.parentId.isEmpty }
+			.map { root => Tree.iterate(root) { parent => scopes.filter { _.parentId.contains(parent.id) } } }
+			.toOptimizedSeq
+	}
+	/**
+	 * A pointer that contains all valid targets, mapped to their keys
+	 */
+	private val byKeyP = mapTreesBy { _.key.toLowerCase }
+	/**
+	 * A pointer that contains all valid targets, mapped to their IDs
+	 */
+	private val byIdP = mapTreesBy { _.id }
+	
+	
 	// OTHER    ---------------------------
 	
 	/**
 	 * @param scopeId ID of the targeted scope
 	 * @return A scope target matching that ID
 	 */
-	def id(scopeId: Int): ScopeTarget = Scopes.nodeForId(scopeId) match {
-		case Some(node) => new NodeWrapper(node)
-		case None => InvalidScope
-	}
+	def id(scopeId: Int): ScopeTarget = byIdP.value.getOrElse(scopeId, InvalidScope)
 	/**
 	 * @param key Key of the targeted scope (case-insensitive)
 	 * @return A scope target matching that key
 	 */
-	def apply(key: String): ScopeTarget = Scopes.nodeForKey(key) match {
-		case Some(node) => new NodeWrapper(node)
-		case None => InvalidScope
-	}
+	def apply(key: String): ScopeTarget = byKeyP.value.getOrElse(key.toLowerCase, InvalidScope)
+	
+	/**
+	 * Updates the cached data.
+	 * Should be called if new scopes are added.
+	 */
+	def update() = _pointer.update()
+	
+	private def mapTreesBy[K](f: Scope => K) =
+		treesP.strongMap { _.iterator.flatMap { _.allNodesIterator }.map { s => f(s) -> new NodeWrapper(s) }.toMap }
 	
 	
 	// NESTED   ---------------------------

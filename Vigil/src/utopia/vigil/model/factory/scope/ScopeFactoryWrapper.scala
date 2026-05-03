@@ -29,8 +29,7 @@ trait ScopeFactoryWrapper[A <: ScopeFactory[A], +Repr] extends ScopeFactory[Repr
 	// IMPLEMENTED	--------------------
 	
 	override def withKey(key: String) = mapWrapped { _.withKey(key) }
-	
-	override def withParentId(parentId: Int) = mapWrapped { _.withParentId(parentId) }
+	override def withParentId(parentId: Option[Int]): Repr = mapWrapped { _.withParentId(parentId) }
 	
 	
 	// OTHER	--------------------

@@ -23,12 +23,10 @@ object ScopeDbModel
 	// ATTRIBUTES	--------------------
 	
 	override val id = DbPropertyDeclaration("id", index)
-	
 	/**
 	  * Database property used for interacting with keys
 	  */
 	lazy val key = property("key")
-	
 	/**
 	  * Database property used for interacting with parent ids
 	  */
@@ -42,10 +40,8 @@ object ScopeDbModel
 	override def apply(data: ScopeData): ScopeDbModel = apply(None, data.key, data.parentId)
 	
 	override def withId(id: Int) = apply(id = Some(id))
-	
 	override def withKey(key: String) = apply(key = key)
-	
-	override def withParentId(parentId: Int) = apply(parentId = Some(parentId))
+	override def withParentId(parentId: Option[Int]): ScopeDbModel = apply(parentId = parentId)
 	
 	override protected def complete(id: Value, data: ScopeData) = Scope(id.getInt, data)
 }
@@ -72,9 +68,7 @@ case class ScopeDbModel(id: Option[Int] = None, key: String = "", parentId: Opti
 	override def table = ScopeDbModel.table
 	
 	override def withId(id: Int) = copy(id = Some(id))
-	
 	override def withKey(key: String) = copy(key = key)
-	
-	override def withParentId(parentId: Int) = copy(parentId = Some(parentId))
+	override def withParentId(parentId: Option[Int]): ScopeDbModel = copy(parentId = parentId)
 }
 

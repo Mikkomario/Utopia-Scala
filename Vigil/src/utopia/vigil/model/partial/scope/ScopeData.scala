@@ -13,9 +13,9 @@ object ScopeData extends FromModelFactoryWithSchema[ScopeData]
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Pair(PropertyDeclaration("key", StringType), PropertyDeclaration("parentId", 
-			IntType, Single("parent_id"), isOptional = true)))
+	override lazy val schema = ModelDeclaration(Pair(
+		PropertyDeclaration("key", StringType),
+		PropertyDeclaration("parentId", IntType, Single("parent_id"), isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -31,15 +31,13 @@ object ScopeData extends FromModelFactoryWithSchema[ScopeData]
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-case class ScopeData(key: String, parentId: Option[Int] = None) 
-	extends ScopeFactory[ScopeData] with ModelConvertible
+case class ScopeData(key: String, parentId: Option[Int] = None) extends ScopeFactory[ScopeData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
 	override def toModel = Model(Pair("key" -> key, "parentId" -> parentId))
 	
 	override def withKey(key: String) = copy(key = key)
-	
-	override def withParentId(parentId: Int) = copy(parentId = Some(parentId))
+	override def withParentId(parentId: Option[Int]): ScopeData = copy(parentId = parentId)
 }
 
