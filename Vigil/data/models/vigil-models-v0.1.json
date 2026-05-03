@@ -1,0 +1,215 @@
+{
+  "project": "Vigil",
+  "version": "v0.1",
+  "author": "Mikko Hilpinen",
+  "package": "utopia.vigil",
+  "index_prefix": "vg",
+  "enums": [
+    {
+      "name": "ScopeGrantType",
+      "doc": "Enumeration for different ways scopes may be adjusted when generating new tokens",
+      "values": [
+        {
+          "name": "Dictate",
+          "doc": "The template dictates the scope of the new token"
+        },
+        {
+          "name": "Grant",
+          "doc": "The template adds scopes to the new token"
+        },
+        {
+          "name": "Restrict",
+          "doc": "The template restricts the parent token's scope when granting a new token"
+        },
+        {
+          "name": "Copy",
+          "doc": "The template copies the parent token's scope to the new token"
+        }
+      ]
+    }
+  ],
+  "classes": {
+    "token": [
+      {
+        "name": "TokenTemplate",
+        "access": "template",
+        "doc": "A template or a mold for creating new tokens",
+        "props": [
+          {
+            "name": "name",
+            "type": "String(32-255)",
+            "index": true,
+            "doc": "Name of this template. May be empty.",
+            "with": "withName"
+          },
+          {
+            "name": "scopeGrantType",
+            "type": "Enum[ScopeGrantType]",
+            "doc": "Way the scope-granting functions in this template"
+          },
+          {
+            "name": "duration",
+            "type": "Option[Duration]",
+            "doc": "Duration of the created tokens. None if infinite."
+          },
+          {
+            "type": "creation",
+            "index": false
+          }
+        ]
+      },
+      {
+        "name": "TokenTemplateScope",
+        "parent": "ScopeRight",
+        "access": "template.right",
+        "doc": "Links a (granted) scope to a token template",
+        "props": [
+          {
+            "name": "templateId",
+            "ref": "token_template",
+            "doc": "ID of the template that grants this scope",
+            "with": "ofTemplate"
+          }
+        ]
+      },
+      {
+        "name": "TokenGrantRight",
+        "access": "template.right",
+        "doc": "Used for allowing certain token types (templates) to generate new tokens of other types",
+        "props": [
+          {
+            "ref": "token_template",
+            "name": "ownerTemplateId",
+            "doc": "ID of the token template that has been given the right to generate new tokens",
+            "with": "ofTemplate"
+          },
+          {
+            "ref": "token_template",
+            "name": "grantedTemplateId",
+            "doc": "ID of the template applied to the generated tokens",
+            "with": "toUseTemplate"
+          },
+          {
+            "name": "revokes",
+            "name_plural": "revokeOriginals",
+            "type": "Boolean",
+            "doc": "Whether generating a new token revokes the token used for authorizing that action"
+          }
+        ]
+      },
+      {
+        "name": "Token",
+        "access": "-",
+        "doc": "Represents a token that may be used for authorizing certain actions",
+        "combo_index": ["revoked", "expires"],
+        "props": [
+          {
+            "ref": "token_template",
+            "name": "templateId",
+            "doc": "ID of the template used when creating this token",
+            "with": "fromTemplate"
+          },
+          {
+            "name": "hash",
+            "name_plural": "hashes",
+            "type": "NonEmptyString(65-128)",
+            "index": true,
+            "doc": "Hashed version of this token",
+            "with": "withHash",
+            "in": "withHashes"
+          },
+          {
+            "ref": "token",
+            "type": "Option[Int]",
+            "name": "parentId",
+            "doc": "ID of the token that was used to generate this token",
+            "with": "createdUsing",
+            "in": "createdUsingTokens"
+          },
+          {
+            "name": "name",
+            "type": "String(64-255)",
+            "doc": "Name of this token. May be empty."
+          },
+          {
+            "type": "creation",
+            "doc": "Time when this token was created"
+          },
+          {
+            "name": "expires",
+            "name_plural": "expirationTimes",
+            "type": "Option[Instant]",
+            "doc": "Time when this token automatically expires. None if this token doesn't expire automatically."
+          },
+          {
+            "name": "revoked",
+            "name_plural": "revokeTimes",
+            "type": "deprecation",
+            "doc": "Time when this token was revoked."
+          }
+        ]
+      },
+      {
+        "name": "TokenScope",
+        "parent": "ScopeRight",
+        "access": "scope",
+        "doc": "Allows a token to be used in some scope",
+        "props": [
+          {
+            "ref": "token",
+            "doc": "ID of the token that grants or has access to the linked scope",
+            "with": "ofToken"
+          }
+        ]
+      }
+    ],
+    "scope": [
+      {
+        "name": "Scope",
+        "access": "-",
+        "doc": "Used for limiting authorization to certain features or areas",
+        "props": [
+          {
+            "name": "key",
+            "type": "NonEmptyString(12-128)",
+            "index": true,
+            "doc": "A key used for identifying this scope",
+            "with": "forKey"
+          },
+          {
+            "ref": "scope",
+            "type": "Option[Int]",
+            "name": "parentId",
+            "doc": "ID of the scope that contains this scope. None if this is a root-level scope.",
+            "with": "underScope"
+          }
+        ]
+      },
+      {
+        "name": "ScopeRight",
+        "generic": true,
+        "access": "right",
+        "doc": "Links a scope to an authentication method that grants that scope",
+        "props": [
+          {
+            "ref": "scope",
+            "doc": "ID of the granted or accessible scope",
+            "with": "toScope"
+          },
+          {
+            "type": "creation",
+            "index": false
+          },
+          {
+            "name": "usable",
+            "type": "Boolean",
+            "index": true,
+            "doc": "Whether the linked scope is directly accessible. \nFalse if the scope is only applied when granting access for other authentication methods.",
+            "with": "withDirectlyUsable",
+            "in": "withDirectlyUsable"
+          }
+        ]
+      }
+    ]
+  }
+}
