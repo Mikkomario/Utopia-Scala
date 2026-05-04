@@ -2,6 +2,7 @@ package utopia.vigil.database.storable.token
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.UncertainBoolean
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
 import utopia.vault.model.template.HasIdProperty
 import utopia.vault.nosql.storable.StorableFactory
@@ -15,7 +16,7 @@ import utopia.vigil.model.stored.token.TokenGrantRight
   * Used for constructing TokenGrantRightDbModel instances and for inserting token grant rights 
   * to the database
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 object TokenGrantRightDbModel 
 	extends StorableFactory[TokenGrantRightDbModel, TokenGrantRight, TokenGrantRightData] 
@@ -39,7 +40,12 @@ object TokenGrantRightDbModel
 	/**
 	  * Database property used for interacting with revoke originals
 	  */
-	lazy val revokes = property("revokes")
+	lazy val revokesOriginal = property("revokesOriginal")
+	
+	/**
+	  * Database property used for interacting with revoke earlier
+	  */
+	lazy val revokesEarlier = property("revokesEarlier")
 	
 	
 	// IMPLEMENTED	--------------------
@@ -47,7 +53,8 @@ object TokenGrantRightDbModel
 	override def table = VigilTables.tokenGrantRight
 	
 	override def apply(data: TokenGrantRightData): TokenGrantRightDbModel = 
-		apply(None, Some(data.ownerTemplateId), Some(data.grantedTemplateId), Some(data.revokes))
+		apply(None, Some(data.ownerTemplateId), Some(data.grantedTemplateId), Some(data.revokesOriginal), 
+			data.revokesEarlier.exact)
 	
 	override def withGrantedTemplateId(grantedTemplateId: Int) = 
 		apply(grantedTemplateId = Some(grantedTemplateId))
@@ -56,7 +63,11 @@ object TokenGrantRightDbModel
 	
 	override def withOwnerTemplateId(ownerTemplateId: Int) = apply(ownerTemplateId = Some(ownerTemplateId))
 	
-	override def withRevokes(revokes: Boolean) = apply(revokes = Some(revokes))
+	override def withRevokesEarlier(revokesEarlier: UncertainBoolean) = 
+		apply(revokesEarlier = revokesEarlier.exact)
+	
+	override def withRevokesOriginal(revokesOriginal: Boolean) = apply(revokesOriginal = 
+		Some(revokesOriginal))
 	
 	override protected def complete(id: Value, data: TokenGrantRightData) = TokenGrantRight(id.getInt, data)
 }
@@ -65,10 +76,11 @@ object TokenGrantRightDbModel
   * Used for interacting with TokenGrantRights in the database
   * @param id token grant right database id
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class TokenGrantRightDbModel(id: Option[Int] = None, ownerTemplateId: Option[Int] = None, 
-	grantedTemplateId: Option[Int] = None, revokes: Option[Boolean] = None) 
+	grantedTemplateId: Option[Int] = None, revokesOriginal: Option[Boolean] = None, 
+	revokesEarlier: Option[Boolean] = None) 
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, TokenGrantRightDbModel] 
 		with TokenGrantRightFactory[TokenGrantRightDbModel]
 {
@@ -78,7 +90,8 @@ case class TokenGrantRightDbModel(id: Option[Int] = None, ownerTemplateId: Optio
 		Vector(TokenGrantRightDbModel.id.name -> id, 
 			TokenGrantRightDbModel.ownerTemplateId.name -> ownerTemplateId, 
 			TokenGrantRightDbModel.grantedTemplateId.name -> grantedTemplateId, 
-			TokenGrantRightDbModel.revokes.name -> revokes)
+			TokenGrantRightDbModel.revokesOriginal.name -> revokesOriginal, 
+			TokenGrantRightDbModel.revokesEarlier.name -> revokesEarlier)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -92,6 +105,9 @@ case class TokenGrantRightDbModel(id: Option[Int] = None, ownerTemplateId: Optio
 	
 	override def withOwnerTemplateId(ownerTemplateId: Int) = copy(ownerTemplateId = Some(ownerTemplateId))
 	
-	override def withRevokes(revokes: Boolean) = copy(revokes = Some(revokes))
+	override def withRevokesEarlier(revokesEarlier: UncertainBoolean) = 
+		copy(revokesEarlier = revokesEarlier.exact)
+	
+	override def withRevokesOriginal(revokesOriginal: Boolean) = copy(revokesOriginal = Some(revokesOriginal))
 }
 

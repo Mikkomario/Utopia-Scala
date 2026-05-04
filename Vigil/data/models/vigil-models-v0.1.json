@@ -91,10 +91,16 @@
             "with": "toUseTemplate"
           },
           {
-            "name": "revokes",
+            "name": "revokesOriginal",
             "name_plural": "revokeOriginals",
             "type": "Boolean",
             "doc": "Whether generating a new token revokes the token used for authorizing that action"
+          },
+          {
+            "name": "revokesEarlier",
+            "name_plural": "revokeEarlier",
+            "type": "UncertainBoolean",
+            "doc": "Whether earlier generated tokens should all be revoked when generating new tokens. \nUncertain if this may be controlled manually."
           }
         ]
       },

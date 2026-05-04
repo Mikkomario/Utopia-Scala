@@ -8,7 +8,7 @@ import utopia.vigil.database.storable.token.TokenGrantRightDbModel
 /**
   * Common trait for access points which may be filtered based on token grant right properties
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 trait FilterTokenGrantRights[+Repr] extends Filterable[Repr]
 {

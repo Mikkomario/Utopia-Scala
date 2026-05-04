@@ -1,6 +1,7 @@
 package utopia.vigil.database.reader.token
 
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.util.UncertainBoolean
 import utopia.vault.model.template.HasTableAsTarget
 import utopia.vault.nosql.read.DbRowReader
 import utopia.vault.nosql.read.parse.ParseTableModel
@@ -13,7 +14,7 @@ import scala.util.Success
 /**
   * Used for reading token grant right data from the DB
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 object TokenGrantRightDbReader 
 	extends DbRowReader[TokenGrantRight] with ParseTableModel[TokenGrantRight] with HasTableAsTarget
@@ -34,6 +35,7 @@ object TokenGrantRightDbReader
 		Success(TokenGrantRight(valid(this.model.id.name).getInt, 
 			TokenGrantRightData(ownerTemplateId = valid(this.model.ownerTemplateId.name).getInt, 
 			grantedTemplateId = valid(this.model.grantedTemplateId.name).getInt, 
-			revokes = valid(this.model.revokes.name).getBoolean)))
+			revokesOriginal = valid(this.model.revokesOriginal.name).getBoolean, 
+			revokesEarlier = UncertainBoolean(valid(this.model.revokesEarlier.name).boolean))))
 }
 

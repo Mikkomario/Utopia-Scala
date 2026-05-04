@@ -1,11 +1,13 @@
 package utopia.vigil.model.factory.token
 
+import utopia.flow.util.UncertainBoolean
+
 /**
   * Common trait for token grant right-related factories which allow construction with individual 
   * properties
   * @tparam A Type of constructed instances
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 trait TokenGrantRightFactory[+A]
 {
@@ -24,9 +26,15 @@ trait TokenGrantRightFactory[+A]
 	def withOwnerTemplateId(ownerTemplateId: Int): A
 	
 	/**
-	  * @param revokes New revokes to assign
-	  * @return Copy of this item with the specified revokes
+	  * @param revokesEarlier New revokes earlier to assign
+	  * @return Copy of this item with the specified revokes earlier
 	  */
-	def withRevokes(revokes: Boolean): A
+	def withRevokesEarlier(revokesEarlier: UncertainBoolean): A
+	
+	/**
+	  * @param revokesOriginal New revokes original to assign
+	  * @return Copy of this item with the specified revokes original
+	  */
+	def withRevokesOriginal(revokesOriginal: Boolean): A
 }
 

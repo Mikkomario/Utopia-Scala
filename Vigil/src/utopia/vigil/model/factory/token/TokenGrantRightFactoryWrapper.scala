@@ -1,6 +1,6 @@
 package utopia.vigil.model.factory.token
 
-import utopia.flow.util.Mutate
+import utopia.flow.util.{Mutate, UncertainBoolean}
 
 /**
   * Common trait for classes that implement TokenGrantRightFactory by wrapping a 
@@ -8,7 +8,7 @@ import utopia.flow.util.Mutate
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 trait TokenGrantRightFactoryWrapper[A <: TokenGrantRightFactory[A], +Repr] 
 	extends TokenGrantRightFactory[Repr]
@@ -36,7 +36,11 @@ trait TokenGrantRightFactoryWrapper[A <: TokenGrantRightFactory[A], +Repr]
 	override def withOwnerTemplateId(ownerTemplateId: Int) = 
 		mapWrapped { _.withOwnerTemplateId(ownerTemplateId) }
 	
-	override def withRevokes(revokes: Boolean) = mapWrapped { _.withRevokes(revokes) }
+	override def withRevokesEarlier(revokesEarlier: UncertainBoolean) = 
+		mapWrapped { _.withRevokesEarlier(revokesEarlier) }
+	
+	override def withRevokesOriginal(revokesOriginal: Boolean) = 
+		mapWrapped { _.withRevokesOriginal(revokesOriginal) }
 	
 	
 	// OTHER	--------------------

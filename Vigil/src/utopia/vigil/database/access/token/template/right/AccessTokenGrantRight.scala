@@ -14,7 +14,7 @@ object AccessTokenGrantRight extends AccessOneRoot[AccessTokenGrantRight[TokenGr
 /**
   * Used for accessing individual token grant rights from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class AccessTokenGrantRight[A](wrapped: TargetingOne[Option[A]]) 
 	extends AccessOneWrapper[Option[A], AccessTokenGrantRight[A]] with HasValues[AccessTokenGrantRightValue] 

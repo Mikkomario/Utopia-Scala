@@ -1,7 +1,7 @@
 package utopia.vigil.database.access.token.template.right
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.util.UncertainBoolean
 import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 import utopia.vigil.database.storable.token.TokenGrantRightDbModel
@@ -9,7 +9,7 @@ import utopia.vigil.database.storable.token.TokenGrantRightDbModel
 /**
   * Used for accessing token grant right values from the DB
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class AccessTokenGrantRightValues(access: AccessManyColumns) extends AccessValues
 {
@@ -35,28 +35,39 @@ case class AccessTokenGrantRightValues(access: AccessManyColumns) extends Access
 	/**
 	  * Whether generating a new token revokes the token used for authorizing that action
 	  */
-	lazy val revokeOriginals = apply(model.revokes) { v => v.getBoolean }
+	lazy val revokeOriginals = apply(model.revokesOriginal) { v => v.getBoolean }
+	/**
+	  * Whether earlier generated tokens should all be revoked when generating new tokens. 
+	  * Uncertain if this may be controlled manually.
+	  */
+	lazy val revokeEarlier = apply(model.revokesEarlier) { v => UncertainBoolean(v.boolean) }
 	
 	
-	// COMPUTED -----------------------
+	// COMPUTED ------------------------
 	
 	/**
+	 * @param defaultRevokeEarlier Whether to include template IDs for cases where revokesEarlier is uncertain.
+	 *                             Default = false.
 	 * @param connection Implicit DB connection
-	 * @return Returns 2 values:
-	 *         1. Template IDs that may be used for constructing new tokens, based on this token.
-	 *         1. Whether the original token should be revoked afterwards
+	 * @return 2 Values:
+	 *              1. Whether any accessible row is marked to revoke the original (calling) token
+	 *              1. IDs of the token templates, from which previously generated tokens should be revoked
 	 */
-	def grantedTemplateIdsAndRevokes(implicit connection: Connection) =
-		access.streamColumns(model.grantedTemplateId, model.revokes) { rowsIter =>
-			var revokes = false
-			val grantedTemplateIds = rowsIter
-				.map { row =>
-					if (!revokes && row(1).getBoolean)
-						revokes = true
-					row.head.getInt
+	def revokeInfo(defaultRevokeEarlier: => Boolean = false)(implicit connection: Connection) =
+		access.streamColumns(model.revokesOriginal, model.revokesEarlier, model.grantedTemplateId) { rowsIter =>
+			var revokeOriginal = false
+			val revokedTemplateIds = rowsIter
+				.flatMap { row =>
+					if (!revokeOriginal && row.head.getBoolean)
+						revokeOriginal = true
+					if (row(1).booleanOr(defaultRevokeEarlier))
+						row(2).int
+					else
+						None
 				}
-				.toOptimizedSeq
-			grantedTemplateIds -> revokes
+				.toSet
+			
+			revokeOriginal -> revokedTemplateIds
 		}
 }
 

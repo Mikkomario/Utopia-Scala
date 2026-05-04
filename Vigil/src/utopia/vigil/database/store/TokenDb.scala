@@ -4,12 +4,15 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.parse.Sha256Hasher
 import utopia.flow.time.{Duration, Now}
+import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.UncertainBoolean.{CertainlyFalse, CertainlyTrue}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
-import utopia.vault.database.Connection
+import utopia.vault.database.{Connection, Store}
+import utopia.vigil.database.access.token.AccessTokens
 import utopia.vigil.database.access.token.scope.AccessTokenScopes
 import utopia.vigil.database.access.token.template.AccessTokenTemplates
-import utopia.vigil.database.access.token.template.right.{AccessTokenGrantRights, AccessTokenTemplateScopes}
+import utopia.vigil.database.access.token.template.right.{AccessTokenGrantRight, AccessTokenGrantRights, AccessTokenTemplateScopes}
 import utopia.vigil.database.storable.token._
 import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.cached.token.TokenIdRefs
@@ -28,6 +31,35 @@ import java.util.UUID
  */
 object TokenDb
 {
+	// ATTRIBUTES   -----------------------
+	
+	private val _storeGrantRights = Store
+		.apply(TokenGrantRightDbModel) { right: (Int, Int, Boolean, UncertainBoolean) =>
+			TokenGrantRightData(ownerTemplateId = right._1, grantedTemplateId = right._2, revokesOriginal = right._3,
+				revokesEarlier = right._4)
+		}
+		// May update the revokes -properties
+		.updating { case ((_, _, revokesOriginal, revokesEarlier), existing, connection) =>
+			val revokesOriginalChanged = existing.revokesOriginal != revokesOriginal
+			val revokesEarlierChanged = existing.revokesEarlier != revokesEarlier
+			
+			if (revokesOriginalChanged || revokesEarlierChanged)
+				connection.use { implicit c =>
+					val access = existing.access.values
+					if (revokesOriginalChanged)
+						access.revokesOriginal.set(revokesOriginal)
+					if (revokesEarlierChanged)
+						access.revokesEarlier.set(revokesEarlier)
+					
+					Some(existing.withRevokesOriginal(revokesOriginal).withRevokesEarlier(revokesEarlier))
+				}
+			else
+				None
+		}
+	
+	
+	// OTHER    ---------------------------
+	
 	/**
 	 * Creates a template for permanent API-keys
 	 * @param scope Granted scope
@@ -44,15 +76,18 @@ object TokenDb
 	 * @param sessionDuration Duration of the created session tokens
 	 * @param name Name of this token template (optional)
 	 * @param sessionTokenName Name given to the session token template (optional)
+	 * @param revokesEarlier Whether previously generated session tokens should be revoked when starting a new session.
+	 *                       Uncertain if this should be toggled manually.
+	 *                       Default = true.
 	 * @param connection Implicit DB connection
 	 * @return Created refresh token template + created session token template
 	 */
 	def createRefreshTokenTemplate(scope: Seq[ScopeTarget], sessionDuration: Duration, name: String = "",
-	                               sessionTokenName: String = "")
+	                               sessionTokenName: String = "", revokesEarlier: UncertainBoolean = CertainlyTrue)
 	                              (implicit connection: Connection) =
 	{
 		val session = createSimpleSessionTemplate(sessionDuration, sessionTokenName)
-		val refresh = createRefreshTokenTemplateFor(session.id, scope, name)
+		val refresh = createRefreshTokenTemplateFor(session.id, scope, name, revokesEarlier)
 		
 		refresh -> session
 	}
@@ -62,13 +97,28 @@ object TokenDb
 	 * @param scope Scope forwarded by this token.
 	 *              Default = empty (assumes that the session token already specifies scope)
 	 * @param name Name of this token template (optional)
+	 * @param revokesEarlier Whether previously generated session tokens should be revoked when starting a new session.
+	 *                       Uncertain if this should be toggled manually.
+	 *                       Default = true.
 	 * @param connection Implicit DB connection
-	 * @return Created refresh token template + created session token template
+	 * @return Created refresh token template
 	 */
-	def createRefreshTokenTemplateFor(sessionTemplateId: Int, scope: Iterable[ScopeTarget] = Empty, name: String = "")
+	def createRefreshTokenTemplateFor(sessionTemplateId: Int, scope: Iterable[ScopeTarget] = Empty, name: String = "",
+	                                  revokesEarlier: UncertainBoolean = CertainlyTrue)
 	                                 (implicit connection: Connection) =
-		createTemplate(name, forwardedScopes = scope, grantsTokensOfTemplates = Single(sessionTemplateId))
+		createTemplate(name, forwardedScopes = scope, grantsTokensOfTemplates = Single(sessionTemplateId),
+			revokesEarlier = revokesEarlier)
 	
+	/**
+	 * Creates a new single-use swap token template
+	 * @param scope Scope accessible by the created session token
+	 * @param duration Duration how long these swap tokens remain usable
+	 * @param sessionDuration Duration of the created session tokens
+	 * @param name Name of this token template (optional)
+	 * @param sessionTokenName Name given to the session token template (optional)
+	 * @param connection Implicit DB connection
+	 * @return Created swap token template + created session token template
+	 */
 	def createSwapToSessionTemplate(scope: Iterable[ScopeTarget], duration: Duration,
 	                                sessionDuration: Duration = Duration.infinite, name: String = "",
 	                                sessionTokenName: String = "")
@@ -79,12 +129,29 @@ object TokenDb
 		
 		swap -> session
 	}
+	/**
+	 * Creates a new single-use swap token template
+	 * @param acquiredTokenTemplateId ID of the template of the acquired tokens
+	 * @param duration Duration how long these swap tokens remain usable
+	 * @param scope Scope forwarded by this token.
+	 *              Default = empty (assumes that the session token already specifies scope)
+	 * @param name Name of this token template (optional)
+	 * @param connection Implicit DB connection
+	 * @return Created swap token template
+	 */
 	def createSwapTemplateFor(acquiredTokenTemplateId: Int, duration: Duration, scope: Iterable[ScopeTarget] = Empty,
 	                          name: String = "")
 	                         (implicit connection: Connection) =
 		createTemplate(name, forwardedScopes = scope, grantsTokensOfTemplates = Single(acquiredTokenTemplateId),
-			duration = duration, swaps = true)
+			duration = duration, revokesOriginal = true)
 	
+	/**
+	 * Creates a simple session token with no authentication scope of its own
+	 * @param sessionDuration Duration how long each session is in effect
+	 * @param name Name of this token (optional)
+	 * @param connection Implicit DB connection
+	 * @return Created session token template
+	 */
 	def createSimpleSessionTemplate(sessionDuration: Duration, name: String = "")(implicit connection: Connection) =
 		createTemplate(name, scopeGrantType = Copy, duration = sessionDuration)
 	
@@ -99,15 +166,19 @@ object TokenDb
 	 *                                I.e. templates of tokens that may be generated using this kind of token.
 	 *                                Default = empty.
 	 * @param duration Duration how long generated tokens should remain usable. Default = infinite.
-	 * @param swaps Whether this type of token is swapped / revoked, when granting new tokens.
-	 *              Default = false = These tokens will remain usable afterwards.
+	 * @param revokesOriginal Whether this type of token is swapped / revoked, when granting new tokens.
+	 *                        Default = false = These tokens will remain usable afterwards.
+	 * @param revokesEarlier Whether the earlier generated tokens should get revoked when generating new tokens.
+	 *                       Uncertain if this should be toggled manually.
+	 *                       Default = false.
 	 * @param connection Implicit DB connection
 	 * @return Stored token template
 	 */
 	def createTemplate(name: String = "", scopeGrantType: ScopeGrantType = Dictate,
 	                   accessibleScopes: Seq[ScopeTarget] = Empty,
 	                   forwardedScopes: Iterable[ScopeTarget] = Empty, grantsTokensOfTemplates: Iterable[Int] = Empty,
-	                   duration: Duration = Duration.infinite, swaps: Boolean = false)
+	                   duration: Duration = Duration.infinite, revokesOriginal: Boolean = false,
+	                   revokesEarlier: UncertainBoolean = CertainlyFalse)
 	                  (implicit connection: Connection) =
 	{
 		// Inserts the template
@@ -122,7 +193,9 @@ object TokenDb
 		// Assigns the token-grant rights
 		val grantRights = TokenGrantRightDbModel.insert(
 			grantsTokensOfTemplates.view
-				.map { grantedTemplateId => TokenGrantRightData(template.id, grantedTemplateId, revokes = swaps) }
+				.map { grantedTemplateId =>
+					TokenGrantRightData(template.id, grantedTemplateId, revokesOriginal = revokesOriginal,
+						revokesEarlier = revokesEarlier) }
 				.toOptimizedSeq)
 
 		DetailedTokenTemplate(template.id, template, scopeLinks, grantRights)
@@ -161,34 +234,66 @@ object TokenDb
 	 * @param token Token (ids) to grant new tokens with
 	 * @param name Name to give to the new tokens. Call-by-name, default = empty.
 	 * @param connection Implicit DB connection
-	 * @return Returns 2 values:
+	 * @return Returns 3 values:
 	 *         1. Generated tokens, where each contains:
 	 *              1. Generated token string / key
 	 *              1. Stored token entry
 	 *         1. Whether 'token' was revoked in this process
+	 *         1. Whether previously generated tokens were revoked in this process
 	 */
-	def grantUsing(token: TokenIdRefs, name: => String = "")(implicit connection: Connection) = {
+	def grantUsing(token: TokenIdRefs, name: => String = "", revokeEarlierDefault: Boolean = false)
+	              (implicit connection: Connection) =
+	{
 		// Checks the grant rights
 		val grantedTemplates = AccessTokenTemplates.whereOriginatingGrantRight.ofTemplate(token.templateId).pull
 		// Case: No grant rights => No change
 		if (grantedTemplates.isEmpty)
-			Empty -> false
+			(Empty, false, false)
 		else {
+			// Checks what to revoke
+			val (revokesOriginal, revokeEarlierFromTemplates) =
+				AccessTokenGrantRights.ofTemplate(token.templateId).revokeInfo(revokeEarlierDefault)
+			
+			// Revokes earlier generated tokens, if applicable
+			val earlierWereRevoked = {
+				if (revokeEarlierFromTemplates.nonEmpty)
+					AccessTokens.active.fromTemplates(revokeEarlierFromTemplates).createdUsing(token.id).revoke()
+				else
+					false
+			}
+			
 			// Generates the new tokens
 			val parentScopeIdsView = Lazy { AccessTokenScopes.ofToken(token.id).scopeIds.toSet }
 			val granted = grantedTemplates.map { _createToken(_, Some(token.id), parentScopeIdsView, name) }
 			
 			// Revokes the original token, if appropriate
 			val wasRevoked = {
-				if (AccessTokenGrantRights.ofTemplate(token.templateId).revokeOriginals.stream { _.contains(true) })
+				if (revokesOriginal)
 					token.access.revoke()
 				else
 					false
 			}
 			
-			granted -> wasRevoked
+			(granted, wasRevoked, earlierWereRevoked)
 		}
 	}
+	
+	/**
+	 * Gives a token type permission to generate tokens of another type
+	 * @param ownerTemplateId ID of the token template granted this right
+	 * @param grantedTemplateId ID of the token template used when generating new tokens
+	 * @param revokesOriginal Whether the original tokens should be revoked when new tokens are generated.
+	 *                        Default = false.
+	 * @param revokesEarlier Whether earlier generated tokens should be revoked when a new token is generated.
+	 *                       Uncertain if this should be toggled manually. Default = false.
+	 * @param connection Implicit DB connection
+	 * @return Grant right store result
+	 */
+	def giveGrantRight(ownerTemplateId: Int, grantedTemplateId: Int, revokesOriginal: Boolean = false,
+	                   revokesEarlier: UncertainBoolean = CertainlyFalse)
+	                  (implicit connection: Connection) =
+		_storeGrantRights.single((ownerTemplateId, grantedTemplateId, revokesOriginal, revokesEarlier),
+			AccessTokenGrantRight.ofTemplate(ownerTemplateId).toUseTemplate(grantedTemplateId).pull)
 	
 	private def _createToken(template: TokenTemplate, parentId: Option[Int], parentScopeIdsView: View[Set[Int]],
 	                         name: String)

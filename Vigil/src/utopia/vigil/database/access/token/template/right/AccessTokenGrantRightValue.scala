@@ -1,6 +1,7 @@
 package utopia.vigil.database.access.token.template.right
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.util.UncertainBoolean
 import utopia.vault.nosql.targeting.columns.AccessColumns.AccessColumn
 import utopia.vault.nosql.targeting.columns.AccessValue
 import utopia.vigil.database.storable.token.TokenGrantRightDbModel
@@ -8,7 +9,7 @@ import utopia.vigil.database.storable.token.TokenGrantRightDbModel
 /**
   * Used for accessing individual token grant right values from the DB
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class AccessTokenGrantRightValue(access: AccessColumn) extends AccessValue
 {
@@ -37,6 +38,12 @@ case class AccessTokenGrantRightValue(access: AccessColumn) extends AccessValue
 	/**
 	  * Whether generating a new token revokes the token used for authorizing that action
 	  */
-	lazy val revokes = apply(model.revokes).optional { v => v.boolean }
+	lazy val revokesOriginal = apply(model.revokesOriginal).optional { v => v.boolean }
+	
+	/**
+	  * Whether earlier generated tokens should all be revoked when generating new tokens. 
+	  * Uncertain if this may be controlled manually.
+	  */
+	lazy val revokesEarlier = apply(model.revokesEarlier) { v => UncertainBoolean(v.boolean) }
 }
 

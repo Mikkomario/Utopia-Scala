@@ -25,7 +25,7 @@ object AccessTokenGrantRights
 /**
   * Used for accessing multiple token grant rights from the DB at a time
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 abstract class AccessTokenGrantRights[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
 	extends TargetingManyLike[A, Repr, AccessTokenGrantRight[A]] with HasValues[AccessTokenGrantRightValues] 
@@ -40,7 +40,7 @@ abstract class AccessTokenGrantRights[A, +Repr <: TargetingManyLike[_, Repr, _]]
   * Provides access to row-specific token grant right -like items
   * @param wrapped The wrapped access point
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class AccessTokenGrantRightRows[A](wrapped: TargetingManyRows[A]) 
 	extends AccessTokenGrantRights[A, AccessTokenGrantRightRows[A]](wrapped) 
@@ -60,7 +60,7 @@ case class AccessTokenGrantRightRows[A](wrapped: TargetingManyRows[A])
   * combinations
   * @param wrapped The wrapped access point
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class AccessCombinedTokenGrantRights[A](wrapped: TargetingMany[A]) 
 	extends AccessTokenGrantRights[A, AccessCombinedTokenGrantRights[A]](wrapped) 

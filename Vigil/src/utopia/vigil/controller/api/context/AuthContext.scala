@@ -2,6 +2,7 @@ package utopia.vigil.controller.api.context
 
 import utopia.access.model.enumeration.Status.{InternalServerError, Unauthorized}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.StringExtensions._
@@ -24,6 +25,59 @@ import utopia.vigil.model.cached.token.TokenIdRefs
 trait AuthContext[+A] extends RequestContext[A]
 {
 	/**
+	 * Verifies that the request is authorized
+	 * @param f A function called if the request is properly authorized.
+	 *          Receives 2 parameters:
+	 *          1. IDs of the used auth token
+	 *          1. DB connection
+	 *
+	 *          Returns the result to send back to the client
+	 *
+	 * @return One of the following results:
+	 *         - If the request was authorized, the result of 'f'
+	 *         - If 'f' threw, 500
+	 *         - If the request was not authorized, 401
+	 */
+	def authorized(f: (TokenIdRefs, Connection) => RequestResult): RequestResult = authorizedFor(Empty)(f)
+	
+	/**
+	 * Verifies that the request is authorized in a specific auth scope
+	 * @param scope Scope that must be accessible in order the request to complete
+	 * @param f A function called if the request is properly authorized.
+	 *          Receives 2 parameters:
+	 *          1. IDs of the used auth token
+	 *          1. DB connection
+	 *
+	 *          Returns the result to send back to the client
+	 *
+	 * @return One of the following results:
+	 *         - If the request was authorized, the result of 'f'
+	 *         - If 'f' threw, 500
+	 *         - If the request was not authorized, 401
+	 */
+	def authorizedFor(scope: ScopeTarget)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
+		authorizedFor(Single(scope))(f)
+	/**
+	 * Verifies that the request is authorized in a specific auth scope
+	 * @param firstScope First scope that must be accessible in order the request to complete
+	 * @param secondScope Second scope that must be accessible in order the request to complete
+	 * @param moreScopes Other scopes that must be accessible in order the request to complete
+	 * @param f A function called if the request is properly authorized.
+	 *          Receives 2 parameters:
+	 *          1. IDs of the used auth token
+	 *          1. DB connection
+	 *
+	 *          Returns the result to send back to the client
+	 *
+	 * @return One of the following results:
+	 *         - If the request was authorized, the result of 'f'
+	 *         - If 'f' threw, 500
+	 *         - If the request was not authorized, 401
+	 */
+	def authorizedFor(firstScope: ScopeTarget, secondScope: ScopeTarget, moreScopes: ScopeTarget*)
+	                 (f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
+		authorizedFor(Pair(firstScope, secondScope) ++ moreScopes)(f)
+	/**
 	 * Verifies that the request is authorized in a specific auth scope
 	 * @param requiredScopes Scopes that must be accessible in order the request to complete
 	 * @param f A function called if the request is properly authorized.
@@ -40,7 +94,6 @@ trait AuthContext[+A] extends RequestContext[A]
 	 */
 	def authorizedFor(requiredScopes: Iterable[ScopeTarget])
 	                 (f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
-	{
 		// Checks the authorization token
 		headers.bearerAuthorization.ifNotEmpty match {
 			case Some(bearerToken) =>
@@ -82,5 +135,4 @@ trait AuthContext[+A] extends RequestContext[A]
 			// Case: No auth token specified => 401
 			case None => Unauthorized -> "Please specify the `Authorization:Bearer ...` header"
 		}
-	}
 }

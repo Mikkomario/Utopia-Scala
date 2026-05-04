@@ -1,7 +1,7 @@
 -- 
 -- Database structure for vigil models
 -- Version: v0.1
--- Last generated: 2026-05-01
+-- Last generated: 2026-05-04
 --
 
 --	Scope	----------
@@ -24,7 +24,7 @@ CREATE TABLE `scope`(
 -- name:                Name of this template. May be empty.
 -- scope_grant_type_id: Way the scope-granting functions in this template
 -- 		References enumeration ScopeGrantType
--- 		Possible values are: 
+-- 		Possible values are: 1 = dictate, 2 = grant, 3 = restrict, 4 = copy
 -- duration_millis:     Duration of the created tokens. None if infinite.
 -- created:             Time when this token template was added to the database
 CREATE TABLE `token_template`(
@@ -63,12 +63,15 @@ CREATE TABLE `token`(
 -- Used for allowing certain token types (templates) to generate new tokens of other types
 -- owner_template_id:   ID of the token template that has been given the right to generate new tokens
 -- granted_template_id: ID of the template applied to the generated tokens
--- revokes:             Whether generating a new token revokes the token used for authorizing that action
+-- revokes_original:    Whether generating a new token revokes the token used for authorizing that action
+-- revokes_earlier:     Whether earlier generated tokens should all be revoked when generating new tokens. 
+-- 		Uncertain if this may be controlled manually.
 CREATE TABLE `token_grant_right`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`owner_template_id` INT NOT NULL, 
 	`granted_template_id` INT NOT NULL, 
-	`revokes` BOOLEAN NOT NULL DEFAULT FALSE, 
+	`revokes_original` BOOLEAN NOT NULL DEFAULT FALSE, 
+	`revokes_earlier` BOOLEAN, 
 	CONSTRAINT vg_tgr_tt_owner_template_ref_fk FOREIGN KEY vg_tgr_tt_owner_template_ref_idx (owner_template_id) REFERENCES `token_template`(`id`) ON DELETE CASCADE, 
 	CONSTRAINT vg_tgr_tt_granted_template_ref_fk FOREIGN KEY vg_tgr_tt_granted_template_ref_idx (granted_template_id) REFERENCES `token_template`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;

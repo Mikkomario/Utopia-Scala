@@ -18,7 +18,7 @@ object TokenGrantRight extends StandardStoredFactory[TokenGrantRightData, TokenG
   * @param id   ID of this token grant right in the database
   * @param data Wrapped token grant right data
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 04.05.2026, v0.1
   */
 case class TokenGrantRight(id: Int, data: TokenGrantRightData) 
 	extends StoredModelConvertible[TokenGrantRightData] with FromIdFactory[Int, TokenGrantRight] 
