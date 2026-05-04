@@ -3,7 +3,9 @@ package utopia.vigil.database.access.token.template
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
 import utopia.vault.nosql.targeting.one.TargetingOne
+import utopia.vigil.database.access.token.template.right.FilterByTokenGrantRight
 import utopia.vigil.database.reader.token.TokenTemplateDbReader
+import utopia.vigil.database.storable.token.TokenGrantRightDbModel
 import utopia.vigil.model.stored.token.TokenTemplate
 
 object AccessTokenTemplates 
@@ -18,7 +20,6 @@ object AccessTokenTemplates
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessTokenTemplateRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedTokenTemplates(access)
 }
 
@@ -34,6 +35,12 @@ abstract class AccessTokenTemplates[A, +Repr <: TargetingManyLike[_, Repr, _]](w
 	// ATTRIBUTES	--------------------
 	
 	override lazy val values = AccessTokenTemplateValues(wrapped)
+	
+	lazy val joinOriginatingGrantRights = join(TokenGrantRightDbModel.grantedTemplateId.column)
+	lazy val whereOriginatingGrantRight = FilterByTokenGrantRight(joinOriginatingGrantRights)
+	
+	lazy val joinPossessedTokenGrantRights = join(TokenGrantRightDbModel.ownerTemplateId.column)
+	lazy val wherePossessedTokenGrantRight = FilterByTokenGrantRight(joinPossessedTokenGrantRights)
 }
 
 /**
@@ -51,7 +58,6 @@ case class AccessTokenTemplateRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessTokenTemplateRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessTokenTemplate(target)
 }
 
@@ -70,7 +76,6 @@ case class AccessCombinedTokenTemplates[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedTokenTemplates(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessTokenTemplate(target)
 }
 

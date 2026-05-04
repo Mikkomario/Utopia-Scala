@@ -8,6 +8,7 @@ import utopia.flow.generic.model.mutable.DataType.BooleanType
 import utopia.flow.generic.model.mutable.DataType.InstantType
 import utopia.flow.generic.model.mutable.DataType.IntType
 import utopia.flow.time.Now
+import utopia.vigil.model.cached.scope.HasScopeId
 import utopia.vigil.model.factory.token.TokenScopeFactory
 import utopia.vigil.model.partial.scope.{ScopeRightData, ScopeRightDataLike}
 
@@ -43,6 +44,7 @@ object TokenScopeData extends FromModelFactoryWithSchema[TokenScopeData]
   */
 case class TokenScopeData(scopeId: Int, tokenId: Int, created: Instant = Now, usable: Boolean = false) 
 	extends TokenScopeFactory[TokenScopeData] with ScopeRightData with ScopeRightDataLike[TokenScopeData]
+		with HasScopeId
 {
 	// IMPLEMENTED	--------------------
 	

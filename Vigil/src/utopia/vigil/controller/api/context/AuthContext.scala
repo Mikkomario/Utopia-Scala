@@ -12,7 +12,7 @@ import utopia.vault.database.Connection
 import utopia.vigil.database.VigilContext
 import utopia.vigil.database.access.token.AccessToken
 import utopia.vigil.database.access.token.scope.AccessTokenScopes
-import utopia.vigil.database.value.ScopeTarget
+import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.cached.token.TokenIdRefs
 
 /**

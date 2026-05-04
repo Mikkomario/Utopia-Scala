@@ -12,6 +12,7 @@ import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.time.{Duration, Now}
 import utopia.vigil.model.enumeration.ScopeGrantType
+import utopia.vigil.model.enumeration.ScopeGrantType.Dictate
 import utopia.vigil.model.factory.token.TokenTemplateFactory
 
 import java.time.Instant
@@ -20,23 +21,22 @@ object TokenTemplateData extends FromModelFactory[TokenTemplateData]
 {
 	// ATTRIBUTES	--------------------
 	
-	lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("name", StringType, isOptional = true), 
-			PropertyDeclaration("scopeGrantType", IntType, Single("scope_grant_type")), 
-			PropertyDeclaration("duration", DurationType, isOptional = true), PropertyDeclaration("created", 
-			InstantType, isOptional = true)))
+	lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("name", StringType, isOptional = true),
+		PropertyDeclaration("scopeGrantType", IntType, Single("scope_grant_type")),
+		PropertyDeclaration("duration", DurationType, isOptional = true),
+		PropertyDeclaration("created", InstantType, isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def apply(model: HasProperties) = {
+	override def apply(model: HasProperties) =
 		schema.validate(model).flatMap { valid => 
 			ScopeGrantType.fromValue(valid("scopeGrantType")).map { scopeGrantType => 
 				TokenTemplateData(valid("name").getString, scopeGrantType, valid("duration").duration, 
 					valid("created").getInstant)
 			}
 		}
-	}
 }
 
 /**
@@ -48,8 +48,8 @@ object TokenTemplateData extends FromModelFactory[TokenTemplateData]
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-case class TokenTemplateData(name: String, scopeGrantType: ScopeGrantType, duration: Option[Duration] = None, 
-	created: Instant = Now) 
+case class TokenTemplateData(name: String, scopeGrantType: ScopeGrantType = Dictate, duration: Option[Duration] = None,
+                             created: Instant = Now)
 	extends TokenTemplateFactory[TokenTemplateData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
@@ -59,11 +59,8 @@ case class TokenTemplateData(name: String, scopeGrantType: ScopeGrantType, durat
 			"created" -> created))
 	
 	override def withCreated(created: Instant) = copy(created = created)
-	
 	override def withDuration(duration: Duration) = copy(duration = Some(duration))
-	
 	override def withName(name: String) = copy(name = name)
-	
 	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = copy(scopeGrantType = scopeGrantType)
 }
 

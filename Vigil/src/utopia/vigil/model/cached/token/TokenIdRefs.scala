@@ -1,5 +1,7 @@
 package utopia.vigil.model.cached.token
 
+import utopia.vigil.database.access.token.AccessToken
+
 /**
  * Combines an auth token's referenced IDs, including its own
  * @param id ID of this token
@@ -9,3 +11,9 @@ package utopia.vigil.model.cached.token
  * @since 03.05.2026, v0.1
  */
 case class TokenIdRefs(id: Int, templateId: Int, parentId: Option[Int] = None)
+{
+	/**
+	 * Access to this token's data in the DB
+	 */
+	lazy val access = AccessToken(id)
+}

@@ -3,7 +3,7 @@ package utopia.vigil.database.store
 import utopia.vault.database.{Connection, Store}
 import utopia.vigil.database.access.scope.AccessScope
 import utopia.vigil.database.storable.scope.ScopeDbModel
-import utopia.vigil.database.value.ScopeTarget
+import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.partial.scope.ScopeData
 
 /**

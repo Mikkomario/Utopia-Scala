@@ -1,4 +1,4 @@
-package utopia.vigil.database.value
+package utopia.vigil.model.cached.scope
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Tree}

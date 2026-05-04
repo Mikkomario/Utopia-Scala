@@ -13,10 +13,10 @@ object TokenGrantRightData extends FromModelFactoryWithSchema[TokenGrantRightDat
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("ownerTemplateId", IntType, Single("owner_template_id")), 
-			PropertyDeclaration("grantedTemplateId", IntType, Single("granted_template_id")), 
-			PropertyDeclaration("revokes", BooleanType, Empty, false)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("ownerTemplateId", IntType, Single("owner_template_id")),
+		PropertyDeclaration("grantedTemplateId", IntType, Single("granted_template_id")),
+		PropertyDeclaration("revokes", BooleanType, Empty, false)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -41,14 +41,11 @@ case class TokenGrantRightData(ownerTemplateId: Int, grantedTemplateId: Int, rev
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("ownerTemplateId" -> ownerTemplateId, "grantedTemplateId" -> grantedTemplateId, 
-			"revokes" -> revokes))
+	override def toModel = Model(Vector("ownerTemplateId" -> ownerTemplateId, "grantedTemplateId" -> grantedTemplateId,
+		"revokes" -> revokes))
 	
 	override def withGrantedTemplateId(grantedTemplateId: Int) = copy(grantedTemplateId = grantedTemplateId)
-	
 	override def withOwnerTemplateId(ownerTemplateId: Int) = copy(ownerTemplateId = ownerTemplateId)
-	
 	override def withRevokes(revokes: Boolean) = copy(revokes = revokes)
 }
 

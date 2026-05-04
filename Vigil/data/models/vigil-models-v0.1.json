@@ -33,6 +33,7 @@
       {
         "name": "TokenTemplate",
         "access": "template",
+        "has_combos": true,
         "doc": "A template or a mold for creating new tokens",
         "props": [
           {
@@ -100,6 +101,13 @@
       {
         "name": "Token",
         "access": "-",
+        "combo": {
+          "name": "ScopedToken",
+          "children": "TokenScope",
+          "child_alias": "scopeLink",
+          "children_alias": "scopeLinks",
+          "doc": "Includes the accessible scope links with a token"
+        },
         "doc": "Represents a token that may be used for authorizing certain actions",
         "combo_index": ["revoked", "expires"],
         "props": [
@@ -202,6 +210,7 @@
           },
           {
             "name": "usable",
+            "name_plural": "areUsable",
             "type": "Boolean",
             "index": true,
             "doc": "Whether the linked scope is directly accessible. \nFalse if the scope is only applied when granting access for other authentication methods.",
