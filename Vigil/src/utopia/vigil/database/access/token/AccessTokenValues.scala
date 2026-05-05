@@ -1,5 +1,6 @@
 package utopia.vigil.database.access.token
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
@@ -52,6 +53,16 @@ case class AccessTokenValues(access: AccessManyColumns) extends AccessValues
 	  * Time when this token was revoked.
 	  */
 	lazy val revokeTimes = apply(model.revoked).flatten { v => v.instant }
+	
+	
+	// COMPUTED -------------------------
+	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return IDs and template IDs of all accessible tokens
+	 */
+	def idsAndTemplateIds(implicit connection: Connection) =
+		access.streamColumns(model.id, model.templateId) { _.map { _.headPair.map { _.getInt } }.toOptimizedSeq }
 	
 	
 	// OTHER    -------------------------

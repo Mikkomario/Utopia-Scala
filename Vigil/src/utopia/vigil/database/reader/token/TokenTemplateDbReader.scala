@@ -36,7 +36,9 @@ object TokenTemplateDbReader
 				TokenTemplateData(name = valid(this.model.name.name).getString, 
 				scopeGrantType = scopeGrantType, 
 				duration = valid(this.model.duration.name).long.map { _.millis }, 
-				created = valid(this.model.created.name).getInstant))
+				created = valid(this.model.created.name).getInstant, 
+				canRevokeSelf = valid(this.model.canRevokeSelf.name).getBoolean, 
+				parentCanRevoke = valid(this.model.parentCanRevoke.name).getBoolean))
 		}
 	}
 }

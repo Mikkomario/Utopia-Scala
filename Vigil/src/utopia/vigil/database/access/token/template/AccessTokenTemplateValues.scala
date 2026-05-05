@@ -43,5 +43,13 @@ case class AccessTokenTemplateValues(access: AccessManyColumns) extends AccessVa
 	  * Time when this token template was added to the database
 	  */
 	lazy val creationTimes = apply(model.created) { v => v.getInstant }
+	/**
+	  * Whether this type of token may be used to revoke itself
+	  */
+	lazy val canRevokeSelves = apply(model.canRevokeSelf) { v => v.getBoolean }
+	/**
+	  * Whether the parent tokens may be used to revoke these tokens
+	  */
+	lazy val parentsCanRevoke = apply(model.parentCanRevoke) { v => v.getBoolean }
 }
 

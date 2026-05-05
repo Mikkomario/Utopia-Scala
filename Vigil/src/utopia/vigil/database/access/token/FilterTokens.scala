@@ -1,6 +1,8 @@
 package utopia.vigil.database.access.token
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.vault.model.immutable.Column
+import utopia.vault.nosql.template.IntIndexFilterable
 import utopia.vault.nosql.view.{DeprecatableView, TimelineView}
 import utopia.vault.sql.Condition
 import utopia.vigil.database.storable.token.TokenDbModel
@@ -10,7 +12,7 @@ import utopia.vigil.database.storable.token.TokenDbModel
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-trait FilterTokens[+Repr] extends TimelineView[Repr] with DeprecatableView[Repr]
+trait FilterTokens[+Repr] extends TimelineView[Repr] with DeprecatableView[Repr] with IntIndexFilterable[Repr]
 {
 	// COMPUTED	--------------------
 	
@@ -21,6 +23,8 @@ trait FilterTokens[+Repr] extends TimelineView[Repr] with DeprecatableView[Repr]
 	
 	
 	// IMPLEMENTED	--------------------
+	
+	override protected def idColumn: Column = model.id
 	
 	override def timestampColumn = model.created
 	

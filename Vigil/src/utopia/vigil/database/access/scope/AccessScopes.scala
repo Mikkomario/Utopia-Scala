@@ -18,7 +18,6 @@ object AccessScopes
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessScopeRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedScopes(access)
 }
 
@@ -51,7 +50,6 @@ case class AccessScopeRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessScopeRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessScope(target)
 }
 
@@ -70,7 +68,6 @@ case class AccessCombinedScopes[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedScopes(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessScope(target)
 }
 

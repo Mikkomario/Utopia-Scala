@@ -1,10 +1,9 @@
 package utopia.vigil.controller.api.context
 
 import utopia.access.model.enumeration.Status.{InternalServerError, Unauthorized}
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.generic.model.immutable.Model
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.result.TryExtensions._
 import utopia.nexus.model.request.RequestContext
@@ -13,7 +12,7 @@ import utopia.vault.database.Connection
 import utopia.vigil.database.VigilContext
 import utopia.vigil.database.access.token.AccessToken
 import utopia.vigil.database.access.token.scope.AccessTokenScopes
-import utopia.vigil.model.cached.scope.ScopeTarget
+import utopia.vigil.model.cached.scope.{ScopeTarget, Scopes}
 import utopia.vigil.model.cached.token.TokenIdRefs
 
 /**
@@ -38,7 +37,7 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorized(f: (TokenIdRefs, Connection) => RequestResult): RequestResult = authorizedFor(Empty)(f)
+	def authorized(f: (TokenIdRefs, Connection) => RequestResult): RequestResult = authorizedFor(Scopes.empty)(f)
 	
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
@@ -56,7 +55,7 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *         - If the request was not authorized, 401
 	 */
 	def authorizedFor(scope: ScopeTarget)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
-		authorizedFor(Single(scope))(f)
+		authorizedFor(Scopes(scope))(f)
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
 	 * @param firstScope First scope that must be accessible in order the request to complete
@@ -92,8 +91,7 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorizedFor(requiredScopes: Iterable[ScopeTarget])
-	                 (f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
+	def authorizedFor(requiredScopes: Scopes)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
 		// Checks the authorization token
 		headers.bearerAuthorization.ifNotEmpty match {
 			case Some(bearerToken) =>
@@ -108,13 +106,11 @@ trait AuthContext[+A] extends RequestContext[A]
 								// Case: Certain scopes are required => Makes sure the auth token has those
 								else {
 									val accessibleScopeIds = AccessTokenScopes.ofToken(token.id).usable.scopeIds.toSet
-									requiredScopes.filterNot { _.isContainedWithin(accessibleScopeIds) }
-										.notEmpty match
-									{
+									requiredScopes.notContainedWithin(accessibleScopeIds).notEmpty match {
 										// Case: Some required scopes are missing => 401
 										case Some(missingScopes) =>
 											RequestResult(ResponseContent(Model.from(
-												"missingScopes" -> missingScopes.view.map { _.key }.toOptimizedSeq),
+												"missingScopes" -> missingScopes.toValue),
 												"Your authentication token lacks the sufficient authorization scopes"))
 										
 										// Case: All required scopes are accessible => Calls the specified function

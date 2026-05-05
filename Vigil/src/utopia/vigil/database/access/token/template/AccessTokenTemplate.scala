@@ -1,7 +1,10 @@
 package utopia.vigil.database.access.token.template
 
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vault.nosql.targeting.columns.HasValues
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
+import utopia.vigil.database.VigilTables
+import utopia.vigil.database.access.token.FilterByToken
 import utopia.vigil.model.stored.token.TokenTemplate
 
 object AccessTokenTemplate extends AccessOneRoot[AccessTokenTemplate[TokenTemplate]]
@@ -24,11 +27,23 @@ case class AccessTokenTemplate[A](wrapped: TargetingOne[Option[A]])
 	
 	override lazy val values = AccessTokenTemplateValue(wrapped)
 	
+	lazy val joinToken = join(VigilTables.token)
+	lazy val whereToken = FilterByToken(joinToken)
+	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingOne[Option[A]]) = AccessTokenTemplate(newTarget)
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param tokenId ID of a token
+	 * @return Access to that token's template
+	 */
+	def ofToken(tokenId: Int) = whereToken.withId(tokenId)
 }
 

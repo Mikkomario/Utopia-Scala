@@ -1,7 +1,7 @@
 -- 
 -- Database structure for vigil models
 -- Version: v0.1
--- Last generated: 2026-05-04
+-- Last generated: 2026-05-05
 --
 
 --	Scope	----------
@@ -27,13 +27,18 @@ CREATE TABLE `scope`(
 -- 		Possible values are: 1 = dictate, 2 = grant, 3 = restrict, 4 = copy
 -- duration_millis:     Duration of the created tokens. None if infinite.
 -- created:             Time when this token template was added to the database
+-- can_revoke_self:     Whether this type of token may be used to revoke itself
+-- parent_can_revoke:   Whether the parent tokens may be used to revoke these tokens
 CREATE TABLE `token_template`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`name` VARCHAR(32), 
 	`scope_grant_type_id` TINYINT NOT NULL, 
 	`duration_millis` BIGINT, 
 	`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-	INDEX vg_tt_name_idx (`name`)
+	`can_revoke_self` BOOLEAN NOT NULL DEFAULT FALSE, 
+	`parent_can_revoke` BOOLEAN NOT NULL DEFAULT FALSE, 
+	INDEX vg_tt_name_idx (`name`), 
+	INDEX vg_tt_parent_can_revoke_idx (`parent_can_revoke`)
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 -- Represents a token that may be used for authorizing certain actions

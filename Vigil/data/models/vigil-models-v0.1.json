@@ -56,6 +56,19 @@
           {
             "type": "creation",
             "index": false
+          },
+          {
+            "name": "canRevokeSelf",
+            "name_plural": "canRevokeSelves",
+            "type": "Boolean",
+            "doc": "Whether this type of token may be used to revoke itself"
+          },
+          {
+            "name": "parentCanRevoke",
+            "name_plural": "parentsCanRevoke",
+            "type": "Boolean",
+            "index": true,
+            "doc": "Whether the parent tokens may be used to revoke these tokens"
           }
         ]
       },

@@ -17,6 +17,12 @@ trait TokenTemplateFactory[+A]
 	// ABSTRACT	--------------------
 	
 	/**
+	  * @param canRevokeSelf New can revoke self to assign
+	  * @return Copy of this item with the specified can revoke self
+	  */
+	def withCanRevokeSelf(canRevokeSelf: Boolean): A
+	
+	/**
 	  * @param created New created to assign
 	  * @return Copy of this item with the specified created
 	  */
@@ -33,6 +39,12 @@ trait TokenTemplateFactory[+A]
 	  * @return Copy of this item with the specified name
 	  */
 	def withName(name: String): A
+	
+	/**
+	  * @param parentCanRevoke New parent can revoke to assign
+	  * @return Copy of this item with the specified parent can revoke
+	  */
+	def withParentCanRevoke(parentCanRevoke: Boolean): A
 	
 	/**
 	  * @param scopeGrantType New scope grant type to assign

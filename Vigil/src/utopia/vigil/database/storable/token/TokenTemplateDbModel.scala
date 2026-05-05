@@ -50,13 +50,26 @@ object TokenTemplateDbModel
 	  */
 	lazy val created = property("created")
 	
+	/**
+	  * Database property used for interacting with can revoke selves
+	  */
+	lazy val canRevokeSelf = property("canRevokeSelf")
+	
+	/**
+	  * Database property used for interacting with parents can revoke
+	  */
+	lazy val parentCanRevoke = property("parentCanRevoke")
+	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = VigilTables.tokenTemplate
 	
 	override def apply(data: TokenTemplateData): TokenTemplateDbModel = 
-		apply(None, data.name, Some(data.scopeGrantType), data.duration, Some(data.created))
+		apply(None, data.name, Some(data.scopeGrantType), data.duration, Some(data.created), 
+			Some(data.canRevokeSelf), Some(data.parentCanRevoke))
+	
+	override def withCanRevokeSelf(canRevokeSelf: Boolean) = apply(canRevokeSelf = Some(canRevokeSelf))
 	
 	override def withCreated(created: Instant) = apply(created = Some(created))
 	
@@ -66,8 +79,11 @@ object TokenTemplateDbModel
 	
 	override def withName(name: String) = apply(name = name)
 	
-	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = apply(scopeGrantType = 
-		Some(scopeGrantType))
+	override def withParentCanRevoke(parentCanRevoke: Boolean) = apply(parentCanRevoke = 
+		Some(parentCanRevoke))
+	
+	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = 
+		apply(scopeGrantType =Some(scopeGrantType))
 	
 	override protected def complete(id: Value, data: TokenTemplateData) = TokenTemplate(id.getInt, data)
 }
@@ -80,7 +96,8 @@ object TokenTemplateDbModel
   */
 case class TokenTemplateDbModel(id: Option[Int] = None, name: String = "", 
 	scopeGrantType: Option[ScopeGrantType] = None, duration: Option[Duration] = None, 
-	created: Option[Instant] = None) 
+	created: Option[Instant] = None, canRevokeSelf: Option[Boolean] = None, 
+	parentCanRevoke: Option[Boolean] = None) 
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, TokenTemplateDbModel] 
 		with TokenTemplateFactory[TokenTemplateDbModel]
 {
@@ -90,12 +107,16 @@ case class TokenTemplateDbModel(id: Option[Int] = None, name: String = "",
 		Vector(TokenTemplateDbModel.id.name -> id, TokenTemplateDbModel.name.name -> name, 
 			TokenTemplateDbModel.scopeGrantType.name -> scopeGrantType.map[Value] { e => e.id }.getOrElse(Value.empty), 
 			TokenTemplateDbModel.duration.name -> duration.map { _.toMillis }, 
-			TokenTemplateDbModel.created.name -> created)
+			TokenTemplateDbModel.created.name -> created, 
+			TokenTemplateDbModel.canRevokeSelf.name -> canRevokeSelf, 
+			TokenTemplateDbModel.parentCanRevoke.name -> parentCanRevoke)
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = TokenTemplateDbModel.table
+	
+	override def withCanRevokeSelf(canRevokeSelf: Boolean) = copy(canRevokeSelf = Some(canRevokeSelf))
 	
 	override def withCreated(created: Instant) = copy(created = Some(created))
 	
@@ -105,7 +126,9 @@ case class TokenTemplateDbModel(id: Option[Int] = None, name: String = "",
 	
 	override def withName(name: String) = copy(name = name)
 	
-	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = copy(scopeGrantType = 
-		Some(scopeGrantType))
+	override def withParentCanRevoke(parentCanRevoke: Boolean) = copy(parentCanRevoke = Some(parentCanRevoke))
+	
+	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = 
+		copy(scopeGrantType =Some(scopeGrantType))
 }
 

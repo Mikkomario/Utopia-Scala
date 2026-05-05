@@ -18,6 +18,11 @@ trait FilterTokenTemplates[+Repr] extends Filterable[Repr]
 	  */
 	def model = TokenTemplateDbModel
 	
+	/**
+	 * @return Access to token templates that allow revoking from parent authorization
+	 */
+	def revokableByParents = filter(model.parentCanRevoke <=> true)
+	
 	
 	// OTHER	--------------------
 	
@@ -26,7 +31,6 @@ trait FilterTokenTemplates[+Repr] extends Filterable[Repr]
 	  * @return Copy of this access point that only includes token templates with the specified name
 	  */
 	def withName(name: String) = filter(model.name.column <=> name)
-	
 	/**
 	  * @param names Targeted names
 	  * @return Copy of this access point that only includes token templates where name is within the 

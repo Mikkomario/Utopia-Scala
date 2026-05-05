@@ -7,7 +7,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
-import utopia.nexus.controller.api.node.LeafNode
+import utopia.nexus.controller.api.node.ApiNode
+import utopia.nexus.model.api.PathFollowResult
+import utopia.nexus.model.api.PathFollowResult.{Follow, NotFound}
 import utopia.nexus.model.response.RequestResult
 import utopia.vault.database.Connection
 import utopia.vigil.controller.api.context.AuthContext
@@ -20,8 +22,7 @@ import utopia.vigil.model.combined.token.ScopedToken
  * @author Mikko Hilpinen
  * @since 04.05.2026, v0.1
  */
-// TODO: Add end session node
-class TokensNode(override val name: String = "tokens") extends LeafNode[AuthContext[Any]]
+class TokensNode(override val name: String = "tokens") extends ApiNode[AuthContext[Any]]
 {
 	// ATTRIBUTES   -------------------
 	
@@ -29,6 +30,17 @@ class TokensNode(override val name: String = "tokens") extends LeafNode[AuthCont
 	
 	
 	// IMPLEMENTED  -------------------
+	
+	// Provides access to individual tokens
+	override def follow(step: String)(implicit context: AuthContext[Any]): PathFollowResult[AuthContext[Any]] = {
+		if (step ~== "current")
+			Follow(new TokenNode(None))
+		else
+			step.int match {
+				case Some(tokenId) => Follow(new TokenNode(Some(tokenId)))
+				case None => NotFound(s"`$step` is not a valid token ID")
+			}
+	}
 	
 	override def apply(method: Method, remainingPath: Seq[String])(implicit context: AuthContext[Any]): RequestResult =
 		context.authorized { (token, connection) =>

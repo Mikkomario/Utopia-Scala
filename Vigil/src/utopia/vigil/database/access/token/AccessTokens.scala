@@ -1,8 +1,10 @@
 package utopia.vigil.database.access.token
 
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
-import utopia.vault.nosql.targeting.many.{AccessManyDeprecatingRoot, AccessRowsWrapper, AccessWrapper, DeprecatingWrapRowAccess, TargetingMany, TargetingManyLike, TargetingManyRows, TargetingTimeline, WrapOneToManyAccess}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
+import utopia.vigil.database.VigilTables
+import utopia.vigil.database.access.token.template.FilterByTokenTemplate
 import utopia.vigil.database.reader.token.{TokenDbReader, TokenIdRefsDbReader}
 import utopia.vigil.database.storable.token.TokenDbModel
 import utopia.vigil.model.stored.token.Token
@@ -40,6 +42,9 @@ abstract class AccessTokens[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: 
 	// ATTRIBUTES	--------------------
 	
 	override lazy val values = AccessTokenValues(wrapped)
+	
+	lazy val joinTemplates = join(VigilTables.tokenTemplate)
+	lazy val whereTemplate = FilterByTokenTemplate(joinTemplates)
 }
 
 /**

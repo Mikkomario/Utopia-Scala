@@ -1,5 +1,6 @@
 package utopia.vigil.database.access.token
 
+import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.Now
 import utopia.vault.database.Connection
@@ -53,6 +54,23 @@ case class AccessTokenValue(access: AccessColumn) extends AccessValue
 	  * Time when this token was revoked.
 	  */
 	lazy val revoked = apply(model.revoked).optional { v => v.instant }
+	
+	
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return An iterator that yields IDs of this token's parents, starting from the closest
+	 */
+	def parentIdsIterator(implicit connection: Connection) =
+		OptionsIterator.iterate(parentId.pull) { AccessToken(_).parentId.pull }
+	/**
+	 * @param connection Implicit DB connection
+	 * @return An iterator that yields the IDs of this token's active (i.e. unrevoked & unexpired) parents,
+	 *         starting from the closest
+	 */
+	def activeParentIdsIterator(implicit connection: Connection) =
+		parentIdsIterator.filter { AccessToken(_).active.nonEmpty }
 	
 	
 	// OTHER    ---------------------------

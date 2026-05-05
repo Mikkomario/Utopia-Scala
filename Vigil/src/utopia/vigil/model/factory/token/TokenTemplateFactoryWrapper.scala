@@ -33,11 +33,16 @@ trait TokenTemplateFactoryWrapper[A <: TokenTemplateFactory[A], +Repr] extends T
 	
 	// IMPLEMENTED	--------------------
 	
+	override def withCanRevokeSelf(canRevokeSelf: Boolean) = mapWrapped { _.withCanRevokeSelf(canRevokeSelf) }
+	
 	override def withCreated(created: Instant) = mapWrapped { _.withCreated(created) }
 	
 	override def withDuration(duration: Duration) = mapWrapped { _.withDuration(duration) }
 	
 	override def withName(name: String) = mapWrapped { _.withName(name) }
+	
+	override def withParentCanRevoke(parentCanRevoke: Boolean) = 
+		mapWrapped { _.withParentCanRevoke(parentCanRevoke) }
 	
 	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = 
 		mapWrapped { _.withScopeGrantType(scopeGrantType) }
