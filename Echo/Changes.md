@@ -4,6 +4,7 @@
 ### Breaking changes
 - Token counts are now represented using **TokenCount** instead of **Int**
 - Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
+- **TokenUsage** now extends **ModelConvertible**
 - **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances, but manages 
   the amount of processed tokens more carefully.

@@ -46,7 +46,8 @@ object References
 			
 			// FIXME: Somehow we arrive here sometimes at program startup
 			//  (although we shouldn't have any Table instances before the setup function is called)
-			case None => throw EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")
+			case None =>
+				throw new EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")
 		}
 	}
 	/**
@@ -64,7 +65,8 @@ object References
 					.view.mapValues { _.groupBy { _.to.name }.withDefaultValue(Empty) }.toMap
 					.withDefaultValue(Map[String, Seq[Reference]]().withDefaultValue(Empty))
 				
-			case None => throw EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")
+			case None =>
+				throw new EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")
 		}
 	}
 	

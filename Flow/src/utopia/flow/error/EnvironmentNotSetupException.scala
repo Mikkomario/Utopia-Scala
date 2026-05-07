@@ -6,5 +6,5 @@ package utopia.flow.error
   * @author Mikko Hilpinen
   * @since 10.12.2016
   */
-case class EnvironmentNotSetupException(message: String, cause: Throwable = null)
+class EnvironmentNotSetupException(val message: String, cause: Throwable = null)
 	extends RuntimeException(message, cause)

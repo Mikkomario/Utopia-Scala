@@ -1,12 +1,11 @@
 package utopia.citadel.util
 
 import utopia.flow.error.EnvironmentNotSetupException
-import utopia.flow.generic.model.mutable.DataType
+import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 /**
   * This context object holds certain global values required by many features in this project. It is recommended to
@@ -52,10 +51,10 @@ object CitadelContext
 	}
 	
 	@throws[EnvironmentNotSetupException]("If .setup(...) hasn't been called yet")
-	private def get = data match
-	{
+	private def get = data match {
 		case Some(data) => data
-		case None => throw EnvironmentNotSetupException("CitadelContext.setup must be called before using this method")
+		case None =>
+			throw new EnvironmentNotSetupException("CitadelContext.setup must be called before using this method")
 	}
 	
 	

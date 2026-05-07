@@ -1,9 +1,11 @@
 package utopia.echo.model.response
 
 import utopia.echo.model.tokenization.TokenCount
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
-import utopia.flow.util.NumberExtensions._
 
 object TokenUsage
 {
@@ -30,6 +32,8 @@ object TokenUsage
 	private case class _TokenUsage(input: TokenCount, output: TokenCount) extends TokenUsage
 	{
 		override def total: TokenCount = input + output
+		
+		override def toModel: Model = Model.from("input" -> input.value, "output" -> output.value)
 	}
 }
 
@@ -38,7 +42,7 @@ object TokenUsage
  * @author Mikko Hilpinen
  * @since 02.09.2025, v1.4
  */
-trait TokenUsage extends SelfCombinable[TokenUsage] with LinearScalable[TokenUsage]
+trait TokenUsage extends SelfCombinable[TokenUsage] with LinearScalable[TokenUsage] with ModelConvertible
 {
 	// ABSTRACT -------------------------
 	

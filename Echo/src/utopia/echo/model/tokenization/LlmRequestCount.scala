@@ -1,6 +1,9 @@
 package utopia.echo.model.tokenization
 
 import utopia.echo.model.response.TokenUsage
+import utopia.flow.generic.model.immutable.Model
+import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.{MayBeZero, Reversible}
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 
@@ -23,6 +26,7 @@ object LlmRequestCount
  */
 case class LlmRequestCount(requests: Int, completed: Int, failures: Int, tokens: TokenUsage)
 	extends MayBeZero[LlmRequestCount] with SelfCombinable[LlmRequestCount] with Reversible[LlmRequestCount]
+		with ModelConvertible
 {
 	// COMPUTED -----------------------
 	
@@ -44,6 +48,9 @@ case class LlmRequestCount(requests: Int, completed: Int, failures: Int, tokens:
 	override def isZero: Boolean = requests == 0
 	
 	override def unary_- : LlmRequestCount = LlmRequestCount(-requests, -completed, -failures, -tokens)
+	
+	override def toModel: Model = Model.from("requests" -> requests, "completed" -> completed,
+		"failures" -> failures, "tokens" -> tokens)
 	
 	override def +(other: LlmRequestCount): LlmRequestCount =
 		LlmRequestCount(requests + other.requests, completed + other.completed, failures + other.failures,

@@ -2,11 +2,10 @@ package utopia.echo.model.response.openai
 
 import utopia.echo.model.response.TokenUsage
 import utopia.echo.model.tokenization.TokenCount
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.{FromModelFactory, FromModelFactoryWithSchema}
 import utopia.flow.generic.model.immutable.{Model, ModelDeclaration}
 import utopia.flow.generic.model.mutable.DataType.IntType
-import utopia.flow.generic.model.template.ModelConvertible
-import utopia.flow.generic.casting.ValueConversions._
 
 object OpenAiTokenUsageStatistics
 {
@@ -85,7 +84,7 @@ object OpenAiTokenUsageStatistics
   */
 case class OpenAiTokenUsageStatistics(input: TokenCount, cached: TokenCount, output: TokenCount, reasoning: TokenCount,
                                       total: TokenCount)
-	extends TokenUsage with ModelConvertible
+	extends TokenUsage
 {
 	// IMPLEMENTED  ---------------------
 	

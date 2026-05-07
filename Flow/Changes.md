@@ -12,6 +12,7 @@
     - By default, the processes are no longer restartable (!)
   - The new **Scheduler** system uses fewer threads than the original implementations di
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
+- **EnvironmentNotSetupException** is no longer a case class
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
 - **AssignableOnce** now requires the implementation of `setFlag: Flag`
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
@@ -35,6 +36,7 @@
 - **IterableOnce** (via **CollectionExtensions**)
   - Added `.groupMapMap(...)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
+  - Added `.completion` to parallel mapping output options
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
 - **Lazy** (object)

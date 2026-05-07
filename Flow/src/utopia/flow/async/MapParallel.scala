@@ -8,7 +8,7 @@ import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.async.context.{AccessQueue, ActionQueue}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
-import utopia.flow.collection.mutable.builder.{ParallelBuilder, TryCatchBuilder}
+import utopia.flow.collection.mutable.builder.{BuildNothing, ParallelBuilder, TryCatchBuilder}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryCatch
 import utopia.flow.view.immutable.View
@@ -182,6 +182,13 @@ trait MapCollectionParallel[A, +To]
 	
 	
 	// COMPUTED ------------------------
+	
+	/**
+	 * Makes it so that mapping results are not collected
+	 * @return A copy of this interface which only checks whether the successful output was empty or not.
+	 *         Yields true if non-empty.
+	 */
+	def completion = toCustom(BuildNothing.nonEmptyFlag) { !_ }
 	
 	/**
 	 * Changes the built output collection-type to [[Vector]]

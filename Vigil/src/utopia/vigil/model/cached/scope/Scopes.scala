@@ -8,6 +8,8 @@ import utopia.flow.generic.model.template.ValueConvertible
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.view.template.Extender
 
+import scala.language.implicitConversions
+
 object Scopes extends FromCollectionFactory[ScopeTarget, Scopes]
 {
 	// IMPLICIT ---------------------
