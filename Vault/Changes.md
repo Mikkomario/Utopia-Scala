@@ -6,11 +6,16 @@
 ### Bugfixes
 - **Store** now ensures that input is distinct
 - Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items
+- **AccessGrouped** now extends **TargetingGrouped**, as intended
 ### New methods
+- **ConditionElement**
+  - Added new variants of `.isBetween(...)` and `.notBetween(...)` that support **HasInclusiveEnds**
 - **Row**
   - Added `.contains(Column)`
 ### Other changes
 - Built with Scala v2.13.18
+- Added optimization to `Condition.indexIn(IterableOnce)` and `.indexNotIn(IterableOnce) `
+  for situations where the parameter is of type **HasInclusiveEnds** (e.g. a **NumericSpan**)
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:

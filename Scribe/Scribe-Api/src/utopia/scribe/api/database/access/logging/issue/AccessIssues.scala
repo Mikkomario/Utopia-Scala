@@ -18,8 +18,6 @@ object AccessIssues
 {
 	// ATTRIBUTES	--------------------
 	
-	private val resolutionModel = ResolutionDbModel
-	
 	override val root = apply(IssueDbReader)
 	
 	/**

@@ -4,7 +4,7 @@ import utopia.flow.async.process.Wait
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.TimeExtensions._
 import utopia.scribe.api.controller.logging.Scribe
-import utopia.scribe.api.database.access.single.logging.issue.DbIssue
+import utopia.scribe.api.database.access.logging.issue.AccessIssue
 import utopia.scribe.core.model.enumeration.Severity.Debug
 
 /**
@@ -55,7 +55,7 @@ object LoggingOverfillTest extends App
 	
 	// Tests whether the output is correct
 	cPool { implicit c =>
-		val issue = DbIssue.specific(_scribe.context, Debug).withInstances.pull.get
+		val issue = AccessIssue.instances.inContext(_scribe.context).ofSeverity(Debug).pull.get
 		lazy val debugStr = issue.toString
 		assert(issue.variants.size == 1, debugStr)
 		
@@ -64,7 +64,7 @@ object LoggingOverfillTest extends App
 		assert(variant.occurrences.size == 5, debugStr)
 		
 		// Clears the state for the next test
-		DbIssue(issue.id).delete()
+		AccessIssue(issue.id).delete()
 	}
 	
 	println("Done!")

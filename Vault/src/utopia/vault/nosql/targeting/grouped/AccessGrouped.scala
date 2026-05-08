@@ -88,4 +88,4 @@ object AccessGrouped
  * @author Mikko Hilpinen
  * @since 21.01.2026, v2.1
  */
-trait AccessGrouped[+A] extends AccessGroupedLike[A, AccessGrouped[A]]
+trait AccessGrouped[+A] extends TargetingGrouped[A] with AccessGroupedLike[A, AccessGrouped[A]]

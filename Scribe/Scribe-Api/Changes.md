@@ -6,8 +6,14 @@
   (using **AppConfig**)
   - Database access settings are requested on the first app startup
 - **ScribeContext** now requires a **Scheduler**
+### New methods
+- **AccessErrorRecordRows**
+  - Added `.recursiveToMapById`
 ### Other changes
 - Built with Scala v2.13.18
+- Removed previously deprecated classes:
+  - DbIssue, DbSingleIssue, UniqueIssueAccess
+  - DbErrorRecord, DbSingleErrorRecord, UniqueErrorRecordAccess
 
 ## v1.1.1 - 15.03.2026
 Supports **Flow v2.8**, **Vault v2.1** and **Nexus v2.0**

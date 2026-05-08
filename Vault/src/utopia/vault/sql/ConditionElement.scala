@@ -115,6 +115,14 @@ trait ConditionElement
 	  */
 	def isBetween[A](minMax: HasTwoSides[A])(implicit toElement: A => ConditionElement): Condition =
 		isBetween(toElement(minMax.first), toElement(minMax.second))
+	/**
+	 * @param range Targeted value range (inclusive, ascending)
+	 * @return A condition that returns true if the tested value is
+	 *             1. Equal or larger than the starting value, and
+	 *             1. Smaller or equal than the ending value
+	 */
+	def isBetween[A](range: HasInclusiveEnds[A])(implicit toElement: A => ConditionElement): Condition =
+		isBetween(toElement(range.start), toElement(range.end))
 	
 	/**
 	 * @param min Minimum value (inclusive)
@@ -134,6 +142,12 @@ trait ConditionElement
 	 */
 	def notBetween[A](minMax: HasTwoSides[A])(implicit toElement: A => ConditionElement): Condition =
 		notBetween(toElement(minMax.first), toElement(minMax.second))
+	/**
+	 * @param range Targeted range (inclusive, ascending)
+	 * @return A condition that yields values where this element is somewhere outside the specified range
+	 */
+	def notBetween[A](range: HasInclusiveEnds[A])(implicit toElement: A => ConditionElement): Condition =
+		notBetween(toElement(range.start), toElement(range.end))
 	
 	/**
 	 * @param range A range of values. May be open.

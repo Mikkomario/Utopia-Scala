@@ -59,7 +59,7 @@ object ErrorDb
 		}
 		// Combines the collected information together
 		storedError.map { error =>
-			ErrorRecordWithStackTrace(error, storedStackTrace.map { _.stored }, cause)
+			ErrorRecordWithStackTrace(error.id, error.data, storedStackTrace.map { _.stored }, cause)
 		}
 	}
 	

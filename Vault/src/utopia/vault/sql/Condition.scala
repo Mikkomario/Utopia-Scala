@@ -1,6 +1,7 @@
 package utopia.vault.sql
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.range.HasInclusiveEnds
 import utopia.flow.collection.immutable.{IntSet, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.util.UncertainBoolean
@@ -89,18 +90,19 @@ object Condition
 	 * @return A condition that is met by rows where the column matches one of the specified values
 	 */
 	def indexIn(index: Column, values: IterableOnce[Int]) =
-		_indexIn(values)(index.in) { index.in(_) } { index <=> _ }(alwaysFalse)
+		_indexIn(values) { index.isBetween(_) } (index.in) { index.in(_) } { index <=> _ }(alwaysFalse)
 	/**
 	 * @param index An integer-based (index) column
 	 * @param values Excluded values
 	 * @return A condition that is met by rows where the column does not match any of the specified values
 	 */
 	def indexNotIn(index: Column, values: IterableOnce[Int]) =
-		_indexIn(values)(index.notIn) { index.notIn(_) } { index <> _ }(alwaysTrue)
-	private def _indexIn(values: IterableOnce[Int])(inInts: IntSet => Condition)(inOther: Iterable[Int] => Condition)
+		_indexIn(values) { index.notBetween(_) }(index.notIn) { index.notIn(_) } { index <> _ }(alwaysTrue)
+	private def _indexIn(values: IterableOnce[Int])(inRange: Pair[Int] => Condition)
+	                    (inInts: IntSet => Condition)(inOther: Iterable[Int] => Condition)
 	                    (equals: Int => Condition)(inEmpty: Condition) =
-	{
 		values match {
+			case range: HasInclusiveEnds[Int] => inRange(range.ends.sorted)
 			case s: IntSet => inInts(s)
 			case i: Set[Int] =>
 				// Case: Short collection => Won't bother converting to an int-set
@@ -122,7 +124,6 @@ object Condition
 					case _ => inOther(Set.from(i))
 				}
 		}
-	}
 	
 	private def combine(conditions: Seq[Condition], separator: => String, resultOnEmpty: => Condition) = {
 		conditions.emptyOneOrMany match {

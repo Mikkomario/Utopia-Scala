@@ -1,7 +1,7 @@
 {
   "author": "Mikko Hilpinen",
   "project": "Scribe",
-  "version": "v1.2.2",
+  "version": "v1.3",
   "db_package": "utopia.scribe.api.database",
   "model_package": "utopia.scribe.core.model",
   "models_without_vault": true,
@@ -89,6 +89,7 @@
       {
         "name": "ErrorRecord",
         "access": "error",
+        "has_combos": true,
         "doc": "Represents a single error or exception thrown during program runtime",
         "combo_index": ["exceptionType", "stackTraceId"],
         "props": [

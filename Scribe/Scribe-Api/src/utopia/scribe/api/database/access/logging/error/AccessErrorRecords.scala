@@ -1,12 +1,17 @@
 package utopia.scribe.api.database.access.logging.error
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.scribe.api.database.reader.logging.ErrorRecordDbReader
+import utopia.scribe.api.database.storable.logging.ErrorRecordDbModel
 import utopia.scribe.core.model.stored.logging.ErrorRecord
-import utopia.vault.nosql.targeting.columns.AccessManyColumns
+import utopia.vault.database.Connection
+import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
 import utopia.vault.nosql.targeting.one.TargetingOne
+import utopia.vault.sql.Condition
 
-import scala.language.implicitConversions
+import scala.annotation.tailrec
+import scala.collection.mutable
 
 object AccessErrorRecords 
 	extends AccessManyRoot[AccessErrorRecordRows[ErrorRecord]] with WrapRowAccess[AccessErrorRecordRows] 
@@ -17,26 +22,46 @@ object AccessErrorRecords
 	override val root = apply(ErrorRecordDbReader)
 	
 	
-	// IMPLICIT	--------------------
-	
-	/**
-	  * Provides implicit access to an access point's .values property
-	  * @param access Access point whose values are accessed
-	  */
-	implicit def accessValues(access: AccessErrorRecords[_, _]): AccessErrorRecordValues = access.values
-	
-	
 	// IMPLEMENTED	--------------------
 	
-	/**
-	  * @tparam A Type of accessed items
-	  */
 	override def apply[A](access: TargetingManyRows[A]) = AccessErrorRecordRows(access)
-	
-	/**
-	  * @tparam A Type of accessed items
-	  */
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedErrorRecords(access)
+	
+	
+	// EXTENSIONS   --------------------
+	
+	implicit class ExtendedErrorRecordsAccess[R <: ErrorRecord](val a: AccessErrorRecordRows[R]) extends AnyVal
+	{
+		/**
+		 * Collects all accessible records to a map where keys are record IDs.
+		 * Includes all recorded causes.
+		 * @param connection Implicit DB connection
+		 * @return A map where keys are record IDs and values are error records.
+		 */
+		def recursiveToMapById(implicit connection: Connection): Map[Int, R] = {
+			val builder = a.stream { recordsIter => mutable.Map.from(recordsIter.map { r => r.id -> r }) }
+			buildRecursiveToMapById(builder,
+				builder.valuesIterator.flatMap { r => r.causeId.filterNot(builder.contains) }.toIntSet)
+			
+			builder.toMap
+		}
+		@tailrec
+		private def buildRecursiveToMapById(builder: mutable.Map[Int, R], nextIds: Iterable[Int])
+		                                   (implicit connection: Connection): Unit =
+		{
+			if (nextIds.nonEmpty) {
+				val idsForNextIteration = a(Condition.indexIn(ErrorRecordDbModel.id, nextIds)).stream { recordsIter =>
+					recordsIter
+						.flatMap { record =>
+							builder += (record.id -> record)
+							record.causeId.filterNot(builder.contains)
+						}
+						.toIntSet
+				}
+				buildRecursiveToMapById(builder, idsForNextIteration)
+			}
+		}
+	}
 }
 
 /**
@@ -46,6 +71,7 @@ object AccessErrorRecords
   */
 abstract class AccessErrorRecords[A, +Repr <: TargetingManyLike[_, Repr, _]](wrapped: AccessManyColumns) 
 	extends TargetingManyLike[A, Repr, AccessErrorRecord[A]] with FilterErrorRecords[Repr]
+		with HasValues[AccessErrorRecordValues]
 {
 	// ATTRIBUTES	--------------------
 	
@@ -70,7 +96,6 @@ case class AccessErrorRecordRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessErrorRecordRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessErrorRecord(target)
 }
 
@@ -89,7 +114,6 @@ case class AccessCombinedErrorRecords[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedErrorRecords(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessErrorRecord(target)
 }
 

@@ -1,6 +1,10 @@
 # Utopia Scribe Core - list of changes
 
-## v1.2.2 (in development)
+## v1.3 (in development)
+### Breaking changes
+- **ErrorRecord** is now a trait
+- **ErrorRecordWithStackTrace** now extends **ErrorRecord** instead of just **ErrorRecordFactoryWrapper**
+  - Consequently, the wrapped type is now **ErrorRecordData** instead of **ErrorRecord**
 ### Bugfixes
 - Throwable collection logging now includes an example from the collected failures
 ### Other changes
