@@ -259,6 +259,28 @@ class ClosesAfterIdle[+A](addShutdownHook: Boolean = false)
 			}
 		}
 	}
+	/**
+	 * Keeps the wrapped item open until the specified function has fully resolved
+	 * @param f A function to execute using an open item. Yields a future.
+	 * @tparam R Type of eventual 'f' results
+	 * @return Result of 'f'
+	 */
+	def keepOpenUntilCompletionOf[R](f: A => Future[R]) = {
+		// Locks
+		lockCounter.update { _ + 1 }
+		// Executes the wrapped function
+		val future = Try { f(value) }.getOrMap(Future.failed)
+		// Once the function has fully resolved, releases the lock
+		future.onComplete { _ =>
+			val now = Now.toInstant
+			lastUsedP.value = now
+			// Also restarts the reset loop, if appropriate
+			if (lockCounter.updateAndGet { _ - 1 } <= 0 && resetLoopP.value.isCompleted)
+				startNewResetLoop(now, lastIdleThreshold)
+		}
+		
+		future
+	}
 	
 	private def startNewResetLoop(now: Instant, idleThreshold: Duration) = {
 		if (idleThreshold.isPositive) {

@@ -325,6 +325,42 @@ object Pointer extends PointerFactory[Pointer]
 		def --=(items: Iterable[Any]) = p.update { _ filterNot { my => items.exists(_ == my) } }
 	}
 	
+	implicit class MapPointer[K, V](val c: Pointer[Map[K, V]]) extends AnyVal
+	{
+		/**
+		 * Clears this pointer's contents
+		 */
+		def clear() = c.value = Map()
+		
+		/**
+		 * Removes one key from this pointer
+		 * @param key Targeted key
+		 * @return Value of the targeted key. None if this pointer didn't contain that key.
+		 */
+		def pop(key: K) = c.mutate { contents =>
+			contents.get(key) match {
+				case Some(value) => (Some(value), contents - key)
+				case None => None -> contents
+			}
+		}
+		/**
+		 * Removes all content from this pointer
+		 * @return The contents of this pointer
+		 */
+		def popAll() = c.getAndSet(Map())
+		
+		/**
+		 * Adds a new entry to this pointer
+		 * @param keyValue A key-value pair
+		 */
+		def +=(keyValue: (K, V)) = c.update { _ + keyValue }
+		/**
+		 * Removes a key from this pointer
+		 * @param key Key to remove
+		 */
+		def -=(key: K) = c.update { _ - key }
+	}
+	
 	
 	// NESTED   ---------------------------
 	

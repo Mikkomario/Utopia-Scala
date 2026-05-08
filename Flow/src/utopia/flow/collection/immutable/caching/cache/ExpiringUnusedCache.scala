@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable.caching.cache
 
-import utopia.flow.async.process.WaitTarget.Until
-import utopia.flow.async.process.{LoopingProcess, Wait, WaitUtils}
+import utopia.flow.async.context.Scheduler
+import utopia.flow.async.process.Loop
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.logging.Logger
@@ -9,7 +9,7 @@ import utopia.flow.view.mutable.async.Volatile
 
 import java.time.Instant
 import scala.annotation.unchecked.uncheckedVariance
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 object ExpiringUnusedCache
 {
@@ -23,7 +23,7 @@ object ExpiringUnusedCache
 	 * @return A new cache that clears values automatically
 	 */
 	def apply[K, V](request: K => V)(calculateExpiration: (K, V) => Option[Instant])
-	               (implicit exc: ExecutionContext, log: Logger) =
+	               (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
 		new ExpiringUnusedCache[K, V](request)(calculateExpiration)
 	
 	/**
@@ -35,7 +35,8 @@ object ExpiringUnusedCache
 	 * @tparam V Type of values stored
 	 * @return A new cache that clears values automatically
 	 */
-	def after[K, V](expirationDuration: Duration)(request: K => V)(implicit exc: ExecutionContext, log: Logger) =
+	def after[K, V](expirationDuration: Duration)(request: K => V)
+	               (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
 		new ExpiringUnusedCache[K, V](request)((_, _) => Some(Now + expirationDuration))
 }
 
@@ -45,15 +46,20 @@ object ExpiringUnusedCache
   * @since 16.5.2021, v1.10
   */
 class ExpiringUnusedCache[-K, +V](request: K => V)(calculateExpiration: (K, V) => Option[Instant])
-                                 (implicit exc: ExecutionContext, log: Logger)
+                                 (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger)
 	extends Cache[K, V]
 {
 	// ATTRIBUTES   -----------------------------
 	
-	private val waitLock = new AnyRef
 	// Unchecked, because all values are generated using 'request'
 	private val cacheP: Volatile[Map[Any, (V @uncheckedVariance, Volatile[Option[Instant]])]] = Volatile(Map())
-	private val nextExpirationP = Volatile.empty[Instant]
+	private val nextExpirationP = Volatile.eventful.empty[Instant]
+	
+	
+	// INITAL CODE  -----------------------------
+	
+	// Starts the data-clearance loop once necessary
+	nextExpirationP.onceDefined { _ => startClearanceLoop() }
 	
 	
 	// IMPLEMENTED  -----------------------------
@@ -76,22 +82,18 @@ class ExpiringUnusedCache[-K, +V](request: K => V)(calculateExpiration: (K, V) =
 		
 		// Starts or hurries the expiration process, if necessary
 		expires.foreach { expires =>
-			val (shouldStart, shouldNotify) = nextExpirationP.mutate {
+			nextExpirationP.update {
 				case Some(nextTarget) =>
 					// Case: Next expiration is sooner than what before => Hurries
 					if (nextTarget > expires)
-						(false, true) -> Some(expires)
+						Some(expires)
 					// Case: Next expiration was not modified => No change
 					else
-						(false, false) -> Some(nextTarget)
+						Some(nextTarget)
 				
 				// Case: No expiration was set previously => Starts
-				case None => (true, false) -> Some(expires)
+				case None => Some(expires)
 			}
-			if (shouldStart)
-				ExpirationProcess.runAsync()
-			else if (shouldNotify)
-				WaitUtils.notify(waitLock)
 		}
 		
 		value
@@ -100,6 +102,14 @@ class ExpiringUnusedCache[-K, +V](request: K => V)(calculateExpiration: (K, V) =
 	
 	
 	// OTHER    ---------------------------
+	
+	private def startClearanceLoop(): Unit =
+		Loop
+			.atVariableIntervals(nextExpirationP) {
+				val shouldContinue = clearExpired().isDefined
+				Future.successful(shouldContinue)
+			}
+			.onComplete { _ => nextExpirationP.onceDefined { _ => startClearanceLoop() } }
 	
 	// Locks the next expiration pointer from modifications during this clearance
 	private def clearExpired() = nextExpirationP.updateAndGet { _ =>
@@ -121,38 +131,6 @@ class ExpiringUnusedCache[-K, +V](request: K => V)(calculateExpiration: (K, V) =
 				}
 			}
 			nextTarget -> remaining
-		}
-	}
-	
-	
-	// NESTED   ---------------------------
-	
-	private object ExpirationProcess extends LoopingProcess(waitLock = waitLock)
-	{
-		// ATTRIBUTES   -------------------
-		
-		override protected val isRestartable = true
-		
-		
-		// IMPLEMENTED  -------------------
-		
-		override protected def iteration() = {
-			// Checks the next expiration
-			nextExpirationP.value match {
-				case Some(target) =>
-					// Waits until the wait target is reached, clears the expired elements
-					// and schedules the next iteration
-					if (Wait(target, this.waitLock))
-						clearExpired().map { Until(_) }
-					// Case: Interrupted => Stops
-					else {
-						markAsInterrupted()
-						None
-					}
-					
-				// Case: Nothing to expire => Completes
-				case None => None
-			}
 		}
 	}
 }

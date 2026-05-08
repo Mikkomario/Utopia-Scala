@@ -40,6 +40,8 @@
 - Parallel mapping now supports custom builders
 - Added **WithoutIndexIterator**
 ### New methods
+- **ActionQueue**
+  - Added `.currentSize`
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
 - **HasValues**
@@ -59,6 +61,8 @@
   - Added `.bestMatch(...)`
 - **PartialMapView** (object)
   - Added multiple new constructors
+- **Pointer**
+  - Added new functions for **Pointer**s that contain **Map**s
 - **PossiblyFailingFuture**
   - Added `.mapFailure(...)`, `.flatMapFailure(...)`, `.flatMapFailureRepeatedly(...)` and `.recoverFromFailureWith(...)`
 - **QueuedAction** (object)

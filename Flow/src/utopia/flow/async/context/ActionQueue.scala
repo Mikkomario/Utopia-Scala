@@ -530,6 +530,15 @@ object ActionQueue
 		
 		// IMPLEMENTED  -----------------------
 		
+		override def currentSize: Int = {
+			val pending = pendingCount
+			if (pending == 0) {
+				if (processorP.isEmpty) 0 else 1
+			}
+			else
+				pending + 1
+		}
+		
 		override def hasCapacity = processorP.value.forall { _.isComplete }
 		override def currentWidth: Int = processorP.value.count { !_.isComplete }
 		
@@ -598,6 +607,14 @@ object ActionQueue
 		
 		
 		// IMPLEMENTED  -------------------
+		
+		override def currentSize: Int = {
+			val pending = pendingCount
+			if (pending == 0)
+				currentWidth
+			else
+				pending + maxWidth
+		}
 		
 		override def hasCapacity = !processorsP.value.existsCount(maxWidth) { !_.isComplete }
 		override def currentWidth: Int = processorsP.value.count { !_.isComplete }
@@ -783,6 +800,11 @@ trait ActionQueue extends MaybeEmpty[ActionQueue]
 	 * @return A flag that contains true while this queue is empty
 	 */
 	def emptyFlag: Flag
+	
+	/**
+	 * @return The current number of processes either running or pending execution
+	 */
+	def currentSize: Int
 	
 	/**
 	 * @return A string for debugging the state of this queue
