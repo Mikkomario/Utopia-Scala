@@ -1,5 +1,6 @@
 package utopia.flow.async.process
 
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.Duration
@@ -18,13 +19,14 @@ object LogProcessToFile
 	 * @param log Implicit logging implementation used on file-writing failures
 	 * @return A factory for constructing the logger
 	 */
-	def apply(out: Path)(implicit exc: ExecutionContext, log: Logger) = LogProcessToFileFactory(out, None, 15.seconds)
+	def apply(out: Path)(implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger) =
+		LogProcessToFileFactory(out, None, 15.seconds)
 	
 	
 	// NESTED   ------------------------
 	
 	case class LogProcessToFileFactory(out: Path, err: Option[Path], keepOpenDuration: Duration)
-	                                  (implicit exc: ExecutionContext, log: Logger)
+	                                  (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger)
 	{
 		/**
 		 * @param err Path to where error records should be written

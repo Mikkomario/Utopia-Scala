@@ -1,6 +1,6 @@
 package utopia.scribe.api.app.console
 
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.FileUtils
@@ -31,6 +31,7 @@ object ScribeConsoleApp extends App
 	
 	private implicit val jsonParser: JsonParser = ScribeConsoleSettings.jsonParser
 	private implicit val exc: ThreadPool = ScribeConsoleSettings.threadPool
+	private implicit val scheduler: Scheduler = SysErrLogger.use { implicit log => Scheduler.newInstance }
 	private implicit val log: Logger = ScribeConsoleSettings.logDirectory match {
 		case Some(dir) => new FileLogger(dir, 1.seconds, copyToSysErr = true)
 		case None => SysErrLogger

@@ -1,5 +1,6 @@
 package utopia.flow.util.logging
 
+import utopia.flow.async.context.Scheduler
 import utopia.flow.error.ErrorExtensions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
@@ -33,7 +34,7 @@ object FileLogger
   * @param copyToSysErr Whether log entries should be copied to System.err (default = false)
  */
 class FileLogger(private var dir: Path = "log", groupDuration: Duration = Duration.zero, copyToSysErr: Boolean = false)
-                (implicit codec: Codec, exc: ExecutionContext)
+                (implicit codec: Codec, exc: ExecutionContext, scheduler: Scheduler)
 	extends Logger
 {
 	// ATTRIBUTES   --------------------------

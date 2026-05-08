@@ -13,7 +13,6 @@ object AutoClose
 	  * Uses a resource and then closes it. May throw.
 	  */
 	def apply[T <: AutoCloseable, B](closeable: T)(f: T => B) = closeable.consume(f)
-	
 	/**
 	  * Uses a resource and then closes it. Will not throw.
 	  */
@@ -27,19 +26,11 @@ object AutoClose
 		/**
 		  * Consumes this entity, then closes. Wraps the results in a try
 		  */
-		def tryConsume[B](f: T => B) = Try(consume(f))
-		
+		def tryConsume[B](f: T => B) = Try { consume(f) }
 		/**
 		  * Consumes this entity, then closes. May throw if the provided function throws
 		  */
-		def consume[B](f: T => B): B = {
-			try {
-				f(c)
-			}
-			finally {
-				Try(c.close())
-			}
-		}
+		def consume[B](f: T => B): B = try { f(c) } finally { Try(c.close()) }
 		
 		/**
 		  * Closes this item without a chance of throwing an exception

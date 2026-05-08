@@ -1,22 +1,17 @@
 package utopia.flow.parse.file
 
-import utopia.flow.async.process.ShutdownReaction.SkipDelay
-import utopia.flow.async.process.{Process, ProcessState, Wait}
+import utopia.flow.async.context.Scheduler
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.file.FileExtensions._
-import utopia.flow.time.Now
-import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.Duration
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.caching.Lazy
-import utopia.flow.view.mutable.async.Volatile
+import utopia.flow.view.immutable.caching.{ClosesAfterIdle, Lazy}
 
 import java.io.{FileOutputStream, OutputStream, OutputStreamWriter, PrintWriter}
 import java.nio.file.Path
-import java.time.Instant
-import utopia.flow.time.Duration
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.io.Codec
-import scala.util.{Success, Try}
+import scala.util.Try
 
 object KeptOpenWriter
 {
@@ -29,7 +24,7 @@ object KeptOpenWriter
 	  * @return A new writer wrapper
 	  */
 	def apply(path: Path, keepOpenDuration: Duration)
-	         (implicit codec: Codec, exc: ExecutionContext, logger: Logger) =
+	         (implicit codec: Codec, exc: ExecutionContext, scheduler: Scheduler, logger: Logger) =
 	{
 		val existingPathPointer = Lazy { path.createDirectories() }
 		new KeptOpenWriter(keepOpenDuration)(new FileOutputStream(existingPathPointer.value.get.toFile, true))
@@ -43,18 +38,27 @@ object KeptOpenWriter
   * @since 24.7.2022, v1.16
   */
 class KeptOpenWriter(keepOpenDuration: Duration)(generate: => OutputStream)
-                    (implicit codec: Codec, exc: ExecutionContext, logger: Logger)
+                    (implicit codec: Codec, exc: ExecutionContext, scheduler: Scheduler, log: Logger)
 {
 	// ATTRIBUTES   ----------------------------
 	
-	private val lastAccessPointer = Volatile(Instant.EPOCH)
-	private val writerPointer = Volatile.optional[(PrintWriter, Future[ProcessState])]()
-	
-	
-	// COMPUTED --------------------------------
-	
-	private def lastAccessTime = lastAccessPointer.value
-	private def lastAccessTime_=(newTime: Instant) = lastAccessPointer.value = newTime
+	private val writerP = ClosesAfterIdle.closingOnJvmShutdown.after(keepOpenDuration).trying {
+		// Opens a new print writer. On failure closes the underlying stream and other assets.
+		Try
+			.apply {
+				val stream = generate
+				val writer = Try { new OutputStreamWriter(stream, codec.charSet) }.flatMap { writer =>
+					val printWriter = Try { new PrintWriter(writer) }
+					if (printWriter.isFailure)
+						writer.closeQuietly()
+					printWriter
+				}
+				if (writer.isFailure)
+					stream.closeQuietly()
+				writer
+			}
+			.flatten
+	}
 	
 	
 	// OTHER    --------------------------------
@@ -62,52 +66,8 @@ class KeptOpenWriter(keepOpenDuration: Duration)(generate: => OutputStream)
 	/**
 	  * Performs a write operation
 	  * @param f A function that uses a writer (any thrown errors are caught)
-	  * @tparam U Function result type
+	  * @tparam A Function result type
 	  * @return Success if writing (including function call) succeeded, failure otherwise
 	  */
-	def apply[U](f: PrintWriter => U) = {
-		lastAccessTime = Now
-		writerPointer.mutate { existing =>
-			// Uses a pre-created writer, if possible
-			val writer = existing match {
-				case Some(e) => Success(e)
-				case None =>
-					// Opens a new print writer. On failure closes the underlying stream and other assets.
-					Try {
-						val stream = generate
-						val writer = Try { new OutputStreamWriter(stream, codec.charSet) }.flatMap { writer =>
-							val printWriter = Try { new PrintWriter(writer) }
-							if (printWriter.isFailure)
-								writer.closeQuietly()
-							printWriter
-						}
-						if (writer.isFailure)
-							stream.closeQuietly()
-						writer
-					}.flatten.map { writer =>
-						// Schedules an automated closing for the writer
-						val waitLock = new AnyRef
-						val closeProcess = Process(waitLock, SkipDelay) { hurryPointer =>
-							// Waits until the writer has been unused long enough
-							// (or interrupted, or scheduled to close)
-							var uninterrupted = true
-							while (uninterrupted && !hurryPointer.value && Now < (lastAccessTime + keepOpenDuration)) {
-								uninterrupted = Wait(lastAccessTime + keepOpenDuration, waitLock)
-							}
-							// Closes the writer
-							writerPointer.update { _ =>
-								writer.closeQuietly()
-								None
-							}
-						}
-						closeProcess.runAsync()
-						writer -> closeProcess.completionFuture
-					}
-			}
-			// Attempts to perform the writing operation
-			val result = writer.flatMap { case (writer, _) => Try { f(writer) } }
-			// Updates writer state and returns success or failure
-			result -> writer.toOption
-		}
-	}
+	def apply[A](f: PrintWriter => A) = writerP.keepOpenDuring { _.map(f) }
 }

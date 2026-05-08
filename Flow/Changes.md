@@ -10,7 +10,10 @@
   - Rewrote **LoopingProcess** constructors
     - The new constructors are based on factories
     - By default, the processes are no longer restartable (!)
-  - The new **Scheduler** system uses fewer threads than the original implementations di
+  - The new **Scheduler** system uses fewer threads than the original implementations did
+  - Access to an implicit **Scheduler** is now required in various classes, including:
+    - **KeptOpenWriter**
+    - **FileLogger** and **LogProcessToFile**
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
@@ -32,6 +35,7 @@
 ### New features
 - Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
   except supporting variable cost / "width".
+- Added **ClosesAfterIdle** that handles automated closing
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 - Parallel mapping now supports custom builders
 - Added **WithoutIndexIterator**
@@ -80,6 +84,7 @@
 - Moved `.withoutIndex(...)` and `.findAndPop(...)` from **Seq** to **IterableOnce** in **CollectionExtensions**
   - Also optimized/rewrote the implementations
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
+- Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:

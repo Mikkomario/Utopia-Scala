@@ -5,6 +5,7 @@
 - **ErrorRecord** is now a trait
 - **ErrorRecordWithStackTrace** now extends **ErrorRecord** instead of just **ErrorRecordFactoryWrapper**
   - Consequently, the wrapped type is now **ErrorRecordData** instead of **ErrorRecord**
+- **ConsoleScribe** now requires access to an implicit **Scheduler**
 ### Bugfixes
 - Throwable collection logging now includes an example from the collected failures
 ### Other changes

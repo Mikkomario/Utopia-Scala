@@ -1,5 +1,6 @@
 package utopia.scribe.core.controller.logging
 
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -23,6 +24,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
 import utopia.flow.time.Duration
+
 import scala.io.Codec
 
 object ConsoleScribe
@@ -51,7 +53,7 @@ object ConsoleScribe
 	def apply(context: String, bundleDuration: Duration = 5.seconds, logDirectory: Option[Path] = None,
 	          backupLogger: Logger = SysErrLogger.includingTime,
 	          defaultSeverity: Severity = Severity.default, defaultDetails: Model = Model.empty)
-	         (implicit exc: ExecutionContext) =
+	         (implicit exc: ExecutionContext, scheduler: Scheduler) =
 		new ConsoleScribe(context, bundleDuration, logDirectory, backupLogger, defaultSeverity, defaultDetails)
 	
 	/**
@@ -70,7 +72,8 @@ object ConsoleScribe
 	  */
 	def copyingToFile(logDirectory: Path, context: String, backupLogger: Logger = SysErrLogger.includingTime,
 	                  bundleDuration: Duration = 5.seconds, defaultSeverity: Severity = Severity.default,
-	                  defaultDetails: Model = Model.empty)(implicit exc: ExecutionContext) =
+	                  defaultDetails: Model = Model.empty)
+	                 (implicit exc: ExecutionContext, scheduler: Scheduler) =
 		new ConsoleScribe(context, bundleDuration, Some(logDirectory), backupLogger, defaultSeverity, defaultDetails)
 }
 
@@ -82,7 +85,7 @@ object ConsoleScribe
 class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.seconds,
                     logDirectory: Option[Path] = None, backupLogger: Logger = SysErrLogger.includingTime,
                     severity: Severity = Severity.default, variantDetails: Model = Model.empty)
-                   (implicit exc: ExecutionContext)
+                   (implicit exc: ExecutionContext, scheduler: Scheduler)
 	extends Scribe with ConcreteScribeLike[Scribe]
 {
 	// ATTRIBUTES   -------------------
