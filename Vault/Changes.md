@@ -14,8 +14,11 @@
   - Added `.contains(Column)`
 ### Other changes
 - Built with Scala v2.13.18
+- Added automatic joining logic to cases where the two tables/columns reference the same external column
 - Added optimization to `Condition.indexIn(IterableOnce)` and `.indexNotIn(IterableOnce) `
   for situations where the parameter is of type **HasInclusiveEnds** (e.g. a **NumericSpan**)
+- Optimized `.toMultiMap(...)` in **AccessManyColumns**
+  - The new implementation also contains an optional `includeDefault: Boolean `-parameter
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:

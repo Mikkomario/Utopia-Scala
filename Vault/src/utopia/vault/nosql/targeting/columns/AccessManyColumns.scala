@@ -1,6 +1,7 @@
 package utopia.vault.nosql.targeting.columns
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.enumeration.Extreme
 import utopia.flow.operator.enumeration.Extreme.{Max, Min}
@@ -125,6 +126,8 @@ trait AccessManyColumns extends AccessColumns[Seq[Value], Seq[Seq[Value]]]
 	 * Assumes that there are 0-n values for each key.
 	 * @param key Targeted key column
 	 * @param value Targeted value column
+	 * @param includeDefault Whether an empty default value should be included.
+	 *                       Generated using 'makeValues' with empty input.
 	 * @param makeKey A function that converts a value to a key
 	 * @param makeValues A function that converts read values to a map value
 	 * @param connection Implicit DB connection
@@ -132,13 +135,16 @@ trait AccessManyColumns extends AccessColumns[Seq[Value], Seq[Seq[Value]]]
 	 * @tparam V Type of parsed values
 	 * @return A map that contains the parsed keys & values
 	 */
-	def toMultiMap[K, V](key: Column, value: Column)(makeKey: Value => K)(makeValues: Seq[Value] => V)
+	def toMultiMap[K, V](key: Column, value: Column, includeDefault: Boolean = false)
+	                    (makeKey: Value => K)(makeValues: Seq[Value] => V)
 	                    (implicit connection: Connection) =
-		apply(key, value)
-			.map { values =>
-				val iter = values.iterator
-				makeKey(iter.nextOption().getOrElse(Value.empty)) -> iter.nextOption().getOrElse(Value.empty)
-			}
-			.groupMap { _._1 } { _._2 }
-			.view.mapValues(makeValues).toMap
+	{
+		val result = streamColumns(key, value) { rowsIter =>
+			rowsIter.groupMapMap { row => makeKey(row.head) } { _(1) }(makeValues)
+		}
+		if (includeDefault)
+			result.withDefaultValue(makeValues(Empty))
+		else
+			result
+	}
 }

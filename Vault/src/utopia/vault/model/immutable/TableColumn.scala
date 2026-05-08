@@ -1,14 +1,13 @@
 package utopia.vault.model.immutable
 
-import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.view.template.Extender
 import utopia.vault.database.References
-import utopia.vault.model.error.NoReferenceFoundException
 import utopia.vault.model.template.Joinable
 import utopia.vault.sql.{Join, JoinType}
 
-import scala.util.{Failure, Success}
+import scala.util.Success
 
 /**
   * Wraps a column, including all the parent table's information
@@ -43,20 +42,27 @@ case class TableColumn(table: Table, column: Column) extends Extender[Column] wi
 			References.referencing(this).find { ref => originTables.contains(ref.table) } match {
 				// Case: Direct reference found => Joins
 				case Some(reference) => Success(Single(Join(reference.column, this, joinType)))
-				// Case: No direct reference => Looks for a reference from this point (option 2)
+				// Case: No direct reference
+				//       => Looks whether this column references a column that's related to the origin tables
 				case None =>
-					val secondaryResult = References.findReferencedFrom(this).flatMap { referenced =>
+					References.findReferencedFrom(this).flatMap { myReferenced =>
 						// Case: Reference originates from the specified tables => Includes the referenced table
 						if (originTables.contains(table))
-							Some(Join(column, referenced, joinType))
+							Some(Join(column, myReferenced, joinType))
 						// Case: Reference points to one of the specified tables => Includes this point's table
-						else if (originTables.contains(referenced.table))
-							Some(Join(referenced.column, this, joinType))
-						// Case: Unrelated reference => Won't join to it
+						else if (originTables.contains(myReferenced.table))
+							Some(Join(myReferenced.column, this, joinType))
+						// Case: Neither of the above
+						//       => Looks for cases where this column references a column
+						//          already referenced from the origin tables
 						else
-							None
-					}
-					secondaryResult match {
+							References.referencing(myReferenced).findMap { referencing =>
+								if (originTables.contains(referencing.table))
+									Some(Join(referencing.column, this, joinType))
+								else
+									None
+							}
+					} match {
 						case Some(result) => Success(Single(result))
 						// Case: No direct references to or from this column
 						//       => Attempts to join this column's table instead

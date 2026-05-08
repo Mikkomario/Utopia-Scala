@@ -104,50 +104,43 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	override def contains(table: Table): Boolean = table == this
 	
 	override def toJoinsFrom(originTables: Seq[Table], joinType: JoinType = Inner) = {
-		// If already part of the origin tables, no join is created
+		// Case: Already part of the origin tables => No join is applied
 		if (originTables.contains(this))
 			Success(Empty)
 		else
-			// Finds the first table referencing (or being referenced by) the provided table and uses
-			// that for a join
+			// Finds the first table referencing (or being referenced by) the provided table and uses that for a join
 			originTables.findMap { left => References.connectionBetween(left, this) } match {
+				// Case: Direct reference found => Joins via that
 				case Some(Pair(leftColumn, rightColumn)) =>
 					Success(Single(Join(leftColumn, TableColumn(this, rightColumn), joinType)))
+				// Case: No direct references
+				//       => Looks for a reference that skips one table
+				//          (i.e. cases where both ends point to the same column)
 				case None =>
-					// Secondarily, finds indirect references
-					References.toBiDirectionalLinkGraphFrom(this)
-						.cheapestRoutesTo[Int] {
-							node: ViewGraphNode[Table, (Reference, Boolean)] => originTables.contains(node.value) } {
-							edge =>
-								// Evaluates the routes by:
-								//      1. Length
-								//      2. Whether joining via nullable columns
-								//      3. Whether joining the same direction as the reference (avoiding many-to-one links)
-								//      4. Route ambiguity (based on the number of tables that may be involved)
-								val (reference, sameDirection) = edge.value
-								val referenceTypeCost = if (reference.from.allowsNull) 1000 else 0
-								// Note: We're moving in the graph from the join target to a join origin,
-								//       so reference "same direction" has a different meaning
-								val directionCost = if (sameDirection) 100 else 0
-								val nextTable = (if (sameDirection) reference.to else reference.from).table
-								val referenceCountCost = References.from(nextTable).size + References.to(nextTable).size
-								
-								10000 + referenceTypeCost + directionCost + referenceCountCost
+					References.from(this)
+						.flatMap { myReference =>
+							originTables.iterator.flatMap { origin =>
+								References.from(origin).iterator.filter { _.to == myReference.to }
+									.map { originReference => (originReference.from, myReference.to, myReference.from) }
+							}
 						}
-						.cheapest match
+						.emptyOneOrMany match
 					{
-						case Some(result) =>
-							Success(result.anyRoute.view.reverse
-								.map { edge =>
-									val (reference, isReversed) = edge.value
-									if (isReversed) reference.reverse.toJoin else reference.toJoin
-								}
-								.toOptimizedSeq)
-						case None =>
-							Failure(new NoReferenceFoundException(
-								s"Cannot find a reference between ${
-									originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
-									(tables :+ this).iterator.flatMap(References.from).mkString(", ")}]"))
+						// Case: No such references were found => Looks for indirect references
+						case None => toIndirectJoinsFrom(originTables)
+						// Case: One such reference was found => Yields that
+						case Some(Left((origin, _, end))) => Success(Single(Join(origin, end, joinType)))
+						// Case: Multiple options found => Selects the best one
+						case Some(Right(options)) =>
+							val (from, _, to) = options
+								// Avoids joins that involve nullable columns
+								.filterMinBy { case (origin, _, end) => Pair(origin, end).count { _.allowsNull } }
+								// Avoids nullable referenced columns (rare)
+								.bestMatch { !_._2.allowsNull }
+								// From the remaining options, selects the middle table most unique to this join
+								.minBy { case (_, mid, _) => References.to(mid).size }
+							
+							Success(Single(Join(from, to, joinType)))
 					}
 			}
 	}
@@ -260,4 +253,42 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  * @return A validated copy of that model. Failure if the model didn't contain all required properties.
 	  */
 	def validate(model: HasProperties) = toModelDeclaration.validate(model)
+	
+	private def toIndirectJoinsFrom(originTables: Seq[Table]) = {
+		// Secondarily, finds indirect references
+		References.toBiDirectionalLinkGraphFrom(this)
+			.cheapestRoutesTo[Int] {
+				node: ViewGraphNode[Table, (Reference, Boolean)] => originTables.contains(node.value) } {
+				edge =>
+					// Evaluates the routes by:
+					//      1. Length
+					//      2. Whether joining via nullable columns
+					//      3. Whether joining the same direction as the reference (avoiding many-to-one links)
+					//      4. Route ambiguity (based on the number of tables that may be involved)
+					val (reference, sameDirection) = edge.value
+					val referenceTypeCost = if (reference.from.allowsNull) 1000 else 0
+					// Note: We're moving in the graph from the join target to a join origin,
+					//       so reference "same direction" has a different meaning
+					val directionCost = if (sameDirection) 100 else 0
+					val nextTable = (if (sameDirection) reference.to else reference.from).table
+					val referenceCountCost = References.from(nextTable).size + References.to(nextTable).size
+					
+					10000 + referenceTypeCost + directionCost + referenceCountCost
+			}
+			.cheapest match
+		{
+			case Some(result) =>
+				Success(result.anyRoute.view.reverse
+					.map { edge =>
+						val (reference, isReversed) = edge.value
+						if (isReversed) reference.reverse.toJoin else reference.toJoin
+					}
+					.toOptimizedSeq)
+			case None =>
+				Failure(new NoReferenceFoundException(
+					s"Cannot find a reference between ${
+						originTables.map { _.name }.mkString(" + ") } and $name. Only found references: [${
+						(tables :+ this).iterator.flatMap(References.from).mkString(", ")}]"))
+		}
+	}
 }
