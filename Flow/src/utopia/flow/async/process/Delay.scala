@@ -26,6 +26,15 @@ object Delay
 	private val advancedFactory = AdvancedDelayFactory()
 	
 	
+	// COMPUTED -------------------------
+	
+	/**
+	 * @return A factory that executes the delayed action before allowing JVM to shut down.
+	 *         The delay itself is skipped, however.
+	 */
+	def executingOnShutdown = simpleFactories.second
+	
+	
 	// IMPLICIT -------------------------
 	
 	// Implicitly converts this object into the default factories

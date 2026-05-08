@@ -310,7 +310,7 @@ object ActionQueue
 				// Case: No promise or future has been prepared yet => Waits until one is prepared
 				case None =>
 					val pointer = Volatile.lockable[BasicProcessState](NotStarted)
-					wrappedPointer.onceNotEmpty {
+					wrappedPointer.onceDefined {
 						// Case: Prepared as a promise => Listens to process start & completion
 						case Left(promise) => startAndCompleteStatePointerWith(pointer, startFuture, promise.future)
 						// Case: Prepared as the final future => Listens to its completion

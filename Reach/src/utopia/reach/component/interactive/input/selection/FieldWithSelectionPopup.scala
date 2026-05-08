@@ -716,7 +716,7 @@ class FieldWithSelectionPopup[A, C <: ReachComponent with Focusable](override va
 			// When the selection changes, ensures that the selected content is visible
 			// (but only while the pop-up itself is visible)
 			linkedFlag.onceSet {
-				scrollViewCreation.result.onceNotEmpty { stack =>
+				scrollViewCreation.result.onceDefined { stack =>
 					stack.selectedIndexPointer.addListenerWhile(popupVisibleFlag) { e =>
 						e.newValue.foreach { index =>
 							// Finds the stack's location within the scroll view

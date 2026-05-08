@@ -126,9 +126,9 @@ trait NumericSpan[N]
 	// COMPUTED   -------------------------
 	
 	/**
-	  * The length of this span, which may be negative
+	  * The length of this span. Always positive.
 	  */
-	def length = n.minus(end, start)
+	def length = n.plus(n.abs(n.minus(end, start)), n.one)
 	
 	
 	// IMPLEMENTED  -------------------------

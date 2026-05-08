@@ -105,6 +105,22 @@ object CollectionExtensions
 		private val ops = iter(coll)
 		
 		
+		// COMPUTED ---------------------------
+		
+		/**
+		 * @param buildFrom Implicit build-from for the remaining collection
+		 * @tparam B Type of the extracted item
+		 * @tparam To Type of the remaining collection
+		 * @return Returns 2 values:
+		 *         1. The first item in this collection; None if this collection was empty.
+		 *         1. The remaining items in this collection
+		 */
+		def popHead[B >: iter.A, To](implicit buildFrom: BuildFrom[Repr, iter.A, To]): (Option[B], To) = {
+			val iter = ops.iterator
+			iter.nextOption() -> buildFrom.fromSpecific(coll)(iter)
+		}
+		
+		
 		// OTHER    ---------------------------
 		
 		/**
@@ -1085,7 +1101,7 @@ object CollectionExtensions
 		// COMPUTED ---------------------------
 		
 		/**
-		  * @return This collection if not empty. Otherwise None.
+		  * @return This collection if not empty. Otherwise returns None.
 		  */
 		def notEmpty = if (ops.isEmpty) None else Some(coll)
 		
@@ -1115,6 +1131,20 @@ object CollectionExtensions
 		// OTHER    --------------------------
 		
 		/**
+		 * @param index Index to remove
+		 * @param bf A build-from for the resulting collection (implicit)
+		 * @return A copy of this collection without specified index included
+		 */
+		def withoutIndex[To](index: Int)(implicit bf: BuildFrom[Repr, iter.A, To]): To = {
+			// Case: The targeted index is known to be out-of-bounds => Returns a copy of this collection
+			if (index < 0 || ops.sizeIfKnown.exists { _ <= index })
+				bf.fromSpecific(coll)(ops)
+			// Case: Possibly valid index => Uses a custom iterator to build the remaining collection
+			else
+				bf.fromSpecific(coll)(new WithoutIndexIterator(ops.iterator, index))
+		}
+		
+		/**
 		 * @param f A function that yields true for the item to exclude
 		 * @param bf Implicit build-from for the resulting collection
 		 * @tparam To Type of the collection built
@@ -1122,6 +1152,80 @@ object CollectionExtensions
 		 */
 		def withoutFirstWhere[To](f: iter.A => Boolean)(implicit bf: BuildFrom[Repr, iter.A, To]) =
 			bf.fromSpecific(coll)(FilterFirstIterator(ops.iterator)(f))
+		
+		/**
+		 * Finds and removes an item from this collection.
+		 * @param f A find function to find the item to remove.
+		 * @param buildFrom A build-from for the filtered copy of this collection
+		 * @return Returns 2 values:
+		 *         1. The found item, or None if no item was found
+		 *         1. A copy of this collection without the specified item included
+		 */
+		def findAndPop[B >: iter.A, To](f: iter.A => Boolean)
+		                               (implicit buildFrom: BuildFrom[Repr, iter.A, To]): (Option[B], To) =
+		{
+			val iter = ops.iterator
+			iter.nextOption() match {
+				case Some(first) =>
+					// Case: First item is a match
+					//       => Builds the remainder using the acquired iterator's remaining values
+					if (f(first))
+						Some(first) -> buildFrom.fromSpecific(coll)(iter)
+					else {
+						// Searches for the matching item
+						val remainderBuilder = buildFrom.newBuilder(coll)
+						remainderBuilder += first
+						
+						var found: Option[B] = None
+						while (found.isEmpty && iter.hasNext) {
+							val next = iter.next()
+							if (f(next))
+								found = Some(next)
+							else
+								remainderBuilder += next
+						}
+						
+						// Appends the remaining items
+						remainderBuilder ++= iter
+						found -> remainderBuilder.result()
+					}
+				// Case: Empty collection
+				case None => None -> buildFrom.fromSpecific(coll)(Empty)
+			}
+		}
+		
+		/**
+		 * Finds and removes a specific item from this collection
+		 * @param index Index of the item to remove
+		 * @param buildFrom Build-from for the resulting collection
+		 * @tparam B Type of the extracted item
+		 * @tparam To Type of the remaining collection
+		 * @return Returns 2 values:
+		 *         1. Item at the specified index; None if this collection didn't contain that index.
+		 *         1. A copy of this collection without the specified index.
+		 */
+		def popIndex[B >: iter.A, To](index: Int)(implicit buildFrom: BuildFrom[Repr, iter.A, To]): (Option[B], To) = {
+			// Case: Removing the first item in this collection => Builds the remaining collection using an iterator
+			if (index == 0) {
+				val iter = ops.iterator
+				iter.nextOption() -> buildFrom.fromSpecific(coll)(iter)
+			}
+			// Case: Removing a non-existing index => Yields a copy of this collection
+			if (index < 0 || ops.sizeIfKnown.exists { _ <= index })
+				None -> buildFrom.fromSpecific(coll)(ops)
+			else {
+				// Iterates to the removed position
+				val iter = ops.iterator
+				val builder = buildFrom.newBuilder(coll)
+				builder ++= iter.takeNext(index)
+				
+				// Separates the next item and adds the remaining elements
+				val result = iter.nextOption()
+				builder ++= iter
+				
+				result -> builder.result()
+			}
+		}
 		
 		/**
 		 * Filters this collection so that only distinct values remain. Uses a special function to determine equality
@@ -2218,7 +2322,7 @@ object CollectionExtensions
 		 *              1. All other items in this collection
 		 */
 		def findAndPopMax[B >: seq.A](implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
-			findAndPop[B](Max)
+			findAndPopExtreme[B](Max)
 		/**
 		 * Finds and extracts the smallest item from this collection
 		 * @param bf A build-from for the remaining collection
@@ -2229,7 +2333,7 @@ object CollectionExtensions
 		 *              1. All other items in this collection
 		 */
 		def findAndPopMin[B >: seq.A](implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
-			findAndPop[B](Min)
+			findAndPopExtreme[B](Min)
 		
 		/**
 		 * Finds and extracts the largest item from this collection
@@ -2374,21 +2478,6 @@ object CollectionExtensions
 			}
 		
 		/**
-		  * Finds and removes an item from this sequence. If no item is found, no removal happens either.
-		  * @param f A find function to find the item to remove.
-		  * @param buildFrom A build-from for the filtered copy of this collection
-		  * @return Either:
-		  *             a) (Some(result), other items), if a result was found, or
-		  *             b) (None, this collection), if no result was found
-		  */
-		def findAndPop[B >: seq.A](f: seq.A => Boolean)
-		                          (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): (Option[B], Repr) =
-			ops.indexWhere(f) match {
-				case index if index >= 0 => Some(ops(index)) -> _withoutIndex(ops.iterator, index)
-				case _ => None -> coll
-			}
-		
-		/**
 		 * Finds and extracts the largest item from this collection
 		 * @param f A mapping function used for acquiring the compared values
 		 * @param bf A build-from for the remaining collection
@@ -2460,7 +2549,8 @@ object CollectionExtensions
 		 *              1. The most extreme item in this collection. None if this collection is empty.
 		 *              1. All other items in this collection
 		 */
-		def findAndPop[B >: seq.A](extreme: Extreme)(implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
+		def findAndPopExtreme[B >: seq.A](extreme: Extreme)
+		                                 (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[seq.A]) =
 			findAndPopExtremeBy[B, seq.A](extreme)(Identity)
 		/**
 		 * Finds and extracts the most extreme item from this collection
@@ -2517,27 +2607,8 @@ object CollectionExtensions
 		                               (implicit bf: BuildFrom[Repr, seq.A, Repr], ord: Ordering[Y]): (B, Repr) =
 		{
 			val index = _extremeIndexBy(ops, extreme)(f)
-			ops(index) -> _withoutIndex(ops.iterator, index)
+			ops(index) -> bf.fromSpecific(coll)(new WithoutIndexIterator(ops.iterator, index))
 		}
-		
-		/**
-		  * @param index     Targeted index
-		  * @param buildFrom A build from (implicit)
-		  * @return A copy of this sequence without specified index
-		  */
-		def withoutIndex(index: Int)(implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr = {
-			if (index < 0)
-				coll
-			else {
-				if (ops.sizeCompare(index) <= 0)
-					coll
-				else
-					_withoutIndex(ops.iterator, index)
-			}
-		}
-		private def _withoutIndex(iter: Iterator[seq.A], index: Int)
-		                         (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-			buildFrom.fromSpecific(coll)(iter.zipWithIndex.filterNot { _._2 == index }.map { _._1 })
 		
 		/**
 		  * Performs specified operation for each item in this sequence. Called function will also receive item index

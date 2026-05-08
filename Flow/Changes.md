@@ -13,15 +13,19 @@
   - The new **Scheduler** system uses fewer threads than the original implementations di
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **EnvironmentNotSetupException** is no longer a case class
+- **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
 - **AssignableOnce** now requires the implementation of `setFlag: Flag`
+- **NumericSpan**'s `.length` can no longer yield negative values
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Bugfixes
 - Fixed an issue in **WeakList**'s `:+` function, which always discarded live items (opposite of the desired effect)
+- Bugfix to **NumericSpan**'s `.length` implementation
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
 ### Deprecations
 - `Regex.whiteSpace` is now named `Regex.whitespace`
+- Renamed `.onceNotEmpty(...)` to `.onceDefined(...)` for **Changing** containing **Option**
 ### Bugfixes
 - `Regex.whitespace` would previously match to newline characters, also. 
   The new version uses `\h`, matching only horizontal whitespaces.
@@ -30,10 +34,14 @@
   except supporting variable cost / "width".
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 - Parallel mapping now supports custom builders
+- Added **WithoutIndexIterator**
 ### New methods
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **HasValues**
+  - Added `.tryGetCatching(...)`
 - **IterableOnce** (via **CollectionExtensions**)
+  - Added `.popHead` and `.popIndex(Int)`
   - Added `.groupMapMap(...)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
   - Added `.completion` to parallel mapping output options
@@ -62,11 +70,15 @@
   - Added `.inserted(String, Int)`
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
   - Added `.notSurroundedWith(String, Boolean)`
+- **TryCatch**
+  - Added `.mapFailure(...)`
 - **Value**
   - Added `.getModelOrString`
 ### Other changes
 - Built with Scala v2.13.18
 - Added synchronization to **LockablePointer**'s locking behavior
+- Moved `.withoutIndex(...)` and `.findAndPop(...)` from **Seq** to **IterableOnce** in **CollectionExtensions**
+  - Also optimized/rewrote the implementations
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 
 ## v2.8 - 15.03.2026

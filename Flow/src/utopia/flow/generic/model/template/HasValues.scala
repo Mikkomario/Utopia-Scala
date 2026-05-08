@@ -4,6 +4,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.collection.template.MapAccess
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.util.Mutate
+import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
 
 import scala.util.{Failure, Try}
@@ -126,10 +128,46 @@ trait HasValues extends MapAccess[String, Value]
 			_tryGet(apply(propNames), propNames.head)(f)
 	}
 	private def _tryGet[A](value: Value, propName: => String)(f: Value => Try[A]) =
-		f(value).mapFailure { cause =>
+		_tryGetWith(value, propName)(f) { _.mapFailure(_) }
+	
+	/**
+	 * Attempts to retrieve a value from this model.
+	 * In case of a failure, provides an error message which indicates, which property was being accessed.
+	 * @param propName Primary name of the targeted property
+	 * @param altPropNames Alternative names of the targeted property, in order of descending priority
+	 * @param f A function which converts the value to the desired type,
+	 *          yielding a failure if the value could not be parsed.
+	 *          May also yield partial failures; These are not modified.
+	 * @tparam A type of expected parse results
+	 * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
+	 */
+	def tryGetCatching[A](propName: String, altPropNames: String*)(f: Value => TryCatch[A]) =
+		_tryGetCatching(apply(propName +: altPropNames), propName)(f)
+	/**
+	 * Attempts to retrieve a value from this model.
+	 * In case of a failure, provides an error message which indicates, which property was being accessed.
+	 * @param propNames Names of the targeted properties, in order of descending priority
+	 * @param f A function which converts the value to the desired type,
+	 *          yielding a failure if the value could not be parsed.
+	 *          May also yield partial failures; These are not modified.
+	 * @tparam A type of expected parse results
+	 * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
+	 */
+	def tryGetCatching[A](propNames: Iterable[String])(f: Value => TryCatch[A]) = {
+		if (propNames.isEmpty)
+			TryCatch.Failure(new IllegalArgumentException("No perpery was targeted"))
+		else
+			_tryGetCatching(apply(propNames), propNames.head)(f)
+	}
+	def _tryGetCatching[A](value: Value, propName: => String)(f: Value => TryCatch[A]) =
+		_tryGetWith(value, propName)(f) { _.mapFailure(_) }
+	
+	private def _tryGetWith[R](value: Value, propName: => String)(f: Value => R)
+	                          (mapFailure: (R, Mutate[Throwable]) => R) =
+		mapFailure(f(value), { cause =>
 			if (value.isEmpty)
 				new IllegalArgumentException(s"\"$propName\" was not specified", cause)
 			else
 				new IllegalArgumentException(s"Value of \"$propName\" could not be accepted", cause)
-		}
+		})
 }

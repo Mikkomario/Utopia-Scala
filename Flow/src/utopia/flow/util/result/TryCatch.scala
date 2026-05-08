@@ -2,6 +2,7 @@ package utopia.flow.util.result
 
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.TryCatchBuilder
+import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 
 import scala.language.implicitConversions
@@ -88,6 +89,12 @@ sealed trait TryCatch[+A] extends MayHaveFailed[A] with MayHaveFailedLike[A, Try
 	 *         Failures from 'f' are collected and treated as partial failures, if appropriate.
 	 */
 	def mapCatching[B](f: A => (B, IterableOnce[Throwable])): TryCatch[B]
+	
+	/**
+	 * @param f A mapping function applied to a failure result, if applicable
+	 * @return A copy of this result with s mapped failure
+	 */
+	def mapFailure(f: Mutate[Throwable]): TryCatch[A]
 	
 	/**
 	 * @param failures Additional non-critical failures to assign to this item (call-by-name)
@@ -246,6 +253,8 @@ object TryCatch
 		}
 		override def mapOrFail[B](f: A => MayHaveFailed[B]): TryCatch[B] = f(value).toTryCatch
 		
+		override def mapFailure(f: Mutate[Throwable]): TryCatch[A] = this
+		
 		override def withAdditionalFailures(failures: => IterableOnce[Throwable]): TryCatch[A] =
 			copy(failures = this.failures ++ failures)
 	}
@@ -279,6 +288,8 @@ object TryCatch
 		
 		override def flatMap[B](f: Nothing => TryCatch[B]): TryCatch[B] = this
 		override def mapCatching[B](f: Nothing => (B, IterableOnce[Throwable])): TryCatch[B] = this
+		
+		override def mapFailure(f: Mutate[Throwable]): TryCatch[Nothing] = Failure(f(cause))
 		
 		override def logToTryWithMessage(message: => String)(implicit log: Logger) = toTry
 		override def logWithMessage(message: => String)(implicit log: Logger) = {

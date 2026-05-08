@@ -473,7 +473,9 @@ object Changing
 		 * Calls the specified function once this pointer contains a non-empty value (which may be immediately)
 		 * @param f A function that will be called once/if this pointer acquires a non-empty value
 		 */
-		def onceNotEmpty(f: A => Unit) = wrapped.once { !_isEmpty(_) } { _.foreach(f) }
+		def onceDefined(f: A => Unit) = wrapped.once { !_isEmpty(_) } { _.foreach(f) }
+		@deprecated("Renamed to .onceDefined(...)", "v2.9")
+		def onceNotEmpty(f: A => Unit) = onceDefined(f)
 	}
 	
 	implicit class DeepChanging[A](val c: Changing[Changing[A]]) extends AnyVal
