@@ -302,6 +302,17 @@ object Pointer extends PointerFactory[Pointer]
 		}
 		
 		/**
+		 * Filters the current contents of this pointer
+		 * @param f A function that returns true for items that should be kept in this pointer
+		 */
+		def filterCurrent(f: A => Boolean) = p.update { _.filter(f) }
+		/**
+		 * Filters the current contents of this pointer
+		 * @param f A function that returns true for items that should be removed from this pointer
+		 */
+		def filterNotCurrent(f: A => Boolean) = p.update { _.filterNot(f) }
+		
+		/**
 		  * Adds a new item to the end of this list
 		  */
 		def :+=(item: A) = p.update { _ :+ item }

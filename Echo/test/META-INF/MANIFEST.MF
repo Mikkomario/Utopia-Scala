@@ -1,3 +1,6 @@
 Manifest-Version: 1.0
 Main-Class: utopia.echo.test.ChatTest
+Class-Path: lib/scala-library-2.13.18.jar lib/scala-reflect-2.13.18.jar 
+ lib/httpclient5-5.6.1.jar lib/httpcore5-5.4.jar lib/httpcore5-h2-5.4.ja
+ r lib/slf4j-api-1.7.36.jar
 

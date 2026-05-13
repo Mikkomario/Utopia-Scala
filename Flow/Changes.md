@@ -63,6 +63,7 @@
   - Added multiple new constructors
 - **Pointer**
   - Added new functions for **Pointer**s that contain **Map**s
+  - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` for **Seq**-based **Pointer**s
 - **PossiblyFailingFuture**
   - Added `.mapFailure(...)`, `.flatMapFailure(...)`, `.flatMapFailureRepeatedly(...)` and `.recoverFromFailureWith(...)`
 - **QueuedAction** (object)

@@ -16,6 +16,8 @@
 - **LlmServiceClient** now requires `scheduler: Scheduler`
   - All existing implementations accept this as an implicit parameter
 - **VastAiVllmProcess** now accepts `maxParallelRequests: Option[Int]`
+- **ChatLike** no longer contains any attributes; 
+  The definitions were kept, but the implementations were moved to **AbstractChat** instead.
 - Vast AI process classes now require implicit **Scheduler** access
 ### New features
 - Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**

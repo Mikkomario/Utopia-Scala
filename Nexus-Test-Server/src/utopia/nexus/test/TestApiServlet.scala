@@ -1,7 +1,7 @@
 package utopia.nexus.test
 
 import utopia.bunnymunch.jawn.JsonBunny
-import utopia.flow.async.context.ThreadPool
+import utopia.flow.async.context.{Scheduler, ThreadPool}
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.json.JsonParser
@@ -33,6 +33,7 @@ class TestApiServlet extends LogicWrappingServlet
 	
 	implicit val codec: Codec = Codec.UTF8
 	implicit val exc: ExecutionContext = new ThreadPool("Test-API", 1, 20, 30.seconds)(SysErrLogger)
+	implicit val scheduler: Scheduler = Scheduler.newInstance(exc, SysErrLogger)
 	override implicit val logger: Logger = new FileLogger("log/test-api", 1.seconds, copyToSysErr = true)
 	override implicit val jsonParser: JsonParser = JsonBunny
 	override implicit val expectedParameterEncoding: ParameterEncoding = ParameterEncoding.none
