@@ -8,6 +8,8 @@
 - **ConsoleScribe** now requires access to an implicit **Scheduler**
 ### Bugfixes
 - Throwable collection logging now includes an example from the collected failures
+### New features
+- Added **DelegatingScribe**
 ### Other changes
 - Built with Scala v2.13.18
 

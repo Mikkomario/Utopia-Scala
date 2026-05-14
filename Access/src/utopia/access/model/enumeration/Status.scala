@@ -9,7 +9,7 @@ object Status extends OpenEnumeration[Status, Int]
 	// INITIAL CODE -----------------------------
 	
 	introduce(OK, Created, Accepted,
-		NoContent, MovedPermanently, Found, NotModified, TemporaryRedirect,
+		NoContent, MovedPermanently, Found, SeeOther, NotModified, TemporaryRedirect, PermanentRedirect,
 		BadRequest, Unauthorized, Forbidden, NotFound,
 		MethodNotAllowed, NotAcceptable, Teapot, Locked, TooEarly, TooManyRequests, NoResponse,
 		InternalServerError, NotImplemented, ServiceUnavailable)
@@ -110,6 +110,15 @@ object Status extends OpenEnumeration[Status, Int]
 	 * since this might change the conditions under which the request was issued.
 	 */
 	case object Found extends Status("Found", 302, isTemporary = true)
+	/**
+	 * The HTTP 303 See Other redirection response status code indicates that the browser should redirect to the
+	 * URL in the Location header instead of rendering the requested resource.
+	 *
+	 * This response code is often sent back as a result of PUT or POST methods so the client may retrieve a
+	 * confirmation, or view a representation of a real-world object (see HTTP range-14).
+	 * The method to retrieve the redirected resource is always GET.
+	 */
+	case object SeeOther extends Status("See Other", 303)
 	
 	/**
 	 * If the client has performed a conditional GET request and access is allowed, but the document
@@ -138,6 +147,18 @@ object Status extends OpenEnumeration[Status, Int]
 	 * request method is GET.
 	 */
 	case object TemporaryRedirect extends Status("Temporary Redirect", 307, isTemporary = true, doNotRepeat = false)
+	/**
+	 * The HTTP 308 Permanent Redirect redirection response status code indicates that the requested resource has
+	 * been permanently moved to the URL given by the Location header.
+	 *
+	 * A browser receiving this status will automatically request the resource at the URL in the Location header,
+	 * redirecting the user to the new page.
+	 *
+	 * The request method and the body will not be modified by the client in the redirected request.
+	 * A 301 Moved Permanently requires the request method and the body to remain unchanged when redirection is
+	 * performed, but this is incorrectly handled by older clients to use the GET method instead.
+	 */
+	case object PermanentRedirect extends Status("Permanent Redirect", 308, isTemporary = false, doNotRepeat = true)
 	
 	/**
 	 * The request could not be understood by the server due to malformed syntax. The client SHOULD NOT

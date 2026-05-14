@@ -13,6 +13,11 @@ object Scribe
 	  */
 	def lazily = LazyScribe
 	
+	/**
+	 * @return Access to delegating Scribe constructors
+	 */
+	def delegating = DelegatingScribe
+	
 	
 	// IMPLICIT --------------------------
 	
