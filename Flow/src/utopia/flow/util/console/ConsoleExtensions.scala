@@ -265,13 +265,13 @@ object ConsoleExtensions
 		 * @param options Options to select from, where the second values are descriptions to list to the user
 		 * @param target A string representing the options in plural form. Default = "items".
 		 * @param verb Verb used for the action of selecting an option. Default = "select".
-		 * @param maxListCount Maximum number of items that may be listed on the console.
+		 * @param maxListCount Maximum number of items that may be listed on the console (default = 25).
 		 * @tparam A Type of items selected from
 		 * @return The item selected by the user.
 		 *         None if no options were available, or if the user chose not to select an item.
 		 */
 		def selectFrom[A](options: Seq[(A, String)], target: String = "items", verb: String = "select",
-		                  maxListCount: Int = 20) =
+		                  maxListCount: Int = 25) =
 			_selectFrom(options, None, target, verb, maxListCount).headOption
 		/**
 		 * Requests the user to select one of the specified options.

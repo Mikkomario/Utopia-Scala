@@ -89,6 +89,7 @@
 - Moved `.withoutIndex(...)` and `.findAndPop(...)` from **Seq** to **IterableOnce** in **CollectionExtensions**
   - Also optimized/rewrote the implementations
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
+- Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 
 ## v2.8 - 15.03.2026
