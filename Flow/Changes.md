@@ -85,6 +85,9 @@
   - Added `.getModelOrString`
 ### Other changes
 - Built with Scala v2.13.18
+- **KeptOpenWriter** now accepts 2 new constructor parameters:
+  1. `rethrows: Boolean` - Whether to rethrow original errors (default = false)
+  2. `logFailures: Boolean` - Whether to automatically log all yielded failures (default = false)
 - Added synchronization to **LockablePointer**'s locking behavior
 - Moved `.withoutIndex(...)` and `.findAndPop(...)` from **Seq** to **IterableOnce** in **CollectionExtensions**
   - Also optimized/rewrote the implementations
