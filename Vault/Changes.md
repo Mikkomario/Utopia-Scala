@@ -15,6 +15,9 @@
 ### Other changes
 - Built with Scala v2.13.18
 - Added automatic joining logic to cases where the two tables/columns reference the same external column
+- **TargetingManyRowsLike**'s `.slicesIterator` (extended) function now requires a different class type 
+  (the previous was too ambiguous)
+  - Removed the `.slicedIterator` -version
 - Added optimization to `Condition.indexIn(IterableOnce)` and `.indexNotIn(IterableOnce) `
   for situations where the parameter is of type **HasInclusiveEnds** (e.g. a **NumericSpan**)
 - Optimized `.toMultiMap(...)` in **AccessManyColumns**

@@ -11,6 +11,7 @@ import utopia.vault.model.immutable.{Column, Row, Table, TableColumn}
 import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.read.parse.ParseRows
 import utopia.vault.nosql.read.{DbReader, DbRowReader}
+import utopia.vault.nosql.targeting.TargetingLike
 import utopia.vault.sql.JoinType
 import utopia.vault.sql.JoinType.Inner
 
@@ -18,15 +19,13 @@ object TargetingManyRowsLike
 {
 	// EXTENSIONS   --------------------------
 	
-	implicit class RecursiveTargetingManyRows[T <: TargetingManyRowsLike[A, T, _], +A](val t: T) extends AnyVal
+	implicit class RecursiveTargetingManyRows[A <: Iterable[_]](val t: TargetingManyRowsLike[_, TargetingLike[A, _, _, _], _])
+		extends AnyVal
 	{
 		def slicesIterator(sliceLength: Int)(implicit connection: Connection) =
 			Iterator.iterate(0) { _ + sliceLength }
 				.map { start => t.slice(NumericSpan(start, start + sliceLength - 1)).pull }
 				.takeTo { _.hasSize < sliceLength }
-		
-		def slicedIterator(sliceLength: Int)(implicit connection: Connection) =
-			slicesIterator(sliceLength).flatten
 	}
 }
 
