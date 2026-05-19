@@ -11,7 +11,7 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
-import utopia.disciple.model.request.{Body, Request, Timeout}
+import utopia.disciple.model.request.{HttpEntityConvertible, Request, Timeout}
 import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Delay
 import utopia.flow.collection.immutable.range.{HasEnds, Span}
@@ -360,7 +360,7 @@ trait ApiClient
 	  * @param bodyContent Request body content (non-empty)
 	  * @return A request body wrapping the specified content
 	  */
-	protected def makeRequestBody(bodyContent: Value): Body
+	protected def makeRequestBody(bodyContent: Value): HttpEntityConvertible
 	
 	
 	// OTHER	-------------------------
@@ -393,8 +393,9 @@ trait ApiClient
 	  * @param timeout Connection timeout duration (default = maximum timeout)
 	  * @return Prepared POST request
 	  */
-	def post(path: String, body: Either[Value, Body] = Left(Value.empty), pathParams: Model = Model.empty,
-	         method: Method = Post, headers: Headers = Headers.empty, timeout: Duration = Duration.infinite) =
+	def post(path: String, body: Either[Value, HttpEntityConvertible] = Left(Value.empty),
+	         pathParams: Model = Model.empty, method: Method = Post, headers: Headers = Headers.empty,
+	         timeout: Duration = Duration.infinite) =
 		prepareRequest(method, path, body, pathParams, headers, timeout)
 	/**
 	  * Prepares a POST request (or a similar request, such as PUT).
@@ -549,7 +550,8 @@ trait ApiClient
 	  *
 	  * @return Asynchronous server result
 	  */
-	protected def prepareRequest(method: Method, path: String, body: Either[Value, Body] = Left(Value.empty),
+	protected def prepareRequest(method: Method, path: String,
+	                             body: Either[Value, HttpEntityConvertible] = Left(Value.empty),
 	                             params: Model = Model.empty, headers: Headers = Headers.empty,
 	                             timeout: Duration = Duration.infinite) =
 	{

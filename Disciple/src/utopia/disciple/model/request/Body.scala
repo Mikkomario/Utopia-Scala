@@ -1,6 +1,5 @@
 package utopia.disciple.model.request
 
-import utopia.access.model.ContentType
 import utopia.flow.parse.AutoClose._
 
 import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream}
@@ -11,34 +10,10 @@ import scala.util.Try
 * @author Mikko Hilpinen
 * @since 1.5.2018
 **/
-// TODO: Refactor to allow the client to specify the writing process more precisely
-//  (e.g. when sending streamed content, the client may need to call flush() for the output stream every now and then)
-trait Body
+@deprecated("Deprecated for removal. Please extend RequestBody instead", "v1.9.3")
+trait Body extends RequestBody
 {
     // ABSTRACT    -------------------------
-    
-    /**
-     * Whether this body can repeat its stream contents multiple times
-     */
-	def repeatable: Boolean
-	/**
-	 * Whether this data in this body should be chunked
-	 */
-	// TODO: Automatically consider this body chunked if contentLength is not specified
-	def chunked: Boolean
-	
-	/**
-	 * The length of the body content in bytes, if applicable
-	 */
-	def contentLength: Option[Long]
-	/**
-	 * The content type of this body
-	 */
-	def contentType: ContentType
-	/**
-	 * The content encoding used, if applicable
-	 */
-	def contentEncoding: Option[String]
 	
 	/**
 	 * The content stream. May fail.
@@ -46,7 +21,9 @@ trait Body
 	def stream: Try[InputStream]
 	
 	
-	// OTHER METHODS    ---------------------
+	// IMPLEMENTED  ------------------
+	
+	override def streaming: Boolean = !repeatable
 	
 	/**
 	 * Writes the contents of this body's stream into an output stream. Applies buffering.
@@ -75,5 +52,14 @@ trait Body
 			    }
 			}
 	    }
+	}
+	
+	override def close() = {
+		// Consumes and closes the input stream
+		stream.foreach { input =>
+			val bytes = new Array[Byte](1024) //1024 bytes - Buffer size
+			Iterator.continually (input.read(bytes)).takeWhile { _ != -1 }.foreach { _ => () }
+			input.close()
+		}
 	}
 }

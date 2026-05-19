@@ -6,7 +6,7 @@ import utopia.annex.controller.{PersistedRequestHandler, PersistingRequestQueue}
 import utopia.annex.model.request.ApiRequest.Send
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.HttpEntityConvertible
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, ModelDeclaration, Value}
@@ -135,7 +135,7 @@ object PersistingApiRequest
 		
 		// IMPLEMENTED  ----------------------
 		
-		override def body: Either[Value, Body] = Left(bodyValue)
+		override def body: Either[Value, HttpEntityConvertible] = Left(bodyValue)
 		override def deprecated: Boolean = deprecationFlag.value
 		
 		override def send(prepared: PreparedRequest): Future[RequestResult[A]] = sendFunction(prepared)

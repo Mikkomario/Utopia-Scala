@@ -5,9 +5,9 @@ import utopia.access.model.enumeration.ContentCategory.Application
 import utopia.annex.controller.{ApiClient, PreparingResponseParser}
 import utopia.annex.model.response.Response
 import utopia.annex.util.ResponseParseExtensions._
-import utopia.disciple.controller.{Gateway, RequestRateLimiter}
 import utopia.disciple.controller.parse.ResponseParser
-import utopia.disciple.model.request.{Body, StringBody}
+import utopia.disciple.controller.{Gateway, RequestRateLimiter}
+import utopia.disciple.model.request.{HttpEntityConvertible, StringBody}
 import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.model.immutable.Value
@@ -61,5 +61,6 @@ class TestApiClient(protected override val exc: ExecutionContext, protected over
 		if (accepted.isEmpty) Single(Application.json) else accepted
 	}
 	
-	override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
+	override protected def makeRequestBody(bodyContent: Value): HttpEntityConvertible =
+		StringBody.json(bodyContent.toJson)
 }

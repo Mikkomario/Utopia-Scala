@@ -3,7 +3,7 @@ package utopia.annex.model.request
 import utopia.access.model.enumeration.Method.Get
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.HttpEntityConvertible
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -70,5 +70,5 @@ trait GetRequest[+A] extends ApiRequest[A]
 	// IMPLEMENTED  -----------------------
 	
 	override def method = Get
-	override def body: Either[Value, Body] = Left(Value.empty)
+	override def body: Either[Value, HttpEntityConvertible] = Left(Value.empty)
 }

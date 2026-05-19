@@ -6,7 +6,7 @@ import utopia.annex.controller.ApiClient.TooManyRequestsRetrySettings
 import utopia.annex.model.response.Response
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
-import utopia.disciple.model.request.{Body, StringBody}
+import utopia.disciple.model.request.{HttpEntityConvertible, StringBody}
 import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.range.Span
 import utopia.flow.generic.model.immutable.Value
@@ -46,5 +46,6 @@ class VastAiApiClient(override protected val gateway: Gateway, apiKey: String, a
 	// IMPLEMENTED  ----------------------
 	
 	override protected def modifyOutgoingHeaders(original: Headers): Headers = original.withBearerAuthorization(apiKey)
-	override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
+	override protected def makeRequestBody(bodyContent: Value): HttpEntityConvertible =
+		StringBody.json(bodyContent.toJson)
 }

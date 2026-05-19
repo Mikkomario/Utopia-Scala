@@ -15,6 +15,8 @@ object StreamExtensions
 {
 	implicit class RichInputStream(val stream: InputStream) extends AnyVal
 	{
+		// COMPUTED ----------------------
+		
 		/**
 		  * @return This stream as a buffered input stream.
 		  *         Yields this stream if this is already buffered.
@@ -43,6 +45,31 @@ object StreamExtensions
 				_buffered.reset()
 				Some(_buffered)
 			}
+		}
+		
+		
+		// OTHER    ----------------------
+		
+		/**
+		 * @param bufferSize Buffer size to apply, if constructing a buffered input-stream
+		 * @return A buffered version of this stream. This stream if already buffered.
+		 */
+		def bufferedWithSize(bufferSize: => Int) = stream match {
+			case s: BufferedInputStream => s
+			case s => new BufferedInputStream(s, bufferSize)
+		}
+		
+		/**
+		 * Writes the contents of this stream into an output stream. Uses a separate buffer.
+		 * @param output An output stream to write to
+		 * @param bufferSize Size of the external buffer used, in bytes. Default = 1024.
+		 */
+		def writeTo(output: OutputStream, bufferSize: Int = 1024) = {
+			val buffer = new Array[Byte](bufferSize)
+			Iterator
+				.continually { stream.read(buffer, 0, bufferSize) }
+				.takeWhile { _ != -1 }
+				.foreach { _ => output.write(buffer, 0, bufferSize) }
 		}
 	}
 	

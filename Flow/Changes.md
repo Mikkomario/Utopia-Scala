@@ -46,6 +46,9 @@
   - Added `.getOrElseUpdate(...)`
 - **HasValues**
   - Added `.tryGetCatching(...)`
+- **InputStream** (via **StreamExtensions**)
+  - Added `.bufferedWithSize(Int)`
+  - Added `.writeTo(OutputStream, Int)`
 - **IterableOnce** (via **CollectionExtensions**)
   - Added `.popHead` and `.popIndex(Int)`
   - Added `.groupMapMap(...)`

@@ -1,11 +1,11 @@
 package utopia.annex.model.request
 
 import utopia.access.model.enumeration.Method
-import utopia.annex.util.RequestResultExtensions._
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.request.ApiRequest.MappedApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.annex.util.RequestResultExtensions._
+import utopia.disciple.model.request.HttpEntityConvertible
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.util.result.MayHaveFailed
 import utopia.flow.view.immutable.View
@@ -82,7 +82,7 @@ object ApiRequest
 		override def method: Method = wrapped.method
 		override def path: String = wrapped.path
 		override def pathParams: Model = wrapped.pathParams
-		override def body: Either[Value, Body] = wrapped.body
+		override def body: Either[Value, HttpEntityConvertible] = wrapped.body
 		
 		override def deprecated: Boolean = wrapped.deprecated
 		
@@ -94,7 +94,7 @@ object ApiRequest
 	                            (f: Send[A])
 		extends ApiRequest[A]
 	{
-		override def body: Either[Value, Body] = Left(bod)
+		override def body: Either[Value, HttpEntityConvertible] = Left(bod)
 		override def deprecated: Boolean = deprecationView.value
 		
 		override def send(prepared: PreparedRequest) = f(prepared)
@@ -128,7 +128,7 @@ trait ApiRequest[+A] extends Retractable
 	  * @return Request body or body value.
 	  *         Empty value if no body should be sent.
 	  */
-	def body: Either[Value, Body]
+	def body: Either[Value, HttpEntityConvertible]
 	
 	/**
 	  * Finalizes a sending process (for this request), determining how the response body is handled

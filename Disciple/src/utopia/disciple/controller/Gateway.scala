@@ -8,8 +8,8 @@ import org.apache.hc.client5.http.impl.classic.{HttpClientBuilder, HttpClients}
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder
 import org.apache.hc.client5.http.protocol.RedirectStrategy
 import org.apache.hc.client5.http.ssl.{ClientTlsStrategyBuilder, NoopHostnameVerifier}
+import org.apache.hc.core5.http.HttpEntity
 import org.apache.hc.core5.http.message.BasicNameValuePair
-import org.apache.hc.core5.http.{Header, HttpEntity}
 import org.apache.hc.core5.net.URIBuilder
 import org.apache.hc.core5.ssl.SSLContexts
 import utopia.access.model.Headers
@@ -19,7 +19,7 @@ import utopia.disciple.controller.Gateway.insecureTlsStrategy
 import utopia.disciple.controller.interceptor.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.model.request.TimeoutType.{ManagerTimeout, ReadTimeout}
-import utopia.disciple.model.request.{Body, Request, Timeout}
+import utopia.disciple.model.request.{Request, Timeout}
 import utopia.disciple.model.response.StreamedResponse
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -32,10 +32,8 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 
-import java.io.OutputStream
 import java.net.{URI, URLEncoder}
 import java.nio.charset.StandardCharsets
-import java.util
 import java.util.concurrent
 import java.util.concurrent.TimeUnit
 import scala.concurrent.{ExecutionContext, Future}
@@ -262,7 +260,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
 		val response = Try {
 			// Makes the base request (uri + params + body)
-			val base = makeRequestBase(req.method, req.requestUri, req.params, req.body)
+			val base = makeRequestBase(req.method, req.requestUri, req.params, req.body.map { _.toHttpEntity })
 			// Adds the headers
 			req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
 			// Sets the timeout
@@ -522,54 +520,5 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	        val paramsList = params.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 	        Some(new UrlEncodedFormEntity(paramsList.asJava, StandardCharsets.UTF_8))
 	    }
-	}
-	
-	
-	// IMPLICIT CASTS    ------------------------
-	
-	private implicit def convertOption[T](option: Option[T])
-	        (implicit f: T => HttpEntity): Option[HttpEntity] = option.map(f)
-	
-	//noinspection JavaAccessorMethodOverriddenAsEmptyParen
-	private implicit class EntityBody(val b: Body) extends HttpEntity
-	{
-		// Inspection is suppressed because this is an implemented function from another library
-		
-		/*
-		override def consumeContent() =
-	    {
-	        b.stream.foreach { input =>
-    	        val bytes = new Array[Byte](1024) //1024 bytes - Buffer size
-                Iterator.continually (input.read(bytes)).takeWhile (-1 !=).foreach { _ => }
-	        }
-	    }*/
-		
-		
-		override def getTrailers = () => new util.ArrayList[Header]()
-		
-		override def close() = {
-			// Consumes and closes the input stream
-			b.stream.foreach { input =>
-				val bytes = new Array[Byte](1024) //1024 bytes - Buffer size
-				Iterator.continually (input.read(bytes)).takeWhile (-1 !=).foreach { _ => () }
-				input.close()
-			}
-		}
-		
-		override def getTrailerNames = new util.HashSet[String]()
-		
-		override def getContent() = b.stream.getOrElse(null)
-        override def getContentEncoding() = b.contentEncoding.orNull
-		override def getContentLength() = b.contentLength.getOrElse(-1)
-		
-		// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
-		// Content-Type: text/html; charset=UTF-8
-		override def getContentType() = b.contentType.toString
-		
-		override def isChunked() = b.chunked
-		override def isRepeatable() = b.repeatable
-		override def isStreaming() = !b.repeatable
-		
-		override def writeTo(output: OutputStream) = b.writeTo(output).get
 	}
 }

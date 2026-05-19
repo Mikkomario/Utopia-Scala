@@ -7,7 +7,7 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.annex.util.ResponseParseExtensions._
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
-import utopia.disciple.model.request.{Body, StringBody}
+import utopia.disciple.model.request.{HttpEntityConvertible, StringBody}
 import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.Wait
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -79,6 +79,7 @@ object RequestRateLimitTest extends App
 		
 		override protected def modifyOutgoingHeaders(original: Headers): Headers = original
 		
-		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
+		override protected def makeRequestBody(bodyContent: Value): HttpEntityConvertible =
+			StringBody.json(bodyContent.toJson)
 	}
 }

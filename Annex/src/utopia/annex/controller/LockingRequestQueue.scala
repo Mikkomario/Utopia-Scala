@@ -4,7 +4,7 @@ import utopia.access.model.enumeration.Method
 import utopia.annex.model.request.{ApiRequest, ApiRequestSeed, QueuedRequest, RequestQueueable}
 import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.HttpEntityConvertible
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.ActionQueue
 import utopia.flow.async.context.ActionQueue.QueuedAction
@@ -188,7 +188,7 @@ object LockingRequestQueue
 			override def path: String = wrapped.path
 			override def pathParams: Model = wrapped.pathParams
 			
-			override def body: Either[Value, Body] = wrapped.body
+			override def body: Either[Value, HttpEntityConvertible] = wrapped.body
 			
 			override def deprecated: Boolean = locked || wrapped.deprecated
 			

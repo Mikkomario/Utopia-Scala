@@ -4,6 +4,7 @@
 ### Breaking changes
 - **ApiClient** now requires `tooManyRequestsRetrySettings: Option[TooManyRequestsRetrySettings]` 
   and `scheduler: Scheduler`
+- All places where **Body** was used, **HttpEntityConvertible** is now used
 ### New Features
 - **ApiClient**s using **RequestRateLimiter** now support automated retries for 429 (too many requests) -responses
 ### New methods

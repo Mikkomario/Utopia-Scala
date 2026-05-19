@@ -8,7 +8,7 @@ import utopia.annex.model.response.{RequestResult, Response}
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.disciple.controller.parse.ResponseParser
 import utopia.disciple.controller.{Gateway, RequestRateLimiter}
-import utopia.disciple.model.request.{Body, StringBody}
+import utopia.disciple.model.request.{HttpEntityConvertible, StringBody}
 import utopia.flow.async.context.ActionQueue.QueuedAction
 import utopia.flow.async.context.{ActionQueue, Scheduler}
 import utopia.flow.generic.model.immutable.Value
@@ -108,7 +108,8 @@ class LlmServiceClient(gateway: Gateway, serverAddress: String, apiKey: String =
 		override protected def rateLimiter: Option[RequestRateLimiter] = LlmServiceClient.this.rateLimiter
 		override protected def rootPath: String = serverAddress
 		
-		override protected def makeRequestBody(bodyContent: Value): Body = StringBody.json(bodyContent.toJson)
+		override protected def makeRequestBody(bodyContent: Value): HttpEntityConvertible =
+			StringBody.json(bodyContent.toJson)
 		// Adds an API-key automatically, if specified
 		override protected def modifyOutgoingHeaders(original: Headers): Headers =
 			if (apiKey.isEmpty) original else original.withBearerAuthorization(apiKey)

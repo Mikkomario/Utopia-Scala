@@ -1,30 +1,31 @@
 package utopia.disciple.model.request
 
 import org.apache.hc.core5.http.message.BasicNameValuePair
-import org.apache.hc.core5.net.URLEncodedUtils
+import org.apache.hc.core5.net.WWWFormCodec
 import utopia.access.model.ContentType
 import utopia.access.model.enumeration.ContentCategory._
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 
-import java.io.ByteArrayInputStream
+import java.io.OutputStream
 import java.nio.charset.{Charset, StandardCharsets}
 import scala.jdk.CollectionConverters._
-import scala.util.Success
+import scala.util.Try
 
 object StringBody
 {
     /**
      * Creates a plain text string body
      */
-    def plainText(s: String, charset: Charset) = new StringBody(s, charset, Text.plain)
+    def plainText(text: String, charset: Charset) = apply(text, Text.plain, charset)
     /**
-     * Creates a json string body
+     * Creates a JSON string body
      */
-    def json(s: String) = new StringBody(s, StandardCharsets.UTF_8, Application.json)
+    def json(json: String) = apply(json, Application.json, StandardCharsets.UTF_8)
     /**
-     * Creates an xml string body
+     * Creates an XML string body
      */
-    def xml(s: String) = new StringBody(s, StandardCharsets.UTF_8, Application.xml)
+    def xml(xml: String) = apply(xml, Application.xml, StandardCharsets.UTF_8)
 	
 	/**
 	  * Creates a urlencoded www form based on specified parameters
@@ -33,36 +34,46 @@ object StringBody
 	  * @return A string body wrapping the content as a url-encoded form
 	  */
 	def urlEncodedForm(content: HasProperties, charset: Charset = StandardCharsets.ISO_8859_1) = {
-		// Produces the url-encoded string
-		val parameters = content.properties.map { c => new BasicNameValuePair(c.name, c.value.getString) }
 		// Wraps the string in a body
-		/*
-		val builder = new URIBuilder()
-		content.attributes.foreach { c => builder.addParameter(c.name, c.value.getString) }
-		builder.setCharset(charset)
-		 */
-		// TODO: Fix this (above implementation, although it didn't work)
-		new StringBody(URLEncodedUtils.format(parameters.asJava, charset), charset, Application/"x-www-form-urlencoded")
+		StringBody(
+			WWWFormCodec.format(content.propertiesIterator
+				.map { prop => new BasicNameValuePair(prop.name, prop.value.getString) }.toOptimizedSeq.asJava, charset),
+			Application/"x-www-form-urlencoded", charset)
 	}
+	
+	/**
+	 * @param string String to write
+	 * @param contentType Applicable content type, without the character set specified
+	 * @param charset Character set to use
+	 * @return A new string request body
+	 */
+	def apply(string: String, contentType: ContentType, charset: Charset) =
+		new StringBody(string, contentType.withCharset(charset), charset)
 }
 
 /**
-* This request body is formed of a string
+* A 100% buffered, String-backed request body implementation
 * @author Mikko Hilpinen
 * @since 1.5.2018
 **/
-class StringBody(s: String, charset: Charset, cType: ContentType) extends Body
+class StringBody private(string: String, override val contentType: ContentType, charset: Charset) extends RequestBody
 {
-    private val bytes = s.getBytes(charset)
-	override val contentType: ContentType = cType.withCharset(charset)
+	// ATTRIBUTES   -----------------------
 	
-	def contentLength = Some(bytes.length)
-    
-    def repeatable = true
-	def chunked = false
-	def contentEncoding = None
+    private val bytes = string.getBytes(charset)
+	private val len = bytes.length
+	override val contentEncoding = None
 	
-	def stream = Success(new ByteArrayInputStream(bytes))
+    override val repeatable = true
+	override val streaming: Boolean = false
 	
-	override def toString = s"$s ($contentType)"
+	
+	// IMPLEMENTED  ---------------------
+	
+	override def contentLength = Some(len)
+	
+	override def toString = s"$string ($contentType)"
+	
+	override def writeTo(output: OutputStream): Try[Unit] = Try { output.write(bytes, 0, len) }
+	override def close(): Unit = ()
 }

@@ -1,14 +1,19 @@
 # Utopia Disciple - List of Changes
 
-## v1.9.3 (in development)
+## v1.10 (in development)
 ### Breaking changes
 - Updated to **Apache HttpClient v5.6**
+- `new StringBody(...)` is now private; Use `StringBody.apply(...)` instead
+### Deprecations
+- Deprecated **Body** in favor of **RequestBody** and **HttpEntityConvertible**
 ### New features
 - **Gateway** now supports custom redirect strategies
 - **RequestRateLimiter** now supports temporary lockdowns using `.lockUntil(Instant)` and `.removeLocking()`
+- **Request** now supports more customized body implementation, accepting **HttpEntityConvertible** instead of **Body**
 ### Other changes
 - Built with Scala v2.13.18
 - **RequestRateLimiter** now extends **ScopeUsable**
+- Rewrite **StringBody** and **FileBody** implementations
 
 ## v1.9.2 - 15.03.2026
 A minor update adding some quality-of-life changes, and support for some **Echo**-specific use-cases.

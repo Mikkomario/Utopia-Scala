@@ -23,7 +23,7 @@ import scala.collection.immutable.VectorBuilder
   * @param timeout Request timeout (default = no timeout specified = using Gateway timeout)
  */
 case class Request(requestUri: String, method: Method = Get, params: Model = Model.empty,
-                   headers: Headers = Headers.currentDateHeaders, body: Option[Body] = None,
+                   headers: Headers = Headers.currentDateHeaders, body: Option[HttpEntityConvertible] = None,
                    timeout: Timeout = Timeout.empty)
 {
     // IMPLEMENTED  --------------------
