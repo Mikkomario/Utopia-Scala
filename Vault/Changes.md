@@ -1,15 +1,22 @@
 # Utopia Vault - List of Changes
 
-## v2.1.1 (in development)
+## v2.2 (in development)
 ### Breaking changes
+- **LazyDbValue** now extends **Resettable**
 - The default connection target is now `:mariadb` instead of `:mysql`
+### Deprecations
+- Deprecated **DatabaseCache** (class); Added new constructors that yield **DbValue** **Cache**s
 ### Bugfixes
 - **Store** now ensures that input is distinct
 - Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items
 - **AccessGrouped** now extends **TargetingGrouped**, as intended
+### New features
+- Added **DbValue** trait
 ### New methods
 - **ConditionElement**
   - Added new variants of `.isBetween(...)` and `.notBetween(...)` that support **HasInclusiveEnds**
+- **DbMap**
+  - Added a new index-based constructor
 - **Row**
   - Added `.contains(Column)`
 ### Other changes

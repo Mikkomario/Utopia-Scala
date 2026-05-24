@@ -18,10 +18,11 @@ object TokenTemplateScopeData extends FromModelFactoryWithSchema[TokenTemplateSc
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("scopeId", IntType, Single("scope_id")), 
-			PropertyDeclaration("templateId", IntType, Single("template_id")), PropertyDeclaration("created", 
-			InstantType, isOptional = true), PropertyDeclaration("usable", BooleanType, Empty, false)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("scopeId", IntType, Single("scope_id")),
+		PropertyDeclaration("templateId", IntType, Single("template_id")),
+		PropertyDeclaration("created", InstantType, isOptional = true),
+		PropertyDeclaration("usable", BooleanType, Empty, false)))
 	
 	
 	// IMPLEMENTED	--------------------

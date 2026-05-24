@@ -27,6 +27,9 @@
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
 ### Deprecations
+- Multiple renames in **FromModelFactory**
+  - Renamed `.fromPath(Path)` to `.fromJsonFile(Path)`
+  - Renamed `.mapParseResult(...)` to `.mapResult(...)` and `.flatMapParseResult(...)` to `.tryMapResult(...)`
 - `Regex.whiteSpace` is now named `Regex.whitespace`
 - Renamed `.onceNotEmpty(...)` to `.onceDefined(...)` for **Changing** containing **Option**
 ### Bugfixes
@@ -44,6 +47,11 @@
   - Added `.currentSize`
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **FromModelFactory**
+  - Added `.preparingWith(...)`
+- **HasInclusiveOrderedEnds**
+  - Added `.smallest` and `.largest` aliases for `.min` and `.max` 
+    (since sometimes there are build issues with the latter)
 - **HasValues**
   - Added `.tryGetCatching(...)`
 - **InputStream** (via **StreamExtensions**)

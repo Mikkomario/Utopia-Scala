@@ -1,5 +1,6 @@
 package utopia.vigil.database.storable.scope
 
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.vault.model.immutable.{DbPropertyDeclaration, Storable}
@@ -23,25 +24,21 @@ object ScopeDbModel
 	// ATTRIBUTES	--------------------
 	
 	override val id = DbPropertyDeclaration("id", index)
+	
 	/**
 	  * Database property used for interacting with keys
 	  */
 	lazy val key = property("key")
-	/**
-	  * Database property used for interacting with parent ids
-	  */
-	lazy val parentId = property("parentId")
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = VigilTables.scope
 	
-	override def apply(data: ScopeData): ScopeDbModel = apply(None, data.key, data.parentId)
+	override def apply(data: ScopeData): ScopeDbModel = apply(None, data.key)
 	
 	override def withId(id: Int) = apply(id = Some(id))
 	override def withKey(key: String) = apply(key = key)
-	override def withParentId(parentId: Option[Int]): ScopeDbModel = apply(parentId = parentId)
 	
 	override protected def complete(id: Value, data: ScopeData) = Scope(id.getInt, data)
 }
@@ -52,15 +49,14 @@ object ScopeDbModel
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-case class ScopeDbModel(id: Option[Int] = None, key: String = "", parentId: Option[Int] = None) 
+case class ScopeDbModel(id: Option[Int] = None, key: String = "") 
 	extends Storable with HasId[Option[Int]] with FromIdFactory[Int, ScopeDbModel] 
 		with ScopeFactory[ScopeDbModel]
 {
 	// ATTRIBUTES	--------------------
 	
 	override lazy val valueProperties: Seq[(String, Value)] = 
-		Vector(ScopeDbModel.id.name -> id, ScopeDbModel.key.name -> key, 
-			ScopeDbModel.parentId.name -> parentId)
+		Pair(ScopeDbModel.id.name -> id, ScopeDbModel.key.name -> key)
 	
 	
 	// IMPLEMENTED	--------------------
@@ -69,6 +65,5 @@ case class ScopeDbModel(id: Option[Int] = None, key: String = "", parentId: Opti
 	
 	override def withId(id: Int) = copy(id = Some(id))
 	override def withKey(key: String) = copy(key = key)
-	override def withParentId(parentId: Option[Int]): ScopeDbModel = copy(parentId = parentId)
 }
 

@@ -202,13 +202,26 @@
             "index": true,
             "doc": "A key used for identifying this scope",
             "with": "forKey"
+          }
+        ]
+      },
+      {
+        "name": "ScopeRelation",
+        "access": "relation",
+        "doc": "Documents that possessing one scope grants another access to another scope",
+        "props": [
+          {
+            "name": "parentScopeId",
+            "ref": "scope",
+            "doc": "ID of the scope that grants access to another scope",
+            "with": "withParent"
           },
           {
+            "name": "grantedScopeId",
             "ref": "scope",
-            "type": "Option[Int]",
-            "name": "parentId",
-            "doc": "ID of the scope that contains this scope. None if this is a root-level scope.",
-            "with": "underScope"
+            "doc": "ID of the scope granted by the linked parent scope",
+            "with": "granting",
+            "in": "grantingScopes"
           }
         ]
       },

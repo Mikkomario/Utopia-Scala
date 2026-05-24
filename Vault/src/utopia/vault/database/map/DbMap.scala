@@ -145,6 +145,40 @@ object DbMap
 			copy(refreshInterval = refreshInterval, extraUseDuration = extraUseDuration)
 		
 		/**
+		 * @param store A function which may store a new key-value pair to the database.
+		 *              Used in situations where a targeted update didn't affect any rows.
+		 *
+		 *              Receives 3 values:
+		 *                  1. Targeted key / row index
+		 *                  1. Assigned value as a [[Value]]
+		 *                  1. Database connection
+		 *
+		 * @return A new DB map that targets rows based on their primary key
+		 */
+		def byIndex(store: (Int, Value, Connection) => Unit) =
+			withoutContext[Int] { access.index <=> _ }(store)
+		
+		/**
+		 * Creates a new DB map, which doesn't utilize context values
+		 * @param keyToCondition A function which converts a map key into a filter condition
+		 * @param store A function which may store a new key-value pair to the database.
+		 *              Used in situations where a targeted update didn't affect any rows.
+		 *
+		 *              Receives 3 values:
+		 *                  1. Targeted key
+		 *                  1. Assigned value as a [[Value]]
+		 *                  1. Database connection
+		 *
+		 * @tparam K Type of the keys accepted in this map
+		 * @return A new DB map
+		 */
+		def withoutContext[K](keyToCondition: K => Condition)(store: (K, Value, Connection) => Unit): DbMap[K, Nothing] = {
+			implicit val params: DbMapParams[K, Any] = new DbMapParams(valueColumn, refreshInterval, extraUseDuration,
+				_ => Condition.alwaysTrue, keyToCondition, (_, k, v, c) => store(k, v, c))
+			new _DbMap[K, Nothing, A](access)
+		}
+		
+		/**
 		 * Creates a new DB map
 		 * @param contextToCondition A function which converts a context instance into a filter condition
 		 * @param keyToCondition A function which converts a map key into a filter condition
@@ -166,25 +200,6 @@ object DbMap
 			implicit val params: DbMapParams[K, C] = new DbMapParams(valueColumn, refreshInterval, extraUseDuration,
 				contextToCondition, keyToCondition, store)
 			new _DbMap[K, C, A](access, context)
-		}
-		/**
-		 * Creates a new DB map, which doesn't utilize context values
-		 * @param keyToCondition A function which converts a map key into a filter condition
-		 * @param store A function which may store a new key-value pair to the database.
-		 *              Used in situations where a targeted update didn't affect any rows.
-		 *
-		 *              Receives 3 values:
-		 *                  1. Targeted key
-		 *                  1. Assigned value as a [[Value]]
-		 *                  1. Database connection
-		 *
-		 * @tparam K Type of the keys accepted in this map
-		 * @return A new DB map
-		 */
-		def withoutContext[K](keyToCondition: K => Condition)(store: (K, Value, Connection) => Unit): DbMap[K, Nothing] = {
-			implicit val params: DbMapParams[K, Any] = new DbMapParams(valueColumn, refreshInterval, extraUseDuration,
-				_ => Condition.alwaysTrue, keyToCondition, (_, k, v, c) => store(k, v, c))
-			new _DbMap[K, Nothing, A](access)
 		}
 	}
 	

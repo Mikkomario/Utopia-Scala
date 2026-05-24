@@ -21,18 +21,18 @@ object TokenTemplateData extends FromModelFactory[TokenTemplateData]
 {
 	// ATTRIBUTES	--------------------
 	
-	lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("name", StringType, isOptional = true), 
-			PropertyDeclaration("scopeGrantType", IntType, Single("scope_grant_type")), 
-			PropertyDeclaration("duration", DurationType, isOptional = true), PropertyDeclaration("created", 
-			InstantType, isOptional = true), PropertyDeclaration("canRevokeSelf", BooleanType, 
-			Single("can_revoke_self"), false), PropertyDeclaration("parentCanRevoke", BooleanType, 
-			Single("parent_can_revoke"), false)))
+	lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("name", StringType, isOptional = true),
+		PropertyDeclaration("scopeGrantType", IntType, Single("scope_grant_type")),
+		PropertyDeclaration("duration", DurationType, isOptional = true),
+		PropertyDeclaration("created", InstantType, isOptional = true),
+		PropertyDeclaration("canRevokeSelf", BooleanType, Single("can_revoke_self"), false),
+		PropertyDeclaration("parentCanRevoke", BooleanType, Single("parent_can_revoke"), false)))
 	
 	
 	// IMPLEMENTED	--------------------
 	
-	override def apply(model: HasProperties) = {
+	override def apply(model: HasProperties) =
 		schema.validate(model).flatMap { valid => 
 			ScopeGrantType.fromValue(valid("scopeGrantType")).map { scopeGrantType => 
 				TokenTemplateData(valid("name").getString, scopeGrantType, valid("duration").duration, 
@@ -40,7 +40,6 @@ object TokenTemplateData extends FromModelFactory[TokenTemplateData]
 					valid("parentCanRevoke").getBoolean)
 			}
 		}
-	}
 }
 
 /**
@@ -54,26 +53,20 @@ object TokenTemplateData extends FromModelFactory[TokenTemplateData]
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-case class TokenTemplateData(name: String, scopeGrantType: ScopeGrantType, duration: Option[Duration] = None, 
-	created: Instant = Now, canRevokeSelf: Boolean = false, parentCanRevoke: Boolean = false) 
+case class TokenTemplateData(name: String, scopeGrantType: ScopeGrantType, duration: Option[Duration] = None,
+                             created: Instant = Now, canRevokeSelf: Boolean = false, parentCanRevoke: Boolean = false)
 	extends TokenTemplateFactory[TokenTemplateData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("name" -> name, "scopeGrantType" -> scopeGrantType.id, "duration" -> duration, 
-			"created" -> created, "canRevokeSelf" -> canRevokeSelf, "parentCanRevoke" -> parentCanRevoke))
+	override def toModel = Model(Vector("name" -> name, "scopeGrantType" -> scopeGrantType.id, "duration" -> duration,
+		"created" -> created, "canRevokeSelf" -> canRevokeSelf, "parentCanRevoke" -> parentCanRevoke))
 	
 	override def withCanRevokeSelf(canRevokeSelf: Boolean) = copy(canRevokeSelf = canRevokeSelf)
-	
 	override def withCreated(created: Instant) = copy(created = created)
-	
 	override def withDuration(duration: Duration) = copy(duration = Some(duration))
-	
 	override def withName(name: String) = copy(name = name)
-	
 	override def withParentCanRevoke(parentCanRevoke: Boolean) = copy(parentCanRevoke = parentCanRevoke)
-	
 	override def withScopeGrantType(scopeGrantType: ScopeGrantType) = copy(scopeGrantType = scopeGrantType)
 }
 

@@ -1,6 +1,8 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.8.2 (in development)
+### New features
+- Added **DimensionalFromModelFactory**
 ### New methods
 - **HasBounds**
   - Added `.extremeAlong(Extreme, Axis2D)`

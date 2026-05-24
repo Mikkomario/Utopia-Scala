@@ -47,4 +47,7 @@ trait LazyDbValueWrapper[+A] extends LazyDbValue[A]
 	override def connectedValue(implicit connection: Connection): A = lazyWrapped.value.connectedValue
 	
 	override def current: Option[A] = lazyWrapped.current.flatMap { _.current }
+	override def isSet: Boolean = lazyWrapped.current.exists { _.isSet }
+	
+	override def reset(): Boolean = lazyWrapped.current.exists { _.reset() }
 }

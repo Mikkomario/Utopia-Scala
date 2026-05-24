@@ -4,7 +4,6 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.range.{HasInclusiveOrderedEnds, NumericSpan}
 import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
@@ -26,7 +25,7 @@ import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.shape2d.vector.size.Size
 import utopia.paradigm.shape.template.HasDimensions.HasDoubleDimensions
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorLike, NumericVectorFactory}
-import utopia.paradigm.shape.template.{Dimensional, Dimensions, HasDimensions}
+import utopia.paradigm.shape.template.{Dimensional, DimensionalFromModelFactory, Dimensions, HasDimensions}
 
 import java.awt.geom.RoundRectangle2D
 import scala.collection.mutable
@@ -34,7 +33,8 @@ import scala.language.implicitConversions
 import scala.math.Numeric.DoubleIsFractional
 import scala.util.Success
 
-object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds] with FromModelFactory[Bounds]
+object Bounds extends BoundsFactoryLike[Double, Point, Size, Bounds]
+	with DimensionalFromModelFactory[NumericSpan[Double], Bounds]
 {
 	// ATTRIBUTES    ----------------------
 	
@@ -210,7 +210,7 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
 	
 	// NB: position + size seems to break in a lot of places =>
 	// Will need to be careful with these, in case they break the compiler again in the future
-	override lazy val position: Point = Point(dimensions.map { _.min })
+	override lazy val position: Point = Point(dimensions.map { _.smallest })
 	override lazy val size: Size = Size(dimensions.map { _.length.abs })
 	
 	override lazy val components: Vector[Span1D] =

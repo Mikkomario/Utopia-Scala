@@ -67,7 +67,7 @@ object TokenDb
 	 * @param connection Implicit DB connection
 	 * @return A new token template
 	 */
-	def createStaticApiKey(scope: Seq[ScopeTarget], name: String = "")(implicit connection: Connection) =
+	def createApiKeyTemplate(scope: Seq[ScopeTarget], name: String = "")(implicit connection: Connection) =
 		createTemplate(name, accessibleScopes = scope)
 	
 	/**

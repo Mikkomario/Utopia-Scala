@@ -5,9 +5,9 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.combine.LinearScalable
 import utopia.paradigm.angular.Rotation
 import utopia.paradigm.enumeration.Axis
-import utopia.paradigm.shape.template.{DimensionalBuilder, DimensionalFactory, Dimensions, FromDimensionsFactory, HasDimensions}
+import utopia.paradigm.shape.template._
 import utopia.terra.model.enumeration.CompassDirection
-import utopia.terra.model.enumeration.CompassDirection.{East, EastWest, North, NorthSouth, South, West}
+import utopia.terra.model.enumeration.CompassDirection._
 
 object LatLongRotation
 	extends DimensionalFactory[Rotation, LatLongRotation] with FromDimensionsFactory[Rotation, LatLongRotation]

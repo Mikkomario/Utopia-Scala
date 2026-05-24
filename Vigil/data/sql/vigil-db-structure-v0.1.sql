@@ -1,20 +1,28 @@
 -- 
 -- Database structure for vigil models
 -- Version: v0.1
--- Last generated: 2026-05-05
+-- Last generated: 2026-05-24
 --
 
 --	Scope	----------
 
 -- Used for limiting authorization to certain features or areas
--- key:       A key used for identifying this scope
--- parent_id: ID of the scope that contains this scope. None if this is a root-level scope.
+-- key: A key used for identifying this scope
 CREATE TABLE `scope`(
 	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	`key` VARCHAR(12) NOT NULL, 
-	`parent_id` INT, 
-	INDEX vg_s_key_idx (`key`), 
-	CONSTRAINT vg_s_s_parent_ref_fk FOREIGN KEY vg_s_s_parent_ref_idx (parent_id) REFERENCES `scope`(`id`) ON DELETE SET NULL
+	INDEX vg_s_key_idx (`key`)
+)Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+-- Documents that possessing one scope grants another access to another scope
+-- parent_scope_id:  ID of the scope that grants access to another scope
+-- granted_scope_id: ID of the scope granted by the linked parent scope
+CREATE TABLE `scope_relation`(
+	`id` INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
+	`parent_scope_id` INT NOT NULL, 
+	`granted_scope_id` INT NOT NULL, 
+	CONSTRAINT vg_sr_s_parent_scope_ref_fk FOREIGN KEY vg_sr_s_parent_scope_ref_idx (parent_scope_id) REFERENCES `scope`(`id`) ON DELETE CASCADE, 
+	CONSTRAINT vg_sr_s_granted_scope_ref_fk FOREIGN KEY vg_sr_s_granted_scope_ref_idx (granted_scope_id) REFERENCES `scope`(`id`) ON DELETE CASCADE
 )Engine=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 
 

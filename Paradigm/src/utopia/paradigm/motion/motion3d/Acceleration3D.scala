@@ -9,11 +9,12 @@ import utopia.paradigm.motion.motion2d.Acceleration2D
 import utopia.paradigm.motion.template.{AccelerationFactory, AccelerationLike, ChangeFactory, ModelConvertibleChange}
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.vector.DoubleVector
-import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalFromModelFactory, Dimensions, DimensionsWrapperFactory, HasDimensions}
 
 object Acceleration3D
 	extends DimensionsWrapperFactory[LinearAcceleration, Acceleration3D]
 		with AccelerationFactory[Acceleration3D, Velocity3D, Vector3D]
+		with DimensionalFromModelFactory[LinearAcceleration, Acceleration3D]
 {
 	// ATTRIBUTES   --------------------------
 	

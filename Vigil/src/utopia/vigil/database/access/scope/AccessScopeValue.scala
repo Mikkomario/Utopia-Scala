@@ -23,15 +23,9 @@ case class AccessScopeValue(access: AccessColumn) extends AccessValue
 	  * Access to scope id
 	  */
 	lazy val id = apply(model.index).optional { _.int }
-	
 	/**
 	  * A key used for identifying this scope
 	  */
 	lazy val key = apply(model.key) { v => v.getString }
-	
-	/**
-	  * ID of the scope that contains this scope. None if this is a root-level scope.
-	  */
-	lazy val parentId = apply(model.parentId).optional { v => v.int }
 }
 

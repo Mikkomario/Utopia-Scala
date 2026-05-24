@@ -23,7 +23,7 @@ object PostContext
 	  * Creates a new post context
 	  * @param request Request to wrap
 	  * @param log Implicit logging implementation. Used for logging stream-closing failures.
-	  * @param jsonParser Json parser used for interpreting request json content (implicit)
+	  * @param jsonParser JSON parser used for interpreting request JSON content (implicit)
 	  * @return A new request context
 	  */
 	def apply(request: StreamedRequest)(implicit log: Logger, jsonParser: JsonParser): PostContext =
@@ -46,6 +46,7 @@ object PostContext
  * @author Mikko Hilpinen
   * @since 13.10.2022, v1.9
   */
+// TODO: Add optional logging for parsing failures
 class PostContext(override val request: StreamedRequest)(implicit log: Logger, jsonParser: JsonParser)
 	extends RequestContext[StreamOrReader]
 {
@@ -77,34 +78,59 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	// OTHER    ----------------------------
 	
 	/**
-	  * Parses a value from the request body and uses it to produce a response
-	  * @param f Function that will be called if the value was successfully read.
-	  *          Accepts the read value, which may be empty. Returns a http result.
-	  * @return Function result
-	  */
-	def handlePossibleValuePost(f: Value => RequestResult) = lazyParsedRequestBody.value.leftOrMap(f)
+	 * Processes the request body in three parts:
+	 *     1. Preprocessing that modifies the input model
+	 *     1. Parsing that attempts to parse a model into some item (possibly failing)
+	 *     1. Processing that interacts with the parsed item and yields the final result
+	 * @param preProcess A function that receives the post body as a (potentially empty) model and returns the
+	 *                   model that will be passed to the 'parser'
+	 * @param parser A factory that parses the pre-processed model into an item, possibly failing to do so
+	 * @param handle A function that accepts a successfully parsed item, along with the pre-processed model and
+	 *               yields the final response.
+	 * @return Failure result if parsing failed. Otherwise, the result of the 'handle' function.
+	 */
+	@deprecated("Deprecated for removal. Please use .parseBody(...) using parser.preparingWith(...), or use .interceptAndParseBody(...)", "v2.0.1")
+	def handleInterceptedPost[A](preProcess: Model => Model)(parser: FromModelFactory[A])
+	                            (handle: (A, Model) => RequestResult) =
+		interceptAndParseBody[Model, A] { v => preProcess(v.getModel) }(parser.apply)(handle)
 	/**
-	  * Parses a value from the request body and uses it to produce a response
-	  * @param f Function that will be called if the value was successfully read and not empty.
-	  *          Returns an http result.
-	  * @return Function result or a failure result if no value could be read.
-	  */
-	def handleValuePost(f: Value => RequestResult) = handlePossibleValuePost { value =>
-		// Fails on empty value
-		if (value.isEmpty)
-			BadRequest -> "Please specify a body in the request"
-		else
-			f(value)
-	}
+	 * Processes the request body in three parts:
+	 *     1. Preprocessing that modifies the body value
+	 *     1. Parsing that attempts to parse the preprocessed body
+	 *     1. Processing that interacts with the parsed item and yields the final result
+	 * @param preprocess A function that receives the post body as a (potentially empty) value and yields a
+	 *                   pre-processed value
+	 * @param parse A function that accepts the pre-processed value and attempts to parse it into another type.
+	 *              Yields a success or a failure.
+	 * @param handle A function that accepts a successfully parsed value, along with the pre-processed input and
+	 *               yields the final response.
+	 * @tparam P Type of pre-processed input
+	 * @tparam R Type of parsed value when parsing succeeds
+	 * @return Failure result if parsing failed. Otherwise, the result of the 'handle' function.
+	 */
+	def interceptAndParseBody[P, R](preprocess: Value => P)(parse: P => Try[R])
+	                               (handle: (R, P) => RequestResult): RequestResult =
+		withPossiblyEmptyBody { input =>
+			val prepared = preprocess(input)
+			parse(prepared) match {
+				case Success(parsed) => handle(parsed, prepared)
+				case Failure(error) => BadRequest -> error.getMessage
+			}
+		}
+	@deprecated("Renamed to .withParsedInterceptedBody(...)", "v2.0.1")
+	def handleInterceptedValuePost[P, R](preProcess: Value => P)(parse: P => Try[R])
+	                                    (handle: (R, P) => RequestResult): RequestResult =
+		interceptAndParseBody(preProcess)(parse)(handle)
+	
 	/**
-	  * Parses a model from the request body and uses it to produce a response
-	  * @param parser Model parser
-	  * @param f Function that will be called if the model was successfully parsed. Returns an http result.
-	  * @tparam A Type of parsed model
-	  * @return Function result or a failure result if no model could be parsed.
-	  */
-	def handlePost[A](parser: FromModelFactory[A])(f: A => RequestResult): RequestResult =
-		handleValuePost { value =>
+	 * Parses the request body (object) into a specific data type.
+	 * @param parser Model parser used
+	 * @param f A function that receives the parsed request body, and yields the result to send to the client
+	 * @tparam A Type of the parsed body
+	 * @return Result of 'f', or a failure if the body was empty or couldn't be parsed
+	 */
+	def parseBody[A](parser: FromModelFactory[A])(f: A => RequestResult): RequestResult =
+		withBody { value =>
 			value.tryModel match {
 				case Success(model) =>
 					parser(model) match {
@@ -118,66 +144,61 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 						BadRequest)
 			}
 		}
+	@deprecated("Renamed to .parseBody(...)", "v2.0.1")
+	def handlePost[A](parser: FromModelFactory[A])(f: A => RequestResult): RequestResult = parseBody(parser)(f)
 	/**
-	  * Parses request body into a vector of values and handles them using the specified function.
-	  * For non-array bodies, wraps the body in a vector.
-	  * @param f Function that will be called if a json body was present. Accepts a vector of values. Returns result.
-	  * @return Function result or a failure if no value could be read
-	  */
-	def handleArrayPost(f: Seq[Value] => RequestResult) =
-		handlePossibleValuePost { v: Value => f(v.getVector) }
-	/**
-	 * Parses request body into a vector of models and handles them using the specified function. Non-vector bodies
-	 * are wrapped in vectors, non-object elements are ignored.
-	 * @param parser Parser used for parsing models into objects
-	 * @param f Function called if all parsing succeeds
-	 * @tparam A Type of parsed item
-	 * @return Function result or failure in case of parsing failures
+	 * Accesses the request body. Yields a failure if no request body was specified.
+	 * @param f A function that receives the request body as a Value (not empty)
+	 *          and yields the result to send to the client.
+	 * @return Result of 'f', or a failure if request body was not specified or couldn't be parsed.
 	 */
-	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Seq[A] => RequestResult) =
-		handleArrayPost { values =>
+	def withBody(f: Value => RequestResult) = withPossiblyEmptyBody { value =>
+		// Fails on empty value
+		if (value.isEmpty)
+			BadRequest -> "Please specify a request body"
+		else
+			f(value)
+	}
+	@deprecated("Renamed to .withBody(...)", "v2.0.1")
+	def handleValuePost(f: Value => RequestResult) = withBody(f)
+	
+	/**
+	 * Parses n objects from the request body.
+	 * @param parser Parser used for parsing models/objects into a specific data type
+	 * @param f A function called if parsing succeeds for every included object.
+	 *          Yields the result to send to the client.
+	 * @tparam A Type of parsed items.
+	 * @return Result of 'f', or a failure if parsing failed at any point.
+	 */
+	def parseArrayBody[A](parser: FromModelFactory[A])(f: Seq[A] => RequestResult) =
+		withArrayBody { values =>
 			values.tryMapAll { v => parser(v.getModel) } match {
 				case Success(parsed) => f(parsed)
 				case Failure(error) => BadRequest -> error.getMessage
 			}
 		}
+	@deprecated("Renamed to .parseArrayBody(...)", "v2.0.1")
+	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Seq[A] => RequestResult) =
+		parseArrayBody(parser)(f)
 	/**
-	  * Processes the request body in three parts:
-	  * 1) Preprocessing that modifies the input
-	  * 2) Parsing that attempts to parse the input into a processed value (possibly failing)
-	  * 3) Processing that interacts with the parsed value and yields the final result
-	  * @param preProcess A function that receives the post body as a (potentially empty) value and yields a
-	  *                   pre-processed value
-	  * @param parse A function that accepts the pre-processed value and attempts to parse it into another type.
-	  *              Yields a success or a failure.
-	  * @param handle A function that accepts a successfully parsed value, along with the pre-processed input and
-	  *               yields the final response.
-	  * @tparam P Type of pre-processed input
-	  * @tparam R Type of parsed value when parsing succeeds
-	  * @return Failure result if parsing failed. Otherwise, the result of the 'handle' function.
-	  */
-	def handleInterceptedValuePost[P, R](preProcess: Value => P)(parse: P => Try[R])
-	                                    (handle: (R, P) => RequestResult): RequestResult =
-		handlePossibleValuePost { input =>
-			val pre = preProcess(input)
-			parse(pre) match {
-				case Success(res) => handle(res, pre)
-				case Failure(error) => BadRequest -> error.getMessage
-			}
-		}
+	 * Accesses the request body as a Vector of values. Non-array bodies are wrapped in a Vector.
+	 * Yields a failure if request-body parsing fails.
+	 * @param f A function that receives the parsed values from the response body.
+	 *          Receives an empty array, if there was no request body.
+	 *          Yields the request result to send to the client.
+	 * @return Result of 'f', or a failure if body-parsing failed
+	 */
+	def withArrayBody(f: Seq[Value] => RequestResult) = withPossiblyEmptyBody { v: Value => f(v.getVector) }
+	@deprecated("Renamed to .withArrayBody(...)", "v2.0.1")
+	def handleArrayPost(f: Seq[Value] => RequestResult) = withArrayBody(f)
+	
 	/**
-	  * Processes the request body in three parts:
-	  * 1) Preprocessing that modifies the input model
-	  * 2) Parsing that attempts to parse a model into some item (possibly failing)
-	  * 3) Processing that interacts with the parsed item and yields the final result
-	  * @param preProcess A function that receives the post body as a (potentially empty) model and returns the
-	  *                   model that will be passed to the 'parser'
-	  * @param parser A factory that parses the pre-processed model into an item, possibly failing to do so
-	  * @param handle A function that accepts a successfully parsed item, along with the pre-processed model and
-	  *               yields the final response.
-	  * @return Failure result if parsing failed. Otherwise, the result of the 'handle' function.
-	  */
-	def handleInterceptedPost[A](preProcess: Model => Model)(parser: FromModelFactory[A])
-	                            (handle: (A, Model) => RequestResult) =
-		handleInterceptedValuePost[Model, A] { v => preProcess(v.getModel) }(parser.apply)(handle)
+	 * Accesses the request body, if possible. Yields a failure on parse failures.
+	 * @param f A function that receives the request body as a value, which is empty if no request body was specified.
+	 *          Returns the request result to yield.
+	 * @return Result of 'f', or a failure if body-parsing failed.
+	 */
+	def withPossiblyEmptyBody(f: Value => RequestResult) = lazyParsedRequestBody.value.leftOrMap(f)
+	@deprecated("Renamed to .withBodyIfDefined(...)", "v2.0.1")
+	def handlePossibleValuePost(f: Value => RequestResult) = withPossiblyEmptyBody(f)
 }

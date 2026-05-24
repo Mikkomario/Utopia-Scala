@@ -2,6 +2,15 @@
 
 ## v2.0.1 (in development)
 Built with Scala v2.13.18
+### Deprecations
+- Multiple deprecations in **PostContext**
+  - deprecated `.handleInterceptedPost(...)`
+  - Renamed `.handleInterceptedValuePost(...)` to `.interceptAndParseBody(...)`
+  - Renamed `.handlePost(...)` to `.parseBody(...)`
+  - Renamed `.handleValuePost(...)` to `.withBody(...)`
+  - Renamed `.handleModelArrayPost(...)` to `.parseArrayBody(...)`
+  - Renamed `.handleArrayPost(...)` to `.withArrayBody(...)`
+  - Renamed `.handlePossibleValuePost(...)` to `.withPossiblyEmptyBody(...)`
 
 ## v2.0 - 15.03.2026
 This update rewrote every class in this project. The main ideas are the same, but brought up-to-date. 

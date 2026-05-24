@@ -11,10 +11,11 @@ import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.motion.template.{ChangeFactory, ModelConvertibleChange, VelocityLike}
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.vector.DoubleVector
-import utopia.paradigm.shape.template.{Dimensions, DimensionsWrapperFactory, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalFromModelFactory, Dimensions, DimensionsWrapperFactory, HasDimensions}
 
 object Velocity2D
 	extends DimensionsWrapperFactory[LinearVelocity, Velocity2D] with ChangeFactory[Velocity2D, Vector2D]
+		with DimensionalFromModelFactory[LinearVelocity, Velocity2D]
 {
 	// ATTRIBUTES   -------------------------
 	

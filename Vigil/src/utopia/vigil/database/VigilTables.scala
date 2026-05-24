@@ -15,6 +15,11 @@ object VigilTables
 	  * Table that contains scopes (Used for limiting authorization to certain features or areas)
 	  */
 	lazy val scope = apply("scope")
+	/**
+	 * Table that contains scope relations (Documents that possessing one scope grants another
+	 * access to another scope)
+	 */
+	lazy val scopeRelation = apply("scope_relation")
 	
 	/**
 	  * Table that contains tokens (Represents a token that may be used for authorizing certain actions)

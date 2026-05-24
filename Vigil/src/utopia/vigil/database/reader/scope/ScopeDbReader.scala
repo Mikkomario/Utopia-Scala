@@ -30,7 +30,7 @@ object ScopeDbReader extends DbRowReader[Scope] with ParseTableModel[Scope] with
 	override def table = model.table
 	
 	override def fromValid(valid: Model) = 
-		Success(Scope(valid(this.model.id.name).getInt, ScopeData(key = valid(this.model.key.name).getString, 
-			parentId = valid(this.model.parentId.name).int)))
+		Success(Scope(valid(this.model.id.name).getInt, 
+			ScopeData(key = valid(this.model.key.name).getString)))
 }
 

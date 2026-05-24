@@ -14,11 +14,11 @@ object TokenGrantRightData extends FromModelFactoryWithSchema[TokenGrantRightDat
 {
 	// ATTRIBUTES	--------------------
 	
-	override lazy val schema = 
-		ModelDeclaration(Vector(PropertyDeclaration("ownerTemplateId", IntType, Single("owner_template_id")), 
-			PropertyDeclaration("grantedTemplateId", IntType, Single("granted_template_id")), 
-			PropertyDeclaration("revokesOriginal", BooleanType, Single("revokes_original"), false), 
-			PropertyDeclaration("revokesEarlier", BooleanType, Single("revokes_earlier"), isOptional = true)))
+	override lazy val schema = ModelDeclaration(Vector(
+		PropertyDeclaration("ownerTemplateId", IntType, Single("owner_template_id")),
+		PropertyDeclaration("grantedTemplateId", IntType, Single("granted_template_id")),
+		PropertyDeclaration("revokesOriginal", BooleanType, Single("revokes_original"), false),
+		PropertyDeclaration("revokesEarlier", BooleanType, Single("revokes_earlier"), isOptional = true)))
 	
 	
 	// IMPLEMENTED	--------------------
@@ -41,22 +41,18 @@ object TokenGrantRightData extends FromModelFactoryWithSchema[TokenGrantRightDat
   * @author Mikko Hilpinen
   * @since 04.05.2026, v0.1
   */
-case class TokenGrantRightData(ownerTemplateId: Int, grantedTemplateId: Int, 
-	revokesOriginal: Boolean = false, revokesEarlier: UncertainBoolean = UncertainBoolean) 
+case class TokenGrantRightData(ownerTemplateId: Int, grantedTemplateId: Int, revokesOriginal: Boolean = false,
+                               revokesEarlier: UncertainBoolean = UncertainBoolean)
 	extends TokenGrantRightFactory[TokenGrantRightData] with ModelConvertible
 {
 	// IMPLEMENTED	--------------------
 	
-	override def toModel = 
-		Model(Vector("ownerTemplateId" -> ownerTemplateId, "grantedTemplateId" -> grantedTemplateId, 
-			"revokesOriginal" -> revokesOriginal, "revokesEarlier" -> revokesEarlier.exact))
+	override def toModel = Model(Vector("ownerTemplateId" -> ownerTemplateId, "grantedTemplateId" -> grantedTemplateId,
+		"revokesOriginal" -> revokesOriginal, "revokesEarlier" -> revokesEarlier.exact))
 	
 	override def withGrantedTemplateId(grantedTemplateId: Int) = copy(grantedTemplateId = grantedTemplateId)
-	
 	override def withOwnerTemplateId(ownerTemplateId: Int) = copy(ownerTemplateId = ownerTemplateId)
-	
 	override def withRevokesEarlier(revokesEarlier: UncertainBoolean) = copy(revokesEarlier = revokesEarlier)
-	
 	override def withRevokesOriginal(revokesOriginal: Boolean) = copy(revokesOriginal = revokesOriginal)
 }
 

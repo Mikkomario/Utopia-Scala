@@ -54,11 +54,18 @@ object LazyDbValue
 			value
 		}
 		override def current: Option[B] = _current
+		override def isSet: Boolean = _current.isDefined
 		
 		override def connectedValue(implicit connection: Connection): B = _current.getOrElse {
 			val value = f(original.connectedValue)
 			_current = Some(value)
 			value
+		}
+		
+		override def reset(): Boolean = {
+			val wasReset = original.reset() || _current.isDefined
+			_current = None
+			wasReset
 		}
 	}
 }
@@ -68,17 +75,8 @@ object LazyDbValue
  * @author Mikko Hilpinen
  * @since 17.11.2025, v2.1
  */
-trait LazyDbValue[+A] extends Lazy[A]
+trait LazyDbValue[+A] extends DbValue[A] with Lazy[A]
 {
-	// ABSTRACT ------------------------
-	
-	/**
-	 * @param connection Implicit DB connection to utilize, if necessary
-	 * @return Wrapped value
-	 */
-	def connectedValue(implicit connection: Connection): A
-	
-	
 	// IMPLEMENTED  -------------------
 	
 	override def map[B](f: A => B): LazyDbValue[B] = current match {

@@ -4,10 +4,10 @@ import utopia.flow.collection.immutable.Single
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.SureFromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.model.template
-import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
 import utopia.flow.operator.equality.EqualsBy
+import utopia.flow.time.Duration
 import utopia.paradigm.angular.{Angle, Rotation}
 import utopia.paradigm.enumeration.Axis
 import utopia.paradigm.enumeration.Axis.{X, Y, Z}
@@ -15,11 +15,11 @@ import utopia.paradigm.generic.ParadigmDataType.Vector3DType
 import utopia.paradigm.motion.motion3d.Velocity3D
 import utopia.paradigm.shape.shape2d.vector.Vector2D
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
-import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalFromModelFactory, Dimensions, HasDimensions}
 
-import utopia.flow.time.Duration
-
-object Vector3D extends DoubleVectorFactory[Vector3D] with SureFromModelFactory[Vector3D]
+object Vector3D
+	extends DoubleVectorFactory[Vector3D] with DimensionalFromModelFactory[Double, Vector3D]
+		with SureFromModelFactory[Vector3D]
 {
     // ATTRIBUTES    --------------------
     

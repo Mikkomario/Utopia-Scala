@@ -47,6 +47,14 @@ trait HasInclusiveOrderedEnds[P] extends HasOrderedEnds[P] with HasInclusiveEnds
 	// COMPUTED -----------------------
 	
 	/**
+	 * @return An alias for [[min]]
+	 */
+	def smallest = min
+	/**
+	 * @return An alias for [[max]]
+	 */
+	def largest = max
+	/**
 	  * @return The minimum and the maximum of this span
 	  */
 	def minMax: Pair[P] = ends.sorted

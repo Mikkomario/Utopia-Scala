@@ -1,7 +1,6 @@
 package utopia.paradigm.shape.shape2d.vector.point
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.generic.model.template.{ModelConvertible, ValueConvertible}
@@ -12,13 +11,13 @@ import utopia.paradigm.generic.ParadigmDataType.PointType
 import utopia.paradigm.shape.shape2d.line.Line
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
-import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalFromModelFactory, Dimensions, HasDimensions}
 
 import java.awt.geom.Point2D
 import scala.collection.immutable.HashMap
 import scala.util.Success
 
-object Point extends DoubleVectorFactory[Point] with FromModelFactory[Point]
+object Point extends DoubleVectorFactory[Point] with DimensionalFromModelFactory[Double, Point]
 {
 	// ATTRIBUTES   ---------------------------
 	

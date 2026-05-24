@@ -1,13 +1,12 @@
 package utopia.vigil.database.store
 
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Tree}
+import utopia.flow.collection.immutable.{Empty, Pair}
+import utopia.flow.operator.Identity
 import utopia.vault.database.{Connection, Store}
-import utopia.vault.store.StoreResult
+import utopia.vigil.database.access.scope.relation.AccessScopeRelations
 import utopia.vigil.database.access.scope.{AccessScope, AccessScopes}
-import utopia.vigil.database.storable.scope.ScopeDbModel
-import utopia.vigil.model.cached.scope.ScopeTarget
-import utopia.vigil.model.partial.scope.ScopeData
-import utopia.vigil.model.stored.scope.Scope
+import utopia.vigil.database.storable.scope.{ScopeDbModel, ScopeRelationDbModel}
+import utopia.vigil.model.partial.scope.{ScopeData, ScopeRelationData}
 
 /**
  * Used for interacting with scope information in the DB
@@ -18,26 +17,10 @@ object ScopeDb
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val _store = Store
-		.apply(ScopeDbModel) { data: (String, Option[Int]) => ScopeData(key = data._1, parentId = data._2) }
-		// May update the parent ID
-		.updating { (input, existing, connection) =>
-			if (existing.parentId != input._2)
-				Some(connection.use { implicit c =>
-					val prop = existing.access.parentId
-					input._2 match {
-						case Some(newParentId) =>
-							prop.set(newParentId)
-							existing.withParentId(newParentId)
-							
-						case None =>
-							prop.clear()
-							existing.withoutParent
-					}
-				})
-			else
-				None
-		}
+	private val _store = Store(ScopeDbModel) { key: String => ScopeData(key = key) }
+	private val _storeLinks = Store(ScopeRelationDbModel) { link: Pair[Int] =>
+		ScopeRelationData(parentScopeId = link.first, grantedScopeId = link.second)
+	}
 	
 	
 	// OTHER    ---------------------------
@@ -45,41 +28,48 @@ object ScopeDb
 	/**
 	 * Stores an individual scope entry to the DB
 	 * @param scope Scope key to store
-	 * @param parent Scope that should directly contain this scope (optional)
 	 * @param connection Implicit DB connection
 	 * @return Scope-storing result
 	 */
-	def store(scope: String, parent: Option[ScopeTarget] = None)(implicit connection: Connection) =
-		_store.single(scope -> parent.filter { _.isValid }.map { _.id }, AccessScope.forKey(scope).pull)
+	def store(scope: String)(implicit connection: Connection) =
+		_store.single(scope, AccessScope.forKey(scope).pull)
 	/**
-	 * Stores scope trees to the database
-	 * @param scopeTrees Scope trees to store, where navs are scope keys.
+	 * Stores a scope graph to the database
+	 * @param scopeLinks Scope relations to store,
+	 *                   where first values are parent scope keys and second values are granted scope keys
+	 * @param unrelated Scope keys that are not related with any other scope (default = empty)
+	 * @param exclusive Whether this is an exclusive data-set (other scopes and relations will be deleted)
 	 * @param connection Implicit DB connection
-	 * @return Scope store results
 	 */
-	def store(scopeTrees: Iterable[Tree[String]])(implicit connection: Connection) = {
-		if (scopeTrees.nonEmpty) {
-			// Pulls the existing scope info in order to avoid duplicates
-			val existing = AccessScopes.pull
-			val resultBuilder = OptimizedIndexedSeq.newBuilder[StoreResult[Scope]]
-			
-			// Stores one scope layer at a time
-			var nextScopes = scopeTrees.map[(Tree[String], Option[Int])] { _ -> None }
-			while (nextScopes.nonEmpty) {
-				val stored = _store.keyMap(nextScopes.map { case (node, parentId) => node.nav -> parentId }, existing) {
-					_._1.toLowerCase } { _.key.toLowerCase }
-				
-				resultBuilder ++= stored.valuesIterator
-				nextScopes = nextScopes.flatMap { case (node, _) =>
-					val parentId = stored(node.nav.toLowerCase).id
-					node.children.map { _ -> Some(parentId) }
-				}
-			}
-			
-			resultBuilder.result()
+	def store(scopeLinks: Iterable[Pair[String]], unrelated: Iterable[String] = Empty, exclusive: Boolean = false)
+	         (implicit connection: Connection) =
+	{
+		// Stores the referenced scopes
+		val existingScopes = AccessScopes.pull
+		val storeMap = _store.keyMap((scopeLinks.iterator.flatten ++ unrelated).distinct, existingScopes) {
+			_.toLowerCase } { _.key.toLowerCase }
+		
+		// Deletes other scopes, if appropriate
+		if (exclusive) {
+			val validScopeIds = storeMap.valuesIterator.map { _.id }.toSet
+			AccessScopes(existingScopes.iterator.map { _.id }.filterNot(validScopeIds.contains)).delete()
 		}
-		// Case: Nothing to store
-		else
-			Empty
+		
+		// Stores scope relations
+		val existingScopeRelations = {
+			if (exclusive)
+				AccessScopeRelations.pull
+			else
+				AccessScopeRelations.ofScopes(storeMap.valuesIterator.filter { _.existed }.map { _.id }).pull
+		}
+		val storedLinks = _storeLinks.keyMap(scopeLinks.iterator.map { _.map { key => storeMap(key.toLowerCase).id } },
+			existingScopeRelations)(Identity) { r => Pair(r.parentScopeId, r.grantedScopeId) }
+		
+		// Deletes other relations, if appropriate
+		if (exclusive) {
+			val validRelationIds = storedLinks.valuesIterator.map { _.id }.toSet
+			AccessScopeRelations(existingScopeRelations.iterator.map { _.id }.filterNot(validRelationIds.contains))
+				.delete()
+		}
 	}
 }

@@ -3,13 +3,14 @@ package utopia.vigil.model.factory.scope
 import utopia.flow.util.Mutate
 
 /**
-  * Common trait for classes that implement ScopeFactory by wrapping a ScopeFactory instance
+  * Common trait for classes that implement ScopeRelationFactory by wrapping a 
+  * ScopeRelationFactory instance
   * @tparam A Type of constructed instances
   * @tparam Repr Implementing type of this factory
   * @author Mikko Hilpinen
-  * @since 01.05.2026, v0.1
+  * @since 24.05.2026, v0.1
   */
-trait ScopeFactoryWrapper[A <: ScopeFactory[A], +Repr] extends ScopeFactory[Repr]
+trait ScopeRelationFactoryWrapper[A <: ScopeRelationFactory[A], +Repr] extends ScopeRelationFactory[Repr]
 {
 	// ABSTRACT	--------------------
 	
@@ -28,7 +29,9 @@ trait ScopeFactoryWrapper[A <: ScopeFactory[A], +Repr] extends ScopeFactory[Repr
 	
 	// IMPLEMENTED	--------------------
 	
-	override def withKey(key: String) = mapWrapped { _.withKey(key) }
+	override def withGrantedScopeId(grantedScopeId: Int) = mapWrapped { _.withGrantedScopeId(grantedScopeId) }
+	
+	override def withParentScopeId(parentScopeId: Int) = mapWrapped { _.withParentScopeId(parentScopeId) }
 	
 	
 	// OTHER	--------------------

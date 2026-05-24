@@ -15,9 +15,11 @@ import utopia.paradigm.generic.ParadigmDataType.Vector2DType
 import utopia.paradigm.motion.motion2d.Velocity2D
 import utopia.paradigm.shape.shape3d.Vector3D
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
-import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalFromModelFactory, Dimensions, HasDimensions}
 
-object Vector2D extends DoubleVectorFactory[Vector2D] with SureFromModelFactory[Vector2D]
+object Vector2D
+	extends DoubleVectorFactory[Vector2D] with DimensionalFromModelFactory[Double, Vector2D]
+		with SureFromModelFactory[Vector2D]
 {
 	// ATTRIBUTES	---------------------------
 	

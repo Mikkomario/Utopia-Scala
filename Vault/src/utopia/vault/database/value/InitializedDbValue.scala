@@ -17,6 +17,11 @@ object InitializedDbValue
 	// NESTED   -----------------------
 	
 	private case class _InitializedDbValue[+A](value: A) extends InitializedDbValue[A]
+	{
+		override def isSet: Boolean = true
+		
+		override def reset(): Boolean = false
+	}
 }
 
 /**

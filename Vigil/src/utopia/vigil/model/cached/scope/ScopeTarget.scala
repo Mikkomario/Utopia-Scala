@@ -1,40 +1,37 @@
 package utopia.vigil.model.cached.scope
 
-import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Tree}
-import utopia.flow.collection.mutable.iterator.OptionsIterator
-import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.view.mutable.eventful.CopyOnDemand
-import utopia.vault.store.{EqualsById, HasId}
+import utopia.flow.collection.immutable.{Empty, Graph, Pair}
+import utopia.flow.operator.enumeration.End
+import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.view.immutable.caching.Lazy
+import utopia.vault.database.{Connection, DatabaseCache}
+import utopia.vault.store.HasId
 import utopia.vigil.database.VigilContext._
-import utopia.vigil.database.access.scope.AccessScopes
-import utopia.vigil.model.stored.scope.Scope
+import utopia.vigil.database.access.scope.AccessScope
+import utopia.vigil.database.access.scope.relation.AccessScopeRelations
+import utopia.vigil.model.cached.scope.ScopeTarget.lazyGraphs
 
 object ScopeTarget
 {
 	// ATTRIBUTES   -----------------------
 	
-	/**
-	 * A pointer that contains all registered scopes. May be updated / refreshed.
-	 */
-	private val _pointer = CopyOnDemand { connectionPool.logging { implicit c => AccessScopes.pull }.getOrElse(Empty) }
-	/**
-	 * A pointer that contains all registered scopes as trees.
-	 */
-	private val treesP = _pointer.strongMap { scopes =>
-		implicit val eq: EqualsFunction[Scope] = EqualsById
-		scopes.iterator.filter { _.parentId.isEmpty }
-			.map { root => Tree.iterate(root) { parent => scopes.filter { _.parentId.contains(parent.id) } } }
-			.toOptimizedSeq
+	private val idByKey = DatabaseCache { (key: String, connection) =>
+		implicit val c: Connection = connection
+		AccessScope.forKey(key).id.pull
 	}
-	/**
-	 * A pointer that contains all valid targets, mapped to their keys
-	 */
-	private val byKeyP = mapTreesBy { _.key.toLowerCase }
-	/**
-	 * A pointer that contains all valid targets, mapped to their IDs
-	 */
-	private val byIdP = mapTreesBy { _.id }
+	private val keyById = DatabaseCache { (id: Int, connection) =>
+		implicit val c: Connection = connection
+		AccessScope(id).key.pull
+	}
+	
+	private val lazyGraphs = Lazy.resettable {
+		val links = connectionPool.logging { implicit c => AccessScopeRelations.values.parentAndChildIds }
+			.getOrElse(Empty)
+		val childGraph = Graph(links.iterator.map { link => (link.first, (), link.second) }.toSet)
+		val parentGraph = Graph(links.iterator.map { link => (link.second, (), link.first) }.toSet)
+		
+		Pair(parentGraph, childGraph)
+	}
 	
 	
 	// OTHER    ---------------------------
@@ -43,21 +40,24 @@ object ScopeTarget
 	 * @param scopeId ID of the targeted scope
 	 * @return A scope target matching that ID
 	 */
-	def id(scopeId: Int): ScopeTarget = byIdP.value.getOrElse(scopeId, InvalidScope)
+	def id(scopeId: Int): ScopeTarget = new ScopeById(scopeId, validated = false)
 	/**
 	 * @param key Key of the targeted scope (case-insensitive)
 	 * @return A scope target matching that key
 	 */
-	def apply(key: String): ScopeTarget = byKeyP.value.getOrElse(key.toLowerCase, InvalidScope)
+	def apply(key: String): ScopeTarget = new ScopeByKey(key)
 	
 	/**
 	 * Updates the cached data.
 	 * Should be called if new scopes are added.
 	 */
-	def update() = _pointer.update()
+	def update() = {
+		lazyGraphs.reset()
+		idByKey.cachedValues.foreach { _.reset() }
+		keyById.cachedValues.foreach { _.reset() }
+	}
 	
-	private def mapTreesBy[K](f: Scope => K) =
-		treesP.strongMap { _.iterator.flatMap { _.allNodesIterator }.map { s => f(s) -> new NodeWrapper(s) }.toMap }
+	private def validId(scopeId: Int): ScopeTarget = new ScopeById(scopeId, validated = true)
 	
 	
 	// NESTED   ---------------------------
@@ -71,24 +71,21 @@ object ScopeTarget
 		override val id: Int = -1
 		override val key: String = ""
 		
-		override val parentId: Option[Int] = None
-		override val childrenIterator: Iterator[ScopeTarget] = Iterator.empty
+		override val parentIdsIterator: Iterator[Int] = Iterator.empty
+		override val grantedScopesIterator: Iterator[ScopeTarget] = Iterator.empty
 	}
 	
-	private class NodeWrapper(node: Tree[Scope]) extends ScopeTarget
+	private class ScopeById(override val id: Int, validated: Boolean) extends ScopeTarget
 	{
-		// ATTRIBUTES   --------------------
+		override lazy val key: String = keyById(id).value
+		override lazy val isValid: Boolean = validated || key.nonEmpty
+	}
+	private class ScopeByKey(override val key: String) extends ScopeTarget
+	{
+		private lazy val _id = idByKey(key.toLowerCase).value
 		
-		override val isValid: Boolean = true
-		
-		
-		// IMPLEMENTED  --------------------
-		
-		override def id: Int = node.id
-		override def key: String = node.nav.key
-		
-		override def parentId: Option[Int] = node.nav.parentId
-		override def childrenIterator: Iterator[ScopeTarget] = node.children.iterator.map { new NodeWrapper(_) }
+		override def id: Int = _id.getOrElse(-1)
+		override def isValid: Boolean = _id.isDefined
 	}
 }
 
@@ -110,34 +107,25 @@ trait ScopeTarget extends HasId[Int]
 	 */
 	def key: String
 	
-	/**
-	 * @return ID of the scope directly above this scope
-	 */
-	def parentId: Option[Int]
-	/**
-	 * @return An iterator that yields the scopes directly under this scope
-	 */
-	def childrenIterator: Iterator[ScopeTarget]
-	
 	
 	// COMPUTED --------------------------
 	
 	/**
-	 * @return Scope directly above this one
+	 * @return An iterator that yields the IDs of all scopes granted by this scope
 	 */
-	def parent: Option[ScopeTarget] = parentId.map(ScopeTarget.id)
-	
+	def grantedScopeIdsIterator: Iterator[Int] = relatedIdsIterator(Last)
 	/**
-	 * @return An iterator that yields IDs of the scopes above this one,
-	 *         starting from the closes and ending in the root scope.
-	 *         Empty if this is a root scope.
+	 * @return An iterator that yields all scopes granted by this scope
 	 */
-	def parentIdsIterator = OptionsIterator.iterate(parentId) { ScopeTarget.id(_).parentId }
+	def grantedScopesIterator = grantedScopeIdsIterator.map(ScopeTarget.validId)
 	/**
-	 * @return An iterator that yields the parent scopes, starting from the closes and ending in the root scope.
-	 *         Empty if this is a root scope.
+	 * @return An iterator that yields the IDs of all scopes that grant this scope
 	 */
-	def parentsIterator = OptionsIterator.iterate(parent) { _.parent }
+	def parentIdsIterator = relatedIdsIterator(First)
+	/**
+	 * @return An iterator that yields all scopes that grant this scope
+	 */
+	def parentsIterator = parentIdsIterator.map(ScopeTarget.validId)
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -164,4 +152,7 @@ trait ScopeTarget extends HasId[Int]
 	 */
 	def isContainedWithin(grantedScopeIds: Set[Int]): Boolean =
 		grantedScopeIds.contains(id) || parentIdsIterator.exists(grantedScopeIds.contains)
+		
+	private def relatedIdsIterator(targetSide: End) =
+		lazyGraphs.value(targetSide)(id).allNodesIterator.drop(1).map { _.value }
 }

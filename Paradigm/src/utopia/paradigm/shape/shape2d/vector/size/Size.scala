@@ -12,13 +12,15 @@ import utopia.paradigm.measurement.DistanceUnit
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
 import utopia.paradigm.shape.template.vector.{DoubleVector, DoubleVectorFactory, DoubleVectorLike}
-import utopia.paradigm.shape.template.{Dimensions, HasDimensions}
+import utopia.paradigm.shape.template.{DimensionalFromModelFactory, Dimensions, HasDimensions}
 import utopia.paradigm.transform.LinearSizeAdjustable
 
 import java.awt.Dimension
 import scala.math.Numeric.DoubleIsFractional
 
-object Size extends SizeFactoryLike[Double, Size] with DoubleVectorFactory[Size] with SureFromModelFactory[Size]
+object Size
+    extends SizeFactoryLike[Double, Size] with DoubleVectorFactory[Size] with DimensionalFromModelFactory[Double, Size]
+        with SureFromModelFactory[Size]
 {
     // ATTRIBUTES   --------------------------
     
