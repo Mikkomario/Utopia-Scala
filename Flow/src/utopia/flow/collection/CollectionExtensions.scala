@@ -108,6 +108,28 @@ object CollectionExtensions
 		// COMPUTED ---------------------------
 		
 		/**
+		 * @return Whether this collection's contents are fully distinct.
+		 *         False if this collection contains at least one duplicate element.
+		 */
+		def isDistinct = {
+			val iter = ops.iterator
+			if (iter.hasNext) {
+				val buffer = mutable.Set[this.iter.A]()
+				var distinct = true
+				while (distinct && iter.hasNext) {
+					val next = iter.next()
+					if (buffer.contains(next))
+						distinct = false
+					else
+						buffer += next
+				}
+				distinct
+			}
+			else
+				true
+		}
+		
+		/**
 		 * @param buildFrom Implicit build-from for the remaining collection
 		 * @tparam B Type of the extracted item
 		 * @tparam To Type of the remaining collection

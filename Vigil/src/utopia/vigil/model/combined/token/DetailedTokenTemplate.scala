@@ -1,5 +1,8 @@
 package utopia.vigil.model.combined.token
 
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.model.immutable.{Model, Value}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.vigil.model.factory.token.TokenTemplateFactoryWrapper
 import utopia.vigil.model.partial.token.TokenTemplateData
 import utopia.vigil.model.stored.token.{TokenGrantRight, TokenTemplate, TokenTemplateScope}
@@ -13,6 +16,9 @@ case class DetailedTokenTemplate(id: Int, data: TokenTemplateData, scopeLinks: S
                                  grantRights: Seq[TokenGrantRight])
 	extends TokenTemplate with TokenTemplateFactoryWrapper[TokenTemplateData, DetailedTokenTemplate]
 {
+	override def toModel: Model =
+		super.toModel ++ Model.from("scopeLinks" -> scopeLinks, "grantRights" -> grantRights)
+	
 	override def withId(id: Int): TokenTemplate = copy(id = id)
 	override protected def wrap(factory: TokenTemplateData): DetailedTokenTemplate = copy(data = factory)
 }

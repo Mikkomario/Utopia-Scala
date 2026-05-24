@@ -58,6 +58,7 @@
   - Added `.bufferedWithSize(Int)`
   - Added `.writeTo(OutputStream, Int)`
 - **IterableOnce** (via **CollectionExtensions**)
+  - Added `.isDistinct`
   - Added `.popHead` and `.popIndex(Int)`
   - Added `.groupMapMap(...)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`

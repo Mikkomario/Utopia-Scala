@@ -2,6 +2,7 @@ package utopia.vigil.database.access.token.template
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.time.TimeExtensions._
+import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, AccessValues}
 import utopia.vigil.database.VigilContext
 import utopia.vigil.database.storable.token.TokenTemplateDbModel
@@ -51,5 +52,15 @@ case class AccessTokenTemplateValues(access: AccessManyColumns) extends AccessVa
 	  * Whether the parent tokens may be used to revoke these tokens
 	  */
 	lazy val parentsCanRevoke = apply(model.parentCanRevoke) { v => v.getBoolean }
+	
+	
+	// COMPUTED --------------------------
+	
+	/**
+	 * @param connection Implicit DB connection
+	 * @return Token template IDs, mapped to template names (lower-case)
+	 */
+	def idByName(implicit connection: Connection) =
+		access.toMap(model.name, model.id) { _.getString.toLowerCase } { _.getInt }
 }
 

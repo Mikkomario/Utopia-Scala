@@ -2,6 +2,7 @@ package utopia.vigil.model.stored.scope
 
 import utopia.vault.store.{FromIdFactory, StandardStoredFactory, StoredModelConvertible}
 import utopia.vigil.database.access.scope.AccessScope
+import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.factory.scope.ScopeFactoryWrapper
 import utopia.vigil.model.partial.scope.ScopeData
 
@@ -22,8 +23,13 @@ object Scope extends StandardStoredFactory[ScopeData, Scope]
   */
 case class Scope(id: Int, data: ScopeData) 
 	extends StoredModelConvertible[ScopeData] with FromIdFactory[Int, Scope] 
-		with ScopeFactoryWrapper[ScopeData, Scope]
+		with ScopeFactoryWrapper[ScopeData, Scope] with ScopeTarget
 {
+	// ATTRIBUTES   ----------------
+	
+	override val isValid: Boolean = true
+	
+	
 	// COMPUTED	--------------------
 	
 	/**
@@ -33,6 +39,8 @@ case class Scope(id: Int, data: ScopeData)
 	
 	
 	// IMPLEMENTED	--------------------
+	
+	override def key: String = data.key
 	
 	override protected def wrappedFactory = data
 	
