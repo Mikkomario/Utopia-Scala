@@ -1,7 +1,7 @@
 package utopia.vigil.database.store
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.parse.Sha256Hasher
 import utopia.flow.time.{Duration, Now}
 import utopia.flow.util.UncertainBoolean
@@ -59,6 +59,66 @@ object TokenDb
 	
 	
 	// OTHER    ---------------------------
+	
+	/**
+	 * If no tokens have been registered to the DB, sets up the developer token
+	 * @param developerScope Scope granted to the developer token (call-by-name)
+	 * @param scopeLinks Scope links to insert, where each value contains:
+	 *                   1. Name of the parent scope
+	 *                   1. Name of the granted child scope.
+	 *
+	 *                   Call-by-name.
+	 * @param otherScopes Other scopes to register (outside of scope relations / -link)
+	 * @param connection Implicit DB connection
+	 * @return If the developer key was created, yields:
+	 *         1. The developer token (store it somewhere safe)
+	 *         1. The stored developer token
+	 *         1. The developer token template
+	 *
+	 *         If tokens had already been set up, yields None.
+	 */
+	def setupDeveloperKeyIfNeeded(developerScope: => ScopeTarget, scopeLinks: => Iterable[Pair[String]],
+	                              otherScopes: => IterableOnce[String] = Empty)
+	                             (implicit connection: Connection) =
+	{
+		// Case: No tokens have been registered yet => Sets up the developer token
+		if (AccessTokens.active.isEmpty)
+			Some(setupDeveloperKey(developerScope, scopeLinks, otherScopes))
+		// Case: Tokens have already been registered => No change
+		else
+			None
+	}
+	/**
+	 * Sets up the developer token. Assumes that no developer tokens have been set up yet.
+	 * @param developerScope Scope granted to the developer token
+	 * @param scopeLinks Scope links to insert, where each value contains:
+	 *                   1. Name of the parent scope
+	 *                   1. Name of the granted child scope.
+	 *
+	 *                   Call-by-name.
+	 * @param otherScopes Other scopes to register (outside of scope relations / -link)
+	 * @param connection Implicit DB connection
+	 * @return Returns:
+	 *         1. The developer token (store it somewhere safe)
+	 *         1. The stored developer token
+	 *         1. The developer token template
+	 */
+	def setupDeveloperKey(developerScope: ScopeTarget, scopeLinks: Iterable[Pair[String]],
+	                      otherScopes: IterableOnce[String] = Empty)
+	                     (implicit connection: Connection) =
+	{
+		// Sets up the scope system
+		ScopeDb.store(scopeLinks, Set(developerScope.key) ++ otherScopes)
+		ScopeTarget.update()
+		
+		// Creates the dev token template
+		val devTokenTemplate = createApiKeyTemplate(Single(developerScope), "Developer key")
+		// Creates the dev token
+		val (token, storedToken) = createToken(devTokenTemplate, name = "Developer key")
+		
+		// Returns the new token
+		(token, storedToken, devTokenTemplate)
+	}
 	
 	/**
 	 * Creates a template for permanent API-keys
