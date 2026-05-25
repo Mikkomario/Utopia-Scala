@@ -1,8 +1,9 @@
 package utopia.vigil.database.access.scope.relation
 
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
-import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
+import utopia.vault.nosql.targeting.many._
 import utopia.vault.nosql.targeting.one.TargetingOne
+import utopia.vigil.database.access.scope.FilterByScope
 import utopia.vigil.database.reader.scope.ScopeRelationDbReader
 import utopia.vigil.model.stored.scope.ScopeRelation
 
@@ -18,7 +19,6 @@ object AccessScopeRelations
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessScopeRelationRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedScopeRelations(access)
 }
 
@@ -34,6 +34,9 @@ abstract class AccessScopeRelations[A, +Repr <: TargetingManyLike[_, Repr, _]](w
 	// ATTRIBUTES	--------------------
 	
 	override lazy val values = AccessScopeRelationValues(wrapped)
+	
+	lazy val joinGrantedScopes = join(model.grantedScopeId.column)
+	lazy val whereGrantedScopes = FilterByScope(joinGrantedScopes)
 }
 
 /**
@@ -51,7 +54,6 @@ case class AccessScopeRelationRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessScopeRelationRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessScopeRelation(target)
 }
 
@@ -70,7 +72,6 @@ case class AccessCombinedScopeRelations[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedScopeRelations(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessScopeRelation(target)
 }
 

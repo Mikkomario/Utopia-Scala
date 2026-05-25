@@ -1,11 +1,14 @@
 package utopia.vigil.database.store
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.operator.Identity
 import utopia.vault.database.{Connection, Store}
+import utopia.vault.store.StoreResult
 import utopia.vigil.database.access.scope.relation.AccessScopeRelations
 import utopia.vigil.database.access.scope.{AccessScope, AccessScopes}
 import utopia.vigil.database.storable.scope.{ScopeDbModel, ScopeRelationDbModel}
+import utopia.vigil.model.combined.scope.ChildScope
 import utopia.vigil.model.partial.scope.{ScopeData, ScopeRelationData}
 
 /**
@@ -72,4 +75,57 @@ object ScopeDb
 				.delete()
 		}
 	}
+	
+	/**
+	 * Sets / overwrites the scopes granted by a specific scope
+	 * @param parentScopeId ID of the scope that grants other scopes
+	 * @param granted Granted scope keys
+	 * @param connection Implicit DB connection
+	 * @return Returns 2 values:
+	 *         1. Stored child scopes
+	 *         1. Deleted scope relation links
+	 */
+	//noinspection ConvertibleToMethodValue
+	def setGrantsOf(parentScopeId: Int, granted: Set[String])(implicit connection: Connection) = {
+		// Stores the referenced scopes
+		val storeMap = _store.keyMap(granted, AccessScopes.forKeys(granted).pull) {
+			_.toLowerCase } { _.key.toLowerCase }
+		val scopeById = storeMap.valuesIterator.map { s => s.id -> s }.toMap
+		val grantedScopeIds = scopeById.keySet
+		
+		// Checks for existing grants
+		val (linksToRemove, linksToKeep) = AccessScopeRelations.withParent(parentScopeId).pull
+			.divideBy { link => grantedScopeIds.contains(link.grantedScopeId) }.toTuple
+		val existingGrantedIds = linksToKeep.iterator.map { _.grantedScopeId }.toSet
+		
+		// Deletes grants that are no longer present
+		if (linksToRemove.nonEmpty)
+			AccessScopeRelations(linksToRemove.iterator.map { _.id }).delete()
+		
+		// Inserts missing grants
+		val inserted = ScopeRelationDbModel.insert(
+			(grantedScopeIds -- existingGrantedIds).iterator
+				.map { grantedId => ScopeRelationData(parentScopeId = parentScopeId, grantedScopeId = grantedId) }
+				.toOptimizedSeq)
+		
+		(linksToKeep.iterator.map { StoreResult.existed(_) } ++ inserted.iterator.map { StoreResult.inserted(_) })
+			.map { link => link.map { link => ChildScope(scopeById(link.grantedScopeId), link) } }
+			.toOptimizedSeq -> linksToRemove
+	}
+	
+	/**
+	 * Deletes specific scope grants
+	 * @param parentScopeId ID of the scope from which grants are removed
+	 * @param deletedGrants Granted scope keys to remove
+	 * @param connection Implicit DB connection
+	 */
+	def deleteGrantsOf(parentScopeId: Int, deletedGrants: Set[String])(implicit connection: Connection) =
+		AccessScopeRelations.withParent(parentScopeId).whereGrantedScopes.forKeys(deletedGrants).delete()
+	/**
+	 * Deletes all grants of a specific scope
+	 * @param parentScopeId ID of the scope from which grants are removed
+	 * @param connection Implicit DB connection
+	 */
+	def deleteGrantsOf(parentScopeId: Int)(implicit connection: Connection) =
+		AccessScopeRelations.withParent(parentScopeId).delete()
 }

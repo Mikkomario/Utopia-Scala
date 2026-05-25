@@ -1,8 +1,8 @@
 package utopia.vigil.database.access.scope
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.nosql.template.Filterable
-import utopia.vault.sql.Condition
+import utopia.vault.model.immutable.Column
+import utopia.vault.nosql.template.IntIndexFilterable
 import utopia.vigil.database.storable.scope.ScopeDbModel
 
 /**
@@ -10,7 +10,7 @@ import utopia.vigil.database.storable.scope.ScopeDbModel
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-trait FilterScopes[+Repr] extends Filterable[Repr]
+trait FilterScopes[+Repr] extends IntIndexFilterable[Repr]
 {
 	// COMPUTED	--------------------
 	
@@ -18,6 +18,11 @@ trait FilterScopes[+Repr] extends Filterable[Repr]
 	  * Model that defines scope database properties
 	  */
 	def model = ScopeDbModel
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override protected def idColumn: Column = model.id
 	
 	
 	// OTHER	--------------------

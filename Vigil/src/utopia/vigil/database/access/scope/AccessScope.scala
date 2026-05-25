@@ -1,7 +1,11 @@
 package utopia.vigil.database.access.scope
 
+import utopia.flow.collection.immutable.Empty
+import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.HasValues
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
+import utopia.vigil.database.access.scope.relation.AccessScopeRelations
+import utopia.vigil.model.response.ResponseScope
 import utopia.vigil.model.stored.scope.Scope
 
 object AccessScope extends AccessOneRoot[AccessScope[Scope]]
@@ -9,6 +13,25 @@ object AccessScope extends AccessOneRoot[AccessScope[Scope]]
 	// ATTRIBUTES	--------------------
 	
 	override val root = AccessScopes.root.head
+	
+	
+	// EXTENSIONS   --------------------
+	
+	implicit class RichAccessScope(val a: AccessScope[Scope]) extends AnyVal
+	{
+		/**
+		 * Pulls this scope and all granted scopes, converting them to response models
+		 * @param connection Implicit DB connection
+		 * @return This scope as a response model. None if no scope was accessed.
+		 */
+		def pullResponseModel(implicit connection: Connection) = {
+			a.pull.map { root =>
+				val children = AccessScopes.resolveRelationsToResponseModels(
+					AccessScopeRelations.withParent(root.id).parentAndChildIds, Set(root.id))
+				ResponseScope(root.id, root.key, children.getOrElse(root.id, Empty))
+			}
+		}
+	}
 }
 
 /**

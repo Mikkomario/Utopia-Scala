@@ -1,5 +1,6 @@
 package utopia.vigil.database.access.token.scope
 
+import utopia.vault.database.Connection
 import utopia.vault.nosql.targeting.columns.{AccessManyColumns, HasValues}
 import utopia.vault.nosql.targeting.many.{AccessManyRoot, AccessRowsWrapper, AccessWrapper, TargetingMany, TargetingManyLike, TargetingManyRows, WrapOneToManyAccess, WrapRowAccess}
 import utopia.vault.nosql.targeting.one.TargetingOne
@@ -18,7 +19,6 @@ object AccessTokenScopes
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessTokenScopeRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedTokenScopes(access)
 }
 
@@ -34,6 +34,16 @@ abstract class AccessTokenScopes[A, +Repr <: TargetingManyLike[_, Repr, _]](wrap
 	// ATTRIBUTES	--------------------
 	
 	override lazy val values = AccessTokenScopeValues(wrapped)
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param scopeId ID of the targeted scope
+	 * @param connection Implicit DB connection
+	 * @return Whether access to the specified scope is included in this access/search
+	 */
+	def containsScope(scopeId: Int)(implicit connection: Connection) = toScope(scopeId).nonEmpty
 }
 
 /**
@@ -51,7 +61,6 @@ case class AccessTokenScopeRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessTokenScopeRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessTokenScope(target)
 }
 
@@ -70,7 +79,6 @@ case class AccessCombinedTokenScopes[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedTokenScopes(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessTokenScope(target)
 }
 

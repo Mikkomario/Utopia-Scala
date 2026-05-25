@@ -195,6 +195,14 @@
         "name": "Scope",
         "access": "-",
         "doc": "Used for limiting authorization to certain features or areas",
+        "combo": {
+          "name": "ChildScope",
+          "child": "ScopeRelation",
+          "is_always_linked": true,
+          "parent_alias": "scope",
+          "child_alias": "linkToParent",
+          "doc": "Represents a scope that's granted by some other scope"
+        },
         "props": [
           {
             "name": "key",

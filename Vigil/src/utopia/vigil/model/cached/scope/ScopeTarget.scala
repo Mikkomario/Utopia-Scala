@@ -1,6 +1,7 @@
 package utopia.vigil.model.cached.scope
 
 import utopia.flow.collection.immutable.{Empty, Graph, Pair}
+import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
 import utopia.flow.view.immutable.caching.Lazy
@@ -10,6 +11,7 @@ import utopia.vigil.database.VigilContext._
 import utopia.vigil.database.access.scope.AccessScope
 import utopia.vigil.database.access.scope.relation.AccessScopeRelations
 import utopia.vigil.model.cached.scope.ScopeTarget.lazyGraphs
+import utopia.vigil.model.stored.scope.Scope
 
 object ScopeTarget
 {
@@ -37,15 +39,35 @@ object ScopeTarget
 	// OTHER    ---------------------------
 	
 	/**
+	 * @param value A value
+	 * @return Scope target represented by the specified value
+	 */
+	def forValue(value: Value) = value.intOrString match {
+		case Some(Left(id)) => this.id(id)
+		case Some(Right(key)) => apply(key)
+		case None => InvalidScope
+	}
+	
+	/**
 	 * @param scopeId ID of the targeted scope
 	 * @return A scope target matching that ID
 	 */
-	def id(scopeId: Int): ScopeTarget = new ScopeById(scopeId, validated = false)
+	def id(scopeId: Int): ScopeTarget = {
+		if(scopeId <= 0)
+			InvalidScope
+		else
+			new ScopeById(scopeId, validated = false)
+	}
 	/**
 	 * @param key Key of the targeted scope (case-insensitive)
 	 * @return A scope target matching that key
 	 */
-	def apply(key: String): ScopeTarget = new ScopeByKey(key)
+	def apply(key: String): ScopeTarget = {
+		if (key.length > Scope.maxKeyLength)
+			InvalidScope
+		else
+			new ScopeByKey(key)
+	}
 	
 	/**
 	 * Updates the cached data.
@@ -73,12 +95,16 @@ object ScopeTarget
 		
 		override val parentIdsIterator: Iterator[Int] = Iterator.empty
 		override val grantedScopesIterator: Iterator[ScopeTarget] = Iterator.empty
+		
+		override def toString: String = "invalid"
 	}
 	
 	private class ScopeById(override val id: Int, validated: Boolean) extends ScopeTarget
 	{
 		override lazy val key: String = keyById(id).value
 		override lazy val isValid: Boolean = validated || key.nonEmpty
+		
+		override def toString: String = s"scope #$id"
 	}
 	private class ScopeByKey(override val key: String) extends ScopeTarget
 	{
@@ -86,6 +112,8 @@ object ScopeTarget
 		
 		override def id: Int = _id.getOrElse(-1)
 		override def isValid: Boolean = _id.isDefined
+		
+		override def toString: String = key
 	}
 }
 
@@ -109,6 +137,11 @@ trait ScopeTarget extends HasId[Int]
 	
 	
 	// COMPUTED --------------------------
+	
+	/**
+	 * @return Access to this scope's data in the DB
+	 */
+	def access = AccessScope(id)
 	
 	/**
 	 * @return An iterator that yields the IDs of all scopes granted by this scope
