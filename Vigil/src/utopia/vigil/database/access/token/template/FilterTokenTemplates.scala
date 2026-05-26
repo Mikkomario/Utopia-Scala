@@ -1,7 +1,8 @@
 package utopia.vigil.database.access.token.template
 
 import utopia.flow.generic.casting.ValueConversions._
-import utopia.vault.nosql.template.Filterable
+import utopia.vault.model.immutable.Column
+import utopia.vault.nosql.template.IntIndexFilterable
 import utopia.vigil.database.storable.token.TokenTemplateDbModel
 
 /**
@@ -9,7 +10,7 @@ import utopia.vigil.database.storable.token.TokenTemplateDbModel
   * @author Mikko Hilpinen
   * @since 01.05.2026, v0.1
   */
-trait FilterTokenTemplates[+Repr] extends Filterable[Repr]
+trait FilterTokenTemplates[+Repr] extends IntIndexFilterable[Repr]
 {
 	// COMPUTED	--------------------
 	
@@ -22,6 +23,11 @@ trait FilterTokenTemplates[+Repr] extends Filterable[Repr]
 	 * @return Access to token templates that allow revoking from parent authorization
 	 */
 	def revokableByParents = filter(model.parentCanRevoke <=> true)
+	
+	
+	// IMPLEMENTED  ----------------
+	
+	override protected def idColumn: Column = model.id
 	
 	
 	// OTHER	--------------------

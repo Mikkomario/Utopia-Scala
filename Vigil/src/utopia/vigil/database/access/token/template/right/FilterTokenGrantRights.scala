@@ -28,7 +28,6 @@ trait FilterTokenGrantRights[+Repr] extends Filterable[Repr]
 	  * template id
 	  */
 	def ofTemplate(ownerTemplateId: Int) = filter(model.ownerTemplateId.column <=> ownerTemplateId)
-	
 	/**
 	  * @param ownerTemplateIds Targeted owner template ids
 	  * @return Copy of this access point that only includes token grant rights where owner template id is 
@@ -43,7 +42,6 @@ trait FilterTokenGrantRights[+Repr] extends Filterable[Repr]
 	  * template id
 	  */
 	def toUseTemplate(grantedTemplateId: Int) = filter(model.grantedTemplateId.column <=> grantedTemplateId)
-	
 	/**
 	  * @param grantedTemplateIds Targeted granted template ids
 	  * @return Copy of this access point that only includes token grant rights where granted template id is 

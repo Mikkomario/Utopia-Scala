@@ -284,13 +284,33 @@ object TokenDb
 	def createToken(template: TokenTemplate, parentId: Option[Int] = None, name: String = "")
 	               (implicit connection: Connection) =
 	{
+		val key = UUID.randomUUID().toString
+		val token = createTokenWithCustomHash(template, Sha256Hasher(key), parentId, name)
+		key -> token
+	}
+	/**
+	 * Creates a new authorization token using a specific token hash
+	 * @param template Template used for creating this token
+	 * @param hash SHA256 hash to represent the key / token with
+	 * @param parentId ID of the token used for generating this token. Optional.
+	 *
+	 *                 NB: No authorization / validity checks are performed for this value.
+	 *                     This function assumes that referenced token may be used for this purpose.
+	 * @param name Name to give to this token (optional)
+	 * @param connection Implicit DB connection
+	 * @return Stored token entry
+	 */
+	def createTokenWithCustomHash(template: TokenTemplate, hash: String, parentId: Option[Int] = None,
+	                              name: String = "")
+	                             (implicit connection: Connection) =
+	{
 		val parentScopeIdsView = Lazy {
 			parentId match {
 				case Some(parentId) => AccessTokenScopes.ofToken(parentId).scopeIds.toSet
 				case None => Set[Int]()
 			}
 		}
-		_createToken(template, parentId, parentScopeIdsView, name)
+		_createToken(template, hash, name, parentId, parentScopeIdsView)
 	}
 	
 	/**
@@ -300,19 +320,33 @@ object TokenDb
 	 *
 	 * @param token Token (ids) to grant new tokens with
 	 * @param name Name to give to the new tokens. Call-by-name, default = empty.
+	 * @param limitToTemplateIds IDs of the token templates to which granting should be limited.
+	 *                           Default = empty = should grant a copy of every grantable token type.
+	 * @param revokeEarlierDefault The default option for whether the previously generated tokens should be revoked.
+	 *                             Applied if the token template doesn't specify whether this should be done.
+	 *                             Default = false = previously generated tokens won't be revoked by default.
 	 * @param connection Implicit DB connection
 	 * @return Returns 3 values:
 	 *         1. Generated tokens, where each contains:
 	 *              1. Generated token string / key
 	 *              1. Stored token entry
+	 *              1. Applied token template
 	 *         1. Whether 'token' was revoked in this process
 	 *         1. Whether previously generated tokens were revoked in this process
 	 */
-	def grantUsing(token: TokenIdRefs, name: => String = "", revokeEarlierDefault: Boolean = false)
+	def grantUsing(token: TokenIdRefs, name: => String = "", limitToTemplateIds: Iterable[Int] = Empty,
+	               revokeEarlierDefault: => Boolean = false)
 	              (implicit connection: Connection) =
 	{
 		// Checks the grant rights
-		val grantedTemplates = AccessTokenTemplates.whereOriginatingGrantRight.ofTemplate(token.templateId).pull
+		val grantedTemplates = {
+			val base = AccessTokenTemplates.whereOriginatingGrantRight.ofTemplate(token.templateId)
+			// May limit the grants to a specific subset of templates
+			if (limitToTemplateIds.nonEmpty)
+				base.in(limitToTemplateIds).pull
+			else
+				base.pull
+		}
 		// Case: No grant rights => No change
 		if (grantedTemplates.isEmpty)
 			(Empty, false, false)
@@ -331,7 +365,11 @@ object TokenDb
 			
 			// Generates the new tokens
 			val parentScopeIdsView = Lazy { AccessTokenScopes.ofToken(token.id).scopeIds.toSet }
-			val granted = grantedTemplates.map { _createToken(_, Some(token.id), parentScopeIdsView, name) }
+			val granted = grantedTemplates.map { template =>
+				val key = UUID.randomUUID().toString
+				val newToken = _createToken(template, Sha256Hasher(key), name, Some(token.id), parentScopeIdsView)
+				(key, newToken, template)
+			}
 			
 			// Revokes the original token, if appropriate
 			val wasRevoked = {
@@ -362,13 +400,12 @@ object TokenDb
 		_storeGrantRights.single((ownerTemplateId, grantedTemplateId, revokesOriginal, revokesEarlier),
 			AccessTokenGrantRight.ofTemplate(ownerTemplateId).toUseTemplate(grantedTemplateId).pull)
 	
-	private def _createToken(template: TokenTemplate, parentId: Option[Int], parentScopeIdsView: View[Set[Int]],
-	                         name: String)
+	private def _createToken(template: TokenTemplate, hash: String, name: String, parentId: Option[Int],
+	                         parentScopeIdsView: View[Set[Int]])
 	                        (implicit connection: Connection) =
 	{
 		// Creates the new token
-		val key = UUID.randomUUID().toString
-		val token = TokenDbModel.insert(TokenData(template.id, Sha256Hasher(key), parentId, name,
+		val token = TokenDbModel.insert(TokenData(template.id, hash, parentId, name,
 			expires = template.duration.map { Now + _ }))
 		
 		// Determines the scope given to the new token
@@ -406,6 +443,6 @@ object TokenDb
 			TokenScopeData(scopeId = scopeId, tokenId = token.id, usable = direct)
 		})
 		
-		key -> ScopedToken(token, scopeLinks)
+		ScopedToken(token, scopeLinks)
 	}
 }
