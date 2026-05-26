@@ -69,6 +69,8 @@ object TokenDb
 	 *
 	 *                   Call-by-name.
 	 * @param otherScopes Other scopes to register (outside of scope relations / -link)
+	 * @param devTokenTemplateName Name of the developer token template. Default = "developer".
+	 * @param devTokenName Name of the developer token. Default = "Developer key".
 	 * @param connection Implicit DB connection
 	 * @return If the developer key was created, yields:
 	 *         1. The developer token (store it somewhere safe)
@@ -78,12 +80,14 @@ object TokenDb
 	 *         If tokens had already been set up, yields None.
 	 */
 	def setupDeveloperKeyIfNeeded(developerScope: => ScopeTarget, scopeLinks: => Iterable[Pair[String]],
-	                              otherScopes: => IterableOnce[String] = Empty)
+	                              otherScopes: => IterableOnce[String] = Empty,
+	                              devTokenTemplateName: => String = "developer",
+	                              devTokenName: => String = "Developer key")
 	                             (implicit connection: Connection) =
 	{
 		// Case: No tokens have been registered yet => Sets up the developer token
 		if (AccessTokens.active.isEmpty)
-			Some(setupDeveloperKey(developerScope, scopeLinks, otherScopes))
+			Some(setupDeveloperKey(developerScope, scopeLinks, otherScopes, devTokenTemplateName, devTokenName))
 		// Case: Tokens have already been registered => No change
 		else
 			None
@@ -97,6 +101,8 @@ object TokenDb
 	 *
 	 *                   Call-by-name.
 	 * @param otherScopes Other scopes to register (outside of scope relations / -link)
+	 * @param devTokenTemplateName Name of the developer token template. Default = "developer".
+	 * @param devTokenName Name of the developer token. Default = "Developer key".
 	 * @param connection Implicit DB connection
 	 * @return Returns:
 	 *         1. The developer token (store it somewhere safe)
@@ -104,7 +110,8 @@ object TokenDb
 	 *         1. The developer token template
 	 */
 	def setupDeveloperKey(developerScope: ScopeTarget, scopeLinks: Iterable[Pair[String]],
-	                      otherScopes: IterableOnce[String] = Empty)
+	                      otherScopes: IterableOnce[String] = Empty, devTokenTemplateName: String = "developer",
+	                      devTokenName: String = "Developer key")
 	                     (implicit connection: Connection) =
 	{
 		// Sets up the scope system
@@ -112,9 +119,9 @@ object TokenDb
 		ScopeTarget.update()
 		
 		// Creates the dev token template
-		val devTokenTemplate = createApiKeyTemplate(Single(developerScope), "Developer key")
+		val devTokenTemplate = createApiKeyTemplate(Single(developerScope), devTokenTemplateName)
 		// Creates the dev token
-		val (token, storedToken) = createToken(devTokenTemplate, name = "Developer key")
+		val (token, storedToken) = createToken(devTokenTemplate, name = devTokenName)
 		
 		// Returns the new token
 		(token, storedToken, devTokenTemplate)
