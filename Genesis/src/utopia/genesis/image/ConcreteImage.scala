@@ -172,8 +172,8 @@ class ConcreteImage private(override protected val source: Option[BufferedImage]
 	
 	override def subImage(area: Bounds) = source match {
 		case Some(source) =>
-			area.overlapWith(Bounds(Point.origin, size)) match {
-				case Some(overlap) => _subImage(source, overlap / scaling)
+			(area / scaling).round.overlapWith(Bounds(Point.origin, sourceResolution)) match {
+				case Some(sourceOverlap) => _subImage(source, sourceOverlap)
 				case None =>
 					Image(new BufferedImage(0, 0, source.getType), scaling, alpha,
 						specifiedOrigin.map { _ - area.position / scaling })
@@ -427,12 +427,10 @@ class ConcreteImage private(override protected val source: Option[BufferedImage]
 	
 	// Only works when specified area is inside the original image's bounds and scaled according to source resolution
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) = {
-		val area = relativeArea.round
-		val newSource = img.getSubimage(area.leftX.toInt max 0, area.topY.toInt max 0,
-			area.width.toInt min sourceResolution.width.toInt,
-			area.height.toInt min sourceResolution.height.toInt)
-		val newLazyPixels = Lazy { _pixels.value.view(area) }
-		new ConcreteImage(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - area.position },
+		val newSource = img.getSubimage(relativeArea.leftX.toInt, relativeArea.topY.toInt,
+			relativeArea.width.toInt, relativeArea.height.toInt)
+		val newLazyPixels = Lazy { _pixels.value.view(relativeArea) }
+		new ConcreteImage(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - relativeArea.position },
 			newLazyPixels, newLazyPixels.map { _.averageShade })
 	}
 	
