@@ -125,6 +125,17 @@ object Condition
 				}
 		}
 	
+	/**
+	  * @param element A condition element that might be null
+	  * @return A condition that yields true for null values
+	  */
+	def isNull(element: ConditionElement) = apply(element.toSqlSegment + " IS NULL")
+	/**
+	  * @param element A condition element that might be null
+	  * @return A condition that yields true for non-null values
+	  */
+	def isNotNull(element: ConditionElement) = apply(element.toSqlSegment + " IS NOT NULL")
+	
 	private def combine(conditions: Seq[Condition], separator: => String, resultOnEmpty: => Condition) = {
 		conditions.emptyOneOrMany match {
 			case None => resultOnEmpty

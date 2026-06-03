@@ -13,10 +13,14 @@
 ### New features
 - Added **DbValue** trait
 ### New methods
+- **Condition** (object)
+  - Added `.isNull(ConditionElement)` and `.isNotNull(ConditionElement)`
 - **ConditionElement**
   - Added new variants of `.isBetween(...)` and `.notBetween(...)` that support **HasInclusiveEnds**
 - **DbMap**
   - Added a new index-based constructor
+- **Join**
+  - Added `.columns`
 - **Row**
   - Added `.contains(Column)`
 ### Other changes

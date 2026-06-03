@@ -38,11 +38,11 @@ case class Column(propertyName: String, columnName: String, tableName: String, o
 	/**
 	  * Creates a condition that checks whether the column value in the database is null
 	  */
-	lazy val isNull = Condition(SqlSegment(s"$sqlName IS NULL"))
+	lazy val isNull = Condition.isNull(this)
 	/**
 	  * Creates a condition that checks whether the column value in the database is not null
 	  */
-	lazy val isNotNull = Condition(SqlSegment(s"$sqlName IS NOT NULL"))
+	lazy val isNotNull = Condition.isNotNull(this)
 	
 	
 	// COMPUTED PROPERTIES    ------------------

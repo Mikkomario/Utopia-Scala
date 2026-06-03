@@ -3,6 +3,8 @@
 ## v4.3 (in development)
 ### Breaking changes
 - **PaintManager**s are now required to implement `.invalidate(...)`
+### Bugfixes
+- Added safety checks for subimage rounding errors that previously threw
 ### New features
 - Added **Chart** for drawing point charts
 ### Other changes

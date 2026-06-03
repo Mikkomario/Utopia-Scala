@@ -1,6 +1,6 @@
 package utopia.vault.sql
 
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.util.StringExtensions._
 import utopia.vault.model.immutable.{Column, Table, TableColumn}
 import utopia.vault.model.template.Joinable
@@ -27,7 +27,7 @@ case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condi
 	// COMPUTED PROPERTIES    ----------------
 	
 	/**
-	  * An sql segment based on this join (Eg. "LEFT JOIN table2 ON table1.column1 = table2.column2")
+	  * An SQL segment based on this join (E.g. "LEFT JOIN table2 ON table1.column1 = table2.column2")
 	  */
 	def toSqlSegment = {
 		val base = SqlSegment(s"$joinType JOIN ${ to.table.sqlName }${ rightAlias.prependIfNotEmpty(" AS ") } ON ${
@@ -38,6 +38,11 @@ case class Join(from: Column, to: TableColumn, joinType: JoinType = Inner, condi
 			case None => base
 		}
 	}
+	
+	/**
+	  * @return Columns involved in this join
+	  */
+	def columns = Pair(from, to.column)
 	
 	@deprecated("Renamed to .from", "v1.22")
 	def leftColumn = from

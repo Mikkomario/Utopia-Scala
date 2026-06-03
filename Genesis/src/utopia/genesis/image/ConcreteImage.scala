@@ -428,7 +428,9 @@ class ConcreteImage private(override protected val source: Option[BufferedImage]
 	// Only works when specified area is inside the original image's bounds and scaled according to source resolution
 	private def _subImage(img: BufferedImage, relativeArea: Bounds) = {
 		val area = relativeArea.round
-		val newSource = img.getSubimage(area.leftX.toInt, area.topY.toInt, area.width.toInt, area.height.toInt)
+		val newSource = img.getSubimage(area.leftX.toInt max 0, area.topY.toInt max 0,
+			area.width.toInt min sourceResolution.width.toInt,
+			area.height.toInt min sourceResolution.height.toInt)
 		val newLazyPixels = Lazy { _pixels.value.view(area) }
 		new ConcreteImage(Some(newSource), scaling, alpha, specifiedOrigin.map { _ - area.position },
 			newLazyPixels, newLazyPixels.map { _.averageShade })
