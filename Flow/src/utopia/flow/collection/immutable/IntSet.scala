@@ -201,7 +201,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 {
 	// ATTRIBUTES   ------------------------
 	
-	private val lazySize = Lazy { ranges.iterator.map { _.length }.sum }
+	private val lazySize = Lazy { ranges.iterator.map { _.length + 1 }.sum }
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -214,7 +214,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 	override def head = ranges.head.start
 	override def last = ranges.last.end
 	override def tail = {
-		if (ranges.head.length > 1)
+		if (ranges.head.length > 0)
 			IntSet(ranges.mapHead { _.mapStart { _ + 1 } })
 		else
 			IntSet(ranges.tail)
@@ -244,7 +244,7 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 			val iter = ranges.iterator
 			
 			while (i < stopThreshold && iter.hasNext) {
-				i += iter.next().length
+				i += iter.next().length + 1
 			}
 			
 			i.compareTo(otherSize)
@@ -260,12 +260,13 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 		
 		while (remaining > 0 && input.hasNext) {
 			val nextRange = input.next()
-			if (nextRange.length >= remaining) {
+			val len = nextRange.length + 1
+			if (len >= remaining) {
 				builder += nextRange
-				remaining -= nextRange.length
+				remaining -= len
 			}
 			else {
-				builder += nextRange.withLength(remaining)
+				builder += nextRange.withLength(remaining - 1)
 				remaining = 0
 			}
 		}
@@ -286,8 +287,9 @@ case class IntSet private(ranges: Seq[IntSpan]) extends Iterable[Int]
 			
 			while (remaining > 0 && input.hasNext) {
 				val nextRange = input.next()
-				if (nextRange.length >= remaining)
-					remaining -= nextRange.length
+				val len = nextRange.length + 1
+				if (len >= remaining)
+					remaining -= len
 				else {
 					partial = Some(nextRange.mapStart { _ + remaining })
 					remaining = 0

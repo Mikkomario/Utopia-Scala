@@ -351,9 +351,9 @@ trait ConditionElement
 			in(individualValues) || rangeConditions
 	}
 	private def inConditionElements(values: IntSet) = {
-		// Converts the input range into individual values (from ranges of length 1 & 2) and longer ranges
+		// Converts the input range into individual values (from ranges of 1 & 2 values) and longer ranges
 		values.ranges.flatDivideWith { range =>
-			if (range.length <= 2)
+			if (range.length <= 1)
 				range.iterator.map { Left(_) }
 			else
 				Single(Right(range))

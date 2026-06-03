@@ -79,16 +79,12 @@ object NumericSpan
 	// IMPLEMENTED  ---------------------
 	
 	private class _NumericSpan[N](override val start: N, override val end: N, _step: N)
-	                     (override implicit val n: Numeric[N])
+	                             (override implicit val n: Numeric[N])
 		extends NumericSpan[N] with EqualsBy
 	{
 		// ATTRIBUTES   -------------------------
 		
 		override lazy val step = n.abs(_step)
-		
-		/**
-		  * The length of this span, which may be negative
-		  */
 		override lazy val length = super.length
 		
 		
@@ -126,9 +122,10 @@ trait NumericSpan[N]
 	// COMPUTED   -------------------------
 	
 	/**
-	  * The length of this span. Always positive.
+	  * The length of this span (= end - start).
+	 * May be zero, but not negative.
 	  */
-	def length = n.plus(n.abs(n.minus(end, start)), n.one)
+	def length = n.abs(n.minus(end, start))
 	
 	
 	// IMPLEMENTED  -------------------------

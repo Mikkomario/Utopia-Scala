@@ -23,7 +23,6 @@
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Bugfixes
 - Fixed an issue in **WeakList**'s `:+` function, which always discarded live items (opposite of the desired effect)
-- Bugfix to **NumericSpan**'s `.length` implementation
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
 ### Deprecations

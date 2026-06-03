@@ -450,11 +450,10 @@ class Bounds private(override val dimensions: Dimensions[NumericSpan[Double]])
 	 * @param other Another area
 	 * @return The intersection between these two areas. None if there is no intersection.
 	 */
-	def overlapWith(other: HasDimensions[HasInclusiveOrderedEnds[Double]]) = {
+	def overlapWith(other: HasDimensions[HasInclusiveOrderedEnds[Double]]) =
 		x.overlapWith(other.x).flatMap { xOverlap =>
 			y.overlapWith(other.y).map { yOverlap => Bounds(xOverlap, yOverlap) }
 		}
-	}
 	/**
 	 * @param other Another set of bounds
 	 * @return The overlap between these two sets of bounds
