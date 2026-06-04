@@ -413,7 +413,16 @@ case class Color private(private val data: Either[Hsl, Rgb], alpha: Double)
 	  * @param theirWeight A weight modifier for the other color
 	  * @return A weighted average between these colors (rgb-wise)
 	  */
-	def average(other: Color, myWeight: Double, theirWeight: Double): Color = average(other, myWeight / theirWeight)
+	def average(other: Color, myWeight: Double, theirWeight: Double): Color = {
+		if (theirWeight == 0) {
+			if (myWeight == 0)
+				average(other)
+			else
+				this
+		}
+		else
+			average(other, myWeight / theirWeight)
+	}
 	
 	/**
 	  * Creates a darkened copy of this color

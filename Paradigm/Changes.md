@@ -1,6 +1,9 @@
 # Utopia Paradigm - List of Changes
 
 ## v1.8.2 (in development)
+### Bugfixes
+- Bugfix to **Color**'s `.average(Color, Double, Double)` function, 
+  which previously failed when the other color's priority was 0.
 ### New features
 - Added **DimensionalFromModelFactory**
 ### New methods

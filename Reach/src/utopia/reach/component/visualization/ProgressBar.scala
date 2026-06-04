@@ -347,7 +347,7 @@ class ProgressBar(override val hierarchy: ComponentHierarchy, context: VariableC
 		override val drawLevel: DrawLevel = Normal
 		
 		override def draw(drawer: Drawer, bounds: Bounds): Unit = {
-			// Uses anti-aliasing when drawing (if using rounding)
+			// Uses antialiasing when drawing (if using rounding)
 			val d = if (settings.rounds) drawer.antialiasing else drawer
 			
 			val leftWidth = bounds.width * visualProgress

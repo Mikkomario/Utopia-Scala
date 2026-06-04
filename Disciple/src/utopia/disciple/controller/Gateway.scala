@@ -491,7 +491,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	        // If both a body and parameters were provided, adds params to uri
 	        val uri = makeUriWithParams(baseUri, params)
 	        val base = baseWith(uri)
-	        base.setEntity(body.get)
+		    body.foreach(base.setEntity)
 	        base
 	    }
 	}

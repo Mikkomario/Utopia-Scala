@@ -6,6 +6,8 @@
 - `new StringBody(...)` is now private; Use `StringBody.apply(...)` instead
 ### Deprecations
 - Deprecated **Body** in favor of **RequestBody** and **HttpEntityConvertible**
+### Bugfixes
+- Bugfix to cases where an empty POST / PUT request would throw when disallowing body parameters.
 ### New features
 - **Gateway** now supports custom redirect strategies
 - **RequestRateLimiter** now supports temporary lockdowns using `.lockUntil(Instant)` and `.removeLocking()`

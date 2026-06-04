@@ -160,13 +160,14 @@ trait ButtonLike extends ReachComponent with FocusableWithState with CursorDefin
 		// IMPLEMENTED	---------------------------
 		
 		override def onKeyState(event: KeyStateEvent) = {
+			// TODO: Should check whether the window owns the focus owner, or whether it is the focus owner
 			lazy val windowHasFocus = parentWindow.exists { window => window.isFocused || !window.isFocusableWindow }
 			if (hotKeys.exists { key =>
 				key.isTriggeredWith(event.keyboardState) && (key.triggersWithoutWindowFocus || windowHasFocus) })
 				down = true
 			else if (down) {
-				trigger()
 				down = false
+				trigger()
 			}
 		}
 	}

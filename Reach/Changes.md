@@ -11,6 +11,7 @@
 ### Other changes
 - Built with Scala v2.13.18
 - **InputField** now longer extends **Input**, but now only extends **View**
+- **ButtonLike** now changes its state before, and not after, triggering
 
 ## v1.7.1 - 15.03.2026
 Supports **Flow v2.8**
