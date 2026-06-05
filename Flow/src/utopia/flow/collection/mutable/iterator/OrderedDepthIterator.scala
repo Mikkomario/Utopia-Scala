@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable.iterator
 
-import scala.collection.immutable.VectorBuilder
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 
 object OrderedDepthIterator
 {
@@ -35,7 +35,7 @@ class OrderedDepthIterator[A](firstLayerSource: Iterator[A])(goDeeper: A => Iter
 	
 	private var currentLayerSource = firstLayerSource
 	// Stores the current layer's iteration in memory in order to open the next level when it is reached
-	private val currentLayerBuffer = new VectorBuilder[A]()
+	private val currentLayerBuffer = OptimizedIndexedSeq.newBuilder[A]
 	
 	
 	// IMPLEMENTED  ---------------------

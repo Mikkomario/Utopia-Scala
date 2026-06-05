@@ -33,9 +33,9 @@ object GraphNode
 	  * @param cost The cost of traversing these routes
 	  * @param isDestination Whether this represents a search destination.
 	  *                      False if this represents potential progress in the node-search process instead.
-	  * @param isConfirmedAsOptimal True if 'routes' has been confirmed to be the optimal / cheapest routes to 'node'.
+	  * @param isConfirmedAsOptimal True if 'routes' has been confirmed to be the optimal / the cheapest routes to 'node'.
 	  *                             If false, another route or routes may be discovered,
-	  *                             which are at least equally as valid.
+	  *                             which are at least as valid.
 	  *
 	  *                             Note: 'routes' may still be the optimal set or routes, even if this value is false,
 	  *                             but that wouldn't be for certain.
@@ -80,7 +80,7 @@ object GraphNode
 	/**
 	  * Represents a result (either preliminary or final) in a graph search process.
 	  * @param stages A sequence which contains both acquired results (which might not be optimal),
-	  *               as well as stateful information concerning the progress in traversing through the graph.
+	  *               and stateful information concerning the progress in traversing through the graph.
 	  *               The first values listed represent actual successful results.
 	  *               After that are listed values which represent temporary / preliminary search progress.
 	  * @param minFutureCost Smallest cost that may be acquired for any future result.
@@ -316,7 +316,7 @@ object GraphNode
 		  *
 		  * A requirement for finding the optimal results may also be applied.
 		  * In this case, this search will continue until the identified search result has been optimized.
-		  * Otherwise this search completes as soon as small-enough cost has been achieved.
+		  * Otherwise, this search completes as soon as small-enough cost has been achieved.
 		  *
 		  * @param costThreshold A cost threshold, under which the result must fall (exclusive).
 		  * @param optimize Whether the acquired results should be optimized before returning.
@@ -347,7 +347,7 @@ object GraphNode
 		  *
 		  * A requirement for finding the optimal results may also be applied.
 		  * In this case, this search will continue until the identified search result or results have been optimized.
-		  * Otherwise this search completes as soon as small-enough cost has been achieved.
+		  * Otherwise, this search completes as soon as small-enough cost has been achieved.
 		  *
 		  * @param costThreshold A cost threshold, under which the result must fall (exclusive).
 		  * @param acceptPartialResults Whether partial results should be accepted.
@@ -394,7 +394,7 @@ object GraphNode
 							//       => Optimizes the search and returns the optimal results
 							if (optimize && !preliminary.isConfirmedAsOptimal)
 								find { _.isConfirmedAsOptimal }.getOrElse(current)
-							// Case: Optimal results were found or sub-optimal results are accepted => Returns
+							// Case: Optimal results were found or suboptimal results are accepted => Returns
 							else
 								preliminary
 						}
@@ -455,12 +455,12 @@ object GraphNode
 		{
 			// ATTRIBUTES   ----------------
 			
-			// Contains nodes from which a path finder has LEFT
+			// Contains nodes from which a pathfinder has LEFT
 			private val blockedNodesBuffer = mutable.Set[AnyNode]()
 			// Contains an entry for each encountered search result. The contained values may not be the final results.
 			private val resultsBuffer = mutable.Map[GNode, (Set[Seq[Edge]], C)]()
 			
-			// Prepared path finders for the next iteration
+			// Prepared pathfinders for the next iteration
 			private var nextOrigins: Map[GNode, PathFinder] = Map(start -> new PathFinder(start, startCost, Set(Empty)))
 			// Smallest achievable cost for the next iteration,
 			// assuming that cost function always returns a positive (> 0) value
