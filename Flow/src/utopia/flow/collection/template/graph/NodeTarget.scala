@@ -1,6 +1,5 @@
 package utopia.flow.collection.template.graph
 
-import utopia.flow.collection.template.GraphEdge
 import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
@@ -33,7 +32,7 @@ object NodeTarget
 	  * @tparam E Type of edge values accepted
 	  * @return A node target that uses the specified function
 	  */
-	implicit def apply[N, E](f: (View[N], View[Iterable[GraphEdge[E, View[N]]]]) => Boolean): NodeTarget[N, E] =
+	implicit def apply[N, E](f: (View[N], View[Iterable[GraphEdgeLike[E, View[N]]]]) => Boolean): NodeTarget[N, E] =
 		new _NodeTarget[N, E](f)
 	
 	
@@ -51,23 +50,23 @@ object NodeTarget
 	
 	object AnyNode extends NodeTarget[Any, Any]
 	{
-		override def apply(node: View[Any], edges: => Iterable[GraphEdge[Any, View[Any]]]): Boolean = true
+		override def apply(node: View[Any], edges: => Iterable[GraphEdgeLike[Any, View[Any]]]): Boolean = true
 	}
 	
 	private class SpecificNodeTarget(node: View[Any]) extends NodeTarget[Any, Any]
 	{
-		override def apply(node: View[Any], edges: => Iterable[GraphEdge[Any, View[Any]]]): Boolean = node == this.node
+		override def apply(node: View[Any], edges: => Iterable[GraphEdgeLike[Any, View[Any]]]): Boolean = node == this.node
 	}
 	
 	private class SpecificValueTarget[-A](value: A) extends NodeTarget[A, Any]
 	{
-		override def apply(node: View[A], edges: => Iterable[GraphEdge[Any, View[A]]]): Boolean = node.value == value
+		override def apply(node: View[A], edges: => Iterable[GraphEdgeLike[Any, View[A]]]): Boolean = node.value == value
 	}
 	
-	private class _NodeTarget[-N, -E](f: (View[N], View[Iterable[GraphEdge[E, View[N]]]]) => Boolean)
+	private class _NodeTarget[-N, -E](f: (View[N], View[Iterable[GraphEdgeLike[E, View[N]]]]) => Boolean)
 		extends NodeTarget[N, E]
 	{
-		override def apply(node: View[N], edges: => Iterable[GraphEdge[E, View[N]]]): Boolean = f(node, View(edges))
+		override def apply(node: View[N], edges: => Iterable[GraphEdgeLike[E, View[N]]]): Boolean = f(node, View(edges))
 	}
 }
 
@@ -88,5 +87,5 @@ trait NodeTarget[-N, -E]
 	  * @param edges Edges leaving from that node (call-by-name)
 	  * @return Whether that's the targeted node
 	  */
-	def apply(node: View[N], edges: => Iterable[GraphEdge[E, View[N]]]): Boolean
+	def apply(node: View[N], edges: => Iterable[GraphEdgeLike[E, View[N]]]): Boolean
 }

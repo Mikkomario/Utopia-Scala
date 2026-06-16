@@ -7,10 +7,8 @@ import utopia.flow.collection.immutable.graph.{GraphTravelResults, NodeTravelSta
 import utopia.flow.collection.immutable.{Empty, Graph, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
-import utopia.flow.collection.template.GraphEdge
 import utopia.flow.collection.template.graph.GraphNodeLike.PathsFinder
 import utopia.flow.collection.template.graph.NodeTarget.AnyNode
-import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.Extender
@@ -22,7 +20,7 @@ object GraphNodeLike
 {
 	// NESTED   --------------------
 	
-	private class PathsFinder[N, E, Node <: GraphNodeLike[N, E, Node, Edge], Edge <: GraphEdge[E, Node], C]
+	private class PathsFinder[N, E, Node <: GraphNodeLike[N, E, Node, Edge], Edge <: GraphEdgeLike[E, Node], C]
 	(start: Node, destinations: Iterable[NodeTarget[N, E]], startCost: C, exclusive: Boolean = true)
 	(costOf: Edge => C)(sumOf: (C, C) => C)
 	(implicit ord: Ordering[C])
@@ -296,7 +294,7 @@ object GraphNodeLike
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], Edge <: GraphEdge[E, Repr]]
+trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdgeLike[E, Repr]]
 	extends View[N] with Extender[N]
 {
     // TYPES    --------------------
