@@ -6,6 +6,20 @@ import utopia.flow.operator.equality.EqualsFunction
 
 object ValueTree
 {
+	// IMPLICIT ----------------------
+	
+	/**
+	 * Implicitly accesses a value tree as a navigator
+	 * @param tree A tree to navigate
+	 * @param eq Implicit equals function to apply
+	 * @tparam A Type of the navigation elements / wrapped values
+	 * @return A navigator for the specified tree
+	 */
+	def asNavigator[A](tree: ValueTree[A])
+	                  (implicit eq: EqualsFunction[A] = EqualsFunction.default): TreeNavigator[A, ValueTree[A]] =
+		tree.navigateUsing(eq)
+	
+	
 	// OTHER    ----------------------
 	
 	/**

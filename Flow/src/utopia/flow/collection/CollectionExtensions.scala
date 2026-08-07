@@ -326,6 +326,16 @@ object CollectionExtensions
 			val iter = i.iterator
 			if (iter.hasNext) Some(iter) else None
 		}
+		/**
+		 * @return If this collection is empty, yields None.
+		 *         Otherwise, yields either this collection, or an iterator from this collection,
+		 *         depending on this collection's type.
+		 */
+		def nonEmptyCollection: Option[IterableOnce[A]] = i match {
+			case v: View[A] => v.iterator.notEmpty
+			case i: Iterable[A] => i.notEmpty
+			case i => i.iterator.notEmpty
+		}
 		
 		/**
 		  * @return Whether all items within this collection are considered equal (comparing with ==)
