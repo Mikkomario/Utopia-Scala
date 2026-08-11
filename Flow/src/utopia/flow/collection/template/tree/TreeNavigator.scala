@@ -10,6 +10,7 @@ import utopia.flow.collection.immutable.Pair
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
+// TODO: Do we really want to extend TreeLike here?
 trait TreeNavigator[-N, Node <: TreeLike2[Node]] extends TreeLike2[Node]
 {
 	// ABSTRACT --------------------------

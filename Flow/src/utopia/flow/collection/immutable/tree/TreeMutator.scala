@@ -52,10 +52,11 @@ object TreeMutator
  * @author Mikko Hilpinen
  * @since 07.08.2026, v2.9
  */
-class TreeMutator[N, Node <: CopyableTreeLike[Node]](root: Node, path: Seq[Node], protected val node: Node,
-                                                     generated: Boolean = false)
-                                                    (matcher: (Node, N) => Boolean)(navToNode: N => Node)
-	extends TreeNavigator[N, TreeMutator[N, Node]] with CopyableTreeLike[Node]
+// FIXME: Navigator's and Copyable's Repr types conflict
+class TreeMutator[N, Node <: CopyableTreeLike[N, Node]](root: Node, path: Seq[Node], protected val node: Node,
+                                                        generated: Boolean = false)
+                                                       (matcher: (Node, N) => Boolean)
+	extends TreeNavigator[N, TreeMutator[N, Node]] with CopyableTreeLike[N, Node]
 {
 	// ATTRIBUTES   ----------------------
 	

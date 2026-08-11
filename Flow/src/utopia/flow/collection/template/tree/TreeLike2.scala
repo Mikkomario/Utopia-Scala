@@ -289,6 +289,11 @@ trait TreeLike2[+Repr <: TreeLike2[Repr]] extends MaybeEmpty[Repr]
 	  */
 	def contains(node: Any): Boolean = nodesBelowIterator.contains(node)
 	/**
+	 * @param node A searched node
+	 * @return Whether this node directly contains that node
+	 */
+	def containsDirect(node: Any) = children.contains(node)
+	/**
 	 * Attempts to find a specific node from this tree
 	 * @param node Searched node
 	 * @return If this tree contained the specified node, yields Some(Seq),

@@ -14,36 +14,6 @@ import utopia.flow.util.Mutate
 trait CopyableValueTreeLike[A, Repr <: CopyableTreeLike[Repr] with ValueTreeLike[A, Repr]]
 	extends CopyableTreeLike[Repr] with ValueTreeLike[A, Repr]
 {
-	protected def wrap(value: A): Repr
-	
-	/*
-	def withValue(value: A) = {
-		val mid = wrap(value)
-		if (hasChildren) mid.withChildren(children) else mid
-	}
-	def mapValue(f: Mutate[A]) = withValue(f(value))
-	*/
-	
-	/**
-	 * @param value Child node value to add
-	 * @return A copy of this tree including a new child with that value
-	 */
-	def :+(value: A): Repr = withChildren(children :+ wrap(value))
-	/**
-	 * Creates a new tree that contains a child node with specified value.
-	 * If this node already contains such a child, doesn't add a new one.
-	 * @param value Child node value
-	 * @return A copy of this tree including a child with that value
-	 */
-	def including(value: A)(implicit eq: EqualsFunction[A] = EqualsFunction.default) = {
-		// Case: This node already contains that child => ignores
-		if (children.exists { _.value ~== value })
-			self
-		// Case: New child => inserts
-		else
-			this :+ value
-	}
-	
 	/**
 	 * Creates a new copy of this tree where specified value never occurs.
 	 * Removes the content from every child, including grand children etc.
