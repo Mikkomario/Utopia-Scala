@@ -8,7 +8,6 @@ import utopia.flow.collection.immutable.Single
 import utopia.flow.util.StringExtensions._
 import utopia.nexus.controller.api.context.PostContext
 import utopia.nexus.controller.api.node.LeafNode
-import utopia.nexus.model.request.Request.StreamedRequest
 import utopia.nexus.model.response.RequestResult
 import utopia.vault.database.Connection
 import utopia.vigil.controller.api.context.AuthContext
@@ -25,7 +24,7 @@ import utopia.vigil.model.post.NewTokenTemplate
  * @author Mikko Hilpinen
  * @since 22.05.2026, v0.1
  */
-class TokenTemplatesNode(requiredScope: ScopeTarget) extends LeafNode[AuthContext[StreamedRequest] with PostContext]
+class TokenTemplatesNode(requiredScope: ScopeTarget) extends LeafNode[AuthContext[Any] with PostContext]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -36,7 +35,7 @@ class TokenTemplatesNode(requiredScope: ScopeTarget) extends LeafNode[AuthContex
 	// IMPLEMENTED  ------------------------
 	
 	override def apply(method: Method, remainingPath: Seq[String])
-	                  (implicit context: AuthContext[StreamedRequest] with PostContext): RequestResult =
+	                  (implicit context: AuthContext[Any] with PostContext): RequestResult =
 		context.authorizedFor(requiredScope) { (_, connection) =>
 			context.parseBody(NewTokenTemplate) { newTemplate =>
 				implicit val c: Connection = connection
