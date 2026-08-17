@@ -147,7 +147,11 @@ class SpreadSheet(sheet: Sheet) extends ScopeUsable[SpreadSheet]
 		// Finds the header row
 		iter.findMapNext(rowToHeaders) match {
 			// Case: Header row found => Converts the remaining rows into models
-			case Some(headers) => iter.map { _.toModel(headers, preLoadModels) }
+			case Some(headers) =>
+				iter.map { _.toModel(headers, preLoadModels) }
+					// Skips the initial empty rows. Stops when an empty row is encountered afterwards.
+					.dropWhile { _.hasOnlyEmptyValues }.takeWhile { _.hasNonEmptyValues }
+				
 			// Case: No header row found
 			case None => Iterator.empty
 		}

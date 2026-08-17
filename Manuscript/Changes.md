@@ -2,6 +2,8 @@
 
 ## v1.0.5 (in development)
 Built with Scala v2.13.18
+### Other changes
+- Empty rows are no longer included when returning **Model** iterators
 
 ## v1.0.4 - 15.03.2026
 A minor update reflecting **Flow**'s changes to the **Model** interface
