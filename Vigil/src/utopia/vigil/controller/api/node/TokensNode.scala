@@ -11,7 +11,6 @@ import utopia.nexus.controller.api.context.PostContext
 import utopia.nexus.controller.api.node.{ApiNode, LeafNode}
 import utopia.nexus.model.api.PathFollowResult
 import utopia.nexus.model.api.PathFollowResult.Follow
-import utopia.nexus.model.request.Request.StreamedRequest
 import utopia.nexus.model.response.RequestResult
 import utopia.vault.database.Connection
 import utopia.vigil.controller.api.context.AuthContext
@@ -32,9 +31,9 @@ object TokensNode
 	 * @tparam C Type of the accepted context
 	 * @return A new tokens API node
 	 */
-	def includingTemplates[C <: AuthContext[StreamedRequest] with PostContext](templateCreationScope: ScopeTarget,
-	                                                                           name: String = "tokens",
-	                                                                           otherChildren: Seq[ApiNode[C]] = Empty) =
+	def includingTemplates[C <: AuthContext[Any] with PostContext](templateCreationScope: ScopeTarget,
+	                                                               name: String = "tokens",
+	                                                               otherChildren: Seq[ApiNode[C]] = Empty) =
 		apply[C](name, new TokenTemplatesNode(templateCreationScope) +: otherChildren)
 	/**
 	 * @param name Name of this node. Default = "tokens"

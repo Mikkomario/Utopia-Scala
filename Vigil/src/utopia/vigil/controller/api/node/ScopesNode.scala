@@ -11,7 +11,6 @@ import utopia.nexus.controller.api.context.PostContext
 import utopia.nexus.controller.api.node.{ApiNode, LeafNode}
 import utopia.nexus.model.api.PathFollowResult
 import utopia.nexus.model.api.PathFollowResult.Follow
-import utopia.nexus.model.request.Request.StreamedRequest
 import utopia.nexus.model.response.RequestResult
 import utopia.vault.database.Connection
 import utopia.vigil.controller.api.context.AuthContext
@@ -26,8 +25,7 @@ import utopia.vigil.model.post.NewScope
  * @author Mikko Hilpinen
  * @since 24.05.2026, v0.1
  */
-class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget)
-	extends ApiNode[AuthContext[StreamedRequest] with PostContext]
+class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget) extends ApiNode[AuthContext[Any] with PostContext]
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -38,7 +36,7 @@ class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget)
 	// IMPLEMENTED  -----------------------
 	
 	override def follow(step: String)
-	                   (implicit context: AuthContext[StreamedRequest] with PostContext): PathFollowResult[AuthContext[StreamedRequest] with PostContext] =
+	                   (implicit context: AuthContext[Any] with PostContext): PathFollowResult[AuthContext[Any] with PostContext] =
 	{
 		// Case: Targeting accessible scopes
 		if (step ~== "accessible")
@@ -49,7 +47,7 @@ class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget)
 	}
 	
 	override def apply(method: Method, remainingPath: Seq[String])
-	                  (implicit context: AuthContext[StreamedRequest] with PostContext): RequestResult =
+	                  (implicit context: AuthContext[Any] with PostContext): RequestResult =
 		method match {
 			// Case: POST => Creates one or more new scopes
 			case Post =>
@@ -89,13 +87,13 @@ class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget)
 	
 	// NESTED   --------------------------
 	
-	private object AccessibleScopesNode extends LeafNode[AuthContext[StreamedRequest] with PostContext]
+	private object AccessibleScopesNode extends LeafNode[AuthContext[Any] with PostContext]
 	{
 		override def name: String = "accessible"
 		override def allowedMethods: Iterable[Method] = Single(Get)
 		
 		override def apply(method: Method, remainingPath: Seq[String])
-		                  (implicit context: AuthContext[StreamedRequest] with PostContext): RequestResult =
+		                  (implicit context: AuthContext[Any] with PostContext): RequestResult =
 			context.authorizedFor(readScope) { (token, connection) =>
 				implicit val c: Connection = connection
 				RequestResult(AccessScopes.whereTokenLinks.ofToken(token.id).pullResponseModels)

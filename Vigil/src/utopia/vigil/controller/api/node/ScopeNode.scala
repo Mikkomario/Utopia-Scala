@@ -7,7 +7,6 @@ import utopia.flow.collection.immutable.{Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.nexus.controller.api.context.PostContext
 import utopia.nexus.controller.api.node.{ApiNode, LeafNode, NodeWithChildren}
-import utopia.nexus.model.request.Request.StreamedRequest
 import utopia.nexus.model.response.RequestResult
 import utopia.vault.database.Connection
 import utopia.vigil.controller.api.context.AuthContext
@@ -25,16 +24,16 @@ import utopia.vigil.model.stored.scope.Scope
  * @since 24.05.2026, v0.1
  */
 class ScopeNode(readScope: ScopeTarget, editScope: ScopeTarget, target: ScopeTarget)
-	extends NodeWithChildren[AuthContext[StreamedRequest] with PostContext]
+	extends NodeWithChildren[AuthContext[Any] with PostContext]
 {
 	// IMPLEMENTED  ---------------------
 	
 	override def name: String = target.toString
-	override def children: Iterable[ApiNode[AuthContext[StreamedRequest] with PostContext]] = Single(GrantsNode)
+	override def children: Iterable[ApiNode[AuthContext[Any] with PostContext]] = Single(GrantsNode)
 	override def allowedMethods: Iterable[Method] = Set(Get, Post, Put, Delete)
 	
 	override def apply(method: Method, remainingPath: Seq[String])
-	                  (implicit context: AuthContext[StreamedRequest] with PostContext): RequestResult =
+	                  (implicit context: AuthContext[Any] with PostContext): RequestResult =
 		context.authorizedFor(if (method == Get) readScope else editScope) { (token, connection) =>
 			implicit val c: Connection = connection
 			method match {
