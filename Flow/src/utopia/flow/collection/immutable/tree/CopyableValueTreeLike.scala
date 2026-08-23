@@ -1,9 +1,6 @@
 package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.template.tree.ValueTreeLike
-import utopia.flow.operator.equality.EqualsExtensions.ImplicitApproxEquals
-import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.util.Mutate
 
 /**
  * Common trait for copyable (immutable) trees, where each node wraps a value
@@ -11,9 +8,16 @@ import utopia.flow.util.Mutate
  * @since 04.08.2026, v2.9
  */
 // TODO: Review and refactor (these methods were collected from previous immutable tree version)
-trait CopyableValueTreeLike[A, Repr <: CopyableTreeLike[Repr] with ValueTreeLike[A, Repr]]
-	extends CopyableTreeLike[Repr] with ValueTreeLike[A, Repr]
+trait CopyableValueTreeLike[A, -N, +Repr <: CopyableTreeLike[N, Repr] with ValueTreeLike[A, Repr]]
+	extends CopyableTreeLike[N, Repr] with ValueTreeLike[A, Repr]
 {
+	// ABSTRACT -------------------------
+	
+	
+	
+	
+	// OTHER    -------------------------
+	
 	/**
 	 * Creates a new copy of this tree where specified value never occurs.
 	 * Removes the content from every child, including grand children etc.
@@ -27,35 +31,6 @@ trait CopyableValueTreeLike[A, Repr <: CopyableTreeLike[Repr] with ValueTreeLike
 	 * @return A copy of this tree without that value included in its direct children
 	 */
 	def withoutDirectValue(valueToRemove: A) = filterDirectValues { _ != valueToRemove }
-	
-	/**
-	 * Maps children which are reachable using the specified content path
-	 * @param path path to the child or children being targeted, where each item represents targeted content.
-	 *             An empty path represents this node.
-	 * @param f    A mapping function that modifies the node(s) at the end of the specified path
-	 * @return A modified copy of this tree
-	 */
-	def mapPath(path: Seq[A])(f: Repr => Repr): Repr = {
-		path.headOption match {
-			case Some(nextStep) =>
-				if (path hasSize 1)
-					mapChildren { c => if (c.nav ~== nextStep) f(c) else c }
-				else {
-					val remaining = path.tail
-					mapChildren { c => if (c.nav ~== nextStep) c.mapPath(remaining)(f) else c }
-				}
-			case None => f(self)
-		}
-	}
-	/**
-	 * Maps children which are reachable using the specified content path
-	 * @param start First step (content) on the path
-	 * @param next  The next step (content) on the path
-	 * @param more  Additional steps
-	 * @param f     A mapping function that modifies the node(s) at the end of the specified path
-	 * @return A modified copy of this tree
-	 */
-	def mapPath(start: A, next: A, more: A*)(f: Repr => Repr): Repr = mapPath(Pair(start, next) ++ more)(f)
 	
 	/**
 	 * Filters the children directly under this node
@@ -72,6 +47,7 @@ trait CopyableValueTreeLike[A, Repr <: CopyableTreeLike[Repr] with ValueTreeLike
 	 */
 	def filterValues(f: A => Boolean) = filter { n => f(n.value) }
 	
+	/*
 	/**
 	 * Replaces a single branch within this tree with the specified branch, based on the branch root nav element.
 	 * @param newBranch A tree to replace an existing branch with
@@ -101,4 +77,5 @@ trait CopyableValueTreeLike[A, Repr <: CopyableTreeLike[Repr] with ValueTreeLike
 		else
 			Left(self)
 	}
+	 */
 }

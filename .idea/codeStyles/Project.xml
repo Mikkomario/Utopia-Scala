@@ -3,11 +3,6 @@
     <JavaCodeStyleSettings>
       <option name="JD_ADD_BLANK_AFTER_DESCRIPTION" value="false" />
     </JavaCodeStyleSettings>
-    <ScalaCodeStyleSettings>
-      <option name="SPACES_IN_ONE_LINE_BLOCKS" value="true" />
-      <option name="TYPE_ANNOTATION_EXCLUDE_IN_TEST_SOURCES" value="true" />
-      <option name="SD_BLANK_LINE_BEFORE_TAGS" value="false" />
-    </ScalaCodeStyleSettings>
     <codeStyleSettings language="JAVA">
       <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
       <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="false" />

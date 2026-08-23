@@ -6,37 +6,6 @@ import utopia.flow.util.Mutate
 
 import scala.annotation.tailrec
 
-object TreeMutator
-{
-	/**
-	 * Creates a new tree mutator
-	 * @param root The modified root level node
-	 * @param path Targeted path under the root node
-	 * @param matches A function which determines whether a node (1) matches a nav element (2)
-	 * @param newNode A function which generates a new node for nav elements, which don't appear in the tree
-	 * @tparam N Type of nav elements used
-	 * @tparam Node Type of nodes interacted with
-	 * @return A new tree mutator interface, pointing to the node at the end of 'path'
-	 */
-	def apply[N, Node <: CopyableTreeLike[Node, Node]](root: Node, path: Seq[N])
-	                                                  (matches: (Node, N) => Boolean)(newNode: N => Node) =
-	{
-		var generated = false
-		val nodePath = path
-			.foldLeftIterator(root) { (node, nav) =>
-				if (generated)
-					newNode(nav)
-				else
-					node.children.find { matches(_, nav) }.getOrElse {
-						generated = true
-						newNode(nav)
-					}
-			}
-			.toOptimizedSeq
-		
-		new TreeMutator[N, Node](root, nodePath.tail, nodePath.last, generated)(matches)(newNode)
-	}
-}
 
 /**
  * Used for mutating a deeper section of a tree
@@ -52,14 +21,24 @@ object TreeMutator
  * @author Mikko Hilpinen
  * @since 07.08.2026, v2.9
  */
-class TreeMutator[Nav, Node <: CopyableTreeLike[Node, Node]](root: Node, path: Seq[Node],
-                                                             val node: Node, generated: Boolean = false)
-                                                            (matcher: (Node, Nav) => Boolean)(navToNode: Nav => Node)
-	extends TreeNavigator[Nav, TreeMutator[Nav, Node]] with CopyableFromNodesTreeLike[Node]
+trait TreeMutator2[Nav, N, Node <: CopyableTreeLike[N, Node]]
+	extends TreeNavigator[Nav, TreeMutator2[Nav, N, Node]] with CopyableTreeLike[N, Node]
 {
-	// ATTRIBUTES   ----------------------
+	// ABSTRACT   ------------------------
 	
-	override val children: Seq[Node] = node.children
+	protected def root: Node
+	
+	protected def path: Seq[Node]
+	
+	def node: Node
+	
+	def generated: Boolean
+	
+	protected def wrapChild(child: Node, generated: Boolean = false): TreeMutator2[Nav, N, Node]
+	
+	protected def wrapUpdatedChild(child: Node): N
+	
+	protected def findNodeFor(nodes: Seq[Node], nav: Nav): Option[Node]
 		
 	
 	// COMPUTED     ----------------------
@@ -104,13 +83,21 @@ class TreeMutator[Nav, Node <: CopyableTreeLike[Node, Node]](root: Node, path: S
 	
 	override def self: Node = node
 	
-	override def factory: TreeFactory[Node, Node] = RootModifyingFactory
-	override protected def current: TreeMutator[Nav, Node] = this
+	override def children: Seq[Node] = node.children
 	
-	override protected def findUnder(parent: TreeMutator[Nav, Node], nav: Nav): Option[TreeMutator[Nav, Node]] =
-		parent.children.find { c => matcher(c, nav) }.map { wrapChild(_) }
-		
-	override protected def nodeFor(nav: Nav): TreeMutator[Nav, Node] = wrapChild(navToNode(nav), generated = true)
+	override protected def findUnder(parent: TreeMutator2[Nav, N, Node], nav: Nav): Option[TreeMutator2[Nav, N, Node]] =
+		findNodeFor(parent.children, nav).map { wrapChild(_) }
+	
+	override def appendingFactory: TreeFactory[N, Node] = ???
+	
+	override def slicingFactory(index: Int, replaceCount: Int): TreeFactory[N, Node] = ???
+	
+	override def filterDirect(f: Node => Boolean): Node = ???
+	
+	override def filter(f: Node => Boolean): Node = ???
+	
+	override def factory: TreeFactory[N, Node] = RootModifyingFactory
+	override protected def current: TreeMutator2[Nav, N, Node] = this
 	
 	
 	// OTHER    -----------------------
@@ -147,19 +134,16 @@ class TreeMutator[Nav, Node <: CopyableTreeLike[Node, Node]](root: Node, path: S
 		// Case: Still going up => Replaces the updated node within the parent
 		else {
 			val nextOriginal = pathIter.next()
-			assign(nextOriginal, nextOriginal.replaceChild(original, updated), pathIter)
+			assign(nextOriginal, nextOriginal.replaceChild(original, wrapUpdatedChild(updated)), pathIter)
 		}
 	}
-	
-	private def wrapChild(child: Node, generated: Boolean = false) =
-		new TreeMutator[Nav, Node](root, path :+ child, child, generated)(matcher)(navToNode)
 		
 	
 	// NESTED   -----------------------------
 	
-	private object RootModifyingFactory extends TreeFactory[Node, Node]
+	private object RootModifyingFactory extends TreeFactory[N, Node]
 	{
-		override def withChildren(children: IterableOnce[Node]): Node = {
+		override def withChildren(children: IterableOnce[N]): Node = {
 			children.nonEmptyCollection match {
 				case Some(children) => assign(node, node.withChildren(children), ascendingIter)
 				case None =>

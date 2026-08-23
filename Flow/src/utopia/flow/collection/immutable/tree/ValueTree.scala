@@ -15,14 +15,14 @@ object ValueTree
  * @author Mikko Hilpinen
  * @since 10.08.2026, v2.9
  */
-trait ValueTree[A] extends Tree with template.tree.ValueTree[A] with ValueTreeLike[A, ValueTree[A]]
-	with CopyableValueTreeLike[A, ValueTree[A]]
+trait ValueTree[A, -N]
+	extends template.tree.ValueTree[A] with CopyableValueTreeLike[A, N, ValueTree[A, N]]
 {
 	/**
 	 * @param value Child node value to add
 	 * @return A copy of this tree including a new child with that value
 	 */
-	def :+(value: A): ValueTree[A] = withChildren(children :+ ValueTree(value))
+	def :+(value: A): ValueTree[A, N] = withChildren(children :+ ValueTree(value))
 	/**
 	 * Creates a new tree that contains a child node with specified value.
 	 * If this node already contains such a child, doesn't add a new one.
@@ -38,12 +38,12 @@ trait ValueTree[A] extends Tree with template.tree.ValueTree[A] with ValueTreeLi
 			this :+ value
 	}
 	
-	def mutate[N >: A](step: N, otherSteps: N*)(implicit eq: EqualsFunction[N] = EqualsFunction.default) =
-		mutatePath[N](step +: otherSteps)
+	def mutate[Nav >: A](step: N, otherSteps: N*)(implicit eq: EqualsFunction[Nav] = EqualsFunction.default) =
+		mutatePath[Nav](step +: otherSteps)
 	
-	def mutatePath[N >: A](path: Seq[N])(implicit eq: EqualsFunction[N] = EqualsFunction.default) =
+	def mutatePath[Nav >: A](path: Seq[N])(implicit eq: EqualsFunction[Nav] = EqualsFunction.default) =
 		mutatePathUsing(path, eq)
 	
-	def mutatePathUsing[N >: A](path: Seq[N], eq: EqualsFunction[N]) =
-		TreeMutator(self, path) { (node, nav) => eq(node.value, nav) } { ValueTree(_) }
+	def mutatePathUsing[Nav >: A](path: Seq[N], eq: EqualsFunction[Nav]) =
+		TreeMutator(self, path) { (node, nav) => eq.apply(node.value, nav) } { ValueTree(_) }
 }

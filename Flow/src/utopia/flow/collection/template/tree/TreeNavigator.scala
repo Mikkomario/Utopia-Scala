@@ -10,19 +10,22 @@ import utopia.flow.collection.immutable.Pair
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-// TODO: Do we really want to extend TreeLike here?
-trait TreeNavigator[-N, Node <: TreeLike2[Node]] extends TreeLike2[Node]
+trait TreeNavigator[-N, Node]
 {
 	// ABSTRACT --------------------------
 	
 	/**
-	 * Checks whether a tree node matches a navigational element
-	 * @param node Node to test
-	 * @param nav Navigational element to test against
-	 * @return Whether 'node' is the targeted node
+	 * @return The node that's targeted with an empty path
 	 */
-	protected def matches(node: Node, nav: N): Boolean
+	protected def current: Node
 	
+	/**
+	 * Checks whether a tree node matches a navigational element
+	 * @param parent Node under which other nodes are sought
+	 * @param nav Navigational element to find
+	 * @return A node directly under 'parent', which matches the specified 'nav'
+	 */
+	protected def findUnder(parent: Node, nav: N): Option[Node]
 	/**
 	 * @param nav A nav element that didn't match a node in this tree
 	 * @return A new node that matches the specified nav element
@@ -63,14 +66,12 @@ trait TreeNavigator[-N, Node <: TreeLike2[Node]] extends TreeLike2[Node]
 	 * @param nav The navigational step to take next, if a matching node is found
 	 * @return The first child that matches the specified step. None if no such (direct) child was found.
 	 */
-	def get(nav: N) = _get(self, nav)
+	def get(nav: N) = findUnder(current, nav)
 	/**
 	 * @param path A path of navigational steps to take. Ordered.
 	 * @return Node at the end of that path. May be generated.
 	 */
 	def get(path: IterableOnce[N]) =
-		path.foldLeftIterator[Option[Node]](Some(self)) { case (node, nav) => node.flatMap { _get(_, nav) } }
+		path.foldLeftIterator[Option[Node]](Some(current)) { case (node, nav) => node.flatMap { findUnder(_, nav) } }
 			.takeTo { _.isEmpty }.last
-			
-	private def _get(node: Node, nav: N) = node.children.find { matches(_, nav) }
 }
