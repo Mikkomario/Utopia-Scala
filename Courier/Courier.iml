@@ -9,10 +9,10 @@
       <excludeFolder url="file://$MODULE_DIR$/data/test-read" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Flow" />
+    <orderEntry type="library" name="scala-sdk-2.13.18" level="application" />
     <orderEntry type="library" name="activation" level="project" />
     <orderEntry type="library" name="javax.mail" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.13.18" level="application" />
+    <orderEntry type="module" module-name="Flow" />
+    <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

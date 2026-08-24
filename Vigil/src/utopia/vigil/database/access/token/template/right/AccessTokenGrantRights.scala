@@ -18,7 +18,6 @@ object AccessTokenGrantRights
 	// IMPLEMENTED	--------------------
 	
 	override def apply[A](access: TargetingManyRows[A]) = AccessTokenGrantRightRows(access)
-	
 	override def apply[A](access: TargetingMany[A]) = AccessCombinedTokenGrantRights(access)
 }
 
@@ -51,7 +50,6 @@ case class AccessTokenGrantRightRows[A](wrapped: TargetingManyRows[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingManyRows[A]) = AccessTokenGrantRightRows(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessTokenGrantRight(target)
 }
 
@@ -71,7 +69,6 @@ case class AccessCombinedTokenGrantRights[A](wrapped: TargetingMany[A])
 	override def self = this
 	
 	override protected def wrap(newTarget: TargetingMany[A]) = AccessCombinedTokenGrantRights(newTarget)
-	
 	override protected def wrapUniqueTarget(target: TargetingOne[Option[A]]) = AccessTokenGrantRight(target)
 }
 

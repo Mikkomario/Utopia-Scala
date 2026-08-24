@@ -8,11 +8,11 @@
       <excludeFolder url="file://$MODULE_DIR$/data/coder-build" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Flow" />
-    <orderEntry type="module" module-name="Vault" />
-    <orderEntry type="library" name="emoji-java" level="project" />
-    <orderEntry type="module" module-name="Vault-Disconnected" />
     <orderEntry type="library" name="scala-sdk-2.13.18" level="application" />
+    <orderEntry type="library" name="emoji-java" level="project" />
+    <orderEntry type="module" module-name="Flow" />
+    <orderEntry type="module" module-name="Vault-Disconnected" />
+    <orderEntry type="module" module-name="Vault" />
+    <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
