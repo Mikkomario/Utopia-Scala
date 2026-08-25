@@ -4,6 +4,7 @@ import utopia.access.model.enumeration.Status.{InternalServerError, Unauthorized
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.parse.Sha256Hasher
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.result.TryExtensions._
 import utopia.nexus.model.request.RequestContext
@@ -97,7 +98,7 @@ trait AuthContext[+A] extends RequestContext[A]
 			case Some(bearerToken) =>
 				VigilContext.connectionPool
 					.tryWith[RequestResult] { implicit connection =>
-						AccessToken.idRefs.active.withHash(bearerToken).pull match {
+						AccessToken.idRefs.active.withKey(bearerToken).pull match {
 							// Case: Valid token => Checks the scope (if needed)
 							case Some(token) =>
 								// Case: No scope is required => Calls the specified function

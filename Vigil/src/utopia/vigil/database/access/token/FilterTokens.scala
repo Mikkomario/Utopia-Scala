@@ -1,6 +1,7 @@
 package utopia.vigil.database.access.token
 
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.parse.Sha256Hasher
 import utopia.vault.model.immutable.Column
 import utopia.vault.nosql.template.IntIndexFilterable
 import utopia.vault.nosql.view.{DeprecatableView, TimelineView}
@@ -67,5 +68,16 @@ trait FilterTokens[+Repr] extends TimelineView[Repr] with DeprecatableView[Repr]
 	  * set
 	  */
 	def withHashes(hashes: Iterable[String]) = filter(model.hash.column.in(hashes))
+	
+	/**
+	 * @param key An API key / token string (not hashed)
+	 * @return Access to tokens that match the specified key string
+	 */
+	def withKey(key: String) = withHash(Sha256Hasher(key))
+	/**
+	 * @param keys API key / token strings (not hashed)
+	 * @return Access to tokens that match the specified key strings
+	 */
+	def withKeys(keys: Iterable[String]) = withHashes(keys.map(Sha256Hasher.apply))
 }
 

@@ -57,13 +57,14 @@ object TokenDbModel
 	val revoked = property("revoked")
 	
 	private val notRevokedCondition = revoked.isNull
+	private val wontExpireCondition = expires.isNull
 	
 	
 	// IMPLEMENTED	--------------------
 	
 	override def table = VigilTables.token
 	
-	override def activeCondition: Condition = notRevokedCondition && !(expires <= Now)
+	override def activeCondition: Condition = notRevokedCondition && (wontExpireCondition || expires > Now)
 	
 	override def apply(data: TokenData): TokenDbModel =
 		apply(None, Some(data.templateId), data.hash, data.parentId, data.name, Some(data.created), 
