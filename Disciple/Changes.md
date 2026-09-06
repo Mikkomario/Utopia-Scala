@@ -15,7 +15,8 @@
 ### Other changes
 - Built with Scala v2.13.18
 - **RequestRateLimiter** now extends **ScopeUsable**
-- Rewrite **StringBody** and **FileBody** implementations
+- Rewrote **StringBody** and **FileBody** implementations
+- Improved **Gateway**'s connection management
 
 ## v1.9.2 - 15.03.2026
 A minor update adding some quality-of-life changes, and support for some **Echo**-specific use-cases.
