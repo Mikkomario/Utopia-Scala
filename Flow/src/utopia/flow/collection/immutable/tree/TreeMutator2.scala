@@ -50,7 +50,7 @@ trait TreeMutator2[Nav, N, Node <: CopyableTreeLike[N, Node]]
 		if (generated) {
 			val pathIter = ascendingIter
 			pathIter.nextOption() match {
-				case Some(parent) => assign(parent, parent :+ node, pathIter)
+				case Some(parent) => assign(parent, parent :+ wrapUpdatedChild(node), pathIter)
 				// Case: Including a generated root node (not expected) => Yields the new node
 				case None => node
 			}
@@ -88,8 +88,8 @@ trait TreeMutator2[Nav, N, Node <: CopyableTreeLike[N, Node]]
 	override protected def findUnder(parent: TreeMutator2[Nav, N, Node], nav: Nav): Option[TreeMutator2[Nav, N, Node]] =
 		findNodeFor(parent.children, nav).map { wrapChild(_) }
 	
+	// TODO: Probably we're going to use node.appendingFactory.mapResult(something like assign)
 	override def appendingFactory: TreeFactory[N, Node] = ???
-	
 	override def slicingFactory(index: Int, replaceCount: Int): TreeFactory[N, Node] = ???
 	
 	override def filterDirect(f: Node => Boolean): Node = ???
@@ -111,7 +111,7 @@ trait TreeMutator2[Nav, N, Node <: CopyableTreeLike[N, Node]]
 		if (generated) {
 			val pathIter = ascendingIter
 			pathIter.nextOption() match {
-				case Some(parent) => assign(parent, parent :+ f(node), pathIter)
+				case Some(parent) => assign(parent, parent :+ wrapUpdatedChild(f(node)), pathIter)
 				case None => f(node)
 			}
 		}
