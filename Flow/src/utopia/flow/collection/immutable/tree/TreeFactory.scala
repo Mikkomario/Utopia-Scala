@@ -85,7 +85,9 @@ trait TreeFactory[-N, +T]
 	
 	def appendingTo(children: Iterable[N]): TreeFactory[N, T] = new AppendingFactory[N, T](this, children)
 	def slicing(children: Seq[N], atIndex: Int, replacing: Int = 0): TreeFactory[N, T] =
-		new ReplacingFactory[N, T](this, children.view, atIndex, replacing)
+		slicing(children.view, atIndex, replacing)
+	def slicing(children: SeqView[N], atIndex: Int, replacing: Int = 0): TreeFactory[N, T] =
+		new ReplacingFactory[N, T](this, children, atIndex, replacing)
 		
 	def mapResult[T2](f: T => T2): TreeFactory[N, T2] = new MappingFactory[N, T, T2](this, f)
 }

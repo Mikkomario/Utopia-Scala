@@ -7,19 +7,13 @@ import utopia.flow.collection.template.tree.ValueTreeLike
  * @author Mikko Hilpinen
  * @since 04.08.2026, v2.9
  */
-// TODO: Review and refactor (these methods were collected from previous immutable tree version)
 trait CopyableValueTreeLike[A, -N, +Repr <: CopyableTreeLike[N, Repr] with ValueTreeLike[A, Repr]]
 	extends CopyableTreeLike[N, Repr] with ValueTreeLike[A, Repr]
 {
-	// ABSTRACT -------------------------
-	
-	
-	
-	
 	// OTHER    -------------------------
 	
 	/**
-	 * Creates a new copy of this tree where specified value never occurs.
+	 * Creates a new copy of this tree where the specified value never occurs.
 	 * Removes the content from every child, including grand children etc.
 	 * @param valueToRemove The value to remove
 	 * @return A copy of this tree without nodes containing the specified value
