@@ -8,13 +8,13 @@
       <excludeFolder url="file://$MODULE_DIR$/lib/pdfbox/src" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="scala-sdk-2.13.18" level="application" />
+    <orderEntry type="library" name="commons-logging" level="project" />
     <orderEntry type="library" name="apache.poi" level="project" />
+    <orderEntry type="library" name="apache.poi.ooxml" level="project" />
+    <orderEntry type="library" name="pdfbox" level="project" />
     <orderEntry type="module" module-name="Flow" />
     <orderEntry type="module" module-name="Paradigm" />
-    <orderEntry type="library" name="apache.poi.ooxml" level="project" />
-    <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
-    <orderEntry type="library" name="pdfbox" level="project" />
-    <orderEntry type="library" name="commons-logging" level="project" />
+    <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

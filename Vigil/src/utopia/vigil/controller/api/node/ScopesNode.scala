@@ -78,6 +78,7 @@ class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget) extends ApiNode
 			case _ =>
 				context.authorizedFor(readScope) { (token, connection) =>
 					implicit val c: Connection = connection
+					// FIXME: Doesn't work
 					RequestResult(AccessScopes.root.root.pullResponseModels.map { scope =>
 						scope.toModelWithAccessibleScopeIds(AccessTokenScopes.usable.ofToken(token.id).scopeIds.toSet)
 					})

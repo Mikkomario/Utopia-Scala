@@ -18,18 +18,18 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
-    <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Access" />
-    <orderEntry type="module" module-name="Exodus" />
-    <orderEntry type="module" module-name="Flow" />
-    <orderEntry type="module" module-name="Metropolis" />
-    <orderEntry type="module" module-name="Vault" />
+    <orderEntry type="library" name="scala-sdk-2.13.18" level="application" />
     <orderEntry type="library" name="mariadb-java-client" level="project" />
     <orderEntry type="library" name="servlet-api" level="project" />
+    <orderEntry type="module" module-name="Flow" />
+    <orderEntry type="module" module-name="BunnyMunch" />
+    <orderEntry type="module" module-name="Vault" />
+    <orderEntry type="module" module-name="Access" />
     <orderEntry type="module" module-name="Nexus" />
     <orderEntry type="module" module-name="NexusForTomcat" />
-    <orderEntry type="module" module-name="BunnyMunch" />
+    <orderEntry type="module" module-name="Metropolis" />
     <orderEntry type="module" module-name="Citadel" />
-    <orderEntry type="library" name="scala-sdk-2.13.14" level="application" />
+    <orderEntry type="module" module-name="Exodus" />
+    <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

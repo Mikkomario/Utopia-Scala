@@ -28,24 +28,24 @@ object Duration
 	private val mega = 1000000
 	private val secondToNano = 1000000000L
 	
-	private lazy val equalsByMillis: EqualsFunction[Duration] = equalsBy(MilliSecond)
+	private val equalsByMillis: EqualsFunction[Duration] = equalsBy(MilliSecond)
 	
 	/**
 	 * A duration of length 0
 	 */
-	lazy val zero = apply(0, Second)
+	val zero = apply(0, Second)
 	/**
 	 * A duration with infinite length
 	 */
-	lazy val infinite = apply(scala.concurrent.duration.Duration.Inf)
+	val infinite = apply(scala.concurrent.duration.Duration.Inf)
 	/**
 	 * A duration with infinite length to the negative direction
 	 */
-	lazy val minusInfinite = apply(scala.concurrent.duration.Duration.MinusInf)
+	val minusInfinite = apply(scala.concurrent.duration.Duration.MinusInf)
 	/**
 	 * A duration with an undefined (NaN) length
 	 */
-	lazy val undefined = apply(scala.concurrent.duration.Duration.Undefined)
+	val undefined = apply(scala.concurrent.duration.Duration.Undefined)
 	
 	
 	// TYPES    ------------------------

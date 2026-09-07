@@ -204,7 +204,8 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 		    // Specifies the connection timeout
 		    connectionTimeout.ifFinite.foreach { timeout =>
 			    builder.setDefaultConnectionConfig(
-				    ConnectionConfig.custom().setConnectTimeout(timeout.toMillis, TimeUnit.MILLISECONDS).build())
+				    ConnectionConfig.custom().setConnectTimeout(timeout.toMillis, TimeUnit.MILLISECONDS)
+					    .setValidateAfterInactivity(3, TimeUnit.SECONDS).build())
 		    }
 		    
 		    builder.build()
@@ -220,6 +221,7 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	// TODO: Shouldn't this be closed at some point?
     private val client = {
 	    val builder = HttpClients.custom().setConnectionManager(connectionManager).setConnectionManagerShared(true)
+		    .evictExpiredConnections().evictIdleConnections(org.apache.hc.core5.util.TimeValue.ofSeconds(20))
 	    redirectStrategy.foreach(builder.setRedirectStrategy)
 	    customizeClient(builder).build()
     }

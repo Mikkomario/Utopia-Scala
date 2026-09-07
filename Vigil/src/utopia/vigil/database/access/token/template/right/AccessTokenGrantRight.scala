@@ -2,6 +2,7 @@ package utopia.vigil.database.access.token.template.right
 
 import utopia.vault.nosql.targeting.columns.HasValues
 import utopia.vault.nosql.targeting.one.{AccessOneRoot, AccessOneWrapper, TargetingOne}
+import utopia.vigil.database.access.token.template.FilterByTokenTemplate
 import utopia.vigil.model.stored.token.TokenGrantRight
 
 object AccessTokenGrantRight extends AccessOneRoot[AccessTokenGrantRight[TokenGrantRight]]
@@ -23,6 +24,12 @@ case class AccessTokenGrantRight[A](wrapped: TargetingOne[Option[A]])
 	// ATTRIBUTES	--------------------
 	
 	override lazy val values = AccessTokenGrantRightValue(wrapped)
+	
+	lazy val joinParent = join(model.ownerTemplateId.column)
+	lazy val whereParent = FilterByTokenTemplate(joinParent)
+	
+	lazy val joinGranted = join(model.grantedTemplateId.column)
+	lazy val whereGranted = FilterByTokenTemplate(joinGranted)
 	
 	
 	// IMPLEMENTED	--------------------

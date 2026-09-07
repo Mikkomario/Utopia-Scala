@@ -2,6 +2,8 @@ package utopia.vault.database.value
 
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.Resettable
+import utopia.flow.view.mutable.async.Volatile
+import utopia.vault.database.value.DbValue.MappedDbValue
 import utopia.vault.database.{Connection, ConnectionPool}
 
 import scala.util.Try
@@ -37,6 +39,36 @@ object DbValue
 	
 	// NESTED   ------------------------
 	
+	private class MappedDbValue[A, B](source: DbValue[A], f: (A, Connection) => B)(implicit cPool: ConnectionPool)
+		extends DbValue[B]
+	{
+		// ATTRIBUTES   ----------------
+		
+		private val cache = Volatile.empty[(A, B)]
+		
+		
+		// IMPLEMENTED  ----------------
+		
+		override def value: B = cPool { implicit c => connectedValue }
+		override def connectedValue(implicit connection: Connection): B = {
+			val origin = source.connectedValue
+			cache.value.filter { _._1 == origin } match {
+				case Some((_, value)) => value
+				case None =>
+					val value = f(origin, connection)
+					cache.setOne((origin, value))
+					value
+			}
+		}
+		
+		override def isSet: Boolean = cache.nonEmpty && source.isSet
+		
+		override def reset(): Boolean = {
+			val cacheWasReset = cache.pop().isDefined
+			source.reset() || cacheWasReset
+		}
+	}
+	
 	private class TryDbValue[+A](f: Connection => Try[A])(implicit cPool: ConnectionPool) extends DbValue[Try[A]]
 	{
 		override def value: Try[A] = cPool.tryWith(f).flatten
@@ -70,4 +102,18 @@ trait DbValue[+A] extends View[A] with Resettable
 	 * @return Wrapped value
 	 */
 	def connectedValue(implicit connection: Connection): A
+	
+	
+	// OTHER    ------------------------
+	
+	/**
+	 * Maps the value of this container
+	 * @param f A mapping function that modifies this value. Also receives an open DB connection.
+	 *          Assumed to be deterministic, with no side effects.
+	 * @param cPool Implicit connection pool to use.
+	 * @tparam B Type of mapping results.
+	 * @return A view into the mapped value.
+	 */
+	def mapConnected[B](f: (A, Connection) => B)(implicit cPool: ConnectionPool): DbValue[B] =
+		new MappedDbValue[A, B](this, f)
 }
