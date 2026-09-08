@@ -76,18 +76,46 @@ trait TreeFactory[-N, +T]
 	
 	// COMPUTED -----------------------
 	
+	/**
+	 * @return A tree node with no children
+	 */
 	def withoutChildren = withChildren(Empty)
 	
 	
 	// OTHER    -----------------------
 	
+	/**
+	 * @param child Child node to include
+	 * @return A tree node with a single child node
+	 */
 	def withChild(child: N) = withChildren(Single(child))
 	
+	/**
+	 * @param children Existing child nodes
+	 * @return A copy of this factory that always includes the specified nodes
+	 */
 	def appendingTo(children: Iterable[N]): TreeFactory[N, T] = new AppendingFactory[N, T](this, children)
+	/**
+	 * @param children Existing child nodes
+	 * @param atIndex Index to which new nodes are inserted
+	 * @param replacing Number of 'children' to replace at 'atIndex'
+	 * @return A copy of this factory that inserts new children to a specific index
+	 */
 	def slicing(children: Seq[N], atIndex: Int, replacing: Int = 0): TreeFactory[N, T] =
 		slicing(children.view, atIndex, replacing)
+	/**
+	 * @param children View of the existing child nodes
+	 * @param atIndex Index to which new nodes are inserted
+	 * @param replacing Number of 'children' to replace at 'atIndex'
+	 * @return A copy of this factory that inserts new children to a specific index
+	 */
 	def slicing(children: SeqView[N], atIndex: Int, replacing: Int = 0): TreeFactory[N, T] =
 		new ReplacingFactory[N, T](this, children, atIndex, replacing)
-		
+	
+	/**
+	 * @param f A mapping function applied to the generated node(s)
+	 * @tparam T2 Type of the mapped nodes
+	 * @return A copy of this factory applying the specified mapping function
+	 */
 	def mapResult[T2](f: T => T2): TreeFactory[N, T2] = new MappingFactory[N, T, T2](this, f)
 }

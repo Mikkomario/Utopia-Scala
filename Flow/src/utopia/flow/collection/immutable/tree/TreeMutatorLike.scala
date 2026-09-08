@@ -105,9 +105,9 @@ trait TreeMutatorLike[-Nav, N, Node <: CopyableTreeLike[N, Node], Repr <: TreeLi
 	
 	override def children: Seq[Node] = node.children
 	
-	override def appendingFactory: TreeFactory[N, Node] = node.appendingFactory.mapResult(replaceNode)
+	override def appendingFactory: TreeFactory[N, Node] = node.appendingFactory.mapResult(replacedWith)
 	override def slicingFactory(index: Int, replaceCount: Int): TreeFactory[N, Node] =
-		node.slicingFactory(index, replaceCount).mapResult(replaceNode)
+		node.slicingFactory(index, replaceCount).mapResult(replacedWith)
 	
 	override protected def findUnder(parent: Repr, nav: Nav): Option[Repr] =
 		findNodeFor(parent.children, nav).map { wrapChild(_) }
@@ -135,14 +135,14 @@ trait TreeMutatorLike[-Nav, N, Node <: CopyableTreeLike[N, Node], Repr <: TreeLi
 	 * @param f A mapping function to apply to this node
 	 * @return A copy of [[root]] with a modified copy of this node
 	 */
-	def mapped(f: Mutate[Node]) = replaceNode(f(node))
+	def mapped(f: Mutate[Node]) = replacedWith(f(node))
 	
 	/**
 	 * Replaces the current node with a new version, yielding a modified copy of the root node.
 	 * @param updated Updated version of [[node]].
 	 * @return Updated version of [[root]]
 	 */
-	private def replaceNode(updated: Node) = {
+	def replacedWith(updated: Node) = {
 		if (generated) {
 			val pathIter = ascendingIter
 			pathIter.nextOption() match {
