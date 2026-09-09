@@ -12,6 +12,7 @@ import utopia.flow.view.template.Extender
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
 
+@deprecated("Replaced with a new version and ValueTreeLike", "v2.9")
 object TreeLike
 {
 	// TYPES    -------------------------
@@ -62,6 +63,7 @@ object TreeLike
   * @tparam Node Types of nodes in this tree
   */
 // TODO: We need covariant A and a contravariant N for navigation input
+@deprecated("Replaced with a new version and ValueTreeLike", "v2.9")
 trait TreeLike[A, +Node <: TreeLike[A, Node]] extends MaybeEmpty[Node] with Extender[A]
 {
 	// ABSTRACT   --------------------

@@ -90,7 +90,7 @@ object GraphNodeLike
 			// Destination search functions, discovered routes, achieved cost values, plus found node,
 			// Listed for cases where a node has been found, but where a better result may still be achieved
 			// Only filled in 'exclusive' mode
-			private var unprovenDestinations: Iterable[(Node => Boolean, Seq[Seq[Edge]], C, Node)] = Empty
+			private var unprovenDestinations: Iterable[(NodeTarget[N, E], Seq[Seq[Edge]], C, Node)] = Empty
 			private val provenDestinationsBuffer = mutable.Set[Node]()
 			
 			// Contains true once the search process has completed
@@ -197,7 +197,7 @@ object GraphNodeLike
 							.map { case (destination, previousRoutes, previousMinCost, previousNode) =>
 								// Finds new search results which are better or as good as the results found before
 								val arrived = newFinders
-									.filter { o => destination(o.currentNode) }
+									.filter { o => destination(o.currentNode, o.currentNode.leavingEdges) }
 									.filter { _.currentCost <= previousMinCost }
 								// Case: New competing results found
 								//       => Merges them to the previous results or overrides previous results with them

@@ -4,6 +4,8 @@ import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.template.tree.ValueTree.NavigateUsingValues
 import utopia.flow.operator.equality.EqualsFunction
 
+import scala.language.implicitConversions
+
 object ValueTree
 {
 	// IMPLICIT ----------------------
@@ -15,8 +17,8 @@ object ValueTree
 	 * @tparam A Type of the navigation elements / wrapped values
 	 * @return A navigator for the specified tree
 	 */
-	def asNavigator[A](tree: ValueTree[A])
-	                  (implicit eq: EqualsFunction[A] = EqualsFunction.default): TreeNavigator[A, ValueTree[A]] =
+	implicit def asNavigator[A](tree: ValueTree[A])
+	                           (implicit eq: EqualsFunction[A] = EqualsFunction.default): TreeNavigator[A, ValueTree[A]] =
 		tree.navigateUsing(eq)
 	
 	
@@ -36,10 +38,10 @@ object ValueTree
 	private class NavigateUsingValues[A](wrapped: ValueTree[A])(implicit eq: EqualsFunction[A])
 		extends TreeNavigator[A, ValueTree[A]]
 	{
-		override def self: ValueTree[A] = wrapped
-		override def children: Seq[ValueTree[A]] = wrapped.children
+		override protected def current: ValueTree[A] = wrapped
 		
-		override protected def matches(node: ValueTree[A], nav: A): Boolean = eq(node.value, nav)
+		override protected def findUnder(parent: ValueTree[A], nav: A): Option[ValueTree[A]] =
+			parent.children.find { node => eq(node.value, nav) }
 		
 		override protected def nodeFor(nav: A): ValueTree[A] = ValueTree(nav)
 	}
@@ -57,6 +59,7 @@ object ValueTree
  */
 trait ValueTree[+A] extends ValueTreeLike[A, ValueTree[A]]
 {
+	// TODO: We must move these to ValueTreeLike, so that we may yield Repr instead of ValueTree
 	/**
 	 * Creates an interface for navigating this tree, based on the wrapped values
 	 * @param eq Implicit equality function to apply. Default = `==`.

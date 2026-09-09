@@ -3,6 +3,8 @@ package utopia.flow.collection.template.tree
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
 
+import scala.annotation.unchecked.uncheckedVariance
+
 /**
  * Common trait for implementations that provide tree navigation based on some navigation elements
  * @tparam N Type of navigational elements accepted
@@ -10,7 +12,7 @@ import utopia.flow.collection.immutable.Pair
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-trait TreeNavigator[-N, Node]
+trait TreeNavigator[-N, +Node]
 {
 	// ABSTRACT --------------------------
 	
@@ -21,11 +23,15 @@ trait TreeNavigator[-N, Node]
 	
 	/**
 	 * Checks whether a tree node matches a navigational element
-	 * @param parent Node under which other nodes are sought
+	 * @param parent Node under which other nodes are sought.
+	 *
+	 *               NB: Must be part of the navigated tree, i.e. <= Node.
+	 *                   If this condition is met, this may be kept @uncheckedVariance.
+	 *
 	 * @param nav Navigational element to find
 	 * @return A node directly under 'parent', which matches the specified 'nav'
 	 */
-	protected def findUnder(parent: Node, nav: N): Option[Node]
+	protected def findUnder(parent: Node @uncheckedVariance, nav: N): Option[Node]
 	/**
 	 * @param nav A nav element that didn't match a node in this tree
 	 * @return A new node that matches the specified nav element
@@ -63,7 +69,7 @@ trait TreeNavigator[-N, Node]
 	
 	/**
 	 * Finds a child directly under this node that matches the specified navigational step
-	 * @param nav The navigational step to take next, if a matching node is found
+	 * @param nav The navigational step to take next if a matching node is found
 	 * @return The first child that matches the specified step. None if no such (direct) child was found.
 	 */
 	def get(nav: N) = findUnder(current, nav)

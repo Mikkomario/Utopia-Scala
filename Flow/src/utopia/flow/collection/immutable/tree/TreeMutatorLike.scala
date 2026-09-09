@@ -5,6 +5,7 @@ import utopia.flow.collection.template.tree.{TreeLike2, TreeNavigator}
 import utopia.flow.util.Mutate
 
 import scala.annotation.tailrec
+import scala.annotation.unchecked.uncheckedVariance
 
 /**
  * Used for mutating a deeper section of a tree
@@ -15,7 +16,7 @@ import scala.annotation.tailrec
  * @author Mikko Hilpinen
  * @since 07.08.2026, v2.9
  */
-trait TreeMutatorLike[-Nav, N, Node <: CopyableTreeLike[N, Node], Repr <: TreeLike2[Node]]
+trait TreeMutatorLike[-Nav, N, Node <: CopyableTreeLike[N, Node], +Repr <: TreeLike2[Node]]
 	extends TreeNavigator[Nav, Repr] with CopyableTreeLike[N, Node]
 {
 	// ABSTRACT   ------------------------
@@ -109,7 +110,7 @@ trait TreeMutatorLike[-Nav, N, Node <: CopyableTreeLike[N, Node], Repr <: TreeLi
 	override def slicingFactory(index: Int, replaceCount: Int): TreeFactory[N, Node] =
 		node.slicingFactory(index, replaceCount).mapResult(replacedWith)
 	
-	override protected def findUnder(parent: Repr, nav: Nav): Option[Repr] =
+	override protected def findUnder(parent: Repr @uncheckedVariance, nav: Nav): Option[Repr] =
 		findNodeFor(parent.children, nav).map { wrapChild(_) }
 	
 	override def filterDirect(f: Node => Boolean): Node = {

@@ -10,6 +10,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
   * @author Mikko Hilpinen
   * @since 4.11.2016
   */
+@deprecated("Replaced with CopyableTreeLike", "v2.9")
 trait TreeLike[A, Repr <: TreeLike[A, Repr]] extends template.TreeLike[A, Repr] with ApproxSelfEquals[Repr]
 {
 	// ABSTRACT --------------------

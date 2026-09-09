@@ -6,6 +6,8 @@ import utopia.flow.collection.immutable.{Empty, SingleView}
 import utopia.flow.collection.immutable.tree.ValueTree.ValueTreeMutator
 import utopia.flow.collection.template
 import utopia.flow.collection.template.tree
+import utopia.flow.collection.template.tree.TreeNavigator
+import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsFunction
 
 import scala.collection.IndexedSeqView
@@ -21,7 +23,8 @@ object ValueTree
 	 * @tparam A Type of the value to wrap
 	 * @return A root level node wrapping that value
 	 */
-	implicit def wrap[A](value: A): ValueTree[A] = apply(value).withoutChildren
+	implicit def wrap[A](value: A)(implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
+		apply(value).withoutChildren
 	/**
 	 * Implicitly wraps a value with n child nodes
 	 * @param valueAndChildren A pair of two values:
@@ -30,7 +33,8 @@ object ValueTree
 	 * @tparam A Type of the wrapped values
 	 * @return A new value tree, based on the specified input
 	 */
-	implicit def wrap[A](valueAndChildren: (A, IterableOnce[ValueTree[A]])): ValueTree[A] =
+	implicit def wrap[A](valueAndChildren: (A, IterableOnce[ValueTree[A]]))
+	                    (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
 		apply(valueAndChildren._1).withChildren(valueAndChildren._2)
 	
 	
@@ -42,14 +46,16 @@ object ValueTree
 	 * @tparam A Type of the wrapped value
 	 * @return A factory for constructing value trees
 	 */
-	def apply[A](value: A, lazily: Boolean = false) = new ValueTreeFactory[A](value)
+	def apply[A](value: A, lazily: Boolean = false)(implicit valueEquals: EqualsFunction[A] = EqualsFunction.default) =
+		new ValueTreeFactory[A](value)
 	
 	/**
 	 * @param node A node to wrap
 	 * @tparam A Type of the node's value
 	 * @return A value tree from the specified node
 	 */
-	def from[A](node: template.tree.ValueTree[A]): ValueTree[A] = node match {
+	def from[A](node: template.tree.ValueTree[A])
+	           (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] = node match {
 		case t: ValueTree[A] => t
 		case t => apply(t.value).withChildren(t.children.map(ValueTree.from))
 	}
@@ -61,9 +67,10 @@ object ValueTree
 	 * A factory interface used for constructing new value trees
 	 * @param value Value to wrap by the root node
 	 * @param lazily Whether the child nodes should be initialized lazily. Default = false.
+	 * @param valueEquals A function used for matching values in tree navigation
 	 * @tparam A Type of the wrapped values
 	 */
-	case class ValueTreeFactory[A](value: A, lazily: Boolean = false)
+	case class ValueTreeFactory[A](value: A, lazily: Boolean = false)(implicit valueEquals: EqualsFunction[A])
 		extends TreeFactory[template.tree.ValueTree[A], ValueTree[A]]
 	{
 		// IMPLEMENTED  ------------------
@@ -95,6 +102,18 @@ object ValueTree
 		 * @return A node with children based on the specified branch values
 		 */
 		def branch(values: IterableOnce[A]): ValueTree[A] = _branch(values.iterator)
+		
+		/**
+		 * Assigns a series of (potentially overlapping) branches under this node.
+		 *
+		 * Overlapping (leading) parts will be joined into the same nodes / branches.
+		 * E.g. `[ [1, 2], [1, 3], [4] ]` would yield two trees: 1 -> [2, 3] and 4.
+		 *
+		 * @param branches Branches to place under this node.
+		 * @return A node containing the specified branches
+		 */
+		def withBranches(branches: IterableOnce[IterableOnce[A]]) =
+			withGroupedBranches(branches)(Identity) { (v, _) => v }
 		
 		/**
 		 * Assigns a series of (potentially overlapping) branches under this node.
@@ -200,7 +219,9 @@ object ValueTree
  * @since 10.08.2026, v2.9
  */
 case class ValueTree[A](override val value: A, override val children: Seq[ValueTree[A]], lazily: Boolean)
+                       (implicit valueEquals: EqualsFunction[A])
 	extends template.tree.ValueTree[A] with CopyableValueTreeLike[A, template.tree.ValueTree[A], ValueTree[A]]
+		with TreeNavigator[A, ValueTree[A]]
 {
 	// ATTRIBUTES   -------------------------
 	
@@ -217,15 +238,15 @@ case class ValueTree[A](override val value: A, override val children: Seq[ValueT
 	def growingLazily = if (lazily) this else copy(lazily = true)
 	
 	/**
-	 * @param eq Implicit equals function to apply. Used in navigation. Default = use ==.
 	 * @return A mutator interface targeting this node
 	 */
-	def mutate(implicit eq: EqualsFunction[A] = EqualsFunction.default) = mutateUsing(eq)
+	def mutate = mutateUsing(valueEquals)
 		
 	
 	// IMPLEMENTED  -------------------------
 	
 	override def self: ValueTree[A] = this
+	override protected def current: ValueTree[A] = self
 	
 	override def slicingFactory(index: Int, replaceCount: Int): TreeFactory[template.tree.ValueTree[A], ValueTree[A]] =
 		factory.slicing(children, index, replaceCount)
@@ -234,7 +255,12 @@ case class ValueTree[A](override val value: A, override val children: Seq[ValueT
 	
 	override def filter(f: ValueTree[A] => Boolean): ValueTree[A] =
 		copy(children = children.view.filter(f).map { _.filter(f) }.toOptimizedSeq)
-		
+	
+	override protected def findUnder(parent: ValueTree[A], nav: A): Option[ValueTree[A]] =
+		parent.children.find { node => valueEquals(node.value, nav) }
+	
+	override protected def nodeFor(nav: A): ValueTree[A] = ValueTree(nav).withoutChildren
+	
 	
 	// OTHER    -----------------------------
 	

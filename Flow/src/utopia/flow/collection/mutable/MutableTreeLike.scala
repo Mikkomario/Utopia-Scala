@@ -10,6 +10,7 @@ import utopia.flow.collection.immutable.Empty
   * @author Mikko Hilpinen
   * @since 1.11.2016
   */
+@deprecated("Replaced with a new version", "v2.9")
 trait MutableTreeLike[A, Repr <: MutableTreeLike[A, Repr]] extends collection.template.TreeLike[A, Repr]
 {
 	// ABSTRACT ---------------------

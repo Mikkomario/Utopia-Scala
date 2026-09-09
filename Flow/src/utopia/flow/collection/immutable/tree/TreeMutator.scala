@@ -6,6 +6,7 @@ import utopia.flow.util.Mutate
 
 import scala.annotation.tailrec
 
+@deprecated("Deprecated for removal. Replaced with TreeMutatorLike", "v2.9")
 object TreeMutator
 {
 	/**
@@ -52,6 +53,7 @@ object TreeMutator
  * @author Mikko Hilpinen
  * @since 07.08.2026, v2.9
  */
+@deprecated("Deprecated for removal. Replaced with TreeMutatorLike", "v2.9")
 class TreeMutator[Nav, Node <: CopyableTreeLike[Node, Node]](root: Node, path: Seq[Node],
                                                              val node: Node, generated: Boolean = false)
                                                             (matcher: (Node, Nav) => Boolean)(navToNode: Nav => Node)

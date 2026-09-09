@@ -6,6 +6,7 @@ import utopia.flow.operator.equality.EqualsFunction
 
 import scala.collection.{IndexedSeqView, IterableFactory, SeqFactory}
 
+@deprecated("Replaced with ValueTree", "v2.9")
 object Tree
 {
 	/**
@@ -152,6 +153,7 @@ object Tree
   * @author Mikko Hilpinen
   * @since 4.11.2016
   */
+@deprecated("Replaced with ValueTree", "v2.9")
 case class Tree[A](override val nav: A, override val children: Seq[Tree[A]] = Empty)
                   (implicit override val navEquals: EqualsFunction[A] = EqualsFunction.default)
 	extends TreeLike[A, Tree[A]]
