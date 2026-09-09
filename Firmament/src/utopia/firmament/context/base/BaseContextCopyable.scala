@@ -4,12 +4,13 @@ import utopia.firmament.component.Window
 import utopia.firmament.context.DualFormContext
 import utopia.firmament.model.Margins
 import utopia.firmament.model.enumeration.SizeCategory
-import utopia.firmament.model.enumeration.SizeCategory.{Large, Medium, Small, VeryLarge, VerySmall}
+import utopia.firmament.model.enumeration.SizeCategory._
 import utopia.firmament.model.stack.{LengthPriority, StackLength}
 import utopia.flow.operator.ScopeUsable
+import utopia.flow.util.Mutate
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole}
+import utopia.paradigm.color.{Color, ColorContrastRequirement, ColorLevel, ColorRole}
 import utopia.paradigm.enumeration.ColorContrastStandard
 import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
 import utopia.paradigm.transform.{Adjustment, LinearSizeAdjustable}
@@ -33,10 +34,10 @@ trait BaseContextCopyable[+Repr, +ColorSensitive]
 	  */
 	def withFont(font: Font): Repr
 	/**
-	  * @param standard Color contrast standard to follow
-	  * @return A copy of this context that uses the specified color contrast standards
-	  */
-	def withColorContrastStandard(standard: ColorContrastStandard): Repr
+	 * @param requiredContrast Color contrast requirements to apply
+	 * @return Copy of this context with the specified contrast requirements applied
+	 */
+	def withContrastRequirement(requiredContrast: ColorContrastRequirement): Repr
 	/**
 	  * @param margins Margins to use
 	  * @return A copy of this context with those margins
@@ -98,7 +99,7 @@ trait BaseContextCopyable[+Repr, +ColorSensitive]
 	/**
 	  * @return A copy of this context with strict color contrast standards being applied
 	  */
-	def withEnhancedColorContrast = withColorContrastStandard(Enhanced)
+	def withEnhancedColorContrast = withContrastRequirement(Enhanced)
 	
 	/**
 	  * @return A copy of this context where there is no maximum (stack) margin defined
@@ -228,10 +229,23 @@ trait BaseContextCopyable[+Repr, +ColorSensitive]
 	def mapMargins(f: Margins => Margins) = withMargins(f(margins))
 	
 	/**
+	 * @param f A mapping function to apply to the applied contrast requirements
+	 * @return Copy of this context with modified color contrast requirements
+	 */
+	def mapRequiredContrast(f: Mutate[ColorContrastRequirement]) = withContrastRequirement(f(requiredContrast))
+	
+	/**
 	  * @param color Background color role
 	  * @param shade Background color shade
 	  * @return A copy of this context that assumes the specified color combination as the background color.
 	  *         Assumes that this context's color scheme is used.
 	  */
 	def against(color: ColorRole, shade: ColorLevel): ColorSensitive = against(colors(color)(shade))
+	
+	/**
+	 * @param standard Color contrast standard to follow
+	 * @return A copy of this context that uses the specified color contrast standards
+	 */
+	@deprecated("Deprecated for removal. Please use withContrastRequirement instead", "v2.0")
+	def withColorContrastStandard(standard: ColorContrastStandard): Repr = withContrastRequirement(standard)
 }

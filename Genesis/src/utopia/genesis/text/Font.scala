@@ -3,7 +3,7 @@ package utopia.genesis.text
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.text.FontStyle._
 import utopia.genesis.util.Screen
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color.ColorContrastRequirement
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.transform.LinearSizeAdjustable
@@ -104,7 +104,7 @@ case class Font(name: String, baseSize: Int, style: FontStyle = FontStyle.Plain,
 	 * @param ppi Pixels per inch in this context
 	 * @return Whether this font should be considered large
 	 */
-	def isLarge(implicit ppi: Ppi) = ColorContrastStandard.textIsLarge(size, bold = isBold)
+	def isLarge(implicit ppi: Ppi) = ColorContrastRequirement.textIsLarge(size, bold = isBold)
 	
 	
 	// IMPLEMENTED	-------------------

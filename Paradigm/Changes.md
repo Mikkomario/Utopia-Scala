@@ -1,19 +1,24 @@
 # Utopia Paradigm - List of Changes
 
-## v1.8.2 (in development)
+## v1.9 (in development)
+### Breaking changes
+- **ColorSet**'s `.against(...)` functions now require access to implicit **HasColorContrastRequirements**
+  - These no longer accept minimum contrast as a separate parameter, and instead accept `small: Boolean`
+- **ColorContrast**'s `.isLegible` variants now require access to implicit **HasColorContrastRequirements**
 ### Deprecations
 - Renamed various functions and properties within **ColorContrastStandard**
 ### Bugfixes
 - Bugfix to **Color**'s `.average(Color, Double, Double)` function, 
   which previously failed when the other color's priority was 0.
 ### New features
+- Added **ColorContrastRequirement**
 - Added **DimensionalFromModelFactory**
 ### New methods
 - **HasBounds**
   - Added `.extremeAlong(Extreme, Axis2D)`
 ### Other changes
 - Built with Scala v2.13.18
-- **ColorContrastStandard** is no longer an enumeration and may now be scaled
+- **ColorContrastStandard** now extends **ColorContrastRequirement**
 
 ## v1.8.1 - 15.03.2026
 A very minor update, mostly focusing on supporting the latest **Flow** changes.

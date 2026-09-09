@@ -3,7 +3,7 @@ package utopia.paradigm.color
 import utopia.flow.operator.numeric.DoubleLike
 import utopia.flow.operator.sign.{Sign, SignOrZero}
 import utopia.paradigm.enumeration.ColorContrastStandard
-import utopia.paradigm.enumeration.ColorContrastStandard.{Enhanced, Minimum}
+import utopia.paradigm.enumeration.ColorContrastStandard.Enhanced
 import utopia.paradigm.measurement.Distance
 
 import scala.language.implicitConversions
@@ -27,35 +27,37 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	// ATTRIBUTES	----------------------
 	
 	/**
-	  * The color contrast standard reached in normal context
+	  * The color contrast standard reached in a normal context
 	  */
 	lazy val standard = ColorContrastStandard.forContrast(ratio)
-	
 	/**
 	  * The color contrast standard reached in context where large text is used
 	  */
-	lazy val largeTextStandard = ColorContrastStandard.values.find { ratio >= _.largeTextMinimumContrast }
+	lazy val largeTextStandard = ColorContrastStandard.values.find { ratio >= _.largeTextMin }
 	
 	
 	// COMPUTED	--------------------------
 	
 	/**
-	  * @return Whether this color contrast ensures minimum legibility on all font sizes
-	  */
-	def isAlwaysLegible = ratio >= Minimum.defaultMinimumContrast
+	 * @return Whether this color contrast ensures enhanced legibility on all font sizes
+	 */
+	def isAlwaysHighQuality = isAlwaysLegible(Enhanced)
 	/**
-	  * @return Whether this color contrast ensures minimum legibility for large text sizes
-	  */
-	def isLegibleForLargeText = ratio >= Minimum.largeTextMinimumContrast
+	 * @return Whether this color contrast ensures enhanced legibility on large font sizes
+	 */
+	def isHighQualityForLargeText = isLegibleForLargeText(Enhanced)
 	
 	/**
-	  * @return Whether this color contrast ensures enhanced legibility on all font sizes
+	 * @param context Applicable color contrast requirements (implicit)
+	  * @return Whether this color contrast ensures minimum legibility on all font sizes
 	  */
-	def isAlwaysHighQuality = ratio >= Enhanced.defaultMinimumContrast
+	def isAlwaysLegible(implicit context: HasColorContrastRequirements) = context.requiredContrast.accepts(ratio)
 	/**
-	  * @return Whether this color contrast ensures enhanced legibility on large font sizes
+	 * @param context Applicable color contrast requirements (implicit)
+	  * @return Whether this color contrast ensures minimum legibility for large text sizes
 	  */
-	def isHighQualityForLargeText = ratio >= Enhanced.largeTextMinimumContrast
+	def isLegibleForLargeText(implicit context: HasColorContrastRequirements) =
+		context.requiredContrast.accepts(ratio, large = true)
 	
 	
 	// IMPLEMENTED	----------------------
@@ -81,7 +83,6 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	  * @return An increased contrast
 	  */
 	def +(amount: Double) = ColorContrast(ratio + amount)
-	
 	/**
 	  * @param amount Contrast amount to decrease
 	  * @return A decreased contrast
@@ -90,25 +91,25 @@ case class ColorContrast(ratio: Double) extends DoubleLike[ColorContrast]
 	
 	/**
 	  * @param fontSize Size of the font used
-	  * @param fontIsBold Whether font is bold (default = false)
+	  * @param bold Whether the font is bold (default = false)
 	  * @return Whether text would be legible with this color contrast and specified settings
 	  */
-	def isLegibleWithFontSize(fontSize: Distance, fontIsBold: Boolean = false) =
-		Minimum.test(ratio, fontSize, fontIsBold)
-	
+	def isLegibleWithFontSize(fontSize: Distance, bold: Boolean = false)
+	                         (implicit context: HasColorContrastRequirements) =
+		context.requiredContrast.acceptsText(ratio, fontSize, bold = bold)
 	/**
 	  * @param fontSize Size of the font used
-	  * @param fontIsBold Whether font is bold (default = false)
+	  * @param bold Whether the font is bold (default = false)
 	  * @return Whether text would meet enhanced standards with this color contrast and specified settings
 	  */
-	def isHighQualityWithFontSize(fontSize: Distance, fontIsBold: Boolean = false) =
-		Enhanced.test(ratio, fontSize, fontIsBold)
+	def isHighQualityWithFontSize(fontSize: Distance, bold: Boolean = false) =
+		isLegibleWithFontSize(fontSize, bold)(Enhanced)
 	
 	/**
 	  * @param fontSize Size of the font used
-	  * @param fontIsBold Whether font is bold (default = false)
+	  * @param bold Whether the font is bold (default = false)
 	  * @return The standard reached with this color contrast and specified settings. None if no standard is reached.
 	  */
-	def standardWithFontSize(fontSize: Distance, fontIsBold: Boolean) =
-		ColorContrastStandard.forText(ratio, fontSize, fontIsBold)
+	def standardWithFontSize(fontSize: Distance, bold: Boolean) =
+		ColorContrastStandard.forText(ratio, fontSize, bold)
 }

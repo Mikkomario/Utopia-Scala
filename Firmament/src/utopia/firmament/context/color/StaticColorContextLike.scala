@@ -2,10 +2,11 @@ package utopia.firmament.context.color
 
 import utopia.firmament.context.ColorAccessLike
 import utopia.firmament.context.base.StaticBaseContextLike
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.paradigm.color.ColorLevel.Standard
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet}
+import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorSet, HasColorContrastRequirements}
 
 /**
   * Common trait for static context implementations which specify a container background
@@ -59,7 +60,7 @@ trait StaticColorContextLike[+Repr, +Textual]
 	  *         which is suited against the current context
 	  */
 	def withBackground(color: ColorSet, preferredShade: ColorLevel): Repr =
-		against(color.against(background, preferredShade))
+		against(color.against(background, preferredShade)(this))
 	/**
 	  * @param role          New background color (role) to assume
 	  * @param preferredShade Preferred color shade (default = standard)
@@ -67,7 +68,7 @@ trait StaticColorContextLike[+Repr, +Textual]
 	  *         which is suited against the current context
 	  */
 	def withBackground(role: ColorRole, preferredShade: ColorLevel): Repr =
-		withBackground(colors(role).against(background, preferredShade))
+		withBackground(colors(role).against(background, preferredShade)(this))
 	
 	/**
 	  * @param f A mapping function to apply for the current background color
@@ -91,8 +92,9 @@ trait StaticColorContextLike[+Repr, +Textual]
 		/**
 		  * @return Minimum contrast used within this setting
 		  */
-		def minimumContrast =
-			if (expectSmallObjects) contrastStandard.defaultMinimumContrast else contrastStandard.largeTextMinimumContrast
+		def minimumContrast = requiredContrast.minFor(large = !expectSmallObjects)
+		
+		private implicit def context: HasColorContrastRequirements = StaticColorContextLike.this
 		
 		
 		// IMPLEMENTED  -----------------
@@ -108,20 +110,23 @@ trait StaticColorContextLike[+Repr, +Textual]
 		def expectingLargeObjects =
 			if (expectSmallObjects) copy(expectSmallObjects = false) else this
 		/**
-		  * @return Access to colors where contrast is suitable for the current font settings
+		  * @return Access to colors where the contrast is suitable for the current font settings
 		  */
-		def forText = copy(expectSmallObjects = !font.isLargeOnScreen)
+		def forText = {
+			val large = font.isLargeOnScreen
+			if (large == expectSmallObjects) copy(expectSmallObjects = !large) else this
+		}
 		
 		/**
 		  * @param color A proposed set of colors
 		  * @return The best color from the specified set for this context
 		  */
-		def apply(color: ColorSet) = color.against(background, level, minimumContrast)
+		def apply(color: ColorSet) = color.against(background, level, small =expectSmallObjects)
 		/**
 		  * @param role A color role
 		  * @return Color to use for that role in this context
 		  */
-		def apply(role: ColorRole) = colors(role).against(background, level, minimumContrast)
+		def apply(role: ColorRole) = colors(role).against(background, level, small = expectSmallObjects)
 		/**
 		  * @param role A color role
 		  * @param competingColor A color the resulting color should not resemble
@@ -130,7 +135,8 @@ trait StaticColorContextLike[+Repr, +Textual]
 		  *         from the specified colors and the current background color
 		  */
 		def differentFrom(role: ColorRole, competingColor: Color, moreColors: Color*) =
-			colors(role).againstMany(moreColors.toSet + competingColor + background)
+			colors(role).againstMany(Set.concat(moreColors, Pair(competingColor, background)), level,
+				small = expectSmallObjects)
 		
 		/**
 		  * @param level A color level

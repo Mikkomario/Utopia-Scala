@@ -3,6 +3,7 @@
 ## v2.4 (in development)
 ### Breaking changes
 - Various window-related classes now require implicit **Scheduler** access
+- **TextField** now requires access to implicit **HasColorContrastRequirements**
 ### Other changes
 - Built with Scala v2.13.18
 

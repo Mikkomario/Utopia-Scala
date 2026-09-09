@@ -99,7 +99,7 @@ object SelectionDrawer
 						// Case: Drawing using a specific color
 						//       => Uses a version of that color that suits the current background
 						case Some(color) =>
-							val default = context.colors(color).against(bg, preferredShade)
+							val default = context.colors(color).against(bg, preferredShade)(context)
 							// Case: No highlighting
 							if (highlightFactor == 0)
 								default

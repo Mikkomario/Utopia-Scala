@@ -12,8 +12,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.Priority.High
 import utopia.genesis.graphics.{DrawSettings, Drawer}
-import utopia.paradigm.color.{Color, ColorRole, ColorScheme}
-import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
+import utopia.paradigm.color.{Color, ColorRole, ColorScheme, HasColorContrastRequirements}
 import utopia.paradigm.shape.shape2d.area.Circle
 import utopia.paradigm.shape.shape2d.area.polygon.c4.bounds.Bounds
 import utopia.paradigm.shape.shape2d.vector.point.Point
@@ -173,7 +172,7 @@ trait RadioButtonFactoryLike[+Repr] extends RadioButtonSettingsWrapper[Repr] wit
 	protected def _apply[A](selectedValuePointer: EventfulPointer[A], value: A,
 	                        backgroundColorPointer: Changing[Color], diameter: Double,
 	                        hoverExtraRadius: Double, ringWidth: Double)
-	                       (implicit colorScheme: ColorScheme) =
+	                       (implicit colorScheme: ColorScheme, context: HasColorContrastRequirements) =
 		new RadioButton[A](hierarchy, selectedValuePointer, value, backgroundColorPointer, diameter,
 			hoverExtraRadius, ringWidth, (ringWidth * 1.25).round.toDouble, settings)
 }
@@ -218,7 +217,7 @@ case class ContextualRadioButtonFactory(hierarchy: ComponentHierarchy,
 		_apply[A](selectedValuePointer, value, context.backgroundPointer,
 			(context.margins.medium * 1.6 * sizeMod).round.toDouble,
 			(context.margins.medium * 0.4 * sizeMod).round.toDouble,
-			((context.margins.medium * 0.22 * sizeMod) max 1.0).round.toDouble)(context.colors)
+			((context.margins.medium * 0.22 * sizeMod) max 1.0).round.toDouble)(context.colors, context)
 	}
 }
 
@@ -255,7 +254,7 @@ case class RadioButtonFactory(hierarchy: ComponentHierarchy,
 	def apply[A](selectedValuePointer: EventfulPointer[A], value: A,
 	             backgroundColorPointer: Changing[Color], diameter: Double,
 	             hoverExtraRadius: Double, ringWidth: Double = 1.0)
-	            (implicit colorScheme: ColorScheme) =
+	            (implicit colorScheme: ColorScheme, context: HasColorContrastRequirements) =
 		_apply[A](selectedValuePointer, value, backgroundColorPointer, diameter, hoverExtraRadius, ringWidth)
 }
 
@@ -294,7 +293,7 @@ class RadioButton[A](override val hierarchy: ComponentHierarchy, selectedValuePo
                      representing: A, backgroundColorPointer: Changing[Color],
                      diameter: Double, hoverExtraRadius: Double, ringWidth: Double = 1.0, emptyRingWidth: Double = 1.25,
                      settings: RadioButtonSettings = RadioButtonSettings.default)
-                    (implicit colorScheme: ColorScheme)
+                    (implicit colorScheme: ColorScheme, context: HasColorContrastRequirements)
 	extends AbstractButton(settings) with ConcreteCustomDrawReachComponent
 {
 	// ATTRIBUTES   ---------------------------------
@@ -315,8 +314,7 @@ class RadioButton[A](override val hierarchy: ComponentHierarchy, selectedValuePo
 			// While disabled or unselected, uses either black or white, with certain opacity
 			// Otherwise uses the selection color
 			if (isSelected && isEnabled)
-				colorScheme(settings.selectedColorRole)
-					.against(background, minimumContrast = Minimum.defaultMinimumContrast)
+				colorScheme(settings.selectedColorRole).against(background)
 			else {
 				// TODO: Use a different color when focused. Also, utilize context.
 				val base = background.shade.defaultTextColor

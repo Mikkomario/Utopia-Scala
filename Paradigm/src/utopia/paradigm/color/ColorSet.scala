@@ -1,13 +1,13 @@
 package utopia.paradigm.color
 
-import utopia.flow.collection.immutable.Single
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 
 import scala.annotation.tailrec
+import scala.collection.View
 import scala.language.implicitConversions
 
 object ColorSet
@@ -17,23 +17,18 @@ object ColorSet
 	/**
 	 * A color set of 2 colors: Black (default, slightly opaque) and white (slightly opaque)
 	 */
-	lazy val blackAndWhite = apply(Color.textBlack, Color.textWhite, Color.textBlack)
+	val blackAndWhite = apply(Color.textBlack, Color.textWhite, Color.textBlack)
 	
 	/**
-	  * Default shade of gray to use in light themed uis
+	  * Default shade of gray to use in light-themed UIs
 	  */
 	lazy val defaultLightGray = apply(
 		Rgb.grayWithValue(225), Rgb.grayWithValue(245), Rgb.grayWithValue(200))
 	/**
-	  * Default shade of gray to use in dark themed uis
+	  * Default shade of gray to use in dark-themed UIs
 	  */
 	lazy val defaultDarkGray = apply(
 		Rgb.grayWithValue(66), Rgb.grayWithValue(109), Rgb.grayWithValue(27))
-	
-	
-	// COMPUTED	---------------------------
-	
-	private def defaultMinimumContrast = Minimum.largeTextMinimumContrast
 	
 	
 	// IMPLICIT	--------------------------
@@ -86,16 +81,14 @@ object ColorSet
 }
 
 /**
-  * A set of related colors
+  * A set of related color shades
+ * @param default The default color
+ * @param variants Variants of the default color
   * @author Mikko Hilpinen
   * @since 17.11.2019, Reflection v1
-  * @param default The default color
-  * @param variants Variants of the default color
   */
 case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends FromShadeFactory[Color]
 {
-	import ColorSet.defaultMinimumContrast
-	
 	// ATTRIBUTES   ------------------------
 	
 	/**
@@ -122,47 +115,49 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 	
 	/**
 	  * Picks the color in this set that is suitable for the specified background color
-	  * @param backgroundColor A background / contrasting color
+	  * @param background A background / contrasting color
 	  * @param preference      Preferred color shade
-	  * @param minimumContrast Minimum contrast level required for simply picking the default color
-	  *                        (default = minimum legibility default = 4.5:1)
-	  * @return A color in this set most suitable against the specified background color
+	  * @param small Whether this color will be used for smaller text or other smaller elements. Default = false.
+	  * @param context Context in which these colors are used. Determines the applied color contrast requirements.
+	 * @return A color in this set most suitable against the specified background color
 	  */
-	def against(backgroundColor: Color, preference: ColorLevel = Standard,
-	            minimumContrast: Double = defaultMinimumContrast): Color =
+	def against(background: Color, preference: ColorLevel = Standard, small: Boolean = false)
+	           (implicit context: HasColorContrastRequirements): Color =
 		preference match {
 			// Case: Prefers the default color variant
 			case Standard =>
 				// Case: Default is OK => Uses it
-				if (default.contrastAgainst(backgroundColor) > minimumContrast)
+				if (context.requiredContrast.accepts(default.contrastAgainst(background), large = !small))
 					default
 				// Case: Default contrast is too low => Uses the better variant
 				else
-					variants.valuesIterator.maxByOption { _.contrastAgainst(backgroundColor) }.getOrElse(default)
+					variants.valuesIterator.maxByOption { _.contrastAgainst(background) }.getOrElse(default)
+					
 			// Case: Prefers a color variant => Uses the value with enough contrast
-			case variant: ColorShade => against(backgroundColor, variant, minimumContrast)
+			case variant: ColorShade => _against(background, variant, small)
 		}
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring light color)
-	  * @param backgroundColor A background / contrasting color
-	  * @param minimumContrast Minimum contrast level required for simply picking the default color
-	  *                        (default = minimum legibility default = 4.5:1)
+	  * @param background A background / contrasting color
+	  * @param small Whether this color will be used for smaller text or other smaller elements. Default = false.
+	  * @param context Context in which these colors are used. Determines the applied color contrast requirements.
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def againstPreferringLight(backgroundColor: Color, minimumContrast: Double = defaultMinimumContrast): Color =
-		against(backgroundColor, Light, minimumContrast)
+	def againstPreferringLight(background: Color, small: Boolean = false)
+	                          (implicit context: HasColorContrastRequirements): Color =
+		_against(background, Light, small)
 	/**
 	  * Picks the best color set for the specific background (best being one that has enough contrast difference,
 	  * preferring dark color)
 	  * @param backgroundColor A background / contrasting color
-	  * @param minimumContrast Minimum contrast level required for simply picking the default color
-	  *                        (default = minimum legibility default = 4.5:1)
+	  * @param small Whether this color will be used for smaller text or other smaller elements. Default = false.
+	  * @param context Context in which these colors are used. Determines the applied color contrast requirements.
 	  * @return The best color in this color set in a context with specified color
 	  */
-	def againstPreferringDark(backgroundColor: Color,
-	                                minimumContrast: Double = defaultMinimumContrast): Color =
-		against(backgroundColor, Dark, minimumContrast)
+	def againstPreferringDark(backgroundColor: Color, small: Boolean = false)
+	                         (implicit context: HasColorContrastRequirements): Color =
+		_against(backgroundColor, Dark, small)
 	
 	/**
 	  * Picks the color that most resembles the specified color
@@ -170,23 +165,24 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 	  * @return A color in this set that most resembles the specified color
 	  */
 	def mostLike(anotherColor: Color) =
-		(Some(default) ++ variants.valuesIterator).minBy { _.contrastAgainst(anotherColor) }
+		(Iterator.single(default) ++ variants.valuesIterator).minBy { _.contrastAgainst(anotherColor) }
 	
 	/**
 	  * Picks a shade from this color set that works best against multiple colors
 	  * @param colors          A set of colors selected color should work with
-	  * @param minimumContrast Minimum contrast level required for simply picking the default color
-	  *                        (default = minimum legibility default = 4.5:1)
+	  * @param small           Whether this color will be used for smaller text or other smaller elements. Default = false.
+	  * @param context         Context in which these colors are used. Determines the applied color contrast requirements.
 	  * @return The best color in this set to be used against those colors
 	  */
 	@tailrec
-	final def againstMany(colors: Iterable[Color], preference: ColorLevel = Standard,
-	                      minimumContrast: Double = defaultMinimumContrast): Color =
+	final def againstMany(colors: Iterable[Color], preference: ColorLevel = Standard, small: Boolean = false)
+	                      (implicit context: HasColorContrastRequirements): Color =
 	{
+		val required = context.requiredContrast
 		val preferred = apply(preference)
 		val contrastsToPreferred = colors.iterator.map(preferred.contrastAgainst).caching
 		// Case: There is enough contrast against the preferred option => Uses that one
-		if (contrastsToPreferred.forall { _ >= minimumContrast })
+		if (contrastsToPreferred.forall { required.accepts(_, large = !small) })
 			preferred
 		// Case: Not enough contrast for the preferred option => Uses alternative options
 		else
@@ -202,7 +198,8 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 							.maxBy { _._2 }
 						// Case: The variant has high-enough contrast, or is better than the preferred option
 						//       => Uses the color variant
-						if (contrastToVariant >= minimumContrast || contrastToVariant > contrastsToPreferred.min)
+						if (required.accepts(contrastToVariant, large = !small) ||
+							contrastToVariant > contrastsToPreferred.min)
 							betterVariant
 						// Case: None of the options meet the minimum requirements and the preferred color is better
 						//       => Selects the preferred option
@@ -211,7 +208,7 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 					}
 					
 				// Case: Preferred variant was not OK => Uses the standard shade or the better variant (recursive)
-				case _: ColorShade => againstMany(colors, minimumContrast = minimumContrast)
+				case _: ColorShade => againstMany(colors, small = small)
 			}
 	}
 	
@@ -227,11 +224,16 @@ case class ColorSet(default: Color, variants: Map[ColorShade, Color]) extends Fr
 	  */
 	def map(f: Color => Color) = ColorSet(f(default), variants.view.mapValues(f).toMap)
 	
-	private def against(backgroundColor: Color, preference: ColorShade, minimumContrast: Double) = {
-		val order = (variants.get(preference).toVector :+ default) ++ variants.get(preference.opposite)
-		val contrasts = order.map { color => color -> Lazy { color.contrastAgainst(backgroundColor) } }
+	private def _against(backgroundColor: Color, preference: ColorShade, small: Boolean)
+	                    (implicit context: HasColorContrastRequirements) =
+	{
+		val required = context.requiredContrast
+		val contrasts = View.concat(variants.get(preference), Single(default), variants.get(preference.opposite))
+			.map { color => color -> Lazy { color.contrastAgainst(backgroundColor) } }
+			.toVector
 		// Finds the first shade that has enough contrast to the background
 		// If none of the shades are suitable, picks one with the greatest contrast
-		contrasts.find { _._2.value >= minimumContrast }.getOrElse { contrasts.maxBy { _._2.value } }._1
+		contrasts.find { case (_, contrast) => required.accepts(contrast.value, large = !small) }
+			.getOrElse { contrasts.maxBy { _._2.value } }._1
 	}
 }

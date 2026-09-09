@@ -2,9 +2,14 @@
 
 ## v1.7 (in development)
 ### Breaking changes
+- **BaseContext** variants now use **ColorContextRequirement** instead of **ColorContrastStandard**
+  - Associated properties and copy functions were also renamed
 - **Window** now requires implicit **Scheduler** access
 ### Deprecations
 - Deprecated **Interaction** trait in favor of **Pointer**
+### Bugfixes
+- **StaticColorContextLike**'s `.color.differentFrom(...) `
+  now properly responds to color contrast requirements and the expected target size.
 ### New features
 - Added always-on-top support to **Window** and **WindowContext**
 ### Other changes
