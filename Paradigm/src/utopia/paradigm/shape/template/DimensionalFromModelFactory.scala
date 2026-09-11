@@ -28,7 +28,7 @@ object DimensionalFromModelFactory
 /**
  * A trait that combines both [[DimensionalFactory]] and [[FromModelFactory]].
  * @author Mikko Hilpinen
- * @since 24.05.2026, v1.8.2
+ * @since 24.05.2026, v1.9
  */
 trait DimensionalFromModelFactory[-D, +R] extends DimensionalFactory[D, R] with FromModelFactory[R]
 {

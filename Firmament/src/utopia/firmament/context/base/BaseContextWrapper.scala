@@ -9,8 +9,7 @@ import utopia.flow.util.Mutate
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.color.ColorScheme
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color.{ColorContrastRequirement, ColorScheme}
 
 /**
   * Common trait for implementations of BaseContext by wrapping another instance
@@ -39,7 +38,7 @@ trait BaseContextWrapper[Base <: BaseContextCopyable[Base, _], +Repr] extends Ba
 	override def actorHandler: ActorHandler = base.actorHandler
 	override def localizer: Localizer = base.localizer
 	override def colors: ColorScheme = base.colors
-	override def contrastStandard: ColorContrastStandard = base.contrastStandard
+	override def requiredContrast: ColorContrastRequirement = base.requiredContrast
 	override def margins: Margins = base.margins
 	
 	override def windowPointer: Changing[Option[Window]] = base.windowPointer
@@ -49,8 +48,9 @@ trait BaseContextWrapper[Base <: BaseContextCopyable[Base, _], +Repr] extends Ba
 	override def allowImageUpscalingFlag: Flag = base.allowImageUpscalingFlag
 	
 	override def withFont(font: Font): Repr = mapBase { _.withFont(font) }
-	override def withColorContrastStandard(standard: ColorContrastStandard): Repr =
-		mapBase { _.withColorContrastStandard(standard) }
+	
+	override def withContrastRequirement(requiredContrast: ColorContrastRequirement): Repr =
+		mapBase { _.withContrastRequirement(requiredContrast) }
 	override def withMargins(margins: Margins): Repr = mapBase { _.withMargins(margins) }
 	override def withStackMargin(stackMargin: StackLength): Repr = mapBase { _.withStackMargin(stackMargin) }
 	override def withAllowImageUpscaling(allowImageUpscaling: Boolean): Repr =

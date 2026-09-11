@@ -11,10 +11,11 @@ import utopia.firmament.model.enumeration.StackLayout.Center
 import utopia.firmament.model.stack.LengthExtensions._
 import utopia.firmament.model.stack.StackLength
 import utopia.firmament.model.stack.modifier.FixedOptimalLengthModifier
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.eventful.EventfulPointer
 import utopia.flow.view.template.eventful.Changing
-import utopia.paradigm.color.ColorLevel
+import utopia.paradigm.color.{ColorLevel, HasColorContrastRequirements}
 import utopia.paradigm.color.ColorRole.{Gray, Primary}
 import utopia.paradigm.color.ColorShade.Light
 import utopia.reflection.component.swing.button.{FramedImageButton, ImageAndTextButton, ImageButton, TextButton}
@@ -23,8 +24,8 @@ import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWr
 import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerSelectionManager
-
 import utopia.flow.time.Duration
+
 import scala.concurrent.{ExecutionContext, Future}
 
 object TypeOrSearch
@@ -88,7 +89,8 @@ class TypeOrSearch
  textFieldPrompt: LocalizedString = LocalizedString.empty, preferredTextFieldShade: ColorLevel = Light,
  searchDelay: Duration = Duration.zero)
 (optionsForInput: String => Future[Seq[String]])
-(implicit scrollingContext: ScrollingContext, animationContext: AnimationContext, exc: ExecutionContext, logger: Logger)
+(implicit scrollingContext: ScrollingContext, animationContext: AnimationContext, exc: ExecutionContext, logger: Logger,
+ context: HasColorContrastRequirements)
 	extends StackableAwtComponentWrapperWrapper with PoolWithPointer[Vector[String], Changing[Vector[String]]]
 {
 	// ATTRIBUTES   ----------------------------
@@ -100,7 +102,7 @@ class TypeOrSearch
 	// private val margin = parentContext.relatedItemsStackMargin
 	private val selectionColor = parentContext.color.light.secondary
 	private val itemButtonColor = parentContext.colors.secondary
-		.againstMany(Vector(parentContext.background, selectionColor))
+		.againstMany(Pair(parentContext.background, selectionColor))
 	
 	private val textField = TextField.contextualForStrings(optimalTextFieldWidth.any.expanding,
 		prompt = textFieldPrompt)(parentContext/(Gray -> preferredTextFieldShade))

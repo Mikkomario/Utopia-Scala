@@ -3,6 +3,7 @@
 ## v1.8 (in development)
 ### Breaking changes
 - Various component constructors now require an implicit **Scheduler**
+- **RadioButton**'s non-contextual constructor now requires access to implicit **HasColorContrastRequirements**
 ### New features
 - **ReachCanvas** now supports a more Swing-reliant painting mode, 
   which is activated automatically when created through `.forSwing(...)`, 

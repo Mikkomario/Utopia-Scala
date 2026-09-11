@@ -11,8 +11,7 @@ import utopia.flow.view.immutable.eventful.Fixed
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorScheme}
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color.{Color, ColorContrastRequirement, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 
 object StaticBaseContext
@@ -40,7 +39,7 @@ object StaticBaseContext
 	  * @param colorScheme Color scheme to use
 	  * @param margins Margins to use
 	  * @param stackMargins Stack margins to use (default = use margins)
-	  * @param contrastStandard Color contrast standards to apply (default = minimum)
+	  * @param requiredContrast Color contrast standards to apply (default = minimum)
 	  * @param windowPointer A pointer that contains the window which hosts this component hierarchy,
 	  *                      once initialized.
 	  *                      Default = will never be populated.
@@ -49,10 +48,10 @@ object StaticBaseContext
 	  * @return A new base context
 	  */
 	def apply(actorHandler: ActorHandler, font: Font, colorScheme: ColorScheme, margins: Margins,
-	          stackMargins: Option[StackLength] = None, contrastStandard: ColorContrastStandard = Minimum,
+	          stackMargins: Option[StackLength] = None, requiredContrast: ColorContrastRequirement = Minimum,
 	          windowPointer: Changing[Option[Window]] = Fixed.never, allowImageUpscaling: Boolean = false)
 	         (implicit localizer: Localizer): StaticBaseContext =
-		_BaseContext(actorHandler, localizer, font, colorScheme, margins, stackMargins, contrastStandard, windowPointer,
+		_BaseContext(actorHandler, localizer, font, colorScheme, margins, stackMargins, requiredContrast, windowPointer,
 			allowImageUpscaling)
 	
 	
@@ -60,7 +59,7 @@ object StaticBaseContext
 	
 	private case class _BaseContext(actorHandler: ActorHandler, localizer: Localizer, font: Font, colors: ColorScheme,
 	                                margins: Margins, customStackMargins: Option[StackLength],
-	                                contrastStandard: ColorContrastStandard, windowPointer: Changing[Option[Window]],
+	                                requiredContrast: ColorContrastRequirement, windowPointer: Changing[Option[Window]],
 	                                allowImageUpscaling: Boolean)
 		extends StaticBaseContext
 	{
@@ -80,7 +79,7 @@ object StaticBaseContext
 		
 		override def current: StaticBaseContext = this
 		override def toVariableContext: VariableBaseContext =
-			VariableBaseContext.fixed(actorHandler, colors, margins, font, contrastStandard, customStackMargins,
+			VariableBaseContext.fixed(actorHandler, colors, margins, font, requiredContrast, customStackMargins,
 				windowPointer, allowImageUpscaling)(localizer)
 		
 		override def scaledStackMarginPointer(scalingPointer: Changing[SizeCategory]): Changing[StackLength] =
@@ -90,8 +89,8 @@ object StaticBaseContext
 			}
 		
 		override def withFont(font: Font): StaticBaseContext = copy(font = font)
-		override def withColorContrastStandard(standard: ColorContrastStandard): StaticBaseContext =
-			copy(contrastStandard = standard)
+		override def withContrastRequirement(requiredContrast: ColorContrastRequirement): StaticBaseContext =
+			copy(requiredContrast = requiredContrast)
 		override def withMargins(margins: Margins): StaticBaseContext = copy(margins = margins)
 		override def withStackMargin(stackMargin: StackLength): StaticBaseContext =
 			copy(customStackMargins = Some(stackMargin))

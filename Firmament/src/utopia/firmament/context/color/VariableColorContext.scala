@@ -15,8 +15,7 @@ import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorLevel.Standard
 import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.paradigm.color.{Color, ColorLevel, ColorRole, ColorScheme, ColorSet}
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color._
 
 object VariableColorContext
 {
@@ -47,22 +46,22 @@ object VariableColorContext
 	// Keys are:
 	//      1) Background color pointer
 	//      2) Expects large objects -flag
-	//      3) Applied color contrast standard
+	//      3) Applied color contrast requirements
 	//      4) Either
 	//          4.1) Color set + preferred color level => Best contextual color pointer
 	//          4.2) Color set + preferred color level + competing colors => Best contextual color pointer
 	private val colorPointersCache = WeakCache.weakKeys { bgP: Changing[Color] =>
 		WeakCache.weakKeys { largeFlag: Changing[Boolean] =>
-			Cache { standard: ColorContrastStandard =>
+			Cache { implicit contrastRequirement: ColorContrastRequirement =>
 				val colorCache = WeakCache.weakValues[(ColorSet, ColorLevel), Changing[Color]] { case (color, level) =>
 					bgP.mergeWith(largeFlag) { (bg, large) =>
-						color.against(bg, level, standard.minimumContrast(large = large))
+						color.against(bg, level, small = !large)
 					}
 				}
 				val colorsCache = WeakCache
 					.weakValues[(ColorSet, ColorLevel, Seq[Color]), Changing[Color]] { case (color, level, others) =>
 						bgP.mergeWith(largeFlag) { (bg, large) =>
-							color.againstMany(bg +: others, level, standard.minimumContrast(large = large))
+							color.againstMany(bg +: others, level, small = !large)
 						}
 					}
 				(colorCache, colorsCache)
@@ -73,15 +72,15 @@ object VariableColorContext
 	  * 2 levels deep cache for custom color set pointer mappings.
 	  * Keys are:
 	  *     1. Custom color set pointer
-	  *     1. Background color pointer + is large flag + color contrast standard + preferred shade
+	  *     1. Background color pointer + is large flag + color contrast requirements + preferred shade
 	  *
 	  * NB: Only use this with variable custom color set pointers
 	  */
 	private val colorSetMappingPointerCache = WeakCache.weakKeys { setP: Changing[ColorSet] =>
-		Cache[(Changing[Color], Flag, ColorContrastStandard, ColorLevel), Changing[Color]] {
-			case (bgP, isLargeP, standard, preferredLevel) =>
+		Cache[(Changing[Color], Flag, ColorContrastRequirement, ColorLevel), Changing[Color]] {
+			case (bgP, isLargeP, contrastRequirement, preferredLevel) =>
 				setP.mergeWith(bgP, isLargeP) { (colorSet, bg, large) =>
-					colorSet.against(bg, preferredLevel, minimumContrast = standard.minimumContrast(large))
+					colorSet.against(bg, preferredLevel, small = !large)(contrastRequirement)
 				}
 		}
 	}
@@ -91,16 +90,16 @@ object VariableColorContext
 	  *     1. Mapped color set pointer
 	  *     1. Additional background color -pointer
 	  *     1. Primary background color -pointer
-	  *     1. Applied color contrast standard, is large -flag and preferred color shade
+	  *     1. Applied color contrast requirements, is large -flag and preferred color shade
 	  */
 	private val colorSetAgainstManyCache = WeakCache.weakKeys { setP: Changing[ColorSet] =>
 		WeakCache.weakKeys { otherBgP: Changing[Color] =>
 			WeakCache.weakKeys { bgP: Changing[Color] =>
-				Cache[(ColorContrastStandard, Flag, ColorLevel), Changing[Color]] {
-					case (standard, isLargeFlag, preferredLevel) =>
+				Cache[(ColorContrastRequirement, Flag, ColorLevel), Changing[Color]] {
+					case (contrastRequirement, isLargeFlag, preferredLevel) =>
 						setP.mergeWith(Vector(bgP, otherBgP, isLargeFlag)) { set =>
 							set.againstMany(Pair(bgP, otherBgP).map { _.value }, preferredLevel,
-								standard.minimumContrast(isLargeFlag.value))
+								small = !isLargeFlag.value)(contrastRequirement)
 						}
 				}
 			}
@@ -112,7 +111,7 @@ object VariableColorContext
 	  *     1. Color role pointer to map
 	  *     1. Font pointer, which determines text size and therefore the required color contrast
 	  *     1. Background color pointer
-	  *     1. Color contrast standard + applied color scheme
+	  *     1. Color contrast requirements + applied color scheme
 	  *
 	  * It is recommended to use this cache only for variable role pointers
 	  */
@@ -123,12 +122,11 @@ object VariableColorContext
 			lazy val isLargeFlag = textIsLargePointerCache(fontP)
 			// 3. Background
 			WeakCache.weakKeys { bgP: Changing[Color] =>
-				// 4. Contrast standard & color scheme
-				Cache[(ColorContrastStandard, ColorScheme), Changing[Color]]{ case (standard, colors) =>
+				// 4. Contrast requirements & color scheme
+				Cache[(ColorContrastRequirement, ColorScheme), Changing[Color]]{ case (contrastRequirement, colors) =>
 					roleP.mergeWith(bgP, isLargeFlag) { (role, bg, large) =>
 						role match {
-							case Some(role) =>
-								colors(role).against(bg, minimumContrast = standard.minimumContrast(large))
+							case Some(role) => colors(role).against(bg, small = !large)(contrastRequirement)
 							case None => bg.shade.opposite.defaultTextColor
 						}
 					}
@@ -158,7 +156,7 @@ object VariableColorContext
 			customTextColorPointer match {
 				case Some(Left(colorP)) => colorP
 				case Some(Right(colorSetP)) =>
-					colorFromSetPointer(base.contrastStandard, colorSetP, backgroundPointer,
+					colorFromSetPointer(base.requiredContrast, colorSetP, backgroundPointer,
 						isLargeFlag = textIsLargePointerCache(base.fontPointer))
 				case None => backgroundDefaultTextColorPointerCache(backgroundPointer)
 			}
@@ -179,18 +177,18 @@ object VariableColorContext
 		case c => apply(c, c.backgroundPointer)
 	}
 	
-	private def colorFromSetPointer(contrastStandard: ColorContrastStandard, colorSetPointer: Changing[ColorSet],
+	private def colorFromSetPointer(contrastRequirement: ColorContrastRequirement, colorSetPointer: Changing[ColorSet],
 	                                backgroundPointer: Changing[Color], preferredShade: ColorLevel = Standard,
 	                                isLargeFlag: Flag = AlwaysTrue) =
 	{
 		// Uses a slightly different logic / caching between fixed and variable color sets
 		colorSetPointer.fixedValue match {
 			case Some(colorSet) =>
-				colorPointersCache(backgroundPointer)(isLargeFlag)(contrastStandard)
+				colorPointersCache(backgroundPointer)(isLargeFlag)(contrastRequirement)
 					._1(colorSet -> preferredShade)
 			case None =>
 				colorSetMappingPointerCache(colorSetPointer)(
-					(backgroundPointer, isLargeFlag, contrastStandard, preferredShade))
+					(backgroundPointer, isLargeFlag, contrastRequirement, preferredShade))
 		}
 	}
 	
@@ -273,7 +271,7 @@ object VariableColorContext
 		override def withTextColorRolePointer(p: Changing[ColorRole]): VariableColorContext =
 			withGeneralTextColorPointer(rolePointerToSetPointerCache(colors)(p))
 		override def withPossibleTextColorRolePointer(p: Changing[Option[ColorRole]]): VariableColorContext =
-			withTextColorPointer(textRoleToColorCache(p)(fontPointer)(backgroundPointer)(contrastStandard -> colors))
+			withTextColorPointer(textRoleToColorCache(p)(fontPointer)(backgroundPointer)(requiredContrast -> colors))
 		
 		// Modifying the font may also affect text color, if the text color is based on a color set
 		override def withFontPointer(p: Changing[Font]) =
@@ -298,12 +296,12 @@ object VariableColorContext
 		}
 		
 		private def backgroundFromSetPointer(colorSetPointer: Changing[ColorSet], preferredShade: ColorLevel) =
-			colorFromSetPointer(contrastStandard, colorSetPointer, backgroundPointer, preferredShade)
+			colorFromSetPointer(requiredContrast, colorSetPointer, backgroundPointer, preferredShade)
 		
 		private def customTextColorFromSetPointer(colorSetPointer: Changing[ColorSet],
 		                                          backgroundPointer: Changing[Color] = this.backgroundPointer,
 		                                          fontPointer: Changing[Font] = this.fontPointer): Changing[Color] =
-			VariableColorContext.colorFromSetPointer(contrastStandard, colorSetPointer, backgroundPointer,
+			VariableColorContext.colorFromSetPointer(requiredContrast, colorSetPointer, backgroundPointer,
 				isLargeFlag = textIsLargePointerCache(fontPointer))
 	}
 	
@@ -314,7 +312,7 @@ object VariableColorContext
 		// ATTRIBUTES   ------------------
 		
 		private lazy val (colorCache, colorsCache) =
-			colorPointersCache(context.backgroundPointer)(expectsLargeObjectsFlag)(context.contrastStandard)
+			colorPointersCache(context.backgroundPointer)(expectsLargeObjectsFlag)(context.requiredContrast)
 		
 		
 		// IMPLEMENTED  ----------------------
@@ -342,7 +340,7 @@ object VariableColorContext
 		  *         which is best within the current context
 		  */
 		def apply(colorSetPointer: Changing[ColorSet]) =
-			colorFromSetPointer(context.contrastStandard, colorSetPointer, context.backgroundPointer, preferredLevel,
+			colorFromSetPointer(context.requiredContrast, colorSetPointer, context.backgroundPointer, preferredLevel,
 				expectsLargeObjectsFlag)
 		/**
 		  * @param rolePointer A pointer that contains the color role to apply
@@ -366,7 +364,7 @@ object VariableColorContext
 			else
 				colorSetAgainstManyCache(rolePointerToSetPointerCache(context.colors)(rolePointer))(
 					competingColorPointer)(context.backgroundPointer)(
-					(context.contrastStandard, expectsLargeObjectsFlag, preferredLevel))
+					(context.requiredContrast, expectsLargeObjectsFlag, preferredLevel))
 		}
 		
 		/**

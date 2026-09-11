@@ -8,15 +8,14 @@ import utopia.firmament.model.stack.StackLength
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.color.ColorScheme
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color.{ColorScheme, HasColorContrastRequirements}
 
 /**
   * Common trait for context instances that provide view access to basic context properties
   * @author Mikko Hilpinen
   * @since 29.9.2024
   */
-trait BaseContextPropsView extends Any
+trait BaseContextPropsView extends Any with HasColorContrastRequirements
 {
 	// ABSTRACT	-------------------------
 	
@@ -33,10 +32,6 @@ trait BaseContextPropsView extends Any
 	  * @return The color scheme to be used
 	  */
 	def colors: ColorScheme
-	/**
-	  * @return Color contrast standard being applied
-	  */
-	def contrastStandard: ColorContrastStandard
 	/**
 	  * @return Used margins
 	  */
@@ -95,6 +90,12 @@ trait BaseContextPropsView extends Any
 	  * @return Button border width to use by default
 	  */
 	def buttonBorderWidth = (margins.verySmall / 2.0).round.toInt
+	
+	/**
+	 * @return Color contrast standard being applied
+	 */
+	@deprecated("Renamed to requiredContrast", "v1.8.2")
+	def contrastStandard = requiredContrast
 	
 	
 	// OTHER    -------------------------

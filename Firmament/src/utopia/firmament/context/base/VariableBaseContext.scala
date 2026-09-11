@@ -13,8 +13,7 @@ import utopia.flow.view.immutable.eventful.{Always, AlwaysFalse, Fixed}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 import utopia.genesis.handling.action.ActorHandler
 import utopia.genesis.text.Font
-import utopia.paradigm.color.{Color, ColorScheme}
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color.{Color, ColorContrastRequirement, ColorScheme}
 import utopia.paradigm.enumeration.ColorContrastStandard.Minimum
 
 import scala.language.implicitConversions
@@ -76,7 +75,7 @@ object VariableBaseContext
 	implicit def from(context: BaseContext): VariableBaseContext = context match {
 		case v: VariableBaseContext => v
 		case c =>
-			apply(c.actorHandler, c.margins, c.colors, c.fontPointer, c.contrastStandard, Some(c.stackMarginPointer),
+			apply(c.actorHandler, c.margins, c.colors, c.fontPointer, c.requiredContrast, Some(c.stackMarginPointer),
 				c.windowPointer, c.allowImageUpscalingFlag)(c.localizer)
 	}
 	
@@ -89,7 +88,7 @@ object VariableBaseContext
 	  * @param fontPointer Pointer that contains the applied font
 	  * @param margins Applied margins
 	  * @param colors Applied color-scheme
-	  * @param contrastStandard The color contrast standard applied (default = always minimum standard)
+	  * @param requiredContrast The color contrast requirements to apply (default = minimum standards)
 	  * @param stackMarginPointer Pointer that contains the applied default stack margin.
 	  *                           None (default) if the default pointer should be generated & used instead.
 	  * @param windowPointer A pointer that will contain the window hosting this component hierarchy,
@@ -101,11 +100,11 @@ object VariableBaseContext
 	  * @return A new variable context instance
 	  */
 	def apply(actorHandler: ActorHandler, margins: Margins, colors: ColorScheme,
-	          fontPointer: Changing[Font], contrastStandard: ColorContrastStandard = Minimum,
+	          fontPointer: Changing[Font], requiredContrast: ColorContrastRequirement = Minimum,
 	          stackMarginPointer: Option[Changing[StackLength]] = None,
 	          windowPointer: Changing[Option[Window]] = Fixed.never, allowImageUpscalingFlag: Flag = AlwaysFalse)
 	         (implicit localizer: Localizer): VariableBaseContext =
-		_VariableBaseContext(actorHandler, localizer, margins, colors, contrastStandard, fontPointer,
+		_VariableBaseContext(actorHandler, localizer, margins, colors, requiredContrast, fontPointer,
 			stackMarginPointer.getOrElse { Fixed(defaultStackMarginWith(margins)) },
 			Lazy { createSmallStackMarginPointer(margins, stackMarginPointer) }, windowPointer, allowImageUpscalingFlag,
 			stackMarginPointerIsCustom = false)
@@ -117,8 +116,7 @@ object VariableBaseContext
 	  * @param margins The applied margins
 	  * @param stackMargin The applied default stack margin.
 	  *                    None (default) if the default margin should be generated & used instead.
-	  * @param colorContrastStandard The color contrast standard applied
-	  *                              (default = minimum standard)
+	  * @param requiredContrast The color contrast requirements to apply (default = minimum standard)
 	  * @param windowPointer A pointer that will contain the window hosting this component hierarchy,
 	  *                      once it has been initialized.
 	  *                      Default = will never populate.
@@ -127,10 +125,10 @@ object VariableBaseContext
 	  * @return A new static context instance
 	  */
 	def fixed(actorHandler: ActorHandler, colorScheme: ColorScheme, margins: Margins, font: Font,
-	          colorContrastStandard: ColorContrastStandard = Minimum, stackMargin: Option[StackLength] = None,
+	          requiredContrast: ColorContrastRequirement = Minimum, stackMargin: Option[StackLength] = None,
 	          windowPointer: Changing[Option[Window]] = Fixed.never, allowImageUpscaling: Boolean = false)
 	         (implicit localizer: Localizer): VariableBaseContext =
-		apply(actorHandler, margins, colorScheme, Fixed(font), colorContrastStandard, stackMargin.map { Fixed(_) },
+		apply(actorHandler, margins, colorScheme, Fixed(font), requiredContrast, stackMargin.map { Fixed(_) },
 			windowPointer, Always(allowImageUpscaling))
 	
 	private def defaultStackMarginWith(margins: Margins) = StackLength(margins.verySmall, margins.medium, margins.large)
@@ -146,7 +144,7 @@ object VariableBaseContext
 	
 	private case class _VariableBaseContext(actorHandler: ActorHandler, localizer: Localizer,
 	                                        margins: Margins, colors: ColorScheme,
-	                                        contrastStandard: ColorContrastStandard,
+	                                        requiredContrast: ColorContrastRequirement,
 	                                        fontPointer: Changing[Font],
 	                                        stackMarginPointer: Changing[StackLength],
 	                                        smallStackMarginPointerView: View[Changing[StackLength]],
@@ -160,14 +158,14 @@ object VariableBaseContext
 		override def self: VariableBaseContext = this
 		
 		override def current: StaticBaseContext = StaticBaseContext(actorHandler, fontPointer.value, colors, margins,
-			if (stackMarginPointerIsCustom) Some(stackMarginPointer.value) else None, contrastStandard, windowPointer,
+			if (stackMarginPointerIsCustom) Some(stackMarginPointer.value) else None, requiredContrast, windowPointer,
 			allowImageUpscalingFlag.value)(localizer)
 		override def toVariableContext: VariableBaseContext = this
 		
 		override def smallStackMarginPointer: Changing[StackLength] = smallStackMarginPointerView.value
 		
-		override def withColorContrastStandard(standard: ColorContrastStandard): VariableBaseContext =
-			copy(contrastStandard = standard)
+		override def withContrastRequirement(requiredContrast: ColorContrastRequirement): VariableBaseContext =
+			copy(requiredContrast = requiredContrast)
 		override def withMargins(margins: Margins): VariableBaseContext = copy(margins = margins)
 		
 		override def withFontPointer(p: Changing[Font]): VariableBaseContext = copy(fontPointer = p)

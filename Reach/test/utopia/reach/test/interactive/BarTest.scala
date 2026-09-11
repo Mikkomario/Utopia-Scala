@@ -37,7 +37,7 @@ object BarTest extends App
 						// The bar goes from green to red
 						val baseBarColor = Color.green.average(Color.red, progress, 1 - progress)
 						val actualBarColor =  {
-							if (baseBarColor.contrastAgainst(bg) >= context.contrastStandard.largeTextMinimumContrast)
+							if (baseBarColor.contrastAgainst(bg) >= context.requiredContrast.largeTextMin)
 								baseBarColor
 							else {
 								val variantsIter = {
@@ -47,7 +47,7 @@ object BarTest extends App
 										(1 to 2).iterator.map { i => baseBarColor.lightenedBy(i / 2) }
 								}
 								variantsIter
-									.find { _.contrastAgainst(bg) > context.contrastStandard.largeTextMinimumContrast }
+									.find { _.contrastAgainst(bg) > context.requiredContrast.largeTextMin }
 									.getOrElse(baseBarColor)
 							}
 						}

@@ -3,6 +3,7 @@
 ## v4.3 (in development)
 ### Breaking changes
 - **PaintManager**s are now required to implement `.invalidate(...)`
+- Renamed implicit `Font.awtFontToFont(...)` to `.fromAwt(...)`
 ### Bugfixes
 - Added safety checks for subimage rounding errors that previously threw
 ### New features

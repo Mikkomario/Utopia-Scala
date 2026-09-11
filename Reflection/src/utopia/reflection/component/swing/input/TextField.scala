@@ -9,6 +9,7 @@ import utopia.firmament.drawing.template.TextDrawerLike
 import utopia.firmament.localization.LocalizedString
 import utopia.firmament.model.Border
 import utopia.firmament.model.stack.{StackInsets, StackLength, StackSize}
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.parse.string.Regex
 import utopia.flow.util.NotEmpty
@@ -18,7 +19,7 @@ import utopia.genesis.graphics.DrawLevel.Normal
 import utopia.genesis.graphics.MeasuredText
 import utopia.genesis.text.Font
 import utopia.paradigm.color.ColorShade.{Dark, Light}
-import utopia.paradigm.color.{Color, ColorSet}
+import utopia.paradigm.color.{Color, ColorSet, HasColorContrastRequirements}
 import utopia.paradigm.enumeration
 import utopia.paradigm.enumeration.Alignment
 import utopia.paradigm.enumeration.Axis.X
@@ -52,7 +53,8 @@ object TextField
 	  */
 	def forStrings(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialText: String = "",
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-				   alignment: Alignment = Alignment.Left) =
+				   alignment: Alignment = Alignment.Left)
+	              (implicit context: HasColorContrastRequirements) =
 		new TextField(targetWidth, insideMargins, font, initialText = initialText, prompt = prompt,
 			textColor = textColor, initialAlignment = alignment)({ _.getOrElse("") })
 	
@@ -68,7 +70,8 @@ object TextField
 	  */
 	def forPositiveInts(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Int] = None,
 						prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-						alignment: Alignment = Alignment.Left) =
+						alignment: Alignment = Alignment.Left)
+	                   (implicit context: HasColorContrastRequirements) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.digit, 10),
 			initialValue.map { _.toString } getOrElse "", prompt, textColor,  alignment, Some(Regex.positiveInteger))(
@@ -86,7 +89,8 @@ object TextField
 	  * @return A new text field that formats values to integers
 	  */
 	def forInts(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Int] = None,
-				prompt: Option[Prompt] = None, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left) =
+				prompt: Option[Prompt] = None, textColor: Color = Color.textBlack, alignment: Alignment = Alignment.Left)
+	           (implicit context: HasColorContrastRequirements) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.integerPart, 11),
 			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.integer))(
@@ -106,7 +110,8 @@ object TextField
 	def forPositiveDoubles(targetWidth: StackLength, insideMargins: StackSize, font: Font,
 						   initialValue: Option[Double] = None,
 						   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-						   alignment: Alignment = Alignment.Left) =
+						   alignment: Alignment = Alignment.Left)
+	                      (implicit context: HasColorContrastRequirements) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.positiveNumberPart, 24),
 			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.positiveNumber))(
@@ -127,7 +132,8 @@ object TextField
 	  */
 	def forDoubles(targetWidth: StackLength, insideMargins: StackSize, font: Font, initialValue: Option[Double] = None,
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
-				   alignment: enumeration.Alignment = enumeration.Alignment.Left) =
+				   alignment: enumeration.Alignment = enumeration.Alignment.Left)
+	              (implicit context: HasColorContrastRequirements) =
 	{
 		new TextField(targetWidth, insideMargins, font, FilterDocument(Regex.numberPart, 24),
 			initialValue.map { _.toString } getOrElse "", prompt, textColor, alignment, Some(Regex.number))(
@@ -256,6 +262,7 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 				   prompt: Option[Prompt] = None, textColor: Color = Color.textBlack,
 				   initialAlignment: Alignment = Alignment.Left,
 				   resultFilter: Option[Regex] = None)(resultsParser: Option[String] => A)
+                  (implicit context: HasColorContrastRequirements)
 	extends JWrapper with CachingReflectionStackable with InputWithPointer[A, Changing[A]] with Alignable with Focusable
 		with MutableCustomDrawableWrapper with ReflectionStackLeaf
 {
@@ -407,12 +414,11 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	  * is dependent on current field background color so it should be set first
 	  * @param color Color set to use in this field's selection colors
 	  */
-	def setSelectionHighlight(color: ColorSet) =
-	{
+	def setSelectionHighlight(color: ColorSet) = {
 		val bg = background
 		val preferredSelectionShade = if (bg.luminosity >= 0.5) Light else Dark
 		val selectionColor = color.against(bg, preferredSelectionShade)
-		val caretColor = color.againstMany(Vector(bg, selectionColor))
+		val caretColor = color.againstMany(Pair(bg, selectionColor), small = !font.isLargeOnScreen)
 		
 		field.setSelectionColor(selectionColor.toAwt)
 		field.setSelectedTextColor(selectionColor.shade.defaultTextColor.toAwt)
@@ -420,17 +426,14 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	}
 	
 	// NB: Must be called in the Awt event thread
-	private def filterInAwtThread() =
-	{
+	private def filterInAwtThread() = {
 		val original = text
 		val trimmed = original.trim
-		val filtered =
-		{
+		val filtered = {
 			if (trimmed.isEmpty)
 				trimmed
 			else
-				resultFilter match
-				{
+				resultFilter match {
 					case Some(regex) => regex.findFirstFrom(trimmed).getOrElse("")
 					case None => trimmed
 				}
@@ -445,11 +448,9 @@ class TextField[A](initialTargetWidth: StackLength, insideMargins: StackSize, fo
 	private object EnterListener extends ActionListener
 	{
 		// When enter is pressed, filters field value and informs listeners
-		override def actionPerformed(e: ActionEvent) =
-		{
+		override def actionPerformed(e: ActionEvent) = {
 			filterInAwtThread()
-			if (enterListeners.nonEmpty || resultListeners.nonEmpty)
-			{
+			if (enterListeners.nonEmpty || resultListeners.nonEmpty) {
 				val result = value
 				enterListeners.foreach { _(result) }
 				resultListeners.foreach { _(result) }

@@ -3,7 +3,7 @@ package utopia.genesis.text
 import utopia.flow.parse.file.FileExtensions._
 import utopia.genesis.text.FontStyle._
 import utopia.genesis.util.Screen
-import utopia.paradigm.enumeration.ColorContrastStandard
+import utopia.paradigm.color.ColorContrastRequirement
 import utopia.paradigm.measurement.DistanceExtensions._
 import utopia.paradigm.measurement.Ppi
 import utopia.paradigm.transform.LinearSizeAdjustable
@@ -17,9 +17,14 @@ import scala.util.{Failure, Try}
 
 object Font
 {
+	// IMPLICIT ----------------------------
+	
 	// Implicitly converts from an awt font
-	implicit def awtFontToFont(awtFont: java.awt.Font): Font = Font(awtFont.getName, awtFont.getSize,
-		FontStyle.fromAwt(awtFont.getStyle).getOrElse(Plain))
+	implicit def fromAwt(awtFont: java.awt.Font): Font =
+		Font(awtFont.getName, awtFont.getSize, FontStyle.fromAwt(awtFont.getStyle).getOrElse(Plain))
+	
+	
+	// OTHER    ----------------------------
 	
 	/**
 	  * Loads and registers specified font from the file system. After loading the font, it may be constructed
@@ -35,7 +40,7 @@ object Font
 			Try {
 				val font = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFilePath.toFile)
 				GraphicsEnvironment.getLocalGraphicsEnvironment.registerFont(font)
-				awtFontToFont(font).copy(baseSize = newFontSize)
+				fromAwt(font).copy(baseSize = newFontSize)
 			}
 	}
 }
@@ -79,11 +84,6 @@ case class Font(name: String, baseSize: Int, style: FontStyle = FontStyle.Plain,
 	  * @return The size of this font, with scaling applied
 	  */
 	def sizeOnScreen = size(Screen.ppi)
-	/**
-	  * @param ppi Pixels per inch in this context
-	  * @return The size of this font
-	  */
-	def size(implicit ppi: Ppi) = (baseSize * scaling).pixels
 	
 	/**
 	  * @return Whether this font is with bold style
@@ -91,15 +91,20 @@ case class Font(name: String, baseSize: Int, style: FontStyle = FontStyle.Plain,
 	def isBold = style == Bold
 	
 	/**
-	  * @param ppi Pixels per inch in this context
-	  * @return Whether this font should be considered large
-	  */
-	def isLarge(implicit ppi: Ppi) =
-		size >= (if (isBold) ColorContrastStandard.largeTextThresholdBold else ColorContrastStandard.largeTextThreshold)
-	/**
 	  * @return Whether this font should be considered large on the current screen
 	  */
 	def isLargeOnScreen = isLarge(Screen.ppi)
+	
+	/**
+	 * @param ppi Pixels per inch in this context
+	 * @return The size of this font
+	 */
+	def size(implicit ppi: Ppi) = (baseSize * scaling).pixels
+	/**
+	 * @param ppi Pixels per inch in this context
+	 * @return Whether this font should be considered large
+	 */
+	def isLarge(implicit ppi: Ppi) = ColorContrastRequirement.textIsLarge(size, bold = isBold)
 	
 	
 	// IMPLEMENTED	-------------------
