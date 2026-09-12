@@ -1,16 +1,16 @@
 package utopia.flow.collection.template.graph
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.caching.LazyTree
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.{GraphTravelResults, NodeTravelStage}
 import utopia.flow.collection.immutable.{Empty, Graph, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
+import utopia.flow.collection.{immutable, template}
 import utopia.flow.collection.template.graph.GraphNodeLike.PathsFinder
 import utopia.flow.collection.template.graph.NodeTarget.AnyNode
+import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
-import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.template.Extender
 
 import scala.collection.mutable
@@ -27,7 +27,11 @@ object GraphNodeLike
 	{
 		// COMPUTED --------------------
 		
+		/**
+		 * @return A graph search process (iterator)
+		 */
 		def iterator: GraphSearchProcess[Node, Edge, C] = {
+			// Case: No search destinations => Yields a completed search
 			if (destinations.isEmpty)
 				new GraphSearchProcess(Iterator.empty, start, startCost, includeStartAsResult = false,
 					autocomplete = true)
@@ -291,6 +295,10 @@ object GraphNodeLike
 
 /**
  * Graph nodes contain content and are connected to other graph nodes via edges
+ * @tparam N Type of values wrapped by graph nodes
+ * @tparam E Type of values wrapped by graph edges
+ * @tparam Repr Type of the implementing nodes
+ * @tparam Edge Type of the implementing edges
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
@@ -433,6 +441,25 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 			.flatMap { node => node.leavingEdges.map { edge => (node.value, edge.value, edge.end.value) } }.toSet)
 	
 	/**
+	 * @return A lazily initialized tree based on this graph, where each node matches one in this graph
+	 *         but only contains the node value.
+	 *
+	 *         This node's representation will appear as the root of the tree.
+	 *         Other nodes may appear in multiple locations, but never twice in a single branch.
+	 *
+	 *         For example, if node A connects to nodes B and C, which both connect to node D,
+	 *         which then connects to node E, the resulting branches would be:
+	 *         A -> B -> D -> E,
+	 *         A -> C -> D -> E.
+	 *         Notice how D and E appear twice.
+	 *
+	 *         The resulting tree may be considered to consist of unique paths within this graph that all start
+	 *         from this node and never traverse one node twice.
+	 *
+	 *         Please note that the resulting tree will be very large for graphs with a large number of edges.
+	 */
+	def toValueTree: template.tree.ValueTree[N] = _toTree(Set(self)) { _.value }
+	/**
 	  * @return A lazily initialized tree based on this graph.
 	  *         This node will appear as the root of the tree.
 	  *         Other nodes may appear in multiple locations, but never twice in a single branch.
@@ -449,20 +476,20 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  *
 	  *         Please note that the resulting tree will be very large for graphs with a large number of edges.
 	  */
-	def toTree = _toTree(Set(self))
-	private def _toTree(traversedNodes: Set[Any]): LazyTree[Repr] = {
+	def toTree: template.tree.ValueTree[Repr] = _toTree(Set(self))(Identity)
+	private def _toTree[A](traversedNodes: Set[Any])(wrapNode: Repr => A): template.tree.ValueTree[A] = {
 		// Remembers which nodes have been visited (branch-specific)
 		val newTraversed = traversedNodes + self
 		// Creates the tree lazily
-		LazyTree(Lazy(self), leavingEdges.iterator.flatMap { edge =>
+		immutable.tree.ValueTree(wrapNode(self), lazily = true).withChildren(leavingEdges.iterator.flatMap { edge =>
 			val node = edge.end
 			// Case: A node would be a parent of this node in the tree => ends
 			if (newTraversed.contains(node))
 				None
 			// Case: Unique node within this branch => Converts it to a tree lazily, also
 			else
-				Some(node._toTree(newTraversed))
-		}.caching)
+				Some(node._toTree(newTraversed)(wrapNode))
+		})
 	}
 	
 	/**

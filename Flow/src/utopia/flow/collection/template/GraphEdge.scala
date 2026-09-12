@@ -8,6 +8,7 @@ import utopia.flow.view.template.Extender
   * @author Mikko Hilpinen
   * @since 10.4.2019
   */
+@deprecated("Replaced with GraphEdgeLike", "v2.9")
 trait GraphEdge[+V, +Node] extends View[V] with Extender[V]
 {
 	// ABSTRACT	------------------

@@ -57,9 +57,9 @@ object ViewGraphNode
 	  *                  from that node.
 	  *
 	  *                  (1): The edges are represented with two values:
-	  *                     - 1: The value of that edge, as a View (for example View or Lazy)
+	  *                     - 1: The value of that edge, as a View (for example, View or Lazy)
 	  *                     - 2: The value of the node this edge points to. Again, as a View
-	  *                     (where Lazy would be a likely choice).
+	  *                       (where Lazy would be a likely choice).
 	  *
 	  *                  This function is called lazily, i.e. only before they're used in a graph operation.
 	  *                  Similarly, the iterator/collection returned by this function is consumed lazily and cached.
@@ -71,6 +71,7 @@ object ViewGraphNode
 	  *                  If this function returns a pre-initialized collection with non-lazy or pre-initialized
 	  *                  end values, that results in all the end nodes being initialized at once.
 	  *                  This is acceptable, but not necessarily the behaviour you want.
+	 *
 	  * @tparam N Type of graph node values (recommended to extend Equals)
 	  * @tparam E Type of edge values
 	  * @return A function that accepts a node content and yields a node within this graph (system).

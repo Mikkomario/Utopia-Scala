@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.operator.equality.EqualsFunction
 
+@deprecated("Replaced with MutableValueTree", "v2.9")
 object MutableTree
 {
     def apply[T](content: T, children: Seq[MutableTree[T]] = Empty)(implicit equals: EqualsFunction[T]) =
@@ -24,6 +25,7 @@ object MutableTree
  * @author Mikko Hilpinen
  * @since 1.11.2016
  */
+@deprecated("Replaced with MutableValueTree", "v2.9")
 class MutableTree[A](var nav: A, initialChildren: Seq[MutableTree[A]] = Empty)
                     (implicit override val navEquals: EqualsFunction[A] = EqualsFunction.default)
     extends MutableTreeLike[A, MutableTree[A]]

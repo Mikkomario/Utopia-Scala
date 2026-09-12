@@ -8,6 +8,8 @@ import utopia.flow.view.template.Extender
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
+// TODO: Consider adding a +Repr type
+// TODO: At some point, we might also want a version without .value
 trait GraphEdgeLike[+A, +Node] extends View[A] with Extender[A]
 {
 	// ABSTRACT	------------------

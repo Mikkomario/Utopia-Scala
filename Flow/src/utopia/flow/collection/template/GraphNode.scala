@@ -14,6 +14,7 @@ import utopia.flow.view.template.Extender
 import scala.collection.mutable
 import scala.math.Ordered.orderingToOrdered
 
+@deprecated("Replaced with GraphNodeLike", "v2.9")
 object GraphNode
 {
 	// TYPES    ------------------------
@@ -675,6 +676,7 @@ object GraphNode
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
+@deprecated("Replaced with GraphNodeLike", "v2.9")
 trait GraphNode[N, E, GNode <: GraphNode[N, E, GNode, Edge], Edge <: GraphEdge[E, GNode]]
 	extends View[N] with Extender[N]
 {

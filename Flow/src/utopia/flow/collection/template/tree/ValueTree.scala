@@ -1,7 +1,6 @@
 package utopia.flow.collection.template.tree
 
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.template.tree.ValueTree.NavigateUsingValues
 import utopia.flow.operator.equality.EqualsFunction
 
 import scala.language.implicitConversions
@@ -35,20 +34,12 @@ object ValueTree
 	
 	// NESTED   ----------------------
 	
-	private class NavigateUsingValues[A](wrapped: ValueTree[A])(implicit eq: EqualsFunction[A])
-		extends TreeNavigator[A, ValueTree[A]]
-	{
-		override protected def current: ValueTree[A] = wrapped
-		
-		override protected def findUnder(parent: ValueTree[A], nav: A): Option[ValueTree[A]] =
-			parent.children.find { node => eq(node.value, nav) }
-		
-		override protected def nodeFor(nav: A): ValueTree[A] = ValueTree(nav)
-	}
-	
 	private class _ValueTree[+A](override val value: A, override val children: Seq[ValueTree[A]]) extends ValueTree[A]
 	{
 		override def self: ValueTree[A] = this
+		
+		override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
+			NavigateUsingValues.from[N, ValueTree[N]](this).apply { ValueTree(_) }(equals)
 	}
 }
 
@@ -57,23 +48,4 @@ object ValueTree
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-trait ValueTree[+A] extends ValueTreeLike[A, ValueTree[A]]
-{
-	// TODO: We must move these to ValueTreeLike, so that we may yield Repr instead of ValueTree
-	/**
-	 * Creates an interface for navigating this tree, based on the wrapped values
-	 * @param eq Implicit equality function to apply. Default = `==`.
-	 * @tparam N Type of the compared items
-	 * @return A new navigator interface
-	 */
-	def navigate[N >: A](implicit eq: EqualsFunction[N] = EqualsFunction.default) =
-		navigateUsing[N](eq)
-	/**
-	 * Creates an interface for navigating this tree, based on the wrapped values
-	 * @param equals Equality function to apply
-	 * @tparam N Type of the compared items
-	 * @return A new navigator interface
-	 */
-	def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
-		new NavigateUsingValues[N](this)(equals)
-}
+trait ValueTree[+A] extends ValueTreeLike[A, ValueTree, ValueTree[A]]

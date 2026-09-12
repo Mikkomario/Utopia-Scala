@@ -1,14 +1,17 @@
 package utopia.flow.collection.immutable.tree
 
-import utopia.flow.collection.template.tree.ValueTreeLike
+import utopia.flow.collection.template
+import template.tree.ValueTreeLike
+import utopia.flow.view.immutable.View
 
 /**
  * Common trait for copyable (immutable) trees, where each node wraps a value
  * @author Mikko Hilpinen
  * @since 04.08.2026, v2.9
  */
-trait CopyableValueTreeLike[A, -N, +Repr <: CopyableTreeLike[N, Repr] with ValueTreeLike[A, Repr]]
-	extends CopyableTreeLike[N, Repr] with ValueTreeLike[A, Repr]
+trait CopyableValueTreeLike[A, -N, +CC[A2] <: template.tree.ValueTree[A2],
+	+Repr <: CopyableTreeLike[N, Repr] with ValueTreeLike[A, View, Repr]]
+	extends CopyableTreeLike[N, Repr] with ValueTreeLike[A, CC, Repr]
 {
 	// OTHER    -------------------------
 	

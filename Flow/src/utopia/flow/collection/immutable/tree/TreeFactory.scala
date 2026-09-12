@@ -109,7 +109,7 @@ trait TreeFactory[-N, +T]
 	 * @param replacing Number of 'children' to replace at 'atIndex'
 	 * @return A copy of this factory that inserts new children to a specific index
 	 */
-	def slicing(children: SeqView[N], atIndex: Int, replacing: Int = 0): TreeFactory[N, T] =
+	def slicing(children: SeqView[N], atIndex: Int, replacing: Int): TreeFactory[N, T] =
 		new ReplacingFactory[N, T](this, children, atIndex, replacing)
 	
 	/**

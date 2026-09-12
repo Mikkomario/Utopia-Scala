@@ -12,8 +12,20 @@ import utopia.flow.view.template.Extender
   * @tparam A Type of item used when navigating through this tree. May also be considered the main content of this tree.
   * @tparam Repr Types of nodes in this tree
   */
-trait ValueTreeLike[+A, +Repr <: ValueTreeLike[A, Repr]] extends TreeLike2[Repr] with View[A] with Extender[A]
+trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike2[Repr] with View[A]]
+	extends TreeLike2[Repr] with View[A] with Extender[A]
 {
+	// ABSTRACT -------------------------
+	
+	/**
+	 * Creates an interface for navigating this tree, based on the wrapped values
+	 * @param equals Equality function to apply
+	 * @tparam N Type of the compared items
+	 * @return A new navigator interface
+	 */
+	def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, CC[N]]
+	
+	
 	// COMPUTED    ----------------------
 	
 	/**
@@ -31,6 +43,15 @@ trait ValueTreeLike[+A, +Repr <: ValueTreeLike[A, Repr]] extends TreeLike2[Repr]
 	 * @return All navigational elements within this tree, including this node's nav.
 	 */
 	def values = valuesIterator.toOptimizedSeq
+	
+	/**
+	 * Creates an interface for navigating this tree, based on the wrapped values
+	 * @param eq Implicit equality function to apply. Default = `==`.
+	 * @tparam N Type of the compared items
+	 * @return A new navigator interface
+	 */
+	def navigate[N >: A](implicit eq: EqualsFunction[N] = EqualsFunction.default) =
+		navigateUsing[N](eq)
 	
 	
 	// IMPLEMENTED  ----------------

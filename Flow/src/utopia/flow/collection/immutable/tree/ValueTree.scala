@@ -6,7 +6,7 @@ import utopia.flow.collection.immutable.{Empty, SingleView}
 import utopia.flow.collection.immutable.tree.ValueTree.ValueTreeMutator
 import utopia.flow.collection.template
 import utopia.flow.collection.template.tree
-import utopia.flow.collection.template.tree.TreeNavigator
+import utopia.flow.collection.template.tree.{NavigateUsingValues, TreeNavigator}
 import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsFunction
 
@@ -33,8 +33,8 @@ object ValueTree
 	 * @tparam A Type of the wrapped values
 	 * @return A new value tree, based on the specified input
 	 */
-	implicit def wrap[A](valueAndChildren: (A, IterableOnce[ValueTree[A]]))
-	                    (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
+	implicit def wrapWithChildren[A](valueAndChildren: (A, IterableOnce[ValueTree[A]]))
+	                                (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
 		apply(valueAndChildren._1).withChildren(valueAndChildren._2)
 	
 	
@@ -220,7 +220,8 @@ object ValueTree
  */
 case class ValueTree[A](override val value: A, override val children: Seq[ValueTree[A]], lazily: Boolean)
                        (implicit valueEquals: EqualsFunction[A])
-	extends template.tree.ValueTree[A] with CopyableValueTreeLike[A, template.tree.ValueTree[A], ValueTree[A]]
+	extends template.tree.ValueTree[A]
+		with CopyableValueTreeLike[A, template.tree.ValueTree[A], ValueTree, ValueTree[A]]
 		with TreeNavigator[A, ValueTree[A]]
 {
 	// ATTRIBUTES   -------------------------
@@ -260,6 +261,10 @@ case class ValueTree[A](override val value: A, override val children: Seq[ValueT
 		parent.children.find { node => valueEquals(node.value, nav) }
 	
 	override protected def nodeFor(nav: A): ValueTree[A] = ValueTree(nav).withoutChildren
+	
+	override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
+		NavigateUsingValues[N, N, ValueTree[N]](ValueTree.from(this)) {
+			nav: N => ValueTree(nav).withoutChildren }(equals)
 	
 	
 	// OTHER    -----------------------------
