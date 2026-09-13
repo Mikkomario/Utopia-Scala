@@ -146,6 +146,101 @@ object CollectionExtensions
 		// OTHER    ---------------------------
 		
 		/**
+		 * Maps the first item that matches provided condition, leaves the other items as they were
+		 * @param find      A function for finding the mapped item
+		 * @param map       A mapping function for that item
+		 * @param buildFrom A can build from for resulting collection (implicit)
+		 * @return A copy of this sequence with specified item mapped.
+		 */
+		def mapFirstWhere[B >: iter.A, To](find: iter.A => Boolean)(map: iter.A => B)
+		                                 (implicit buildFrom: BuildFrom[Repr, B, To]): To =
+			buildFrom.fromSpecific(coll)(MapFirstWhereIterator[iter.A, B](ops)(find)(map))
+		
+		/**
+		 * Maps the first item which satisfies a search condition.
+		 * Stops iterating after one such item is found.
+		 *
+		 * This function is intended for use-cases where
+		 *      1. One needs to know whether mapping was performed, AND
+		 *      1. One wants to resolve the remaining collection lazily
+		 *
+		 * @param find A function that yields true for the item to map.
+		 * @param map A mapping function applied to the first item for which 'find' yields true.
+		 *            Called 0-1 times.
+		 * @param buildFrom Implicit build-from for the resulting (completed / buffered) collection
+		 * @tparam B Type of the mapping results
+		 * @tparam To Type of the generated collection
+		 * @return Returns 3 values:
+		 *         1. A builder which contains:
+		 *              1. All items from this collection that appeared before the searched item
+		 *              1. A mapped copy of the searched item, if one was found
+		 *         1. An iterator that yields the items that come after the searched item
+		 *         1. Whether the searched item was found
+		 */
+		// TODO: Possibly just remove this function
+		def incompleteMapFirstWhere[B >: iter.A, To](find: iter.A => Boolean)(map: iter.A => B)
+		                                            (implicit buildFrom: BuildFrom[Repr, B, To]): (mutable.Builder[B, To], Iterator[B], Boolean) =
+		{
+			// Builds up-to and including the first item matching 'find'
+			val iter = ops.iterator
+			val builder = buildFrom.newBuilder(coll)
+			var searching = true
+			while (searching && iter.hasNext) {
+				val a = iter.next()
+				// Case: This item matches the search condition => Maps and appends that item and stops the search
+				if (find(a)) {
+					searching = false
+					builder += map(a)
+				}
+				// Case: Not yet a match => Appends and continues
+				else
+					builder += a
+			}
+			// Returns the remaining items as an iterator
+			(builder, iter, !searching)
+		}
+		
+		/**
+		 * Replaces an existing item with a new version, or appends that version to the end of this collection
+		 * @param item An item to place in this collection
+		 * @param findMatch A function for finding the item to replace
+		 * @param buildFrom An implicit build-from for the resulting collection
+		 * @return A copy of this collection with either one item replaced or the specified item appended
+		 */
+		def replaceOrAppend(item: iter.A)(findMatch: iter.A => Boolean)
+		                   (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+			mergeOrAppend(item)(findMatch) { (_, i) => i }
+		/**
+		 * Merges an item with an existing item, or appends it at the end of this collection
+		 * @param item The item to either merge or append to this collection
+		 * @param findMatch A function that yields true for the item that should be merged with the new item.
+		 *                  A kind of a find function for the merge target.
+		 * @param merge A function that accepts the already existing item and the new item and merges them yielding
+		 *              a third item, which will then replace the first item.
+		 * @param buildFrom An implicit build-from for the resulting collection
+		 * @return A copy of this collection with either one item merged with the specified new item,
+		 *         or the specified item added to the end of this collection
+		 */
+		def mergeOrAppend(item: iter.A)(findMatch: iter.A => Boolean)(merge: (iter.A, iter.A) => iter.A)
+		                 (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
+			mapOrAppend { a => if (findMatch(a)) Some(item) else None }(item)
+		/**
+		 * Maps a single existing item in this collection, or appends a new item instead
+		 * @param f A mapping function that yields a
+		 *          Some if successful (i.e. if this should be 'the' mapping to apply) and
+		 *          None if failed (i.e. if this wasn't the item to map)
+		 * @param append A function that yields a new item to append to this collection.
+		 *               Called only if the specified mapping function 'f' yielded None for all items
+		 *               in this collection.
+		 * @param buildFrom An implicit build-from for the resulting collection
+		 * @return A copy of this collection with either one item mapped,
+		 *         or the specified item added to the end of this collection
+		 */
+		def mapOrAppend[B >: iter.A, To](f: iter.A => Option[B])(append: => B)
+		                                (implicit buildFrom: BuildFrom[Repr, B, To]): To =
+			buildFrom.fromSpecific(coll)(MapOrAppendIterator[iter.A, B](ops)(f)(append))
+		
+		/**
 		 * @param item An item to insert
 		 * @param f A function which yields true at the item, *before* which 'item' should be inserted
 		 * @param bf Implicit build-from for the resulting collection
@@ -1769,68 +1864,6 @@ object CollectionExtensions
 		}
 		
 		/**
-		  * Maps a single existing item in this collection, or appends a new item instead
-		  * @param f A mapping function that yields a
-		  *          Some if successful (i.e. if this should be 'the' mapping to apply) and
-		  *          None if failed (i.e. if this wasn't the item to map)
-		  * @param append A function that yields a new item to append to this collection.
-		  *               Called only if the specified mapping function 'f' yielded None for all items
-		  *               in this collection.
-		  * @param buildFrom An implicit build-from for the resulting collection
-		  * @return A copy of this collection with either one item mapped,
-		  *         or the specified item added to the end of this collection
-		  */
-		def mapOrAppend(f: iter.A => Option[iter.A])(append: => iter.A)
-		               (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-		{
-			val builder = buildFrom.newBuilder(coll)
-			var found = false
-			ops.iterator.foreach { a =>
-				// Case: Already successfully mapped an item => Simply collects the remaining items
-				if (found)
-					builder += a
-				// Case: No successful mapping done yet => attempts to map the next item
-				else
-					f(a) match {
-						// Case: Mapping succeeded => Remembers it and adds the mapping result
-						case Some(mapped) =>
-							found = true
-							builder += mapped
-						// Case: Mapping failed => Adds the original item and moves to the next item instead
-						case None => builder += a
-					}
-			}
-			// If mapping failed for all items, appends a new item to this collection
-			if (!found)
-				builder += append
-			builder.result()
-		}
-		/**
-		  * Merges an item with an existing item, or appends it at the end of this collection
-		  * @param item The item to either merge or append to this collection
-		  * @param findMatch A function that yields true for the item that should be merged with the new item.
-		  *                  A kind of a find function for the merge target.
-		  * @param merge A function that accepts the already existing item and the new item and merges them yielding
-		  *              a third item, which will then replace the first item.
-		  * @param buildFrom An implicit build-from for the resulting collection
-		  * @return A copy of this collection with either one item merged with the specified new item,
-		  *         or the specified item added to the end of this collection
-		  */
-		def mergeOrAppend(item: iter.A)(findMatch: iter.A => Boolean)(merge: (iter.A, iter.A) => iter.A)
-		                 (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-			mapOrAppend { a => if (findMatch(a)) Some(item) else None }(item)
-		/**
-		 * Replaces an existing item with a new version, or appends that version to the end of this collection
-		 * @param item An item to place in this collection
-		 * @param findMatch A function for finding the item to replace
-		 * @param buildFrom An implicit build-from for the resulting collection
-		 * @return A copy of this collection with either one item replaced or the specified item appended
-		 */
-		def replaceOrAppend(item: iter.A)(findMatch: iter.A => Boolean)
-		                   (implicit buildFrom: BuildFrom[Repr, iter.A, Repr]): Repr =
-			mergeOrAppend(item)(findMatch) { (_, i) => i }
-		
-		/**
 		 * Attempts to map items in this collection. Fails if any mapping operation fails.
 		 * @param f  A mapping function. May fail.
 		 * @param bf A build from for the final collection (implicit)
@@ -2494,20 +2527,6 @@ object CollectionExtensions
 		  */
 		def mapLast[B >: seq.A, That](f: seq.A => B)(implicit buildFrom: BuildFrom[Repr, B, That]): That =
 			mapEnd[B, That](Last)(f)
-		
-		/**
-		  * Maps the first item that matches provided condition, leaves the other items as they were
-		  * @param find      A function for finding the mapped item
-		  * @param map       A mapping function for that item
-		  * @param buildFrom A can build from for resulting collection (implicit)
-		  * @return A copy of this sequence with specified item mapped. Returns this if no such item was found.
-		  */
-		def mapFirstWhere(find: seq.A => Boolean)(map: seq.A => seq.A)
-		                 (implicit buildFrom: BuildFrom[Repr, seq.A, Repr]): Repr =
-			ops.indexWhere(find) match {
-				case index if index >= 0 => mapIndex(index)(map)
-				case _ => coll
-			}
 		
 		/**
 		 * Finds and extracts the largest item from this collection

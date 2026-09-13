@@ -2,14 +2,13 @@ package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.template.tree.{Tree, TreeLike2}
 
 /**
   * A common trait for tree implementations which support copy operations
   * @author Mikko Hilpinen
   * @since 05.06.2026, v2.9
   */
-trait CopyableTreeLike[-N, +Repr <: CopyableTreeLike[N, Repr]] extends TreeLike2[Repr]
+trait CopyableTreeLike[-N, +Repr <: CopyableTreeLike[N, Repr]] extends FilterableTreeLike[Repr]
 {
 	// ABSTRACT --------------------
 	
@@ -30,26 +29,10 @@ trait CopyableTreeLike[-N, +Repr <: CopyableTreeLike[N, Repr]] extends TreeLike2
 	 */
 	def slicingFactory(index: Int, replaceCount: Int = 0): TreeFactory[N, Repr]
 	
-	/**
-	 * Filters the children directly under this node
-	 * @param f A function that determines whether a direct child should be kept attached to this node
-	 * @return A filtered copy of this tree
-	 */
-	def filterDirect(f: Repr => Boolean): Repr
-	/**
-	 * Filters this whole tree structure using the specified filter function
-	 * @param f A filtering function that determines which nodes should be kept
-	 * @return A filtered copy of this tree
-	 */
-	def filter(f: Repr => Boolean): Repr
 	
+	// IMPLEMENTED -------------
 	
-	// COMPUTED --------------------
-	
-	/**
-	  * @return A copy of this tree without any child nodes included
-	  */
-	def withoutChildren = if (hasChildren) withChildren(Empty) else self
+	override def withoutChildren = if (hasChildren) withChildren(Empty) else self
 	
 	
 	// OTHER    ----------------
@@ -66,12 +49,6 @@ trait CopyableTreeLike[-N, +Repr <: CopyableTreeLike[N, Repr]] extends TreeLike2
 	 * @return A copy of this tree that includes the specified child nodes
 	 */
 	def ++(newChildren: IterableOnce[N]): Repr = appendingFactory.withChildren(newChildren)
-	/**
-	  * Creates a new copy of this tree where the specified tree doesn't occur anywhere.
-	  * @param node The tree that is not included in the copy
-	  * @return A copy of this tree without the provided tree
-	  */
-	def -(node: Tree): Repr = if (isEmpty) self else filter { _ != node }
 	
 	/**
 	 * @param newChildren New children to assign to this tree.
@@ -79,12 +56,6 @@ trait CopyableTreeLike[-N, +Repr <: CopyableTreeLike[N, Repr]] extends TreeLike2
 	 * @return A copy of this tree with the specified children only
 	 */
 	def withChildren(newChildren: IterableOnce[N]): Repr = factory.withChildren(newChildren)
-	
-	/**
-	 * Creates a new copy of this tree without the provided direct child node
-	 * @param child The child node that is removed from the direct children under this tree
-	 */
-	def withoutDirect(child: TreeLike2[_]) = filterDirect { _ == child }
 	
 	/**
 	 * Replaces one of the child nodes of this tree

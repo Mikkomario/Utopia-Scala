@@ -1,5 +1,24 @@
 package utopia.flow.view.template
 
+object MaybeSet
+{
+	// OTHER    -------------------------
+	
+	/**
+	 * @param other An interface that may be set
+	 * @return An immutable view into that interface's set state
+	 */
+	def view(other: MaybeSet): MaybeSet = new _View(other)
+	
+	
+	// NESTED   -------------------------
+	
+	private class _View(other: MaybeSet) extends MaybeSet
+	{
+		override def isSet: Boolean = other.isSet
+	}
+}
+
 /**
   * Common trait for items which may be in a binary "set" / on state
   * @author Mikko Hilpinen
@@ -29,7 +48,7 @@ trait MaybeSet extends Any
 	 * If this has been set, fails, otherwise calls the specified function
 	 * @param f A function to call if this item has not been set
 	 * @tparam A Type of 'f' results
-	 * @throws IllegalStateException If this item has already been set
+	 * @throws java.lang.IllegalStateException If this item has already been set
 	 * @return Result of 'f'
 	 */
 	@throws[IllegalStateException]("If this item has already been set")
