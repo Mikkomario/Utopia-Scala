@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.template
-import template.tree.ValueTreeLike
+import utopia.flow.collection.template.tree.ValueTreeLike
 import utopia.flow.view.immutable.View
 
 /**
@@ -9,7 +9,7 @@ import utopia.flow.view.immutable.View
  * @author Mikko Hilpinen
  * @since 04.08.2026, v2.9
  */
-trait CopyableValueTreeLike[A, -N, +CC[A2] <: template.tree.ValueTree[A2],
+trait CopyableValueTreeLike[+A, -N, +CC[A2] <: template.tree.ValueTree[A2],
 	+Repr <: CopyableTreeLike[N, Repr] with ValueTreeLike[A, View, Repr]]
 	extends CopyableTreeLike[N, Repr] with ValueTreeLike[A, CC, Repr]
 {
@@ -21,13 +21,13 @@ trait CopyableValueTreeLike[A, -N, +CC[A2] <: template.tree.ValueTree[A2],
 	 * @param valueToRemove The value to remove
 	 * @return A copy of this tree without nodes containing the specified value
 	 */
-	def withoutValue(valueToRemove: A): Repr = filterValues { _ != valueToRemove }
+	def withoutValue[B >: A](valueToRemove: B): Repr = filterValues { _ != valueToRemove }
 	/**
 	 * Creates a copy of this tree without direct children that would contain the specified value
 	 * @param valueToRemove A value to exclude from nodes directly under this one
 	 * @return A copy of this tree without that value included in its direct children
 	 */
-	def withoutDirectValue(valueToRemove: A) = filterDirectValues { _ != valueToRemove }
+	def withoutDirectValue[B >: A](valueToRemove: B) = filterDirectValues { _ != valueToRemove }
 	
 	/**
 	 * Filters the children directly under this node

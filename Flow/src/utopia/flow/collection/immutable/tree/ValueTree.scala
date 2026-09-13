@@ -218,6 +218,7 @@ object ValueTree
  * @author Mikko Hilpinen
  * @since 10.08.2026, v2.9
  */
+// TODO: We probably want A to be covariant. However, for this we need a generic factory property in CopyableTreeLike.
 case class ValueTree[A](override val value: A, override val children: Seq[ValueTree[A]], lazily: Boolean)
                        (implicit valueEquals: EqualsFunction[A])
 	extends template.tree.ValueTree[A]
