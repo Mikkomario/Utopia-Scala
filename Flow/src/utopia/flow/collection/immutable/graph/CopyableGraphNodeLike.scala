@@ -34,7 +34,8 @@ object CopyableGraphNodeLike
 			edgeMap(root.value, newValue, edge.value).iterator.map { case (newContent, endView) =>
 				factory.edge(newContent,
 					endView.mapValue { newValue =>
-						mappedNodes.getOrElseUpdate(edge.end, flatMap(edge.end, newValue, factory, mappedNodes)(edgeMap))
+						mappedNodes.getOrElseUpdate(edge.end,
+							flatMap[N, E, Node, NC, EC, N2, E2](edge.end, newValue, factory, mappedNodes)(edgeMap))
 					})
 			}
 		}
@@ -79,10 +80,10 @@ trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLik
 	def mapNodes[N2](f: N => N2): NC[N2, E] = map(f)(Identity)
 	def mapEdges[N2 >: N, E2](f: E => E2): NC[N2, E2] = map[N2, E2](Identity)(f)
 	def map[N2, E2](mapNode: N => N2)(mapEdge: E => E2): NC[N2, E2] =
-		CopyableGraphNodeLike.map(self, factory, mutable.Map())(mapNode)(mapEdge)
+		CopyableGraphNodeLike.map[N, E, Repr, NC, EC, N2, E2](self, factory, mutable.Map())(mapNode)(mapEdge)
 	
 	def flatMapEdges[N2 >: N, E2](f: (N, E) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
 		flatMap[N2, E2](Identity) { (value, _, edge) => f(value, edge) }
 	def flatMap[N2, E2](mapSelf: N => N2)(mapEdge: (N, N2, E) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
-		CopyableGraphNodeLike.flatMap(self, mapSelf(value), factory, mutable.Map())(mapEdge)
+		CopyableGraphNodeLike.flatMap[N, E, Repr, NC, EC, N2, E2](self, mapSelf(value), factory, mutable.Map())(mapEdge)
 }

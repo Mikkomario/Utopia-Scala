@@ -1,15 +1,15 @@
 package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.caching.iterable.{CachingSeq, LazySingle}
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, SingleView}
+import utopia.flow.collection.immutable.caching.iterable.LazySingle
+import utopia.flow.collection.immutable.{Empty, SingleView}
 import utopia.flow.collection.template
 import utopia.flow.collection.template.tree
 import utopia.flow.collection.template.tree.{NavigateUsingValues, TreeNavigator}
 import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsFunction
-import utopia.flow.view.mutable.Settable
 
+import scala.annotation.tailrec
 import scala.collection.IndexedSeqView
 import scala.language.implicitConversions
 
@@ -55,9 +55,23 @@ object ValueTree
 	 * @return A value tree from the specified node
 	 */
 	def from[A](node: template.tree.ValueTree[A])
-	           (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] = node match {
-		case t: ValueTree[A] => t
-		case t => ??? // apply(t.value).withChildren(t.children.map(ValueTree.from))
+	           (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
+		node match {
+			case t: ValueTree[A] => t
+			case t => apply(t.value).withChildren(t.children.map[ValueTree[A]](from))
+		}
+	
+	/**
+	 * @param tree A tree to modify
+	 * @param eq Implicit equals function used for value-based navigation
+	 * @tparam A Type of the tree values
+	 * @return A new mutator interface yielding modified copies of 'tree'
+	 */
+	def mutatorFor[A](tree: template.tree.ValueTree[A])
+	                 (implicit eq: EqualsFunction[A] = EqualsFunction.default): ValueTreeMutator[A] =
+	{
+		val valueTree = from(tree)
+		new ValueTreeMutator[A](valueTree, Empty, valueTree)
 	}
 	
 	
@@ -77,7 +91,7 @@ object ValueTree
 		
 		override def withChildren(children: IterableOnce[template.tree.ValueTree[A]]): ValueTree[A] = {
 			val childIter = children.iterator.map(ValueTree.from)
-			ValueTree(value, if (lazily) childIter.caching else childIter.toOptimizedSeq, lazily)
+			_ValueTree(value, if (lazily) childIter.caching else childIter.toOptimizedSeq, lazily)
 		}
 		
 		
@@ -189,77 +203,193 @@ object ValueTree
 	 * @param eq Implicit equals function used in navigation
 	 * @tparam A Type of the node values
 	 */
-	// TODO: We can't extend TreeMutatorLike. Also, we need to create and extend ValueTreeLike
-	class ValueTreeMutator[A, N >: A](override protected val root: ValueTree[A],
-	                                  override protected val path: Seq[ValueTree[A]], override val node: ValueTree[A],
-	                                  override val generated: Boolean = false)
-	                                 (implicit eq: EqualsFunction[N])
-		extends TreeMutatorLike[N, template.tree.ValueTree[N], ValueTree[N], ValueTreeMutator[A, N]]
+	// NB: Contains a lot of duplicated code from TreeMutatorLike.
+	// However, TreeMutatorLike doesn't use generic type parameters.
+	class ValueTreeMutator[A](root: ValueTree[A], path: Seq[ValueTree[A]], private val node: ValueTree[A],
+	                          generated: Boolean = false)
+	                         (implicit eq: EqualsFunction[A])
+		extends TreeNavigator[A, ValueTreeMutator[A]] with ValueTree[A]
 	{
-		override protected def current: ValueTreeMutator[A, N] = this
+		// COMPUTED ---------------------------
 		
-		override protected def wrapChild(child: ValueTree[N], generated: Boolean): ValueTreeMutator[A, N] =
+		/**
+		 * @return Copy of the root node including this node
+		 */
+		def included = {
+			if (generated) {
+				val pathIter = ascendingIter
+				pathIter.nextOption() match {
+					case Some(parent) => assign(parent, parent :+ node, pathIter)
+						// Case: Including a generated root node (not expected) => Yields the new node
+					case None => node
+				}
+			}
+			else
+				root
+		}
+		/**
+		 * @return Copy of the root node with this node excluded / not present
+		 */
+		def excluded = {
+			// Case: Attempting to exclude the root => Fails
+			if (path.hasSize < 2)
+				throw new UnsupportedOperationException("Can't exclude the root node")
+			
+			// Case: A generated node => Already excluded
+			if (generated)
+				root
+			else {
+				val pathIter = ascendingIter
+				val parent = pathIter.next()
+				assign(parent, parent.withoutDirect(node), pathIter)
+			}
+		}
+		
+		private def ascendingIter = path.reverseIterator.drop(1)
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def self: ValueTree[A] = node
+		override protected def current: ValueTreeMutator[A] = this
+		
+		override def children: Seq[ValueTree[A]] = node.children
+		override def value: A = node.value
+		
+		override def lazily: Boolean = node.lazily
+		override def growingLazily: ValueTree[A] = if (node.lazily) node else mapped { _.growingLazily }
+		
+		override def withoutChildren: ValueTree[A] =
+			if (!generated && node.isEmpty) node else mapped { _.withoutChildren }
+		
+		override def withValue[B >: A](newValue: B): ValueTree[B] = mapped { _.withValue(newValue) }
+		override def mapValues[B >: A](f: A => B): ValueTree[B] = mapped { _.mapValues(f) }
+		
+		override def ++[B >: A](newChildren: IterableOnce[tree.ValueTree[B]]): ValueTree[B] =
+			mapped { _ ++ newChildren }
+		override def withChildren[B >: A](newChildren: IterableOnce[tree.ValueTree[B]]): ValueTree[B] =
+			mapped { _.withChildren(newChildren) }
+		
+		override def filterDirect(f: ValueTree[A] => Boolean): ValueTree[A] = mapped { _.filterDirect(f) }
+		override def filter(f: ValueTree[A] => Boolean): ValueTree[A] = mapped { _.filter(f) }
+		
+		override protected def nodeFor(nav: A): ValueTreeMutator[A] =
+			wrapChild(ValueTree(nav).withoutChildren, generated = true)
+		
+		override protected def findUnder(parent: ValueTreeMutator[A], nav: A): Option[ValueTreeMutator[A]] =
+			parent.node.children.find { node => eq(node, nav) }.map { wrapChild(_) }
+		
+		
+		// OTHER    -------------------------------
+		
+		/**
+		 * @param f A mapping function to apply to the targeted node
+		 * @tparam B Type of value-mapping results
+		 * @return A copy of the root tree with this node mapped
+		 */
+		def mapped[B >: A](f: ValueTree[A] => ValueTree[B]): ValueTree[B] = replacedWith(f(node))
+		/**
+		 * Replaces the current node with a new version, yielding a modified copy of the root node.
+		 * @param updated Updated version of [[node]].
+		 * @return Updated version of [[root]]
+		 */
+		def replacedWith[B >: A](updated: ValueTree[B]) = {
+			if (generated) {
+				val pathIter = ascendingIter
+				pathIter.nextOption() match {
+					case Some(parent) => assign(parent, parent :+ updated, pathIter)
+					case None => updated
+				}
+			}
+			else
+				assign(node, updated, ascendingIter)
+		}
+		
+		/**
+		 * Assigns a modified node under a parent, traversing the path up until root is modified
+		 * @param original Original node version
+		 * @param updated Updated node version
+		 * @param pathIter An iterator that yields the parents of 'original' (ascending)
+		 * @return Modified root node
+		 */
+		@tailrec
+		private def assign[B >: A](original: ValueTree[A], updated: ValueTree[B],
+		                           pathIter: Iterator[ValueTree[A]]): ValueTree[B] =
+		{
+			// Case: Reached root => Yields the modified version
+			if (!pathIter.hasNext || original == root)
+				updated
+			// Case: Still going up => Replaces the updated node within the parent
+			else {
+				val nextOriginal = pathIter.next()
+				assign(nextOriginal, nextOriginal.replaceChild(original, updated), pathIter)
+			}
+		}
+		
+		private def wrapChild(child: ValueTree[A], generated: Boolean = false): ValueTreeMutator[A] =
 			new ValueTreeMutator[A](root, path :+ node, child, generated)
+	}
+	
+	private case class _ValueTree[+A](override val value: A, override val children: Seq[ValueTree[A]], lazily: Boolean)
+		extends ValueTree[A]
+	{
+		// IMPLEMENTED  -------------------------
 		
-		override protected def wrapUpdatedChild(child: ValueTree[N]): tree.ValueTree[N] = ???
+		override def self: ValueTree[A] = this
 		
-		override protected def findNodeFor(nodes: Seq[ValueTree[N]], nav: N): Option[ValueTree[N]] = ???
+		override def growingLazily = if (lazily) self else copy(lazily = true)
 		
-		override protected def nodeFor(nav: N): ValueTreeMutator[A, N] = ???
-		/*
-				override protected def current: ValueTreeMutator[A] = this
-				
-				override protected def wrapChild(child: ValueTree[A], generated: Boolean): ValueTreeMutator[A] =
-					new ValueTreeMutator[A](root, path :+ node, child, generated)
-				
-				override protected def wrapUpdatedChild(child: ValueTree[A]): tree.ValueTree[A] = child
-				
-				override protected def findNodeFor(nodes: Seq[ValueTree[A]], nav: A): Option[ValueTree[A]] =
-					nodes.find { node => eq(node.value, nav) }
-				
-				override protected def nodeFor(nav: A): ValueTreeMutator[A] =
-					wrapChild(ValueTree(nav).withoutChildren, generated = true)
-				 */
+		override def withValue[B >: A](newValue: B): ValueTree[B] = copy(value = newValue)
+		
+		override def mapValues[B >: A](f: A => B): ValueTree[B] =
+			copy(value = f(value), children = children.map { _.mapValues(f) })
+		
+		override def withoutChildren: ValueTree[A] = if (isEmpty) self else copy(children = Empty)
+		
+		override def withChildren[B >: A](newChildren: IterableOnce[template.tree.ValueTree[B]]) = {
+			val childIter = newChildren.iterator.map(ValueTree.from)
+			copy(children = if (lazily) childIter.caching else childIter.toOptimizedSeq)
+		}
+		
+		override def ++[B >: A](newChildren: IterableOnce[template.tree.ValueTree[B]]) =
+			copy(children = children ++ newChildren.iterator.map(ValueTree.from))
+		
+		override def filterDirect(f: ValueTree[A] => Boolean): ValueTree[A] = copy(children = children.filter(f))
+		override def filter(f: ValueTree[A] => Boolean): ValueTree[A] = {
+			val newChildrenView = children.view.filter(f).map { _.filter(f) }
+			copy(children = if (lazily) newChildrenView.caching else newChildrenView.toOptimizedSeq)
+		}
 	}
 }
 
 /**
  * Common trait for immutable trees where each node wraps some kind of value
  * @tparam A Type of the wrapped values
- * @param value The wrapped value in this node
- * @param children Child nodes directly under this node
- * @param lazily Whether copies of this tree should be initialized lazily. Default = false.
  * @author Mikko Hilpinen
  * @since 10.08.2026, v2.9
  */
-// TODO: Create ValueTreeLike and move some of these functions there
-case class ValueTree[+A](override val value: A, override val children: Seq[ValueTree[A]], lazily: Boolean)
-	extends template.tree.ValueTree[A] with FilterableTreeLike[ValueTree[A]]
+trait ValueTree[+A]
+	extends template.tree.ValueTree[A] with ValueTreeLike[A, template.tree.ValueTree, ValueTree, ValueTree[A]]
 {
+	// ABSTRACT -----------------------------
+	
+	def lazily: Boolean
+	
+	
 	// COMPUTED -----------------------------
 	
 	/**
 	 * @return A copy of this tree that initializes new nodes lazily
 	 */
-	def growingLazily = if (lazily) this else copy(lazily = true)
+	def growingLazily: ValueTree[A]
 	
-	/*
+	/**
 	 * @return A mutator interface targeting this node
 	 */
-	// def mutate = mutateUsing(valueEquals)
+	def mutate[B >: A](implicit eq: EqualsFunction[B]) = mutateUsing[B](eq)
 	
 	
 	// IMPLEMENTED  -------------------------
-	
-	override def self: ValueTree[A] = this
-	
-	override def withoutChildren: ValueTree[A] = if (isEmpty) self else copy(children = Empty)
-	
-	override def filterDirect(f: ValueTree[A] => Boolean): ValueTree[A] = copy(children = children.filter(f))
-	override def filter(f: ValueTree[A] => Boolean): ValueTree[A] = {
-		val newChildrenView = children.view.filter(f).map { _.filter(f) }
-		copy(children = if (lazily) newChildrenView.caching else newChildrenView.toOptimizedSeq)
-	}
 	
 	override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
 		NavigateUsingValues[N, N, ValueTree[N]](ValueTree.from(this)) {
@@ -269,115 +399,8 @@ case class ValueTree[+A](override val value: A, override val children: Seq[Value
 	// OTHER    -----------------------------
 	
 	/**
-	 * Adds a new direct child node to this tree
-	 * @param node A child node to add
-	 * @return a copy of this tree with the specified child added
-	 */
-	def :+[B >: A](node: template.tree.ValueTree[B]) = copy(children = children :+ ValueTree.from(node))
-	/**
-	 * Adds n new child nodes directly under this node
-	 * @param newChildren New children to add under this node
-	 * @return A copy of this tree that includes the specified child nodes
-	 */
-	def ++[B >: A](newChildren: IterableOnce[template.tree.ValueTree[B]]) =
-		copy(children = children ++ newChildren.iterator.map(ValueTree.from))
-	
-	def mapLocalValue[B >: A](f: A => B) = copy(value = f(value))
-	
-	def mapDirectValues[B >: A](f: A => B) = mapDirect { _.mapLocalValue(f) }
-	/**
-	 * Creates a copy of this node with its direct children mapped
-	 * @param f A mapping function for direct child nodes
-	 * @return A mapped copy of this node
-	 */
-	def mapDirect[B >: A](f: ValueTree[A] => ValueTree[B]) =
-		if (isEmpty) self else withChildren(children.map(f))
-		
-	def mapValues[B >: A](f: A => B): ValueTree[B] = copy(value = f(value), children = children.map { _.mapValues(f) })
-	
-	/**
-	 * Replaces one of the child nodes of this tree
-	 * @param original Child node to replace
-	 * @param replacement Replacing node
-	 * @return Copy of this tree with 'original' replaced with 'replacement'.
-	 *         Note: If this tree didn't directly contain 'original', 'replacement' is still added.
-	 */
-	def replaceChild[B >: A](original: Any, replacement: template.tree.ValueTree[B]) =
-		copy(children = children.mapOrAppend { node => if (original == node) Some(replacement) else None }(replacement))
-	
-	def withChildren[B >: A](newChildren: IterableOnce[template.tree.ValueTree[B]]) = {
-		val childIter = newChildren.iterator.map(ValueTree.from)
-		copy(children = if (lazily) childIter.caching else childIter.toOptimizedSeq)
-	}
-	
-	/**
-	 * Maps the topmost nodes in this tree, which match the specified filter function.
-	 * @param filter A filter function that yields true for nodes that should be mapped (using 'f')
-	 * @param f A function that performs the mapping for nodes for which 'filter' yielded true.
-	 * @return A mapped copy of this tree
-	 */
-	def mapRootsWhere[B >: A](filter: ValueTree[A] => Boolean)(f: ValueTree[A] => ValueTree[B]): ValueTree[B] =
-		mapDirect { c => if (filter(c)) f(c) else c.mapRootsWhere[B](filter)(f) }
-	
-	/**
-	 * Maps the first node that satisfies the specified search condition.
-	 * Targets all nodes under this one.
-	 * @param find A search function that yields true for the node to map
-	 * @param map A mapping function applied to the found node
-	 * @return Either:
-	 *         - Left: This tree, if no node satisfied the specified search condition, or
-	 *         - Right: A copy of this tree with a single node mapped
-	 */
-	def mapFirstWhere[B >: A](find: ValueTree[A] => Boolean)(map: ValueTree[A] => ValueTree[B]) = {
-		val (result, mapped) = _mapFirstWhere[B](find)(map)
-		if (mapped)
-			Right(result)
-		else
-			Left(this)
-	}
-	private def _mapFirstWhere[B >: A](find: ValueTree[A] => Boolean)(map: ValueTree[A] => ValueTree[B]): (ValueTree[B], Boolean) = {
-		// Only iterates as far as needed
-		val iter = children.iterator
-		val builder = OptimizedIndexedSeq.newBuilder[ValueTree[B]]
-		var searching = true
-		
-		while (searching && iter.hasNext) {
-			val child = iter.next()
-			// Case: Found the child node to map => Performs the mapping and stops iterating
-			if (find(child)) {
-				searching = false
-				builder += map(child)
-			}
-			// Case: Not the targeted node => Checks whether this child contains said node
-			else {
-				val (deepMapped, changed) = child._mapFirstWhere[B](find)(map)
-				builder += deepMapped
-				// Case: The targeted node existed deeper inside the child tree => Stops iterating the child nodes
-				if (changed)
-					searching = false
-			}
-		}
-		
-		// Case: No targeted node was found => Yields self
-		if (searching)
-			this -> false
-		// Case: Targeted node was found => Appends the unmodified child nodes and returns
-		else {
-			val newChildren = {
-				if (lazily)
-					CachingSeq(iter, builder.result())
-				else {
-					builder ++= iter
-					builder.result()
-				}
-			}
-			copy(children = newChildren) -> true
-		}
-	}
-	
-	/*
 	 * @param eq Equals function to apply. Used in navigation.
 	 * @return A mutator interface targeting this node
 	 */
-	// def mutateUsing(eq: EqualsFunction[A]) = new ValueTreeMutator[A](this, Empty, this)(eq)
+	def mutateUsing[B >: A](eq: EqualsFunction[B]) = ValueTree.mutatorFor[B](self)(eq)
 }

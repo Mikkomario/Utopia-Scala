@@ -1,12 +1,12 @@
 package utopia.flow.collection.template.graph
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.{GraphTravelResults, NodeTravelStage}
 import utopia.flow.collection.immutable.{Empty, Graph, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
-import utopia.flow.collection.{immutable, template}
 import utopia.flow.collection.template.graph.GraphNodeLike.PathsFinder
 import utopia.flow.collection.template.graph.NodeTarget.AnyNode
 import utopia.flow.operator.Identity
@@ -305,11 +305,6 @@ object GraphNodeLike
 trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdgeLike[E, Repr]]
 	extends View[N] with Extender[N]
 {
-    // TYPES    --------------------
-	
-    type Route = Seq[Edge]
-    
-    
     // ABSTRACT --------------------
 	
 	/**
@@ -458,7 +453,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	 *
 	 *         Please note that the resulting tree will be very large for graphs with a large number of edges.
 	 */
-	def toValueTree: template.tree.ValueTree[N] = _toTree(Set(self)) { _.value }
+	def toValueTree: immutable.tree.ValueTree[N] = _toTree(Set(self)) { _.value }
 	/**
 	  * @return A lazily initialized tree based on this graph.
 	  *         This node will appear as the root of the tree.
@@ -476,8 +471,8 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  *
 	  *         Please note that the resulting tree will be very large for graphs with a large number of edges.
 	  */
-	def toTree: template.tree.ValueTree[Repr] = _toTree(Set(self))(Identity)
-	private def _toTree[A](traversedNodes: Set[Any])(wrapNode: Repr => A): template.tree.ValueTree[A] = {
+	def toTree: immutable.tree.ValueTree[Repr] = _toTree(Set(self))(Identity)
+	private def _toTree[A](traversedNodes: Set[Any])(wrapNode: Repr => A): immutable.tree.ValueTree[A] = {
 		// Remembers which nodes have been visited (branch-specific)
 		val newTraversed = traversedNodes + self
 		// Creates the tree lazily
@@ -577,7 +572,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * however, a single empty route will be returned. The end node will always be at the end of
 	  * each route and nowhere else. If there are no connecting routes, an empty array is returned.
 	  */
-	def routesTo(node: NodeTarget[N, E]): Iterable[Route] = {
+	def routesTo(node: NodeTarget[N, E]): Iterable[Seq[Edge]] = {
 		// If trying to find routes to self, will have to handle limitations a bit differently
 		if (node(self, leavingEdges))
 			leavingEdges.find { _.end == self } match {
@@ -588,7 +583,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 			routesTo(node, Set())
 	}
 	// Uses recursion
-	private def routesTo(node: NodeTarget[N, E], visitedNodes: Set[Any]): Iterable[Route] = {
+	private def routesTo(node: NodeTarget[N, E], visitedNodes: Set[Any]): Iterable[Seq[Edge]] = {
 		// Tries to find the destination from each connected edge that leads to a new node
 		val newVisitedNodes = visitedNodes + self
 		

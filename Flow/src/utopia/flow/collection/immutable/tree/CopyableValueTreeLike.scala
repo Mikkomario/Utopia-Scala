@@ -9,6 +9,7 @@ import utopia.flow.view.immutable.View
  * @author Mikko Hilpinen
  * @since 04.08.2026, v2.9
  */
+@deprecated("Deprecated for removal", "v2.9")
 trait CopyableValueTreeLike[+A, -N, +CC[A2] <: template.tree.ValueTree[A2],
 	+Repr <: CopyableTreeLike[N, Repr] with ValueTreeLike[A, View, Repr]]
 	extends CopyableTreeLike[N, Repr] with ValueTreeLike[A, CC, Repr]
