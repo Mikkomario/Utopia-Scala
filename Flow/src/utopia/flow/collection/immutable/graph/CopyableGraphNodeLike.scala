@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable.graph
 
-import utopia.flow.collection.template.graph.{GraphEdgeLike, GraphNodeLike}
+import utopia.flow.collection.template.graph.{GraphEdge, GraphNodeLike}
 import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
@@ -9,7 +9,7 @@ import scala.collection.mutable
 
 object CopyableGraphNodeLike
 {
-	private def map[N, E, Node <: GraphNodeLike[N, E, Node, GraphEdgeLike[E, Node]], NC[_, _], EC[_, _], N2, E2]
+	private def map[N, E, Node <: GraphNodeLike[N, E, Node, GraphEdge[E, Node]], NC[_, _], EC[_, _], N2, E2]
 	               (root: Node, factory: GraphFactory[NC, EC], mappedNodes: mutable.Map[Any, NC[N2, E2]])
 	               (valueMap: N => N2)(edgeMap: E => E2): NC[N2, E2] =
 	{
@@ -25,7 +25,7 @@ object CopyableGraphNodeLike
 		mappedNodes += (root -> result)
 		result
 	}
-	private def flatMap[N, E, Node <: GraphNodeLike[N, E, Node, GraphEdgeLike[E, Node]], NC[_, _], EC[_, _], N2, E2]
+	private def flatMap[N, E, Node <: GraphNodeLike[N, E, Node, GraphEdge[E, Node]], NC[_, _], EC[_, _], N2, E2]
 	                   (root: Node, newValue: N2, factory: GraphFactory[NC, EC], mappedNodes: mutable.Map[Any, NC[N2, E2]])
 	                   (edgeMap: (N, N2, E) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
 	{
@@ -57,7 +57,7 @@ object CopyableGraphNodeLike
  * @author Mikko Hilpinen
  * @since 11.09.2026, v2.9
  */
-trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdgeLike[E, Repr] with EC[N, E]]
+trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdge[E, Repr] with EC[N, E]]
 	extends GraphNodeLike[N, E, Repr, Edge]
 {
 	// ABSTRACT -------------------------

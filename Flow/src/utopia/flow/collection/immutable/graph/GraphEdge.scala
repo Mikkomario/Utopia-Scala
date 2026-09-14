@@ -1,7 +1,6 @@
 package utopia.flow.collection.immutable.graph
 
 import utopia.flow.collection.template
-import utopia.flow.collection.template.graph.GraphEdgeLike
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 
@@ -18,7 +17,7 @@ object GraphEdge
  * @since 11.09.2026, v2.9
  */
 class GraphEdge[+N, +E](override val value: E, endView: View[GraphNode[N, E]])
-	extends template.graph.GraphEdge[N, E] with GraphEdgeLike[E, GraphNode[N, E]]
+	extends template.graph.GraphEdge[E, GraphNode[N, E]]
 {
 	// IMPLEMENTED	---------------------
 	

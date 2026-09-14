@@ -13,13 +13,14 @@ object GraphNode
 	 * @tparam E Type of edge values
 	 * @return A new graph node
 	 */
-	def apply[N, E](value: N, leavingEdges: Iterable[GraphEdge[N, E]] = Empty): GraphNode[N, E] =
+	def apply[N, E](value: N, leavingEdges: Iterable[GraphEdge[E, GraphNode[N, E]]] = Empty): GraphNode[N, E] =
 		new _GraphNode(value, leavingEdges)
 	
 	
 	// NESTED   -------------------------
 	
-	private class _GraphNode[+N, +E](override val value: N, override val leavingEdges: Iterable[GraphEdge[N, E]])
+	private class _GraphNode[+N, +E](override val value: N,
+	                                 override val leavingEdges: Iterable[GraphEdge[E, GraphNode[N, E]]])
 		extends GraphNode[N, E]
 	{
 		override def self: GraphNode[N, E] = this
@@ -31,4 +32,4 @@ object GraphNode
  * @author Mikko Hilpinen
  * @since 11.09.2026, v2.9
  */
-trait GraphNode[+N, +E] extends GraphNodeLike[N, E, GraphNode[N, E], GraphEdge[N, E]]
+trait GraphNode[+N, +E] extends GraphNodeLike[N, E, GraphNode[N, E], GraphEdge[E, GraphNode[N, E]]]

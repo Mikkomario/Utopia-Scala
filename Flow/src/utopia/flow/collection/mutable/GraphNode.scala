@@ -12,6 +12,7 @@ import scala.collection.mutable
  * @author Mikko Hilpinen
  * @since 28.10.2016
  */
+@deprecated("Replaced with MutableGraphNode", "v2.9")
 class GraphNode[N, E](var value: N) extends template.GraphNode[N, E, GraphNode[N, E], GraphEdge[E, GraphNode[N, E]]]
 {
     // TYPES    --------------------

@@ -20,7 +20,7 @@ object GraphNodeLike
 {
 	// NESTED   --------------------
 	
-	private class PathsFinder[N, E, Node <: GraphNodeLike[N, E, Node, Edge], Edge <: GraphEdgeLike[E, Node], C]
+	private class PathsFinder[N, E, Node <: GraphNodeLike[N, E, Node, Edge], Edge <: GraphEdge[E, Node], C]
 	(start: Node, destinations: Iterable[NodeTarget[N, E]], startCost: C, exclusive: Boolean = true)
 	(costOf: Edge => C)(sumOf: (C, C) => C)
 	(implicit ord: Ordering[C])
@@ -302,7 +302,7 @@ object GraphNodeLike
  * @author Mikko Hilpinen
  * @since 10.4.2019
  */
-trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdgeLike[E, Repr]]
+trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdge[E, Repr]]
 	extends View[N] with Extender[N]
 {
     // ABSTRACT --------------------
