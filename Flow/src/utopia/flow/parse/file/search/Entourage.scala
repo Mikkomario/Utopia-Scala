@@ -11,6 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
+@deprecated("Deprecated for removal", "v2.9")
 class Entourage[R](origin: Mine[R], size: Int, startingPath: Seq[Mine[R]] = Empty)
 			   (private val search: Path => R) extends Explorer(origin, startingPath)
 {

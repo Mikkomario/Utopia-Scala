@@ -3,8 +3,8 @@ package utopia.flow.collection.template.graph
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
-import utopia.flow.collection.immutable.graph.{GraphTravelResults, NodeTravelStage}
-import utopia.flow.collection.immutable.{Empty, Graph, Pair, Single}
+import utopia.flow.collection.immutable.graph.{Graph2, GraphTravelResults, NodeTravelStage}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template.graph.GraphNodeLike.PathsFinder
@@ -308,14 +308,20 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
     // ABSTRACT --------------------
 	
 	/**
+	 * @return This node
+	 */
+	def self: Repr
+	
+	/**
 	  * @return The edges leaving this node.
 	  */
     def leavingEdges: Iterable[Edge]
 	
 	/**
-	  * @return This node
-	  */
-	def self: Repr
+	 * Converts this node to a graph
+	 * @return A graph based on this node's connections
+	 */
+	def toGraph: Graph2[N, E]
     
     
     // COMPUTED    ----------------
@@ -426,14 +432,6 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @return All distinct values that appear within this graph
 	  */
 	def allValues = allValuesIterator.toOptimizedSeq
-	
-	/**
-	 * Converts this node to a graph
-	 * @return A graph based on this node's connections
-	 */
-	def toGraph =
-		Graph(allNodesIterator
-			.flatMap { node => node.leavingEdges.map { edge => (node.value, edge.value, edge.end.value) } }.toSet)
 	
 	/**
 	 * @return A lazily initialized tree based on this graph, where each node matches one in this graph

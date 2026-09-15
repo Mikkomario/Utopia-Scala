@@ -1,5 +1,6 @@
 package utopia.flow.collection.immutable.graph
 
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.collection.template
@@ -30,13 +31,24 @@ object GraphNode extends GraphFactory[GraphNode, GraphEdge]
 		apply(value, CachingSeq(LazyInitIterator(edges)))
 	
 	/**
+	 * @param node A graph node to wrap
+	 * @tparam N Type of node values
+	 * @tparam E Type of edge values
+	 * @return An immutable graph node, based on that node
+	 */
+	def from[N, E](node: template.graph.GraphNode[N, E]): GraphNode[N, E] = node match {
+		case n: GraphNode[N, E] => n
+		case n => apply(n.value, n.leavingEdges.iterator.map(GraphEdge.from))
+	}
+	
+	/**
 	 * @param value Value to wrap by this node
 	 * @param edges Edges that leave from this node
 	 * @tparam N Type of the node values
 	 * @tparam E Type of the edge values
 	 * @return A new graph node
 	 */
-	def apply[N, E](value: N, edges: IterableOnce[GraphEdge[N, E]]): GraphNode[N, E] =
+	def apply[N, E](value: N, edges: IterableOnce[GraphEdge[N, E]] = Empty): GraphNode[N, E] =
 		new GraphNode(value, edges match {
 			case v: scala.collection.View[GraphEdge[N, E]] => CachingSeq.from(v)
 			case i: Iterable[GraphEdge[N, E]] => i
@@ -98,6 +110,8 @@ class GraphNode[+N, +E](override val value: N, override val leavingEdges: Iterab
 	
 	override def self: GraphNode[N, E] = this
 	override protected def factory: GraphFactory[GraphNode, GraphEdge] = GraphNode
+	
+	override def toGraph: Graph2[N, E] = Graph2(allNodesIterator)
 	
 	override def filterDirect(f: GraphEdge[N, E] => Boolean): GraphNode[N, E] = {
 		if (leavingEdges.knownSize == 0)

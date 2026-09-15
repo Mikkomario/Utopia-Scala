@@ -10,6 +10,7 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 6.1.2020, v1.6.1
  */
+@deprecated("Deprecated for removal", "v2.9")
 object Guild
 {
 	/**

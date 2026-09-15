@@ -5,6 +5,7 @@ package utopia.flow.parse.file.search
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
+@deprecated("Deprecated for removal", "v2.9")
 sealed trait ExcavationStatus extends Ordered[ExcavationStatus]
 {
 	// ABSTRACT	----------------------

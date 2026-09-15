@@ -24,6 +24,7 @@ object Console
 {
 	// TYPES    ------------------------------
 	
+	// TODO: Refactor to use the new tree classes
 	private type Commands = Tree[(Seq[String], Iterable[Command])]
 	
 	

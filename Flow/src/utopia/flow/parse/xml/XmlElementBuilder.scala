@@ -26,6 +26,7 @@ object XmlElementBuilder
   * @author Mikko Hilpinen
   * @since 10.4.2022, v1.15
   */
+// TODO: Refactor to use the new tree classes
 class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Value.emptyWithType(StringType),
                         initialAttributeMap: Map[Namespace, Model] = Map())
 	extends XmlElementLike[XmlElementBuilder] with MutableTreeLike[NamespacedString, XmlElementBuilder]

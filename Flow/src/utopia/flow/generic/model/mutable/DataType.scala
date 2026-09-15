@@ -10,6 +10,7 @@ import utopia.flow.time._
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.language.existentials
 
+// TODO: Refactor to use the new tree classes
 object DataType
 {
 	// ATTRIBUTES   ---------------------------

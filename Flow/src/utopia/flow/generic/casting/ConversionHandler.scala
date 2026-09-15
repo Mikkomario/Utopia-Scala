@@ -15,6 +15,7 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 12.11.2016
   */
+// TODO: Refactor to use the new graph classes
 object ConversionHandler
 {
 	// TYPES    ------------------------

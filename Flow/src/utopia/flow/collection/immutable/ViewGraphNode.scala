@@ -9,6 +9,7 @@ import utopia.flow.view.immutable.caching.Lazy
 
 import scala.collection.mutable
 
+@deprecated("Replaced with GraphNode", "v2.9")
 object ViewGraphNode
 {
 	/**
@@ -109,6 +110,7 @@ object ViewGraphNode
   * @author Mikko Hilpinen
   * @since 30.9.2022, v2.0
   */
+@deprecated("Replaced with GraphNode", "v2.9")
 class ViewGraphNode[N, E](valueView: View[N], override val leavingEdges: Iterable[ViewGraphEdge[N, E]])
 	extends GraphNode[N, E, ViewGraphNode[N, E], ViewGraphEdge[N, E]]
 {

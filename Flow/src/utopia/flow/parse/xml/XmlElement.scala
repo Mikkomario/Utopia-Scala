@@ -184,6 +184,7 @@ object XmlElement extends FromModelFactory[XmlElement]
   * @param attributeMap A map that contains attribute models for different namespaces (default = empty)
   * @param children Elements appearing within this element
  */
+// TODO: Refactor to use the new tree classes
 case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType(StringType),
                       attributeMap: Map[Namespace, Model] = Map.empty,
                       override val children: Seq[XmlElement] = Empty)

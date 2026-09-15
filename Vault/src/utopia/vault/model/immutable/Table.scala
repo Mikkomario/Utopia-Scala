@@ -254,6 +254,7 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  */
 	def validate(model: HasProperties) = toModelDeclaration.validate(model)
 	
+	// TODO: Refactor to use the new graph classes
 	private def toIndirectJoinsFrom(originTables: Seq[Table]) = {
 		// Secondarily, finds indirect references
 		References.toBiDirectionalLinkGraphFrom(this)

@@ -60,6 +60,7 @@ object XmlElementLike
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
  */
+// TODO: Refactor to use the new tree classes
 trait XmlElementLike[+Repr <: XmlElementLike[Repr]]
     extends TreeLike[NamespacedString, Repr] with ModelConvertible
 {

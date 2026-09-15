@@ -7,6 +7,7 @@ import utopia.flow.collection.template
   * @author Mikko Hilpinen
   * @since 28.10.2016
   */
+@deprecated("Replaced with a new version in package utopia.flow.collection.immutable.graph", "v2.9")
 case class GraphEdge[+A, +Node](override val value: A, override val end: Node)
 	extends template.GraphEdge[A, Node]
 {

@@ -33,12 +33,15 @@ class MutableGraphNode[N, E](var value: N, initialEdges: Seq[MutableGraphEdge[E,
     
     // ATTRIBUTES   ----------------
     
-    override var leavingEdges = initialEdges
+    private var _leavingEdges = initialEdges
     
     
     // IMPLEMENTED    --------------
     
     override def self = this
+    
+    override def leavingEdges = _leavingEdges
+    def leavingEdges_=(newEdges: Seq[MutableGraphEdge[E, MutableGraphNode[N, E]]]) = _leavingEdges = newEdges
     
     
     // OTHER    --------------------

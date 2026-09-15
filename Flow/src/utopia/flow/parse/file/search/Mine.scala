@@ -18,6 +18,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * @param directory Directory represented by this mine
  * @tparam R Type of results collected from this mine
  */
+@deprecated("Deprecated for removal", "v2.9")
 class Mine[R](val directory: Path)
 {
 	// ATTRIBUTES	--------------------

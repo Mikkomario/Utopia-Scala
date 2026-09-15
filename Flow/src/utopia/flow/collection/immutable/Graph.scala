@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.Graph.{GraphViewEdge, GraphViewNode}
 import utopia.flow.collection.template.{GraphEdge, GraphNode}
 import utopia.flow.operator.MaybeEmpty
 
+@deprecated("Replaced with a new version in package utopia.flow.collection.immutable.graph", "v2.9")
 object Graph
 {
 	trait GraphViewNode[N, E] extends GraphNode[N, E, GraphViewNode[N, E], GraphViewEdge[N, E]]
@@ -47,7 +48,7 @@ object Graph
  * @author Mikko Hilpinen
  * @since 25.4.2020, v1.8
  */
-// TODO: Make lazy
+@deprecated("Replaced with a new version in package utopia.flow.collection.immutable.graph", "v2.9")
 case class Graph[N, E](connections: Set[(N, E, N)], isTwoWayBound: Boolean = false) extends MaybeEmpty[Graph[N, E]]
 {
 	// ATTRIBUTES	------------------------

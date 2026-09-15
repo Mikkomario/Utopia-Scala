@@ -11,6 +11,7 @@ import scala.util.Success
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
+@deprecated("Deprecated for removal", "v2.9")
 class Miner[R](origin: Mine[R], startingPath: Seq[Mine[R]] = Empty)(private val search: Path => R)
 	extends Explorer(origin, startingPath)
 {

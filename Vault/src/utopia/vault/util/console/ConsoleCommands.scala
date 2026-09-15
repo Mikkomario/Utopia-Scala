@@ -14,6 +14,7 @@ import utopia.vault.model.immutable.{Reference, Table}
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
+// TODO: Refactor to use the new tree classes
 private object ConsoleCommands
 {
 	// ATTRIBUTES   -----------------------

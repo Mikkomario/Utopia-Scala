@@ -9,6 +9,7 @@ import utopia.flow.collection.immutable.Empty
  * @author Mikko Hilpinen
  * @since 17.12.2019, v1.6.1+
  */
+@deprecated("Deprecated for removal", "v2.9")
 abstract class Explorer[R](val origin: Mine[R], private var _currentRoute: Seq[Mine[R]] = Empty)
 {
 	// ABSTRACT	------------------------

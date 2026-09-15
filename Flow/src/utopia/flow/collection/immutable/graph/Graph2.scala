@@ -1,288 +1,656 @@
 package utopia.flow.collection.immutable.graph
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Graph.{GraphViewEdge, GraphViewNode}
-import utopia.flow.collection.immutable.Pair
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.collection.immutable.caching.cache.Cache
+import utopia.flow.collection.immutable.caching.iterable.CachingSeq
+import utopia.flow.collection.immutable.graph.Graph2.GraphFactory
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.mutable.iterator.LazyInitIterator
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.mutable
 
+object Graph2
+{
+	// ATTRIBUTES   -------------------------
+	
+	/**
+	 * A factory used for constructing graphs
+	 */
+	val factory = GraphFactory()
+	
+	
+	// IMPLICIT -----------------------------
+	
+	// Implicitly treats this object as a factory
+	implicit def objectAsFactory(o: Graph2.type): GraphFactory = o.factory
+	
+	
+	// NESTED   -----------------------------
+	
+	case class GraphFactory(isLazy: Boolean = false)
+	{
+		/**
+		 * @return A copy of this factory that builds the graphs lazily,
+		 *         and where graph-modifications are made lazily, also.
+		 */
+		def lazily = if (isLazy) this else copy(isLazy = true)
+		
+		/**
+		 * @tparam N Type of node values
+		 * @tparam E Type of edge values
+		 * @return An empty graph
+		 */
+		def empty[N, E]: Graph2[N, E] = new EmptyGraph(isLazy)
+		
+		/**
+		 * Creates a new graph using a set of connections
+		 * @param connections Connections that form this graph.
+		 *                    Each connection consists of 3 parts:
+		 *                    1. Value of the node from which an edge originates
+		 *                    1. Value assigned for the connecting edge
+		 *                    1. Value of the node to which the edge points
+		 * @param twoWayBound Whether two-way binding should be applied.
+		 *                    Two-way binding means that all connections will be counted twice:
+		 *                    Once as they are and once reversed.
+		 *                    Default = false.
+		 * @tparam N Type of node values in this graph
+		 * @tparam E Type of edge values in this graph
+		 * @return A new graph based on the specified connections
+		 */
+		def withConnections[N, E](connections: IterableOnce[(N, E, N)], twoWayBound: Boolean = false) = {
+			if (!twoWayBound && connections.knownSize == 0)
+				empty
+			else {
+				val appliedConnections = connections match {
+					case v: scala.collection.View[(N, E, N)] => if (isLazy) v.caching else v.toSet
+					case i: Iterable[(N, E, N)] => i
+					case i => if (isLazy) i.caching else Set.from(i)
+				}
+				_apply(appliedConnections, twoWayBound)
+			}
+		}
+		
+		/**
+		 * @param nodes Nodes that form this graph
+		 * @tparam N Type of node values
+		 * @tparam E Type of edge values
+		 * @return A graph consisting of the specified nodes
+		 */
+		def apply[N, E](nodes: IterableOnce[GraphNode[N, E]]) = nodes match {
+			case v: scala.collection.View[GraphNode[N, E]] =>
+				if (isLazy) _fromNodes(v.caching) else _fromNodes(v.toOptimizedSeq)
+			case i: Seq[GraphNode[N, E]] => _fromNodes(i)
+			case i => if (isLazy) _fromNodes(i.caching) else _fromNodes(i.toOptimizedSeq)
+		}
+		
+		private def _apply[N, E](connections: Iterable[(N, E, N)], twoWayBound: Boolean): Graph2[N, E] =
+			new GraphFromConnections[N, E](connections, twoWayBound, isLazy)
+			
+		private def _fromNodes[N, E](nodes: Seq[GraphNode[N, E]]): Graph2[N, E] =
+			new GraphFromNodes[N, E](nodes, isLazy)
+	}
+	
+	private class EmptyGraph(override val isLazy: Boolean) extends Graph2[Nothing, Nothing]
+	{
+		// ATTRIBUTES   --------------------------
+		
+		override val isEmpty: Boolean = true
+		override val isTwoWayBound: Boolean = false
+		
+		override val connectionsIterator: Iterator[(Nothing, Nothing, Nothing)] = Iterator.empty
+		
+		override val nodeValues: Iterable[Nothing] = Empty
+		override val nodes: Iterable[GraphNode[Nothing, Nothing]] = Empty
+		override val headOption: Option[GraphNode[Nothing, Nothing]] = None
+		
+		override val edgesByTarget: Map[Any, (GraphNode[Nothing, Nothing], Seq[(GraphNode[Nothing, Nothing], GraphEdge[Nothing, Nothing])])] =
+			Map()
+			
+		
+		// IMPLEMENTED  --------------------------
+		
+		override def lazily: Graph2[Nothing, Nothing] = if (isLazy) this else new EmptyGraph(isLazy = true)
+		override def reversed: Graph2[Nothing, Nothing] = this
+		
+		override def subgraphs: Iterable[Graph2[Nothing, Nothing]] = Single(this)
+		
+		override def node[N2 >: Nothing](nodeValue: N2): GraphNode[N2, Nothing] = GraphNode(nodeValue)
+		
+		override def filterNodeValues(f: Nothing => Boolean): Graph2[Nothing, Nothing] = this
+		override def filterNodes(f: GraphNode[Nothing, Nothing] => Boolean): Graph2[Nothing, Nothing] = this
+		override def filterEdgeValues(f: Nothing => Boolean): Graph2[Nothing, Nothing] = this
+		override def filterEdges(f: (GraphNode[Nothing, Nothing], GraphEdge[Nothing, Nothing]) => Boolean): Graph2[Nothing, Nothing] = this
+		override def filterConnections(f: (Nothing, Nothing, Nothing) => Boolean): Graph2[Nothing, Nothing] = this
+		
+		override def map[N2, E2](mapNode: Nothing => N2)(mapEdge: Nothing => E2): Graph2[N2, E2] = this
+		
+		override def subGraphFrom[N2 >: Nothing](startNodeValue: N2): Graph2[N2, Nothing] = this
+		
+		override def +[N2 >: Nothing, E2 >: Nothing](connection: (N2, E2, N2)): Graph2[N2, E2] =
+			_withConnections(Single(connection))
+		override def ++[N2 >: Nothing, E2 >: Nothing](other: Graph2[N2, E2]): Graph2[N2, E2] = other
+		override def ++[N2 >: Nothing, E2 >: Nothing](newConnections: IterableOnce[(N2, E2, N2)]): Graph2[N2, E2] =
+			_withConnections(newConnections)
+	}
+	
+	private class GraphFromConnections[N, E](connections: Iterable[(N, E, N)], override val isTwoWayBound: Boolean,
+	                                         override val isLazy: Boolean)
+		extends Graph2[N, E]
+	{
+		// ATTRIBUTES	------------------------
+		
+		private val generator = GraphNode.generator[N, E] { origin =>
+			// Case: Two-way bound graph => Counts all connections both ways
+			if (isTwoWayBound)
+				connections.iterator.flatMap { case (end1, edgeValue, end2) =>
+					if (end1 == origin) {
+						// Case: Self-connection => Ignored
+						if (end2 == origin)
+							None
+						else
+							Some(edgeValue -> View.fixed(end2))
+					}
+					else if (end2 == origin)
+						Some(edgeValue -> View.fixed(end1))
+					else
+						None
+				}
+			else
+				connections.iterator
+					// Ignores self-connections
+					.filter { case (from, _, to) => from == origin && to != origin }
+					.map { case (_, edgeValue, endValue) => edgeValue -> View.fixed(endValue) }
+		}
+		
+		override val nodeValues = {
+			val valuesIter = connections.iterator.flatMap { case (v1, _, v2) => Pair(v1, v2) }
+			if (isLazy)
+				valuesIter.distinct.caching
+			else
+				valuesIter.toSet
+		}
+		override val nodes = {
+			if (isLazy)
+				nodeValues.map(generator)
+			else
+				nodeValues.view.map(generator).toOptimizedSeq
+		}
+		
+		override lazy val edgesByTarget = _edgesByTarget
+		
+		override val subgraphs = LazyInitIterator { subGraphsIteratorFrom(nodeValues.iterator) }.caching
+		
+		/**
+		 * A lazily initialized version of this graph that's based on realized nodes instead of connection data.
+		 * Used for optimizing certain method implementations.
+		 */
+		private val lazyNodeGraph = Lazy { this.factory(nodes) }
+		/**
+		 * A view that contains Some if a fully realized node graph is available without additional computation.
+		 * Used for optimizing certain method implementations.
+		 */
+		private val fullyRealizedView = {
+			// Case: Lazily initialized graph
+			//       => Node-based version is computed only once all nodes have resolved (or if called from elsewhere)
+			if (isLazy)
+				nodes match {
+					case caching: CachingSeq[GraphNode[N, E]] =>
+						Lazy.conditional {
+							if (lazyNodeGraph.isInitialized || caching.isFullyCached)
+								Some(lazyNodeGraph.value)
+							else
+								None
+						} { _.isDefined }
+					case _ => lazyNodeGraph.lightMap(Some.apply)
+				}
+			// Case: Fully realized graph => The node-based version may be used immediately
+			else
+				lazyNodeGraph.lightMap(Some.apply)
+		}
+		
+		
+		// IMPLEMENTED  ------------------------
+		
+		override def isEmpty = connections.isEmpty
+		
+		override def connectionsIterator: Iterator[(N, E, N)] = connections.iterator
+		
+		override def headOption: Option[GraphNode[N, E]] = nodeValues.headOption.map(generator)
+		
+		override def lazily = if (isLazy) this else this.factory.lazily(nodes)
+		
+		override def node[N2 >: N](nodeValue: N2): GraphNode[N2, E] = nodeValues.find { _ == nodeValue } match {
+			case Some(v) => generator(v)
+			case None => GraphNode(nodeValue)
+		}
+		
+		// Uses the node-based version, if available
+		override def filterNodeValues(f: N => Boolean): Graph2[N, E] = fullyRealizedView.value match {
+			case Some(nodes) => nodes.filterNodeValues(f)
+			case None => _filterNodeValues(f)
+		}
+		// Uses the node-based version, if available
+		override def filterNodes(f: GraphNode[N, E] => Boolean): Graph2[N, E] = fullyRealizedView.value match {
+			case Some(nodes) => nodes.filterNodes(f)
+			case None => _filterNodeValues { v => f(generator(v)) }
+		}
+		
+		override def filterEdgeValues(f: E => Boolean): Graph2[N, E] =
+			filterConnections { case (_, edge, _) => f(edge) }
+		
+		// Delegates the implementation to the node-based version
+		override def filterEdges(f: (GraphNode[N, E], GraphEdge[N, E]) => Boolean): Graph2[N, E] =
+			lazyNodeGraph.value.filterEdges(f)
+		
+		// Uses the node-based version, if available
+		override def map[N2, E2](mapNode: N => N2)(mapEdge: E => E2) = fullyRealizedView.value match {
+			case Some(nodes) => nodes.map(mapNode)(mapEdge)
+			case None =>
+				// Caches node-mapping results to avoid repeated map function calls
+				val nodeResultCache = Cache(mapNode)
+				_withConnections(connections.iterator.map { case (from, edge, to) =>
+					(nodeResultCache(from), mapEdge(edge), nodeResultCache(to))
+				})
+		}
+		
+		override def +[N2 >: N, E2 >: E](connection: (N2, E2, N2)): Graph2[N2, E2] = {
+			if (isLazy)
+				connections match {
+					case c: CachingSeq[(N, E, N)] =>
+						if (c.current.contains(connection))
+							this
+						else
+							_withConnections(c :+ connection)
+						
+					case s: Seq[(N, E, N)] =>
+						if (s.contains(connection))
+							this
+						else
+							_withConnections(s :+ connection)
+				}
+			else if (connections.exists { _ == connection })
+				this
+			else
+				super.+[N2, E2](connection)
+		}
+		
+		private def _filterNodeValues(f: N => Boolean) = {
+			val resultCache = Cache(f)
+			filterConnections { case (from, _, to) => resultCache(from) && resultCache(to) }
+		}
+	}
+	
+	private class GraphFromNodes[N, E](override val nodes: Seq[GraphNode[N, E]], override val isLazy: Boolean)
+		extends Graph2[N, E]
+	{
+		// ATTRIBUTES   -----------------------
+		
+		override val isTwoWayBound: Boolean = false
+		
+		override val nodeValues: Iterable[N] = {
+			if (isLazy)
+				nodes match {
+					case caching: CachingSeq[GraphNode[N, E]] => caching.map { _.value }
+					case nodes => nodes.view.map { _.value }.caching
+				}
+			else
+				nodes.view.map { _.value }.toSet
+		}
+		
+		override lazy val edgesByTarget = _edgesByTarget
+		
+		override val subgraphs: Iterable[Graph2[N, E]] =
+			LazyInitIterator { subGraphsIteratorFrom(nodeValues.iterator) }.caching
+		
+		
+		// IMPLEMENTED  -----------------------
+		
+		override def isEmpty: Boolean = nodes.isEmpty
+		
+		override def headOption: Option[GraphNode[N, E]] = nodes.headOption
+		
+		override def connectionsIterator: Iterator[(N, E, N)] = nodes.iterator.flatMap { node =>
+			node.leavingEdges.iterator.map { edge => (node.value, edge.value, edge.end.value) }
+		}
+		
+		override def lazily: Graph2[N, E] = if (isLazy) this else new GraphFromNodes(nodes, isLazy = true)
+		
+		override def node[N2 >: N](nodeValue: N2): GraphNode[N2, E] =
+			nodes.find { _.value == nodeValue }.getOrElse { GraphNode(nodeValue) }
+		
+		override def filterNodeValues(f: N => Boolean): Graph2[N, E] = filterNodes { node => f(node.value) }
+		override def filterNodes(f: GraphNode[N, E] => Boolean): Graph2[N, E] =
+			this.factory(nodes.iterator.filter(f).map { _.filter { (_, edge) => f(edge.end) } })
+		
+		override def filterEdgeValues(f: E => Boolean): Graph2[N, E] = filterEdges { (_, edge) => f(edge.value) }
+		override def filterEdges(f: (GraphNode[N, E], GraphEdge[N, E]) => Boolean): Graph2[N, E] =
+			this.factory(nodes.map { node => node.filter { (_, edge) => f(node, edge) } })
+		
+		override def map[N2, E2](mapNode: N => N2)(mapEdge: E => E2): Graph2[N2, E2] =
+			this.factory(nodes.map { _.map(mapNode)(mapEdge) })
+	}
+}
+
 /**
- * Represents a set of connections that form potentially multiple graphs
+ * Common trait for pre-built graphs.
+ * NB: Not all nodes specified within a graph are necessarily connected.
  * @author Mikko Hilpinen
  * @since 25.4.2020, v1.8
  */
-// TODO: Add an implementation that accepts a set of nodes instead
-// NB: Connections must not contain self-references
-// TODO: Make covariant
-class Graph2[N, E](connections: Iterable[(N, E, N)], isTwoWayBound: Boolean = false) extends MaybeEmpty[Graph2[N, E]]
+trait Graph2[+N, +E] extends MaybeEmpty[Graph2[N, E]]
 {
-	// ATTRIBUTES	------------------------
+	// ABSTRACT	------------------------
 	
-	private val generator = GraphNode.generator[N, E] { origin =>
-		if (isTwoWayBound)
-			connections.iterator.flatMap { case (end1, edgeValue, end2) =>
-				if (end1 == origin)
-					Some(edgeValue -> View.fixed(end2))
-				else if (end2 == origin)
-					Some(edgeValue -> View.fixed(end1))
-				else
-					None
-			}
-		else
-			connections.iterator.filter { _._1 == origin }
-				.map { case (_, edgeValue, endValue) => edgeValue -> View.fixed(endValue) }
-	}
+	/**
+	 * @return An iterator that yields the connections within this graph.
+	 *         Each connection contains 3 values:
+	 *         1. Value of the connecting node (origin)
+	 *         1. Value of the connecting edge
+	 *         1. Value of the connected node (target)
+	 * @see [[isTwoWayBound]]
+	 */
+	def connectionsIterator: Iterator[(N, E, N)]
 	
-	val nodeValues = connections.iterator.flatMap { case (v1, _, v2) => Pair(v1, v2) }.distinct.caching
+	/**
+	 * @return Whether connections in this graph are applied twice:
+	 *         Once in the direction they are specified and once in reverse.
+	 */
+	def isTwoWayBound: Boolean
+	/**
+	 * @return Whether this graph is lazily resolved.
+	 *         False if most parts of this graph are resolved immediately.
+	 */
+	def isLazy: Boolean
+	
+	/**
+	 * All included node values
+	 */
+	def nodeValues: Iterable[N]
 	/**
 	 * @return All nodes within this graph
 	 */
-	val nodes = nodeValues.map(generator)
+	def nodes: Iterable[GraphNode[N, E]]
+	/**
+	 * @return The first node in this graph. None if this graph is empty.
+	 *         Functionally equivalent to 'nodes.headOption', but may be faster to compute.
+	 */
+	def headOption: Option[GraphNode[N, E]]
 	
 	/**
-	 * @return All sets of nodes within this graph that are not connected with each other.
-	 *         If all the nodes in this graph are connected, returns only a single set of nodes.
+	 * @return A copy of this graph where functions are usually resolved lazily
 	 */
-	val subgraphs = new DistinctGraphsIterator().caching
+	def lazily: Graph2[N, E]
+	
+	/**
+	 * @return All graphs within this graph that are not connected with each other.
+	 *         If all the nodes in this graph are connected, returns only a single graph.
+	 */
+	def subgraphs: Iterable[Graph2[N, E]]
+	
+	/**
+	 * @param nodeValue A node value
+	 * @return A node in this graph with the specified value (may be a generated disconnected node).
+	 */
+	def node[N2 >: N](nodeValue: N2): GraphNode[N2, E]
+	
+	/**
+	 * @return A map where keys are values of edge target nodes,
+	 *         and where values consist of two parts:
+	 *         1. The node matching the specified value
+	 *         1. All edges that point to that node, including two values each:
+	 *              1. The origin node
+	 *              1. The connecting edge
+	 */
+	def edgesByTarget: Map[Any, (GraphNode[N, E], Seq[(GraphNode[N, E], GraphEdge[N, E])])]
+	
+	/**
+	 * @param f A filtering function applied based on node values
+	 * @return A copy of this graph containing only nodes accepted by the specified filtering function
+	 */
+	def filterNodeValues(f: N => Boolean): Graph2[N, E]
+	/**
+	 * @param f A filtering function applied to nodes in this graph
+	 * @return A copy of this graph containing only nodes accepted by the specified filtering function
+	 */
+	def filterNodes(f: GraphNode[N, E] => Boolean): Graph2[N, E]
+	/**
+	 * @param f A filtering function applied based on edge values
+	 * @return A copy of this graph containing only edges accepted by the specified filtering function
+	 */
+	def filterEdgeValues(f: E => Boolean): Graph2[N, E]
+	/**
+	 * @param f A filtering function applied to edges.
+	 *          Receives two values:
+	 *              1. The origin node
+	 *              1. The connecting edge
+	 * @return A copy of this graph containing only edges accepted by the specified filtering function
+	 */
+	def filterEdges(f: (GraphNode[N, E], GraphEdge[N, E]) => Boolean): Graph2[N, E]
+	
+	/**
+	 * Maps all values within this graph (i.e. both node and edge values)
+	 * @param mapNode Mapping function for node values
+	 * @param mapEdge Mapping function for edge values
+	 * @tparam N2 New node value-type
+	 * @tparam E2 New edge value-type
+	 * @return A mapped copy of this graph
+	 */
+	def map[N2, E2](mapNode: N => N2)(mapEdge: E => E2): Graph2[N2, E2]
 	
 	
 	// COMPUTED	----------------------------
 	
 	/**
-	 * @return All edges within this graph
+	 * @return An iterator that yields all edges within this graph
 	 */
-	def edges = nodes.flatMap { _.leavingEdges }
+	def edgesIterator = nodes.iterator.flatMap { _.leavingEdges }
+	/**
+	 * @return An iterator that yields all edges in this graph, grouped by the targeted end node.
+	 *         Each entry contains two values:
+	 *              1. The targeted end node
+	 *              1. Edges that point to that node, including:
+	 *                  1. The origin node
+	 *                  1. The connecting edge
+	 */
+	def edgesByTargetIterator: Iterator[(GraphNode[N, E], Seq[(GraphNode[N, E], GraphEdge[N, E])])] =
+		edgesByTarget.valuesIterator
 	
 	/**
 	 * @return A copy of this graph where each edge points to the opposite direction
 	 */
-	def reversed = new Graph2(connections.map { case (start, edge, end) => (end, edge, start) }, isTwoWayBound)
+	def reversed: Graph2[N, E] = {
+		// Case: This graph is two-way bound => No change is needed
+		if (isTwoWayBound)
+			this
+		else
+			_withConnections(connectionsIterator.map { case (from, edge, to) => (to, edge, from) })
+	}
 	
 	/**
-	 * @return A copy of this graph where each connection is counted twice (once in each direction)
+	 * @return A calculated [[edgesByTarget]] value.
+	 *         The subclasses are expected to store this value as a lazy property.
 	 */
-	def twoWayBound = if (isTwoWayBound) this else new Graph2(connections, isTwoWayBound = true)
+	protected def _edgesByTarget =
+		nodes.iterator
+			.flatMap { node => node.leavingEdges.iterator.map { e => (node, e, e.end) } }
+			.groupToSeqsBy { _._3.value: Any }.view
+			.mapValues { edges => edges.head._3 -> edges.map { case (origin, edge, _) => origin -> edge } }
+			.toMap
+	
+	/**
+	 * @return A factory interface for constructing more copies of this graph
+	 */
+	protected def factory = GraphFactory(isLazy)
 	
 	
 	// IMPLEMENTED  ------------------------
 	
 	override def self = this
 	
-	override def isEmpty = connections.isEmpty
-	
 	
 	// OTHER	----------------------------
 	
 	/**
-	 * @param nodeContent Content of the node
-	 * @return A node in this graph with specified content
+	 * @param nodeValue Value of the targeted node
+	 * @return A node in this graph with the specified value (may be a generated disconnected node)
 	 */
-	def node(nodeContent: N) = generator(nodeContent)
-	/**
-	 * @param nodeContent Content of the node
-	 * @return A node in this graph with specified content
-	 */
-	def apply(nodeContent: N) = node(nodeContent)
-	
-	// TODO: Continue refactoring
+	def apply[N2 >: N](nodeValue: N2) = node(nodeValue)
 	
 	/**
-	 * @param nodeContent Content of the targeted node
-	 * @return Edges pointing to that node
+	 * @param nodeValue A node value
+	 * @return Whether this graph contains an edge involving a node with the specified value
 	 */
-	def edgesTo(nodeContent: N) = edgesByEndNode.getOrElse(nodeContent, Set())
+	def contains[N2 >: N](nodeValue: N2) = nodeValues.iterator.contains(nodeValue)
 	
 	/**
-	 * @param nodeContent Tested node content
-	 * @return Whether this graph contains a link for the specified node
+	 * @param nodeValue Value of the targeted node
+	 * @return Edges pointing to that node (2), including the origin nodes (1)
 	 */
-	def contains(nodeContent: N) = nodesByContent.contains(nodeContent)
-	
-	/**
-	 * @param startNode Starting node content
-	 * @return A graph that contains only the specified node and the nodes connected to that node directly or indirectly
-	 */
-	def subGraphFrom(startNode: N) = copy(connections = node(startNode).allNodes.flatMap { n =>
-		n.leavingEdges.map { e => (n.value, e.value, e.end.value) } })
-	
-	/**
-	 * Maps the contents of this graph
-	 * @param nodeMapper Mapping function for node content
-	 * @param edgeMapper Mapping function for edge content
-	 * @tparam N2 New node content type
-	 * @tparam E2 New edge content type
-	 * @return A mapped copy of this graph
-	 */
-	def map[N2, E2](nodeMapper: N => N2)(edgeMapper: E => E2) = copy(connections = connections.map {
-		case (start, edge, end) => (nodeMapper(start), edgeMapper(edge), nodeMapper(end)) })
-	
-	/**
-	 * Maps all nodes in this graph
-	 * @param f Mapping function for node content
-	 * @tparam N2 New type of node content
-	 * @return A mapped copy of this graph
-	 */
-	def mapNodes[N2](f: N => N2) = copy(connections = connections.map { case (start, edge, end) =>
-		(f(start), edge, f(end)) })
-	
-	/**
-	 * Maps all edge contents in this graph
-	 * @param f A mapping function for edge content
-	 * @tparam E2 New edge content
-	 * @return A mapped copy of this graph
-	 */
-	def mapEdges[E2](f: E => E2) = copy(connections = connections.map { case (start, edge, end) =>
-		(start, f(edge), end) })
-	
-	/**
-	 * Filters the connections in this graph, only considering connection contents
-	 * @param f A filtering function for connections based on connection contents
-	 * @return A filtered copy of this graph
-	 */
-	def filterByContent(f: (N, E, N) => Boolean) = copy(connections =
-		connections.filter { case (start, edge, end) => f(start, edge, end) })
-	
-	/**
-	 * Filters the nodes in this graph by testing their content. Function will be applied only once for each unique
-	 * node content.
-	 * @param f A filter function for node contents
-	 * @return A filtered copy of this graph
-	 */
-	def filterByNodeContent(f: N => Boolean) =
-	{
-		// Calls the filter function as rarely as possible
-		var acceptedNodes = Set[N]()
-		var rejectedNodes = Set[N]()
-		def test(node: N) =
-		{
-			if (acceptedNodes.contains(node))
-				true
-			else if (rejectedNodes.contains(node))
-				false
-			else if (f(node))
-			{
-				acceptedNodes += node
-				true
-			}
-			else
-			{
-				rejectedNodes += node
-				false
-			}
+	def edgesTo[N2 >: N](nodeValue: N2): Seq[(GraphNode[N, E], GraphEdge[N, E])] =
+		nodeValues.find { _ == nodeValue }.flatMap { edgesByTarget.get(_) } match {
+			case Some((_, edges)) => edges
+			case None => Empty
 		}
-		
-		copy(connections = connections.filter { case (start, _, end) => test(start) && test(end) })
-	}
 	
 	/**
-	 * Filters this graph by testing edge content
-	 * @param f A function for filtering edges by content
+	 * Filters the connections / edges in this graph, based on their values
+	 * @param f A filtering function to apply.
+	 *          Receives 3 parameters:
+	 *          1. Value of the origin node
+	 *          1. Value of the connecting edge
+	 *          1. Value of the target node
 	 * @return A filtered copy of this graph
 	 */
-	def filterByEdgeContent(f: E => Boolean) = filterByContent { (_, edge, _) => f(edge) }
+	def filterConnections(f: (N, E, N) => Boolean): Graph2[N, E] =
+		_withConnections(connectionsIterator.filter { case (from, edge, to) => f(from, edge, to) })
 	
 	/**
-	 * Filters this graph by testing individual nodes. The filter function is called only once for each unique node.
-	 * @param f A filter function for nodes
-	 * @return A filtered copy of this graph
+	 * Maps all node values in this graph
+	 * @param f Mapping function for node values
+	 * @tparam N2 New type of node values
+	 * @return A mapped copy of this graph
 	 */
-	def filterByNode(f: GraphViewNode[N, E] => Boolean) = filterByNodeContent { nodeContent =>
-		f(node(nodeContent)) }
-	
+	def mapNodes[N2](f: N => N2) = map(f)(Identity)
 	/**
-	 * Filters this graph by testing individual edges.
-	 * @param f A filter function for edges
-	 * @return A filtered copy of this graph
+	 * Maps all edge values in this graph
+	 * @param f A mapping function for edge values
+	 * @tparam E2 Type of the new edge values
+	 * @return A mapped copy of this graph
 	 */
-	def filterByEdge(f: GraphViewEdge[N, E] => Boolean) = filterByContent { (_, edge, end) =>
-		f(GEdge(edge, end)) }
+	def mapEdges[E2](f: E => E2) = map(Identity)(f)
 	
 	/**
-	 * Creates a copy of this graph with an edge added
-	 * @param start Start node
-	 * @param edge New edge content
-	 * @param end End node
-	 * @return A copy of this graph with additional edge
+	 * @param startNodeValue Value of the node from which the resulting graph will originate
+	 * @return A graph that contains only nodes reachable from the specified node.
 	 */
-	def withEdge(start: N, edge: E, end: N) =
-	{
-		val newConnection = (start, edge, end)
-		copy(connections = connections + newConnection)
-	}
+	def subGraphFrom[N2 >: N](startNodeValue: N2) =
+		factory(LazyInitIterator { node(startNodeValue).allNodesIterator })
 	
 	/**
-	 * @param connection A new connection (start -> edge content -> end)
-	 * @return A copy of this graph with specified connection added
+	 * @param connection A new connection consisting of three parts:
+	 *                   1. Value of the origin node
+	 *                   1. Value of the connecting edge
+	 *                   1. Value of the target node
+	 * @return A copy of this graph with specified connection added/included
 	 */
-	def +(connection: (N, E, N)) = copy(connections = connections + connection)
+	def +[N2 >: N, E2 >: E](connection: (N2, E2, N2)) =
+		_withConnections(connectionsIterator ++ Single(connection))
+	@deprecated("Please use + instead", "v2.9")
+	def withEdge[N2 >: N, E2 >: E](start: N2, edge: E2, end: N2) = this.+[N2, E2]((start, edge, end))
 	
 	/**
-	 * @param newConnections New connections (start -> edge content -> end)
+	 * @param other Another graph
+	 * @return A graph that includes nodes and connections from both graphs
+	 */
+	def ++[N2 >: N, E2 >: E](other: Graph2[N2, E2]): Graph2[N2, E2] = this ++ other.connectionsIterator
+	/**
+	 * @param newConnections New connections to add. Each entry contains:
+	 *                       1. Origin node value
+	 *                       1. Value of the connecting edge
+	 *                       1. Target node value
 	 * @return A copy of this graph with specified connections added
 	 */
-	def ++(newConnections: IterableOnce[(N, E, N)]) = copy(connections = connections ++ newConnections)
+	def ++[N2 >: N, E2 >: E](newConnections: IterableOnce[(N2, E2, N2)]) =
+		_withConnections(connectionsIterator ++ newConnections)
 	
 	/**
-	 * @param other Another graph
-	 * @return A combination of these two graphs
+	 * @param nodeValue Node value to exclude from this graph
+	 * @return A copy of this graph containing no node with the specified value
 	 */
-	def ++(other: Graph[N, E]) = copy(connections = connections ++ other.connections)
+	def -[N2 >: N](nodeValue: N2) = withoutNode(nodeValue)
+	/**
+	 * @param nodeValue Node value to exclude from this graph
+	 * @return A copy of this graph containing no node with the specified value
+	 */
+	def withoutNode[N2 >: N](nodeValue: N2) = filterNodeValues { _ == nodeValue }
+	/**
+	 * @param nodeValues Node values to exclude from this graph
+	 * @return A copy of this graph not involving the specified node values
+	 */
+	def --[N2 >: N](nodeValues: Iterable[N2]) = withoutNodes(nodeValues)
+	/**
+	 * @param nodeValues Node values to exclude from this graph
+	 * @return A copy of this graph not involving the specified node values
+	 */
+	def withoutNodes[N2 >: N](nodeValues: Iterable[N2]) =
+		filterNodeValues { value => !nodeValues.exists { value == _ } }
 	
 	/**
-	 * @param node Node to exclude from this graph
-	 * @return A copy of this graph with specified node excluded
+	 * @param edgeValue An edge value to exclude from this graph
+	 * @return A copy of this graph not including a single edge with the specified value
 	 */
-	def withoutNode(node: N) = copy(connections =
-		connections.filter { case (start, _, end) => start != node && end != node })
-	/**
-	 * @param node Node to exclude from this graph
-	 * @return A copy of this graph with specified node excluded
-	 */
-	def -(node: N) = withoutNode(node)
+	def withoutEdge[E2 >: E](edgeValue: E2) = filterEdgeValues { _ == edgeValue }
 	
-	/**
-	 * @param edge An edge content to exclude from this graph
-	 * @return A copy of this graph with all edges with the specified content removed
-	 */
-	def withoutEdge(edge: E) = copy(connections = connections.filter { case (_, e, _) => e != edge })
+	@deprecated("Renamed to filterConnections", "v2.9")
+	def filterByContent(f: (N, E, N) => Boolean) = filterConnections(f)
+	@deprecated("Renamed to filterNodeValues", "v2.9")
+	def filterByNodeContent(f: N => Boolean) = filterNodeValues(f)
+	@deprecated("Renamed to filterEdgeValues", "v2.9")
+	def filterByEdgeContent(f: E => Boolean) = filterEdgeValues(f)
+	@deprecated("Renamed to filterNodes", "v2.9")
+	def filterByNode(f: GraphNode[N, E] => Boolean) = filterNodes(f)
+	@deprecated("Replaced with filterEdges", "v2.9")
+	def filterByEdge(f: GraphEdge[N, E] => Boolean) = filterEdges { (_, edge) => f(edge) }
 	
-	/**
-	 * @param nodes Nodes to exclude from this graph
-	 * @return A copy of this graph with specified nodes excluded
-	 */
-	def withoutNodes(nodes: Iterable[N]) = copy(connections = connections.filterNot { case (start, _, end) =>
-		nodes.exists { n => start == n || end == n } })
+	protected def _withConnections[N2, E2](connections: IterableOnce[(N2, E2, N2)]) =
+		factory.withConnections(connections, isTwoWayBound)
 	
-	/**
-	 * @param nodes Nodes to exclude from this graph
-	 * @return A copy of this graph with specified nodes excluded
-	 */
-	def --(nodes: Iterable[N]) = withoutNodes(nodes)
-	
-	/**
-	 * @param other Another graph
-	 * @return A copy of this graph with none of the connections in the other graph
-	 */
-	def --(other: Graph[N, E]) = copy(connections = connections -- other.connections)
+	protected def subGraphsIteratorFrom[N2 >: N](distinctValuesIterator: Iterator[N2]): Iterator[Graph2[N2, E]] =
+		new DistinctGraphsIterator(distinctValuesIterator)
 	
 	
 	// NESTED	----------------------------
 	
-	private class DistinctGraphsIterator extends Iterator[Seq[GraphNode[N, E]]]
+	/**
+	 * An iterator used for finding distinct graphs within a graph
+	 * @param distinctValuesIterator An iterator that yields all distinct node values in this graph
+	 * @tparam N2 Type of the accepted node values
+	 */
+	private class DistinctGraphsIterator[N2 >: N](distinctValuesIterator: Iterator[N2]) extends Iterator[Graph2[N2, E]]
 	{
 		// ATTRIBUTES	--------------------
 		
-		private val valuesIterator = (connections.iterator.map { _._1 } ++ connections.iterator.map { _._3 }).distinct
-		private val accessedNodes = mutable.Set[N]()
-		private var lastNodeValuesIter = Iterator.empty[N]
+		/**
+		 * A mutable set containing all node values that have already been included in a graph
+		 */
+		private val accessedNodes = mutable.Set[N2]()
+		/**
+		 * An iterator that yields all values in the last returned graph
+		 */
+		private var lastNodeValuesIter = Iterator.empty[N2]
 		
+		/**
+		 * A lazy container called at every [[hasNext]] or [[next]].
+		 * Initializes the next result.
+		 */
 		private val prepared = ResettableLazy {
+			// Finds the next value that hasn't been involved in any graph yet
 			accessedNodes ++= lastNodeValuesIter
-			valuesIterator.find { !accessedNodes.contains(_) }
+			distinctValuesIterator.find { !accessedNodes.contains(_) }
 		}
 		
 		
@@ -290,13 +658,18 @@ class Graph2[N, E](connections: Iterable[(N, E, N)], isTwoWayBound: Boolean = fa
 		
 		override def hasNext: Boolean = prepared.value.isDefined
 		
-		override def next(): Seq[GraphNode[N, E]] = {
+		override def next() = {
+			// Gets the next starting node
 			val nextValue = prepared.value.get
-			val nextRoot = generator(nextValue)
-			val nextNodes = nextRoot.allNodesIterator.caching
+			val nextRoot = node(nextValue)
 			
+			// Resolves (possibly lazily) all nodes accessible via that node
+			val nextNodesIter = nextRoot.allNodesIterator
+			val nextNodes = if (isLazy) nextNodesIter.caching else nextNodesIter.toOptimizedSeq
+			
+			// Prepares the next iteration and returns the discovered nodes as a graph
 			lastNodeValuesIter = nextNodes.iterator.map { _.value }
-			nextNodes
+			factory(nextNodes)
 		}
 	}
 }

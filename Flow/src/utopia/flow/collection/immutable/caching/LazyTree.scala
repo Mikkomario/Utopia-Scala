@@ -6,6 +6,7 @@ import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.caching.Lazy
 
+@deprecated("Replaced with ValueTree", "v2.9")
 object LazyTree
 {
 	/**
@@ -64,6 +65,7 @@ object LazyTree
   * @author Mikko Hilpinen
   * @since 28.9.2022, v2.0
   */
+@deprecated("Replaced with ValueTree", "v2.9")
 class LazyTree[A](lazyNav: Lazy[A], override val children: CachingSeq[LazyTree[A]] = CachingSeq.empty)
                  (override implicit val navEquals: EqualsFunction[A] = EqualsFunction.default)
 	extends TreeLike[A, LazyTree[A]]
