@@ -23,9 +23,13 @@
   - Added `.columns`
 - **Row**
   - Added `.contains(Column)`
+- **SqlSegment**
+  - Added `.readsMultipleTables`
 ### Other changes
 - Built with Scala v2.13.18
 - Added automatic joining logic to cases where the two tables/columns reference the same external column
+- **AccessGroupedLike** now applies a primary row ID -based default ordering for SELECT queries that apply joins
+  - This is in order to ensure that **ParseGroupedRows** receives an ordered iterator
 - **TargetingManyRowsLike**'s `.slicesIterator` (extended) function now requires a different class type 
   (the previous was too ambiguous)
   - Removed the `.slicedIterator` -version
