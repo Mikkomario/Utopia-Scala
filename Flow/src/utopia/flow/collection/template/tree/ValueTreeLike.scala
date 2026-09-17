@@ -44,8 +44,10 @@ trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike2[Repr] with View[A]]
 	 */
 	def values = valuesIterator.toOptimizedSeq
 	
-	@deprecated("Renamed to .value", "v2.9")
+	@deprecated("Deprecated for removal. Renamed to .value", "v2.9")
 	def nav = value
+	@deprecated("Deprecated for removal. Renamed to .valuesIterator", "v2.9")
+	def allNavsIterator = valuesIterator
 	
 	/**
 	 * Creates an interface for navigating this tree, based on the wrapped values

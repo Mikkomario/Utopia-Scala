@@ -1,8 +1,9 @@
 package utopia.vault.util.console
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Single, TreeLike, ViewGraphNode}
-import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.template.graph.GraphNode
+import utopia.flow.collection.template.tree.TreeLike2
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
@@ -14,7 +15,6 @@ import utopia.vault.model.immutable.{Reference, Table}
 import scala.collection.mutable
 import scala.util.{Success, Try}
 
-// TODO: Refactor to use the new tree classes
 private object ConsoleCommands
 {
 	// ATTRIBUTES   -----------------------
@@ -22,7 +22,7 @@ private object ConsoleCommands
 	private implicit val tableOrdering: Ordering[(Table, Int)] = CombinedOrdering[(Table, Int)](
 		Ordering.by[(Table, Int), Int] { _._2 }.reverse,
 		Ordering.by { _._1.name })
-	private implicit val nodeOrdering: Ordering[ViewGraphNode[(Table, Int), (Reference, Boolean)]] = Ordering.by { _.value }
+	private implicit val nodeOrdering: Ordering[GraphNode[(Table, Int), (Reference, Boolean)]] = Ordering.by { _.value }
 	
 	
 	// NESTED   ---------------------------
@@ -30,7 +30,7 @@ private object ConsoleCommands
 	private object HierarchicalTable
 	{
 		// Expects a bidirectional reference graph
-		def build(graph: ViewGraphNode[(Table, Int), (Reference, Boolean)], from: Option[Table] = None,
+		def build(graph: GraphNode[(Table, Int), (Reference, Boolean)], from: Option[Table] = None,
 		          alwaysIncludeChildren: Boolean = false): HierarchicalTable =
 		{
 			val table = graph.value._1
@@ -41,7 +41,7 @@ private object ConsoleCommands
 				}
 				.toOptimizedSeq
 			
-			val parents = graph.leavingEdges.view.filter { _._2 }.map { _.end }.filter { _._1 != table }
+			val parents = graph.leavingEdges.iterator.filter { _._2 }.map { _.end }.filter { _._1 != table }
 				.toOptimizedSeq.sorted.map { _._1.name }
 			val primaryParent = {
 				if (childEdges.nonEmpty)
@@ -64,18 +64,11 @@ private object ConsoleCommands
 	}
 	private case class HierarchicalTable(name: String, otherParents: Seq[String] = Empty,
 	                                     primaryParent: Option[String] = None, children: Seq[HierarchicalTable] = Empty)
-		extends TreeLike[String, HierarchicalTable]
+		extends TreeLike2[HierarchicalTable]
 	{
 		// IMPLEMENTED  ------------------------
 		
 		override def self = this
-		override def nav = name
-		
-		override implicit def navEquals: EqualsFunction[String] = EqualsFunction.default
-		
-		override protected def createCopy(nav: String, children: Seq[HierarchicalTable]) =
-			copy(name = nav, children = children)
-		override protected def newNode(content: String) = HierarchicalTable(content)
 		
 		
 		// OTHER    --------------------------
@@ -142,16 +135,16 @@ class ConsoleCommands(implicit context: VaultContext) extends Extender[Seq[Comma
 					Try { context.table(tableName) } match {
 						case Success(table) =>
 							// Writes the parent tables
-							val parents = References.parentsTree(table).map { _.name }
+							val parents = References.parentsTree(table).mapValues { _.name }
 							if (parents.children.nonEmpty) {
 								println("\nParents:")
-								parents.children.foreach { printTree(_, 1) }
+								parents.children.foreach { printTree(_, 1) { _.value } }
 							}
 							
 							val tableReferenceCounts = References.referenceTree(table).allNodesIterator
-								.map { n => n.nav -> n.size }.toMap
+								.map { n => n.value -> n.size }.toMap
 							val graph = References.toBiDirectionalLinkGraphFrom(table)
-								.mapValues { t => t -> tableReferenceCounts.getOrElse(t, 0) }
+								.mapNodes { t => t -> tableReferenceCounts.getOrElse(t, 0) }
 							val hierarchy = HierarchicalTable.build(graph, alwaysIncludeChildren = true)
 							
 							if (hierarchy.children.isEmpty)
@@ -178,12 +171,12 @@ class ConsoleCommands(implicit context: VaultContext) extends Extender[Seq[Comma
 					tables.foreach { case (table, _) =>
 						if (!writtenTables.contains(table.name)) {
 							val graph = References.toBiDirectionalLinkGraphFrom(table)
-								.mapValues { t => t -> tableCounts(t) }
+								.mapNodes { t => t -> tableCounts(t) }
 							val hierarchy = HierarchicalTable.build(graph)
 							println()
 							hierarchy.print()
 							
-							writtenTables ++= hierarchy.allNavsIterator
+							writtenTables ++= hierarchy.allNodesIterator.map { _.name }
 						}
 					}
 			}
@@ -194,13 +187,13 @@ class ConsoleCommands(implicit context: VaultContext) extends Extender[Seq[Comma
 	
 	// OTHER    --------------------------
 	
-	private def printTree[T <: TreeLike[_, T]](tree: T, indentation: Int = 0): Unit = {
+	private def printTree[T <: TreeLike2[T]](tree: T, indentation: Int = 0)(treeToString: T => String): Unit = {
 		val linear = linearPathFrom(tree)
-		println(s"${ "\t" * indentation }- ${ linear.view.map { _.nav }.mkString(" -> ") }")
-		linear.last.children.foreach { printTree(_, indentation + 1) }
+		println(s"${ "\t" * indentation }- ${ linear.view.map(treeToString).mkString(" -> ") }")
+		linear.last.children.foreach { printTree(_, indentation + 1)(treeToString) }
 	}
 	
-	private def linearPathFrom[T <: TreeLike[_, T]](tree: T): Seq[T] = {
+	private def linearPathFrom[T <: TreeLike2[T]](tree: T): Seq[T] = {
 		if (tree.children.hasSize(1))
 			tree +: linearPathFrom(tree.children.head)
 		else

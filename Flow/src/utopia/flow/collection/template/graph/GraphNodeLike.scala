@@ -413,6 +413,8 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  *         The values are not returned in any specific order, except that the value of this node is returned first.
 	  */
 	def allValuesIterator = allNodesIterator.map { _.value }
+	@deprecated("Deprecated for removal. Renamed to .allValuesIterator", "v2.9")
+	def allNavsIterator = allValuesIterator
 	/**
 	  * @return An iterator that returns all values within the nodes in this graph.
 	  *         The iterator is ordered so that it returns first the values of nodes closest to this node,

@@ -3,17 +3,17 @@ package utopia.vault.database
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, ViewGraphNode}
+import utopia.flow.collection.immutable.graph.GraphNode
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
+import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.Pointer
 import utopia.vault.context.VaultContext.log
 import utopia.vault.model.error.NoReferenceFoundException
-import utopia.vault.model.immutable.{Column, Reference, ReferencePoint, Table, TableColumn}
+import utopia.vault.model.immutable.{Column, Reference, Table, TableColumn}
 import utopia.vault.sql.{Update, Where}
-
-import scala.collection.immutable.HashSet
 
 /**
   * The references object keeps track of all references between different tables in a multiple
@@ -70,6 +70,36 @@ object References
 		}
 	}
 	
+	/**
+	 * Creates a new reference graph that only contains direct links from the origin table to the target table.
+	 * I.e. the edges point the same direction as the table references.
+	 * @return A function that accepts a table and yields a reference graph node representing the specified table
+	 *         (lazily initialized)
+	 */
+	lazy val linkGraph =
+		GraphNode.generator { table: Table => from(table).iterator.map { ref => ref -> View.fixed(ref.to.table) } }
+	/**
+	 * Creates a new reference graph where leaving edges are the references coming **to** the node table.
+	 * I.e. all the references are associated with the tables they point towards, not where they originate from.
+	 * @return A function that accepts a table and yields a reference graph node representing the specified table
+	 *         (lazily initialized)
+	 */
+	lazy val  reverseLinkGraph =
+		GraphNode.generator { table: Table => to(table).iterator.map { ref => ref -> View.fixed(ref.from.table) } }
+	/**
+	 * Creates a new reference graph that contains each reference twice:
+	 * Once in the table from which the reference originates and once in the table to which the reference points to.
+	 * In other words, all the edges in the resulting graph go both ways.
+	 * @return A function that accepts a table and yields a reference graph
+	 *         node representing the specified table (lazily initialized).
+	 *         Edges containing true as the second value are pointing in the same direction as the reference,
+	 *         and those with false to the opposite.
+	 */
+	lazy val  biDirectionalLinkGraph = GraphNode.generator { table: Table =>
+		LazyInitIterator {  from(table).iterator.map { ref => (ref, true) -> View.fixed(ref.to.table) } } ++
+			LazyInitIterator { to(table).map { ref => (ref, false) -> View.fixed(ref.from.table) } }
+	}
+	
 	
 	// INITIAL CODE ----------------------
 	
@@ -84,36 +114,6 @@ object References
 	
 	
 	// COMPUTED --------------------------
-	
-	/**
-	  * Creates a new reference graph that only contains direct links from the origin table to the target table.
-	  * I.e. the edges point the same direction as the table references.
-	  * @return A function that accepts a table and yields a reference graph node representing the specified table
-	  *         (lazily initialized)
-	  */
-	def linkGraph = ViewGraphNode
-		.iterate { table: Table => from(table).map { ref => View.fixed(ref) -> View.fixed(ref.to.table) } }
-	/**
-	  * Creates a new reference graph where leaving edges are the references coming **to** the node table.
-	  * I.e. all the references are associated with the tables they point towards, not where they originate from.
-	  * @return A function that accepts a table and yields a reference graph node representing the specified table
-	  *         (lazily initialized)
-	  */
-	def reverseLinkGraph = ViewGraphNode
-		.iterate { table: Table => to(table).map { ref => View.fixed(ref) -> View.fixed(ref.from.table) } }
-	/**
-	  * Creates a new reference graph that contains each reference twice:
-	  * Once in the table from which the reference originates and once in the table to which the reference points to.
-	  * In other words, all the edges in the resulting graph go both ways.
-	  * @return A function that accepts a table and yields a reference graph
-	  *         node representing the specified table (lazily initialized).
-	  *         Edges containing true as the second value are pointing in the same direction as the reference,
-	  *         and those with false to the opposite.
-	  */
-	def biDirectionalLinkGraph = ViewGraphNode.iterate { table: Table =>
-		from(table).map { ref => View.fixed(ref -> true) -> View.fixed(ref.to.table) } ++
-			to(table).map { ref => View.fixed(ref -> false) -> View.fixed(ref.from.table) }
-	}
 	
 	
 	// IMPLEMENTED  ----------------------
@@ -140,26 +140,6 @@ object References
 			case None => Some(Set.from(references))
 		}
 	}
-	/**
-	  * Sets up reference data for a single database. Each pair should contain 4 elements:
-	  * 1) referencing table, 2) name of the referencing property, 3) referenced table,
-	  * 4) name of the referenced property.
-	  */
-	@deprecated("Deprecated for removal", "v1.22")
-	def setup(sets: IterableOnce[(Table, String, Table, String)]): Unit = {
-		// Converts the tuple data into a reference set
-		val references = sets.iterator.flatMap { case (table1, name1, table2, name2) =>
-			Reference(table1, name1, table2, name2) }.toSet
-		references.groupBy { _.from.table.databaseName }.foreach { case (dbName, refs) => setup(dbName, refs) }
-	}
-	/**
-	  * Sets up reference data for a single database. Each pair should contain 4 elements:
-	  * 1) referencing table, 2) name of the referencing property, 3) referenced table,
-	  * 4) name of the referenced property.
-	  */
-	@deprecated("Deprecated for removal", "v1.22")
-	def setup(firstSet: (Table, String, Table, String), more: (Table, String, Table, String)*): Unit =
-		setup(HashSet(firstSet) ++ more)
 	
 	/**
 	  * @param column A column from which a reference is acquired
@@ -171,11 +151,6 @@ object References
 		findFrom(column).getOrElse {
 			throw new NoReferenceFoundException(s"${ column.sqlName } doesn't refer to any other column")
 		}
-	@deprecated("Deprecated for removal", "v1.22")
-	def from(table: Table, column: Column): Reference = from(TableColumn(table, column))
-	@deprecated("Deprecated for removal", "v1.22")
-	def from(table: Table, columnName: String): Option[TableColumn] =
-		ReferencePoint(table, columnName).flatMap(findFrom).map { _.to }
 	/**
 	  * @param table Table from which references are made
 	  * @return All references originating from the specified table
@@ -344,7 +319,7 @@ object References
 	  * @return A reference tree where the specified table is the root and tables referencing that table are below it.
 	  *         The references in the result point from tree leaves towards the root of the tree.
 	  */
-	def referenceTree(root: Table) = toReverseLinkGraphFrom(root).toTree.map { _.value }
+	def referenceTree(root: Table) = toReverseLinkGraphFrom(root).toTree.mapValues { _.value }
 	/**
 	  * Forms a tree based on table references where the root is the specified table and node children are tables
 	  * referenced from the higher tables in the tree.
@@ -353,7 +328,7 @@ object References
 	  * @return A reference tree where the specified table is the root and tables referenced from that table are below it.
 	  *         The references in the result point from the root towards the leaves of the tree.
 	  */
-	def parentsTree(root: Table) = toLinkGraphFrom(root).toTree.map { _.value }
+	def parentsTree(root: Table) = toLinkGraphFrom(root).toTree.mapValues { _.value }
 	
 	/**
 	  * Clears all cached reference data concerning a single database

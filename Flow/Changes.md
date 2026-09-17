@@ -14,6 +14,10 @@
   - Access to an implicit **Scheduler** is now required in various classes, including:
     - **KeptOpenWriter**
     - **FileLogger** and **LogProcessToFile**
+- Rewrote **Tree** and **Graph** classes
+  - TODO: Document the other changes
+  - **immutable.Tree** is now replaced with **immutable.tree.ValueTree**
+    - `.map(...)` is no longer available, and is now named `.mapValues(...)`
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`

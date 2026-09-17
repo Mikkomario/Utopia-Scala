@@ -79,11 +79,11 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			val tree = References.referenceTree(rule.table)
 			val restrictingChildren = nonEmptyRules.view
 				.flatMap { childRule =>
-					tree.pathsToRootsWhere { _.nav == childRule.table }.map { childPath =>
+					tree.pathsToRootsWhere { _.value == childRule.table }.map { childPath =>
 						// Converts the table path to a reference path
 						// Throws possible errors here (those would result from logic / programming error)
 						// TODO: Sometimes the path is empty. Probably for self-referencing tables.
-						referencePathFrom(rule.table, childPath.drop(1).map { _.nav }).get
+						referencePathFrom(rule.table, childPath.drop(1).map { _.value }).get
 					}
 				}
 				.toOptimizedSeq

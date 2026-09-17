@@ -219,7 +219,7 @@ object ValueTree
 	class ValueTreeMutator[A](root: ValueTree[A], path: Seq[ValueTree[A]], private val node: ValueTree[A],
 	                          generated: Boolean = false)
 	                         (implicit eq: EqualsFunction[A])
-		extends TreeNavigator[A, ValueTreeMutator[A]] with ValueTree[A]
+		extends TreeNavigator[A, ValueTreeMutator[A]] with ValueTreeLike[A, template.tree.ValueTree, ValueTree, ValueTree[A]]
 	{
 		// COMPUTED ---------------------------
 		
@@ -267,14 +267,14 @@ object ValueTree
 		override def children: Seq[ValueTree[A]] = node.children
 		override def value: A = node.value
 		
-		override def lazily: Boolean = node.lazily
-		override def growingLazily: ValueTree[A] = if (node.lazily) node else mapped { _.growingLazily }
+		override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
+			NavigateUsingValues[N, N, ValueTree[N]](ValueTree.from(node)) {
+				nav: N => ValueTree(nav).withoutChildren }(equals)
 		
 		override def withoutChildren: ValueTree[A] =
 			if (!generated && node.isEmpty) node else mapped { _.withoutChildren }
 		
 		override def withValue[B >: A](newValue: B): ValueTree[B] = mapped { _.withValue(newValue) }
-		override def mapValues[B >: A](f: A => B): ValueTree[B] = mapped { _.mapValues(f) }
 		
 		override def ++[B >: A](newChildren: IterableOnce[tree.ValueTree[B]]): ValueTree[B] =
 			mapped { _ ++ newChildren }
@@ -352,8 +352,8 @@ object ValueTree
 		
 		override def withValue[B >: A](newValue: B): ValueTree[B] = copy(value = newValue)
 		
-		override def mapValues[B >: A](f: A => B): ValueTree[B] =
-			copy(value = f(value), children = children.map { _.mapValues(f) })
+		override def mapValues[B](f: A => B): ValueTree[B] =
+			copy[B](value = f(value), children = children.map { _.mapValues(f) })
 		
 		override def withoutChildren: ValueTree[A] = if (isEmpty) self else copy(children = Empty)
 		
@@ -384,6 +384,9 @@ trait ValueTree[+A]
 {
 	// ABSTRACT -----------------------------
 	
+	/**
+	 * @return Whether copies of this tree should be built lazily
+	 */
 	def lazily: Boolean
 	
 	
@@ -408,6 +411,14 @@ trait ValueTree[+A]
 	
 	
 	// OTHER    -----------------------------
+	
+	/**
+	 * Maps all values in this tree
+	 * @param f A mapping function to apply to each value in this tree
+	 * @tparam B Mapping result type
+	 * @return Copy of this tree where every value has been mapped
+	 */
+	def mapValues[B](f: A => B): ValueTree[B]
 	
 	/**
 	 * @param eq Equals function to apply. Used in navigation.

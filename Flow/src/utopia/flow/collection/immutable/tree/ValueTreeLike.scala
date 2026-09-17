@@ -32,13 +32,6 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	 * @return Copy of this node with the specified value
 	 */
 	def withValue[B >: A](newValue: B): CC[B]
-	/**
-	 * Maps all values in this tree
-	 * @param f A mapping function to apply to each value in this tree
-	 * @tparam B Mapping result type
-	 * @return Copy of this tree where every value has been mapped
-	 */
-	def mapValues[B >: A](f: A => B): CC[B]
 	
 	/**
 	 * Adds n new child nodes directly under this node
