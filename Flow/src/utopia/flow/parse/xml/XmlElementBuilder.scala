@@ -1,10 +1,13 @@
 package utopia.flow.parse.xml
 
-import utopia.flow.collection.mutable.MutableTreeLike
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.mutable.tree.MutableTreeLike2
+import utopia.flow.collection.template.tree.TreeNavigator
+import utopia.flow.view.mutable.Pointer
 
 object XmlElementBuilder
 {
@@ -14,45 +17,69 @@ object XmlElementBuilder
 	  * @tparam X Type of the xml element
 	  * @return A builder based on that xml element
 	  */
+	@deprecated("Deprecated for removal. Please use .from(XmlElementLike) instead", "v2.9")
 	def apply[X <: XmlElementLike[X]](element: X): XmlElementBuilder = {
 		val builder = new XmlElementBuilder(element.name, element.value, element.attributeMap)
 		builder.children = element.children.map { apply(_) }.toVector
 		builder
 	}
+	
+	def from[X <: XmlElementLike[X]](element: X): XmlElementBuilder = element match {
+		case builder: XmlElementBuilder => builder
+		case elem =>
+			new XmlElementBuilder(elem.name, elem.value, elem.attributeMap, elem.children.view.map(from[X]).toOptimizedSeq)
+	}
 }
 
 /**
-  * A mutable XmlElement version which may be used to build and edit (immutable) xml element structures
+  * A mutable [[XmlElementLike]] implementation that may be used to build and edit (immutable) XML element structures
   * @author Mikko Hilpinen
   * @since 10.4.2022, v1.15
   */
-// TODO: Refactor to use the new tree classes
 class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Value.emptyWithType(StringType),
-                        initialAttributeMap: Map[Namespace, Model] = Map())
-	extends XmlElementLike[XmlElementBuilder] with MutableTreeLike[NamespacedString, XmlElementBuilder]
+                        initialAttributeMap: Map[Namespace, Model] = Map(),
+                        initialChildren: Seq[XmlElementBuilder] = Empty)
+	extends XmlElementLike[XmlElementBuilder] with MutableTreeLike2[XmlElement, XmlElementBuilder] with Pointer[Value]
+		with TreeNavigator[NamespacedString, XmlElementBuilder]
 {
 	// ATTRIBUTES   --------------------------------
 	
 	var name = initialName
 	var value = initialValue
 	var attributeMap = initialAttributeMap
-	var children = Vector[XmlElementBuilder]()
+	var children: Seq[XmlElementBuilder] = initialChildren
+	
+	
+	// COMPUTED ------------------------------------
+	
+	def text_=(newText: String) = value = newText
 	
 	
 	// IMPLEMENTED  --------------------------------
 	
 	override def self = this
+	override protected def current: XmlElementBuilder = this
 	
-	def text_=(newText: String) = value = newText
+	override def +=(child: XmlElement): Unit = children :+= XmlElementBuilder.from(child)
+	override def ++=(children: IterableOnce[XmlElement]): Unit =
+		this.children ++= children.iterator.map(XmlElementBuilder.from[XmlElement])
 	
-	override protected def newNode(content: NamespacedString) = {
-		// Adds the node as a new child
-		val node = new XmlElementBuilder(content)
-		children :+= node
-		node
+	override def filterDirect(f: XmlElementBuilder => Boolean): Unit = children = children.filter(f)
+	override def filter(f: XmlElementBuilder => Boolean): Unit = {
+		filterDirect(f)
+		children.foreach { _.filter(f) }
 	}
 	
-	override protected def setChildren(newChildren: Seq[XmlElementBuilder]) = children = newChildren.toVector
+	override def clear(): Unit = children = Empty
+	
+	override protected def findUnder(parent: XmlElementBuilder, nav: NamespacedString): Option[XmlElementBuilder] =
+		children.find { _.name ~== nav }
+	
+	override protected def nodeFor(nav: NamespacedString): XmlElementBuilder = {
+		val newChild = new XmlElementBuilder(nav)
+		children :+= newChild
+		newChild
+	}
 	
 	
 	// OTHER    -----------------------------------
@@ -63,15 +90,10 @@ class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Val
 	def result(): XmlElement = XmlElement(name, value, attributeMap, children.map { _.result() })
 	
 	/**
-	  * Adds a new child node under this node
-	  * @param child The (pre-built) child xml element to add
-	  */
-	def +=(child: XmlElement): Unit = this += XmlElementBuilder(child)
-	/**
 	  * Removes children with the specified name from under this node. Only targets direct children.
 	  * @param childName Name of the child or children to remove.
 	  */
-	def -=(childName: String) = children = children.filterNot { _.name ~== childName }
+	def -=(childName: String) = filterDirect { _.name !~== childName }
 	
 	/**
 	  * Updates the value of a single attribute (alias for .setAttribute(String, Value))

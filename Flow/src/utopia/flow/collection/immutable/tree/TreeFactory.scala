@@ -18,6 +18,9 @@ object TreeFactory
 	 */
 	implicit def apply[N , T](f: IterableOnce[N] => T): TreeFactory[N, T] = new _TreeFactory[N, T](f)
 	
+	// Implicitly constructs trees without child nodes
+	implicit def emptyDefault[T](factory: TreeFactory[_, T]): T = factory.withoutChildren
+	
 	
 	// NESTED   -----------------------
 	

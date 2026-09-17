@@ -1,7 +1,7 @@
 package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.immutable.{Empty, Single}
 
 /**
   * A common trait for tree implementations which support copy operations
@@ -50,6 +50,11 @@ trait CopyableTreeLike[-N, +Repr <: CopyableTreeLike[N, Repr]] extends Filterabl
 	 */
 	def ++(newChildren: IterableOnce[N]): Repr = appendingFactory.withChildren(newChildren)
 	
+	/**
+	 * @param child Only child to assign to this tree node
+	 * @return A copy of this node with only that child node included
+	 */
+	def withChild(child: N): Repr = withChildren(Single(child))
 	/**
 	 * @param newChildren New children to assign to this tree.
 	 *                    Overwrites the existing children.

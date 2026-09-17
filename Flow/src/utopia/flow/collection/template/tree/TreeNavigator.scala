@@ -66,6 +66,11 @@ trait TreeNavigator[-N, +Node]
 	 * @return Node at the end of the specified navigation path. May be generated.
 	 */
 	def apply(first: N, second: N, more: N*) = this / (Pair(first, second) ++ more)
+	/**
+	 * @param path A path of navigational steps to take. Ordered.
+	 * @return Node at the end of that path. May be generated.
+	 */
+	def apply(path: Iterable[N]) = this/path
 	
 	/**
 	 * Finds a child directly under this node that matches the specified navigational step
