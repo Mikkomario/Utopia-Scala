@@ -36,7 +36,7 @@ trait AccessGroupedLike[+A, +Repr] extends TargetingGroupedLike[A, Repr]
 	protected def emptyResult: A
 	
 	/**
-	  * Finalizes an SQL statement, before it is executed.
+	  * Finalizes an SQL statement before it is executed.
 	  * Used for allowing subclasses to modify executed statements by adding more features (like limit and offset),
 	  * for example.
 	  * @param statement A statement to finalize
@@ -188,5 +188,15 @@ trait AccessGroupedLike[+A, +Repr] extends TargetingGroupedLike[A, Repr]
 	  */
 	protected def completeStatement(statement: SqlSegment, condition: Option[Condition] = appliedCondition,
 	                                ordering: Option[OrderBy] = this.ordering) =
-		finalizeStatement(statement + condition.map(Where.apply) + ordering)
+	{
+		// If no ordering is specified, and if multiple tables are read, applies ordering based on the primary ID,
+		// in order to ensure that the rows may be grouped appropriately
+		val appliedOrdering = ordering.orElse {
+			if (statement.readsMultipleTables)
+				table.primaryColumn.map { OrderBy.ascending(_) }
+			else
+				None
+		}
+		finalizeStatement(statement + condition.map(Where.apply) + appliedOrdering)
+	}
 }

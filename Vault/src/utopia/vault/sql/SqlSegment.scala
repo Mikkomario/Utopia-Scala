@@ -89,9 +89,8 @@ object SqlSegment
  * @author Mikko Hilpinen
  * @since 12.3.2017
  * @constructor Creates a new SQL segment from specified SQL with proper metadata (values, database name,
- *              tables and whether this SQL represents a selection statement)
- * @param sql The SQL string representing the segment. Each of the segment's values is indicated with a
- * '?' character.
+ *              tables, and whether this SQL represents a selection statement)
+ * @param sql The SQL string representing the segment. Each of the segment's values is indicated with a '?' character.
  * @param values The values that will be inserted to this segment when it is used. Each '?' in the SQL will
  * be replaced with a single value. Empty values will be interpreted as NULL.
  * @param databaseName The name of the targeted database
@@ -105,7 +104,7 @@ case class SqlSegment(sql: String, values: Seq[Value] = Empty, databaseName: Opt
                       targetTables: Set[Table] = Set(), events: Option[Result => Seq[TableUpdateEvent]] = None,
                       isSelect: Boolean = false, generatesKeys: Boolean = false)
 {
-	// COMPUTED PROPERTIES    -----------
+	// COMPUTED    -----------
 	
 	override def toString = sql
 	
@@ -124,6 +123,11 @@ case class SqlSegment(sql: String, values: Seq[Value] = Empty, databaseName: Opt
 	 * Whether the segment is considered to be empty (no-op)
 	 */
 	def isEmpty = sql.isEmpty
+	
+	/**
+	 * @return Whether this SQL segment reads values from more than one table
+	 */
+	def readsMultipleTables = targetTables.hasSize > 1
 	
 	/**
 	 * @return A copy of this segment placed within parentheses
