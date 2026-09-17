@@ -1,9 +1,9 @@
 package utopia.flow.generic.casting
 
-import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.Single
-import utopia.flow.collection.template.GraphEdge
+import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.mutable.graph.MutableGraphNode
+import utopia.flow.collection.template.graph.GraphEdge
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.model.immutable.{Conversion, Value}
 import utopia.flow.generic.model.mutable.DataType
@@ -15,12 +15,12 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 12.11.2016
   */
-// TODO: Refactor to use the new graph classes
+// TODO: Refactor to use immutable graph classes instead
 object ConversionHandler
 {
 	// TYPES    ------------------------
 	
-	private type ConversionNode = GraphNode[DataType, ConversionStep]
+	private type ConversionNode = MutableGraphNode[DataType, ConversionStep]
 	
 	
 	// ATTRIBUTES    -------------------
@@ -58,7 +58,7 @@ object ConversionHandler
 			Some(value)
 		// Finds the possible ways to cast the value to the target type or any target sub type
 		else
-			_cast(value, toType.subTypes :+ toType)
+			_cast(value, toType.subtypes :+ toType)
 	}
 	/**
 	  * Casts the value to a value of any of the provided data types
@@ -66,7 +66,7 @@ object ConversionHandler
 	  * @param targetTypes The targeted data types
 	  * @return The value cast to one of the data types, None if casting failed or was not possible
 	  */
-	def cast(value: Value, targetTypes: Set[DataType]) = {
+	def cast(value: Value, targetTypes: Iterable[DataType]) = {
 		// If there are no target types, no value can be produced
 		if (targetTypes.isEmpty)
 			None
@@ -77,8 +77,8 @@ object ConversionHandler
 		else if (targetTypes.exists(value.dataType.isOfType))
 			Some(value)
 		else {
-			// The targeted data types include the provided types, plus each of their sub-types
-			val allTargetTypes = targetTypes.flatMap { datatype => datatype.subTypes :+ datatype }
+			// The targeted data types include the provided types, plus each of their subtypes
+			val allTargetTypes = targetTypes.flatMap { datatype => datatype.subtypes :+ datatype }
 			if (allTargetTypes.isEmpty) None else _cast(value, allTargetTypes)
 		}
 	}
@@ -137,16 +137,16 @@ object ConversionHandler
 				Some(ConversionRoute(Single(directEdges.map { _.value }.minBy { _.cost })))
 			else {
 				// If multiple cheapest routes are found, considers the return routes, also
-				val routes = origin.cheapestRoutesToNode(target) { _.value.cost } match {
+				val routes = origin.cheapestRoutesToOne(target) { _.value.cost } match {
 					case Some(result) => result.routes.filterMinBy { _.size }
-					case None => Set.empty
+					case None => Empty
 				}
 				if (routes.size > 1) {
 					// (Route, Number of irrevocable steps, return cost)
-					val routesWithReturnCosts: Set[(Seq[GraphEdge[ConversionStep, GraphNode[DataType, ConversionStep]]], Int, Int)] =
+					val routesWithReturnCosts: Seq[(Seq[GraphEdge[ConversionStep, MutableGraphNode[DataType, ConversionStep]]], Int, Int)] =
 						routes.map { route =>
 							val returnRoutes = route.dropRight(1)
-								.map { edge => edge.end.cheapestRoutesToNode(origin) { _.value.cost } }
+								.map { edge => edge.end.cheapestRoutesToOne(origin) { _.value.cost } }
 							(route, returnRoutes.count { _.isEmpty }, returnRoutes.view.flatten.map { _.cost }.sum)
 						}
 					val bestRoute = routesWithReturnCosts.filterMinBy { _._2 }.minBy { _._3 }._1

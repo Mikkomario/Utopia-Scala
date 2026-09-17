@@ -5,7 +5,7 @@ import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.controller.parser.StreamedPullResponseParser
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.response.ollama.llm.StreamedPullStatus
@@ -75,7 +75,7 @@ class StreamedPullRequest(deprecationView: View[Boolean] = AlwaysFalse)
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName, "stream" -> true))
+	override def body: Either[Value, RequestBody] = Left(Model.from("name" -> llm.llmName, "stream" -> true))
 	override def deprecated: Boolean = deprecationView.value
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[StreamedPullStatus]] =

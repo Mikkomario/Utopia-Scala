@@ -3,7 +3,7 @@ package utopia.echo.model.request.openai
 import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.Post
 import utopia.annex.model.request.ApiRequest
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.enumeration.ModelParameter._
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.settings.{HasImmutableModelSettings, ModelSettings}
@@ -41,7 +41,7 @@ trait BufferedOpenAiChatCompletionRequestLike[+Reply, +Repr]
 	override def pathParams: Model = Model.empty
 	override def deprecated: Boolean = params.deprecationView.value
 	
-	override def body: Either[Value, Body] = {
+	override def body: Either[Value, RequestBody] = {
 		Left(finalizeBody(Model
 			.from(
 				"messages" -> params.messages, "model" -> params.llm.llmName,

@@ -5,15 +5,15 @@ import utopia.access.model.enumeration.Method.Post
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.offer.OfferType.OnDemand
 import utopia.echo.model.vastai.instance.offer.{Offer, OfferProperty, OfferType, SearchFilter}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair}
-import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.operator.sign.Sign
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
 import utopia.flow.view.immutable.View
@@ -46,7 +46,7 @@ case class GetOffers(allocatedStorage: ByteCount = 8.gb, filters: Seq[SearchFilt
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def body: Either[Value, Body] = Left(Model.from(
+	override def body: Either[Value, RequestBody] = Left(Model.from(
 		"type" -> offerType.key,
 		"allocated_storage" -> allocatedStorage.gigas.ceil.toInt,
 		"order" -> order.map { case (prop, dir) =>

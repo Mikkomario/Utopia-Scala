@@ -62,6 +62,17 @@ object ValueTree
 		}
 	
 	/**
+	 * Creates a node out of a single non-branching path
+	 * @param values Values that form this branch. Must not be empty.
+	 * @return A node with values based on the specified branch values
+	 */
+	@throws[NoSuchElementException]("If 'values' is empty")
+	def branch[A](values: IterableOnce[A]): ValueTree[A] = {
+		val iter = values.iterator
+		apply(iter.next()).branch(iter)
+	}
+	
+	/**
 	 * @param tree A tree to modify
 	 * @param eq Implicit equals function used for value-based navigation
 	 * @tparam A Type of the tree values

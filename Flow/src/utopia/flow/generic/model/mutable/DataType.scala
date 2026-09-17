@@ -1,7 +1,8 @@
 package utopia.flow.generic.model.mutable
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, Pair, Tree}
+import utopia.flow.collection.immutable.tree.ValueTree
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.casting.{ConversionHandler, SuperTypeCaster}
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -10,12 +11,11 @@ import utopia.flow.time._
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 import scala.language.existentials
 
-// TODO: Refactor to use the new tree classes
 object DataType
 {
 	// ATTRIBUTES   ---------------------------
 	
-	private var _typeTree: Seq[Tree[DataType]] = Empty
+	private var _typeTree: Seq[ValueTree[DataType]] = Empty
 	
 	
 	// COMPUTED -------------------------------
@@ -29,7 +29,7 @@ object DataType
 	/**
 	  * @return All (currently introduced) known data types
 	  */
-	def values = _typeTree.flatMap { _.allNodesIterator.map { _.nav } }
+	def values = _typeTree.flatMap { _.valuesIterator }
 	
 	
 	// OTHER    -------------------------------
@@ -38,19 +38,19 @@ object DataType
 	  * Introduces a new data type hierarchy
 	  * @param types A type tree or a branch to introduce.
 	  *              Doesn't have to be exhaustive, but should at least
-	  *              a) Start with a previously introduced type OR
-	  *              b) Start with the actual root type.
+	  *              1. Start with a previously introduced type OR
+	  *              1. Start with the actual root type.
 	  *
 	  *              For example, these cases would be valid:
-	  *              a) Type Number has already been introduced as a sub-type of Any.
-	  *              This method is then called with a tree where the root node is Number.
-	  *              b) This method is called with a tree where the root node is Any (assuming that's the topmost type)
+	  *              1. Type Number has already been introduced as a subtype of Any.
+	  *                 This method is then called with a tree where the root node is Number.
+	  *              1. This method is called with a tree where the root node is Any (assuming that's the topmost type)
 	  */
-	def introduce(types: Tree[DataType]) = {
+	def introduce(types: ValueTree[DataType]) = {
 		val oldTypes = values.toSet
 		_typeTree = _typeTree.mapOrAppend { _.mergeBranch(types).toOption }(types)
 		// Adds super type casting
-		val newTypes = types.allNavsIterator.filterNot(oldTypes.contains).toSet
+		val newTypes = types.valuesIterator.filterNot(oldTypes.contains).toSet
 		if (newTypes.nonEmpty)
 			ConversionHandler.addCaster(new SuperTypeCaster(newTypes))
 	}
@@ -59,7 +59,7 @@ object DataType
 	  * @param dataType The data type to introduce to the common type hierarchy
 	  */
 	def introduce(dataType: DataType): Unit =
-		introduce(Tree.branch(dataType.superTypesIterator.toVector.reverse :+ dataType))
+		introduce(ValueTree.branch(dataType.superTypesIterator.toOptimizedSeq.reverseIterator ++ Single(dataType)))
 	
 	
 	// NESTED   --------------------------------
@@ -72,8 +72,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Any"
-		override lazy val supportedClass = classOf[Any]
+		override val name = "Any"
+		override val supportedClass = classOf[Any]
 		
 		
 		// INITIAL CODE ------------------------
@@ -92,8 +92,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "String"
-		override lazy val supportedClass = classOf[String]
+		override val name = "String"
+		override val supportedClass = classOf[String]
 		
 		
 		// INITIAL CODE -----------------------
@@ -106,14 +106,14 @@ object DataType
 		override def superType = Some(AnyType)
 	}
 	/**
-	  * Represents type [[Integer]] from Java (not Int because a reference type is required at this time)
+	  * Represents type [[java.lang.Integer]] from Java (not Int because a reference type is required at this time)
 	  */
 	case object IntType extends DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Int"
-		override lazy val supportedClass = classOf[Integer]
+		override val name = "Int"
+		override val supportedClass = classOf[Integer]
 		
 		
 		// INITIAL CODE -----------------------
@@ -132,8 +132,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Double"
-		override lazy val supportedClass = classOf[java.lang.Double]
+		override val name = "Double"
+		override val supportedClass = classOf[java.lang.Double]
 		
 		
 		// INITIAL CODE -----------------------
@@ -152,8 +152,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Long"
-		override lazy val supportedClass = classOf[java.lang.Long]
+		override val name = "Long"
+		override val supportedClass = classOf[java.lang.Long]
 		
 		
 		// INITIAL CODE -----------------------
@@ -172,8 +172,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Float"
-		override lazy val supportedClass = classOf[java.lang.Float]
+		override val name = "Float"
+		override val supportedClass = classOf[java.lang.Float]
 		
 		
 		// INITIAL CODE -----------------------
@@ -192,8 +192,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Boolean"
-		override lazy val supportedClass = classOf[java.lang.Boolean]
+		override val name = "Boolean"
+		override val supportedClass = classOf[java.lang.Boolean]
 		
 		
 		// INITIAL CODE -----------------------
@@ -212,8 +212,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Instant"
-		override lazy val supportedClass = classOf[Instant]
+		override val name = "Instant"
+		override val supportedClass = classOf[Instant]
 		
 		
 		// INITIAL CODE -----------------------
@@ -232,8 +232,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "LocalDate"
-		override lazy val supportedClass = classOf[LocalDate]
+		override val name = "LocalDate"
+		override val supportedClass = classOf[LocalDate]
 		
 		
 		// INITIAL CODE -----------------------
@@ -252,8 +252,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "LocalTime"
-		override lazy val supportedClass = classOf[LocalTime]
+		override val name = "LocalTime"
+		override val supportedClass = classOf[LocalTime]
 		
 		
 		// INITIAL CODE -----------------------
@@ -272,8 +272,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "LocalDateTime"
-		override lazy val supportedClass = classOf[LocalDateTime]
+		override val name = "LocalDateTime"
+		override val supportedClass = classOf[LocalDateTime]
 		
 		
 		// INITIAL CODE -----------------------
@@ -292,8 +292,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Duration"
-		override lazy val supportedClass = classOf[Duration]
+		override val name = "Duration"
+		override val supportedClass = classOf[Duration]
 		
 		
 		// INITIAL CODE -----------------------
@@ -312,8 +312,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Days"
-		override lazy val supportedClass = classOf[Days]
+		override val name = "Days"
+		override val supportedClass = classOf[Days]
 		
 		
 		// INITIAL CODE -----------------------
@@ -329,8 +329,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name: String = "Year"
-		override lazy val supportedClass: Class[_] = classOf[Year]
+		override val name: String = "Year"
+		override val supportedClass: Class[_] = classOf[Year]
 		
 		// INITIAL CODE -----------------------
 		
@@ -345,8 +345,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name: String = "Month"
-		override lazy val supportedClass: Class[_] = classOf[Month]
+		override val name: String = "Month"
+		override val supportedClass: Class[_] = classOf[Month]
 		
 		// INITIAL CODE -----------------------
 		
@@ -361,8 +361,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name: String = "YearMonth"
-		override lazy val supportedClass: Class[_] = classOf[YearMonth]
+		override val name: String = "YearMonth"
+		override val supportedClass: Class[_] = classOf[YearMonth]
 		
 		// INITIAL CODE -----------------------
 		
@@ -380,8 +380,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Pair"
-		override lazy val supportedClass = classOf[Pair[Value]]
+		override val name = "Pair"
+		override val supportedClass = classOf[Pair[Value]]
 		
 		
 		// INITIAL CODE -----------------------
@@ -400,8 +400,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Vector"
-		override lazy val supportedClass = classOf[Vector[Value]]
+		override val name = "Vector"
+		override val supportedClass = classOf[Vector[Value]]
 		
 		
 		// INITIAL CODE -----------------------
@@ -420,8 +420,8 @@ object DataType
 	{
 		// ATTRIBUTES   ------------------------
 		
-		override lazy val name = "Model"
-		override lazy val supportedClass = classOf[Model]
+		override val name = "Model"
+		override val supportedClass = classOf[Model]
 		
 		
 		// INITIAL CODE -----------------------
@@ -452,7 +452,7 @@ trait DataType
 	def supportedClass: Class[_]
 	
 	/**
-	  * @return The data type that's the parent / super type of this data type.
+	  * @return The data type that's the parent / supertype of this data type.
 	  *         None if this is a topmost data type.
 	  */
 	def superType: Option[DataType]
@@ -461,26 +461,33 @@ trait DataType
 	// COMPUTED --------------------------------
 	
 	/**
-	  * @return An iterator that returns the super types of this data type in order from least to most abstract
-	  *         (i.e. closest to furthest from this type)
-	  */
-	def superTypesIterator = OptionsIterator.iterate(superType) { _.superType }
-	
-	/**
 	  * @return A data type hierarchy where this type is appears as the root and sub-types appear below.
 	  *         Super types of this type are not included, obviously.
 	  */
 	def typeHierarchy =
-		DataType.hierarchy.findMap { tree => tree.allNodesIterator.find { _.nav == this } }.getOrElse(Tree(this))
+		DataType.hierarchy.findMap { tree => tree.allNodesIterator.find { _.value == this } }
+			.getOrElse(ValueTree(this).withoutChildren)
 	
 	/**
-	  * @return The data types that are the sub-types of this data type
+	  * @return The data types that are the subtypes of this data type
 	  */
-	def subTypes = typeHierarchy.allNodesIterator.drop(1).map { _.nav }.toVector
+	def subtypes = subtypesIterator.toOptimizedSeq
+	@deprecated("Renamed to subtypes", "v2.9")
+	def subTypes = subtypes
+	/**
+	 * @return The data types that are the sub-types of this data type
+	 */
+	def subtypesIterator = typeHierarchy.allNodesIterator.drop(1).map { _.value }
+	
 	/**
 	  * @return The data types that are the super types of this data type
 	  */
-	def superTypes = superTypesIterator.toVector
+	def superTypes = superTypesIterator.toOptimizedSeq
+	/**
+	 * @return An iterator that returns the super types of this data type in order from least to most abstract
+	 *         (i.e. closest to furthest from this type)
+	 */
+	def superTypesIterator = OptionsIterator.iterate(superType) { _.superType }
 	
 	
 	// IMPLEMENTED  ---------------------------

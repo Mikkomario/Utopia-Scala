@@ -3,7 +3,7 @@ package utopia.echo.model.request.ollama
 import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.Post
 import utopia.annex.model.request.ApiRequest
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.settings.HasModelSettings
 import utopia.flow.generic.casting.ValueConversions._
@@ -56,7 +56,7 @@ trait OllamaRequest[+R] extends ApiRequest[R] with HasModelSettings
 	override def method: Method = Post
 	override def pathParams: Model = Model.empty
 	
-	override def body: Either[Value, Body] = {
+	override def body: Either[Value, RequestBody] = {
 		val baseModel = Model.from(
 			"model" -> llm.llmName,
 			"stream" -> stream,

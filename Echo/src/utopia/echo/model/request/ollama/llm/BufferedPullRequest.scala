@@ -5,7 +5,7 @@ import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.llm.LlmDesignator
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.generic.casting.ValueConversions._
@@ -66,7 +66,7 @@ class BufferedPullRequest(deprecationView: View[Boolean] = AlwaysFalse)(implicit
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName, "stream" -> false))
+	override def body: Either[Value, RequestBody] = Left(Model.from("name" -> llm.llmName, "stream" -> false))
 	
 	override def deprecated: Boolean = deprecationView.value
 	

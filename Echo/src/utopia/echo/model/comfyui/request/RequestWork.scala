@@ -5,7 +5,7 @@ import utopia.access.model.enumeration.Method.Post
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.comfyui.request.RequestWork.{ExtractPromptId, defaultClientId}
 import utopia.echo.model.comfyui.workflow.node.WorkflowNode
 import utopia.flow.generic.casting.ValueConversions._
@@ -55,7 +55,7 @@ class RequestWork(workflow: Iterable[WorkflowNode], clientId: String = defaultCl
 	
 	// IMPLEMENTED  --------------------------
 	
-	override def body: Either[Value, Body] = Left(Model.from(
+	override def body: Either[Value, RequestBody] = Left(Model.from(
 		"prompt" -> Model.withConstants(workflow.map { _.toConstant }),
 		"client_id" -> clientId
 	))

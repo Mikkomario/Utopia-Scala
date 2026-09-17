@@ -797,6 +797,10 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	                      (implicit ord: Ordering[C]) =
 		_searchFor(destinations, startCost, exclusive = true)(costOf)(sumOf)
 		
+	@deprecated("Please use cheapestRoutesToOne instead", "v2.9")
+	def cheapestRoutesToNode[C](node: View[Any])(costOf: Edge => C)(implicit n: Numeric[C]) =
+		cheapestRoutesToOne(node)(costOf)
+		
 	private def _searchFor[C](destinations: Iterable[NodeTarget[N, E]], startCost: C, exclusive: Boolean)
 	                            (costOf: Edge => C)(sumOf: (C, C) => C)
 	                            (implicit ord: Ordering[C]) =

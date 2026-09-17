@@ -6,7 +6,7 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.error.RequestFailedException
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
@@ -26,7 +26,7 @@ case class DestroyInstance(instanceId: Int, deprecationView: View[Boolean] = Alw
 	override val method: Method = Delete
 	override val path: String = s"instances/$instanceId"
 	override val pathParams: Model = Model.empty
-	override val body: Either[Value, Body] = Left(Value.empty)
+	override val body: Either[Value, RequestBody] = Left(Value.empty)
 	
 	
 	// IMPLEMENTED  -------------------------

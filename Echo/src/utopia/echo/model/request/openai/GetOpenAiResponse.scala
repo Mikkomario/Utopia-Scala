@@ -3,7 +3,7 @@ package utopia.echo.model.request.openai
 import utopia.access.model.enumeration.Method
 import utopia.access.model.enumeration.Method.Post
 import utopia.annex.model.request.ApiRequest
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.enumeration.ModelParameter.{PredictTokens, Temperature, TopP}
 import utopia.echo.model.settings.{HasModelSettings, ModelSettings}
 import utopia.echo.model.request.ChatParams
@@ -48,7 +48,7 @@ trait GetOpenAiResponse[+A] extends ApiRequest[A] with HasModelSettings
 	
 	// TODO: Add support for image quality settings and other image settings
 	// TODO: Add support for built-in tools
-	override def body: Either[Value, Body] = {
+	override def body: Either[Value, RequestBody] = {
 		// Converts the messages to objects
 		val messages = params.messages.map { message =>
 			val content: Value = {

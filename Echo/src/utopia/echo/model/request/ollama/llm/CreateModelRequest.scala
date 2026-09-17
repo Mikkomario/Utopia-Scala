@@ -3,7 +3,7 @@ package utopia.echo.model.request.ollama.llm
 import utopia.access.model.enumeration.Method.Post
 import utopia.access.model.enumeration.Method
 import utopia.annex.model.request.ApiRequest
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.request.RetractableRequestFactory
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
@@ -112,7 +112,7 @@ trait CreateModelRequest[+R] extends ApiRequest[R]
 	override def path: String = "create"
 	override def pathParams: Model = Model.empty
 	
-	override def body: Either[Value, Body] = {
+	override def body: Either[Value, RequestBody] = {
 		val modelFileProp = modelFile match {
 			case Right(str) => Constant("modelfile", str)
 			case Left(path) => Constant("path", path.real.toJson)

@@ -6,20 +6,19 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.error.RequestFailedException
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.request.vastai.AcceptOffer.AcceptOfferResponseParser
-import utopia.echo.model.vastai.instance.offer.RunType
-import RunType.Ssh
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.NewInstanceFoundation
-import utopia.flow.collection.immutable.Empty
+import utopia.echo.model.vastai.instance.offer.RunType
+import utopia.echo.model.vastai.instance.offer.RunType.Ssh
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
-import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.{NotEmpty, UncertainBoolean}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -81,7 +80,7 @@ case class AcceptOffer(offerId: Long, foundation: NewInstanceFoundation, runType
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def body: Either[Value, Body] = {
+	override def body: Either[Value, RequestBody] = {
 		val argsProp = foundation.args match {
 			case Left(args) => args.ifNotEmpty.map { Constant("args_str", _) }
 			case Right(args) => NotEmpty(args).map { Constant("args", _) }

@@ -5,7 +5,7 @@ import utopia.access.model.enumeration.Method
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.echo.model.llm.LlmDesignator
 import utopia.echo.model.response.ollama.llm.ModelShowInfo
 import utopia.flow.generic.model.immutable.{Model, Value}
@@ -57,7 +57,7 @@ class ShowModelRequest(deprecationView: View[Boolean] = AlwaysFalse)(implicit ll
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def body: Either[Value, Body] = Left(Model.from("name" -> llm.llmName))
+	override def body: Either[Value, RequestBody] = Left(Model.from("name" -> llm.llmName))
 	override def deprecated: Boolean = deprecationView.value
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[ModelShowInfo]] =

@@ -4,6 +4,9 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Single}
 import utopia.flow.collection.template
+import utopia.flow.collection.template.tree.TreeLike2
+import utopia.flow.operator.equality.EqualsFunction
+import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
 
@@ -16,7 +19,9 @@ import scala.language.implicitConversions
  * @author Mikko Hilpinen
  * @since 10.08.2026, v2.9
  */
-trait ValueTreeLike[+A, N[+_], +CC[X] <: N[X], +Repr <: ValueTreeLike[A, N, CC, Repr] with N[A]]
+// NB: A lot of the editor's errors related to typing are false
+// Repr <: CC[B] <: N[B] when B >: A, but the editor doesn't pick this up.
+trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC, Repr] with CC[A]]
 	extends template.tree.ValueTreeLike[A, CC, Repr] with FilterableTreeLike[Repr]
 {
 	// ABSTRACT -----------------------------
@@ -86,7 +91,7 @@ trait ValueTreeLike[+A, N[+_], +CC[X] <: N[X], +Repr <: ValueTreeLike[A, N, CC, 
 	 * @return Copy of this tree with 'original' replaced with 'replacement'.
 	 *         Note: If this tree didn't directly contain 'original', 'replacement' is still added.
 	 */
-	def replaceChild[B >: A](original: Any, replacement: N[B]) =
+	def replaceChild[B >: A](original: Any, replacement: N[B]): CC[B] =
 		withChildren[B](children.mapOrAppend[N[B], Seq[N[B]]] { node =>
 			if (original == node) Some(replacement) else None
 		}(replacement))
@@ -114,9 +119,9 @@ trait ValueTreeLike[+A, N[+_], +CC[X] <: N[X], +Repr <: ValueTreeLike[A, N, CC, 
 		if (mapped)
 			Right(result)
 		else
-			Left(this)
+			Left(self)
 	}
-	private def _mapFirstWhere[B >: A](find: Repr => Boolean)(map: Repr => N[B]): (N[B], Boolean) = {
+	private def _mapFirstWhere[B >: A](find: Repr => Boolean)(map: Repr => N[B]): (CC[B], Boolean) = {
 		// Only iterates as far as needed
 		val iter = children.iterator
 		val builder = OptimizedIndexedSeq.newBuilder[N[B]]
@@ -132,7 +137,7 @@ trait ValueTreeLike[+A, N[+_], +CC[X] <: N[X], +Repr <: ValueTreeLike[A, N, CC, 
 			// Case: Not the targeted node => Checks whether this child contains said node
 			else {
 				val (deepMapped, changed) = child._mapFirstWhere[B](find)(map)
-				builder += deepMapped
+				builder += (deepMapped: N[B])
 				// Case: The targeted node existed deeper inside the child tree => Stops iterating the child nodes
 				if (changed)
 					searching = false
@@ -144,6 +149,104 @@ trait ValueTreeLike[+A, N[+_], +CC[X] <: N[X], +Repr <: ValueTreeLike[A, N, CC, 
 			self -> false
 		// Case: Targeted node was found => Appends the unmodified child nodes and returns
 		else
-			(withChildren(CachingSeq(iter, builder.result())): N[B], true)
+			(withChildren(CachingSeq[N[B]](iter, builder.result())), true)
+	}
+	
+	/**
+	 * Replaces a single branch within this tree with the specified branch, based on the branch root nav element.
+	 * @param newBranch A tree to replace an existing branch with
+	 * @return Either:
+	 *             Left: This tree, if it didn't contain a node that could be replaced with the specified tree
+	 *             Right: A copy of this tree where the highest node
+	 *             with a nav element matching that of the specified node has been replaced with the specified node
+	 */
+	def replaceBranch[B >: A](newBranch: N[B] with View[B])(implicit eq: EqualsFunction[B] = EqualsFunction.default) =
+		mapFirstWhere[B] { c => eq(c.value, newBranch.value) } { _ => newBranch }
+	/**
+	 * Merges a branch into this tree at the first direct child node that shares a value with the specified branch root.
+	 *
+	 * Applies the merge as a join; I.e. doesn't add duplicate nodes,
+	 * but adds all missing nodes even from the lower layers.
+	 *
+	 * @param branch A branch to merge into this tree, if possible
+	 * @return Either:
+	 *          - Left(self) if this tree didn't contain a node with matching value
+	 *          - Right: A copy of this tree with the specified branch
+	 *            merged with the first child node that contained a matching value.
+	 */
+	def mergeBranch[B >: A, T <: N[B] with TreeLike2[T] with View[B]](branch: T)
+	                                                                 (implicit eq: EqualsFunction[B] = EqualsFunction.default): Either[Repr, CC[B]] =
+	{
+		// Case: Branch has child nodes => Attempts to merge it with one of the existing nodes
+		if (branch.hasChildren)
+			mapFirstWhere[B] { n => eq(n.value, branch.value) } { _.joinBranches[B, T](branch.children): N[B] }
+		// Case: Already contains a matching node => No changes are needed
+		else if (containsDirectValue(branch.value))
+			Right(self)
+		// Case: No matching node to merge with => Yields Left.
+		else
+			Left(self)
+	}
+	
+	/**
+	 * Joins a new branch to this tree.
+	 * Nodes that match existing children are joined with them.
+	 * Nodes that don't match any existing child are appended.
+	 * @param branch Branch to join to this tree.
+	 * @param eq Implicit equals function used when matching child nodes. Default = use ==.
+	 * @tparam B Type of values in the joined branches
+	 * @tparam T Type of the joined branch nodes
+	 * @return A copy of this tree with the specified branch joined.
+	 */
+	def joinBranch[B >: A, T <: N[B] with TreeLike2[T] with View[B]](branch: T)
+	                                                                (implicit eq: EqualsFunction[B] = EqualsFunction.default): CC[B] =
+		joinBranches[B, T](Single(branch))
+	/**
+	 * Joins n new branches to this tree.
+	 * Nodes that match existing children are joined with them.
+	 * Nodes that don't match any existing child are appended.
+	 * @param branches Branches to join to this tree. Not empty.
+	 * @param eq Implicit equals function used when matching child nodes. Default = use ==.
+	 * @tparam B Type of values in the joined branches
+	 * @tparam T Type of the joined branch nodes
+	 * @return A copy of this tree with the specified branches joined.
+	 */
+	def joinBranches[B >: A, T <: N[B] with TreeLike2[T] with View[B]](branches: IterableOnce[T])
+	                                                                  (implicit eq: EqualsFunction[B] = EqualsFunction.default): CC[B] =
+	{
+		// Divides the new nodes into those that match existing children and those that don't
+		val (newBranches, matches) = branches.divideWith { branch =>
+			children.find { child => eq(child.value, branch.value) } match {
+				// Case: Match with an existing child node => Only applies it if there are grandchildren to join, also
+				case Some(matchingChild) =>
+					if (branch.hasChildren)
+						Right(Some(matchingChild -> branch))
+					else
+						Right(None)
+				// Case: Not a match
+				case None => Left(branch)
+			}
+		}
+		val appliedMatches = matches.flatten
+		// Case: No matches => Only adds the new branches
+		if (appliedMatches.isEmpty)
+			this ++ newBranches
+		// Case: Matches => Recursively merges them with the existing children
+		else {
+			val merges = appliedMatches.iterator
+				.map { case (child, branch) => child -> child.joinBranches[B, T](branch.children) }.toMap
+			val updatedChildren: Seq[N[B]] = children.map[N[B]] { child =>
+				merges.get(child) match {
+					case Some(merged) => merged
+					case None => child
+				}
+			}
+			
+			// Includes the completely new child nodes, if appropriate
+			if (newBranches.isEmpty)
+				withChildren[B](updatedChildren)
+			else
+				withChildren[B](updatedChildren ++ newBranches)
+		}
 	}
 }

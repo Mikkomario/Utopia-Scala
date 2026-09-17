@@ -6,7 +6,7 @@ import utopia.access.model.enumeration.{Method, Status}
 import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
+import utopia.disciple.model.request.RequestBody
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 
@@ -22,7 +22,7 @@ case class GetEcho(content: Value = Value.empty, override val method: Method = P
 	extends ApiRequest[Model]
 {
 	override def path: String = "echo"
-	override def body: Either[Value, Body] = Left(Model.from("status" -> requestedStatus.code, "content" -> content))
+	override def body: Either[Value, RequestBody] = Left(Model.from("status" -> requestedStatus.code, "content" -> content))
 	
 	override def deprecated: Boolean = false
 	

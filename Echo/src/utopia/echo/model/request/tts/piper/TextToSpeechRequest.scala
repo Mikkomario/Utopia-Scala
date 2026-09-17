@@ -5,9 +5,9 @@ import utopia.access.model.enumeration.Method.Post
 import utopia.annex.controller.ApiClient.PreparedRequest
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
-import utopia.disciple.model.request.Body
-import utopia.flow.generic.model.immutable.{Constant, Model, Value}
+import utopia.disciple.model.request.RequestBody
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -102,5 +102,5 @@ trait TextToSpeechRequest[+A] extends ApiRequest[A]
 	override def path: String = ""
 	override def pathParams: Model = Model.empty
 	
-	override def body: Either[Value, Body] = Left(Constant("text", text) +: params.toModel)
+	override def body: Either[Value, RequestBody] = Left(Constant("text", text) +: params.toModel)
 }

@@ -44,6 +44,9 @@ trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike2[Repr] with View[A]]
 	 */
 	def values = valuesIterator.toOptimizedSeq
 	
+	@deprecated("Renamed to .value", "v2.9")
+	def nav = value
+	
 	/**
 	 * Creates an interface for navigating this tree, based on the wrapped values
 	 * @param eq Implicit equality function to apply. Default = `==`.
@@ -63,6 +66,14 @@ trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike2[Repr] with View[A]]
 	
 	// OTHER    --------------------
 	
+	/**
+	 * @param value A value to search
+	 * @param eq Implicit equals function to apply. Default = use ==.
+	 * @tparam N Type of the searched value.
+	 * @return Whether this tree contains a direct child node with value 'value'
+	 */
+	def containsDirectValue[N >: A](value: N)(implicit eq: EqualsFunction[N] = EqualsFunction.default) =
+		children.exists { n => eq(n.value, value) }
 	/**
 	 * @param value A value
 	 * @param eq Implicit equality function to apply. Default = `==`
