@@ -2,7 +2,7 @@ package utopia.flow.collection.template.graph
 
 import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.immutable.graph.Graph2
+import utopia.flow.collection.immutable.graph.Graph
 
 object GraphNode
 {
@@ -36,5 +36,5 @@ object GraphNode
  */
 trait GraphNode[+N, +E] extends GraphNodeLike[N, E, GraphNode[N, E], GraphEdge[E, GraphNode[N, E]]]
 {
-	override def toGraph: Graph2[N, E] = Graph2(allNodesIterator.map(immutable.graph.GraphNode.from))
+	override def toGraph: Graph[N, E] = Graph(allNodesIterator.map(immutable.graph.GraphNode.from))
 }

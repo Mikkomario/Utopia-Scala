@@ -36,7 +36,7 @@ object MutableValueTree
  */
 class MutableValueTree[A](override val value: A, initialChildren: Seq[MutableValueTree[A]] = Empty)
 	extends ValueTree[A] with ValueTreeLike[A, MutableValueTree, MutableValueTree[A]]
-		with MutableTreeLike2[template.tree.ValueTree[A], MutableValueTree[A]]
+		with MutableTreeLike[template.tree.ValueTree[A], MutableValueTree[A]]
 {
 	// ATTRIBUTES  --------------------------
 	

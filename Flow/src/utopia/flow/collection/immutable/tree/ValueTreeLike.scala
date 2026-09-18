@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Single}
 import utopia.flow.collection.template
-import utopia.flow.collection.template.tree.TreeLike2
+import utopia.flow.collection.template.tree.TreeLike
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 
@@ -167,8 +167,8 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	 *          - Right: A copy of this tree with the specified branch
 	 *            merged with the first child node that contained a matching value.
 	 */
-	def mergeBranch[B >: A, T <: N[B] with TreeLike2[T] with View[B]](branch: T)
-	                                                                 (implicit eq: EqualsFunction[B] = EqualsFunction.default): Either[Repr, CC[B]] =
+	def mergeBranch[B >: A, T <: N[B] with TreeLike[T] with View[B]](branch: T)
+	                                                                (implicit eq: EqualsFunction[B] = EqualsFunction.default): Either[Repr, CC[B]] =
 	{
 		// Case: Branch has child nodes => Attempts to merge it with one of the existing nodes
 		if (branch.hasChildren)
@@ -191,8 +191,8 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	 * @tparam T Type of the joined branch nodes
 	 * @return A copy of this tree with the specified branch joined.
 	 */
-	def joinBranch[B >: A, T <: N[B] with TreeLike2[T] with View[B]](branch: T)
-	                                                                (implicit eq: EqualsFunction[B] = EqualsFunction.default): CC[B] =
+	def joinBranch[B >: A, T <: N[B] with TreeLike[T] with View[B]](branch: T)
+	                                                               (implicit eq: EqualsFunction[B] = EqualsFunction.default): CC[B] =
 		joinBranches[B, T](Single(branch))
 	/**
 	 * Joins n new branches to this tree.
@@ -204,8 +204,8 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	 * @tparam T Type of the joined branch nodes
 	 * @return A copy of this tree with the specified branches joined.
 	 */
-	def joinBranches[B >: A, T <: N[B] with TreeLike2[T] with View[B]](branches: IterableOnce[T])
-	                                                                  (implicit eq: EqualsFunction[B] = EqualsFunction.default): CC[B] =
+	def joinBranches[B >: A, T <: N[B] with TreeLike[T] with View[B]](branches: IterableOnce[T])
+	                                                                 (implicit eq: EqualsFunction[B] = EqualsFunction.default): CC[B] =
 	{
 		// Divides the new nodes into those that match existing children and those that don't
 		val (newBranches, matches) = branches.divideWith { branch =>

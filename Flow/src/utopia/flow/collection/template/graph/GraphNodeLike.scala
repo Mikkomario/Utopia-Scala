@@ -3,7 +3,7 @@ package utopia.flow.collection.template.graph
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
-import utopia.flow.collection.immutable.graph.{Graph2, GraphTravelResults, NodeTravelStage}
+import utopia.flow.collection.immutable.graph.{Graph, GraphTravelResults, NodeTravelStage}
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
@@ -321,7 +321,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	 * Converts this node to a graph
 	 * @return A graph based on this node's connections
 	 */
-	def toGraph: Graph2[N, E]
+	def toGraph: Graph[N, E]
     
     
     // COMPUTED    ----------------
@@ -630,8 +630,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @param node The targeted node
 	  * @return Search results, if successful. None if unsuccessful.
 	  */
-	def shortestRoutesToOne(node: NodeTarget[N, E]) =
-		cheapestRoutesToOne(node) { _ => 1 }
+	def shortestRoutesToOne(node: NodeTarget[N, E]) = cheapestRoutesToOne(node) { _ => 1 }
 	/**
 	  * Finds the cheapest routes to a single node.
 	  * @param node The targeted node

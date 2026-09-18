@@ -1,13 +1,13 @@
 package utopia.flow.collection.immutable.tree
 
-import utopia.flow.collection.template.tree.{Tree, TreeLike2}
+import utopia.flow.collection.template.tree.{Tree, TreeLike}
 
 /**
   * A common trait for tree implementations which support filtering / pruning
   * @author Mikko Hilpinen
   * @since 05.06.2026, v2.9
   */
-trait FilterableTreeLike[+Repr <: FilterableTreeLike[Repr]] extends TreeLike2[Repr]
+trait FilterableTreeLike[+Repr <: FilterableTreeLike[Repr]] extends TreeLike[Repr]
 {
 	// ABSTRACT --------------------
 	
@@ -43,5 +43,5 @@ trait FilterableTreeLike[+Repr <: FilterableTreeLike[Repr]] extends TreeLike2[Re
 	 * Creates a new copy of this tree without the provided direct child node
 	 * @param child The child node that is removed from the direct children under this tree
 	 */
-	def withoutDirect(child: TreeLike2[_]) = filterDirect { _ == child }
+	def withoutDirect(child: TreeLike[_]) = filterDirect { _ == child }
 }

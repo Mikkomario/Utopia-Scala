@@ -16,8 +16,20 @@
     - **FileLogger** and **LogProcessToFile**
 - Rewrote **Tree** and **Graph** classes
   - TODO: Document the other changes
-  - **immutable.Tree** is now replaced with **immutable.tree.ValueTree**
+  - **template.TreeLike** was replaced with **template.tree.ValueTreeLike**
+  - **immutable.Tree** was replaced with **immutable.tree.ValueTree**
     - `.map(...)` is no longer available, and is now named `.mapValues(...)`
+  - **mutable.MutableTreeLike** and **MutableTree** were replaced with new versions under package `tree`
+  - **immutable.Graph** was replaced with a new version under package `graph`
+    - The previously used constructor is now named `.withConnections(IterableOnce)`
+  - **template.GraphNode** was replaced with **template.graph.GraphNodeLike**
+    - `/` now yields **Iterator** instead of **Iterable**
+  - **immutable.ViewGraphNode** was replaced with **immutable.graph.GraphNode**
+  - **mutable.GraphNode** was replaced with **mutable.graph.MutableGraphNode**
+    - The `.connect(...)` function now accepts the parameters in reverse order
+  - **template.GraphEdge** was replaced with **template.graph.GraphEdgeLike**
+  - **immutable.GraphEdge** and **ViewGraphEdge** were replaced with a new version under package `graph`
+    - The new version accepts different generic type parameters
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`

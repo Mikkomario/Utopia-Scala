@@ -22,8 +22,8 @@ object Tree
 }
 
 /**
- * Common trait for tree implementations. Removes the generic Repr type from [[TreeLike2]].
+ * Common trait for tree implementations. Removes the generic Repr type from [[TreeLike]].
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-trait Tree extends TreeLike2[Tree]
+trait Tree extends TreeLike[Tree]

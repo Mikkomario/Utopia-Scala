@@ -13,7 +13,7 @@ object NavigateUsingValues
 	 * @tparam Node Type of the nodes in this tree
 	 * @return A factory for constructing navigators from that node
 	 */
-	def from[A, Node <: TreeLike2[Node] with View[A]](root: Node) = new NavigatorFactory[A, Node](root)
+	def from[A, Node <: TreeLike[Node] with View[A]](root: Node) = new NavigatorFactory[A, Node](root)
 	
 	/**
 	 * @param root Root node from which navigation is performed
@@ -24,15 +24,15 @@ object NavigateUsingValues
 	 * @tparam Node Type of the nodes returned
 	 * @return
 	 */
-	def apply[A, Nav >: A, Node <: TreeLike2[Node] with View[A]](root: Node)(wrapNav: Nav => Node)
-	                                                            (implicit eq: EqualsFunction[Nav] = EqualsFunction.default) =
+	def apply[A, Nav >: A, Node <: TreeLike[Node] with View[A]](root: Node)(wrapNav: Nav => Node)
+	                                                           (implicit eq: EqualsFunction[Nav] = EqualsFunction.default) =
 		new NavigateUsingValues[A, Nav, Node](root)(wrapNav)(eq)
 	
 	
 	// NESTED   ----------------------
 	
 	// TODO: Remove this factory class. The type parameters are not being interpreted correctly
-	class NavigatorFactory[A, Node <: TreeLike2[Node] with View[A]](root: Node)
+	class NavigatorFactory[A, Node <: TreeLike[Node] with View[A]](root: Node)
 	{
 		/**
 		 * @param wrapNav A function that accepts a nav element and wraps it in a new node
@@ -54,9 +54,9 @@ object NavigateUsingValues
  * @author Mikko Hilpinen
  * @since 11.09.2026, v2.9
  */
-class NavigateUsingValues[A, -Nav >: A, Node <: TreeLike2[Node] with View[A]](override protected val current: Node)
-                                                                             (wrapNav: Nav => Node)
-                                                                             (implicit eq: EqualsFunction[Nav] = EqualsFunction.default)
+class NavigateUsingValues[A, -Nav >: A, Node <: TreeLike[Node] with View[A]](override protected val current: Node)
+                                                                            (wrapNav: Nav => Node)
+                                                                            (implicit eq: EqualsFunction[Nav] = EqualsFunction.default)
 	extends TreeNavigator[Nav, Node]
 {
 	override protected def findUnder(parent: Node, nav: Nav): Option[Node] =

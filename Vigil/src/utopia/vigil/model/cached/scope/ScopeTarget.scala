@@ -1,6 +1,7 @@
 package utopia.vigil.model.cached.scope
 
-import utopia.flow.collection.immutable.{Empty, Graph, Pair}
+import utopia.flow.collection.immutable.graph.Graph
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.operator.enumeration.End
 import utopia.flow.operator.enumeration.End.{First, Last}
@@ -29,8 +30,8 @@ object ScopeTarget
 	private val lazyGraphs = Lazy.resettable {
 		val links = connectionPool.logging { implicit c => AccessScopeRelations.values.parentAndChildIds }
 			.getOrElse(Empty)
-		val childGraph = Graph(links.iterator.map { link => (link.first, (), link.second) }.toSet)
-		val parentGraph = Graph(links.iterator.map { link => (link.second, (), link.first) }.toSet)
+		val childGraph = Graph.withConnections(links.iterator.map { link => (link.first, (), link.second) })
+		val parentGraph = Graph.withConnections(links.iterator.map { link => (link.second, (), link.first) })
 		
 		Pair(parentGraph, childGraph)
 	}

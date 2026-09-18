@@ -3,18 +3,18 @@ package utopia.flow.collection.template.tree
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.iterator.{BottomToTopIterator, OrderedDepthIterator, PollableOnce}
-import utopia.flow.collection.template.tree.TreeLike2.AllPathsIterator
+import utopia.flow.collection.template.tree.TreeLike.AllPathsIterator
 import utopia.flow.operator.MaybeEmpty
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 
-object TreeLike2
+object TreeLike
 {
 	// NESTED   -------------------------
 	
-	private class AllPathsIterator[+N <: TreeLike2[N]](parents: Seq[N], node: N) extends Iterator[Seq[N]]
+	private class AllPathsIterator[+N <: TreeLike[N]](parents: Seq[N], node: N) extends Iterator[Seq[N]]
 	{
 		// ATTRIBUTES   -----------------
 		
@@ -44,7 +44,7 @@ object TreeLike2
   * @since 1.11.2016
   * @tparam Repr Types of nodes in this tree
   */
-trait TreeLike2[+Repr <: TreeLike2[Repr]] extends MaybeEmpty[Repr]
+trait TreeLike[+Repr <: TreeLike[Repr]] extends MaybeEmpty[Repr]
 {
 	// ABSTRACT   --------------------
 	

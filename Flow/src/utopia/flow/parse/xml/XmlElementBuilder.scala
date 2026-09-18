@@ -5,7 +5,7 @@ import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.mutable.DataType.StringType
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.mutable.tree.MutableTreeLike2
+import utopia.flow.collection.mutable.tree.MutableTreeLike
 import utopia.flow.collection.template.tree.TreeNavigator
 import utopia.flow.view.mutable.Pointer
 
@@ -39,7 +39,7 @@ object XmlElementBuilder
 class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Value.emptyWithType(StringType),
                         initialAttributeMap: Map[Namespace, Model] = Map(),
                         initialChildren: Seq[XmlElementBuilder] = Empty)
-	extends XmlElementLike[XmlElementBuilder] with MutableTreeLike2[XmlElement, XmlElementBuilder] with Pointer[Value]
+	extends XmlElementLike[XmlElementBuilder] with MutableTreeLike[XmlElement, XmlElementBuilder] with Pointer[Value]
 		with TreeNavigator[NamespacedString, XmlElementBuilder]
 {
 	// ATTRIBUTES   --------------------------------

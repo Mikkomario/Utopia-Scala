@@ -12,8 +12,8 @@ import utopia.flow.view.template.Extender
   * @tparam A Type of item used when navigating through this tree. May also be considered the main content of this tree.
   * @tparam Repr Types of nodes in this tree
   */
-trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike2[Repr] with View[A]]
-	extends TreeLike2[Repr] with View[A] with Extender[A]
+trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike[Repr] with View[A]]
+	extends TreeLike[Repr] with View[A] with Extender[A]
 {
 	// ABSTRACT -------------------------
 	

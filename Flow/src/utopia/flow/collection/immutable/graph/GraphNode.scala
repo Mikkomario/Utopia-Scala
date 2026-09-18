@@ -111,7 +111,7 @@ class GraphNode[+N, +E](override val value: N, override val leavingEdges: Iterab
 	override def self: GraphNode[N, E] = this
 	override protected def factory: GraphFactory[GraphNode, GraphEdge] = GraphNode
 	
-	override def toGraph: Graph2[N, E] = Graph2(allNodesIterator)
+	override def toGraph: Graph[N, E] = Graph(allNodesIterator)
 	
 	override def filterDirect(f: GraphEdge[N, E] => Boolean): GraphNode[N, E] = {
 		if (leavingEdges.knownSize == 0)

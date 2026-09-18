@@ -1,7 +1,8 @@
 package utopia.paradigm.measurement
 
-import MetricScale._
-import utopia.flow.collection.immutable.{Graph, Pair}
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.graph.Graph
+import utopia.paradigm.measurement.MetricScale._
 
 /**
  * An enumeration for standard distance units
@@ -105,7 +106,7 @@ sealed abstract class DistanceUnit
 		if (targetUnit == this)
 			1.0
 		else
-			node.shortestRoutesToOne { _.value == targetUnit }.get.anyRoute.view.map { _.value }.product
+			node.shortestRoutesToOne { (n, _) => n.value == targetUnit }.get.anyRoute.view.map { _.value }.product
 	}
 	
 	/**
@@ -132,7 +133,7 @@ object DistanceUnit
 	  * A graph that may be utilized in unit conversions.
 	  * Edges apply scaling modifiers assuming that the end node is the targeted (i.e. conversion result) unit.
 	  */
-	private val conversionGraph = Graph[DistanceUnit, Double](Set(
+	private val conversionGraph = Graph.withConnections[DistanceUnit, Double](Vector(
 		(MegaMeter, KiloMeter, 1000.0),
 		(MegaMeter, Meter, 1000000.0),
 		(KiloMeter, Meter, 1000.0),

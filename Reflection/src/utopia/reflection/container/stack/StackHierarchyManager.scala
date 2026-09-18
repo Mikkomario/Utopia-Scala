@@ -2,8 +2,8 @@ package utopia.reflection.container.stack
 
 import utopia.firmament.awt.AwtEventThread
 import utopia.flow.async.process.LoopingProcess
-import utopia.flow.collection.immutable.GraphEdge
-import utopia.flow.collection.mutable.GraphNode
+import utopia.flow.collection.mutable.graph.{MutableGraphEdge, MutableGraphNode}
+import utopia.flow.time.Duration
 import utopia.flow.util.logging.Logger
 import utopia.flow.view.mutable.async.Volatile
 import utopia.genesis.util.Fps
@@ -13,7 +13,6 @@ import utopia.reflection.component.template.layout.stack.ReflectionStackable
 import scala.collection.immutable.VectorBuilder
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
 
 /**
   * Stack hierarchy manager tracks stack component hierarchies and updates the components when necessary
@@ -24,8 +23,8 @@ object StackHierarchyManager
 {
 	// TYPES	-------------------------
 	
-	private type Node = GraphNode[ReflectionStackable, Int]
-	private type Edge = GraphEdge[Int, Node]
+	private type Node = MutableGraphNode[ReflectionStackable, Int]
+	private type Edge = MutableGraphEdge[Int, Node]
 	
 	
 	// ATTRIBUTES	---------------------
@@ -84,42 +83,39 @@ object StackHierarchyManager
 	  * @return All components that are above the specified component in this stack hierarchy, from the highest
 	  *         to the lowest. Ends with the specified component. Not empty.
 	  */
-	def upperHierarchyOf(component: ReflectionStackable) = ids.get(component.stackId) match
-	{
-		case Some(id) =>
-			// Case: Master component
-			if (id.isMasterId)
-				graph.get(id.masterId).map { _.value }.toVector
-			// Case: Child component
-			else
-				graph.get(id.masterId) match
-				{
-					case Some(masterNode) =>
-						// Collects the whole component path
-						val builder = new VectorBuilder[ReflectionStackable]()
-						builder += masterNode.value
-						var lastNode = masterNode
-						var remainingIds = id.parts.drop(1)
-						while (remainingIds.nonEmpty)
-						{
-							(lastNode/remainingIds.head).headOption match
-							{
-								case Some(nextNode) =>
-									builder += nextNode.value
-									lastNode = nextNode
-									remainingIds = remainingIds.drop(1)
-								// Case: Path was invalid / broken => adds the component to the end and finishes
-								case None =>
-									builder += component
-									remainingIds = Vector()
+	def upperHierarchyOf(component: ReflectionStackable) =
+		ids.get(component.stackId) match {
+			case Some(id) =>
+				// Case: Master component
+				if (id.isMasterId)
+					graph.get(id.masterId).map { _.value }.toVector
+				// Case: Child component
+				else
+					graph.get(id.masterId) match {
+						case Some(masterNode) =>
+							// Collects the whole component path
+							val builder = new VectorBuilder[ReflectionStackable]()
+							builder += masterNode.value
+							var lastNode = masterNode
+							var remainingIds = id.parts.drop(1)
+							while (remainingIds.nonEmpty) {
+								(lastNode/remainingIds.head).nextOption() match {
+									case Some(nextNode) =>
+										builder += nextNode.value
+										lastNode = nextNode
+										remainingIds = remainingIds.drop(1)
+									// Case: Path was invalid / broken => adds the component to the end and finishes
+									case None =>
+										builder += component
+										remainingIds = Vector()
+								}
 							}
-						}
-						builder.result()
-					case None => Vector(component)
-				}
-		// Case: Unregistered component => treats it as an individual master component
-		case None => Vector(component)
-	}
+							builder.result()
+						case None => Vector(component)
+					}
+			// Case: Unregistered component => treats it as an individual master component
+			case None => Vector(component)
+		}
 	
 	/**
 	  * Requests validation for the specified item
@@ -241,7 +237,7 @@ object StackHierarchyManager
 					if (itemId.isMasterId)
 						graph -= itemId.masterId
 					else
-						graphForId(itemId).disconnectTotally(node)
+						graphForId(itemId).disconnectFrom(node)
 					
 					// Removes any child nodes
 					node.allNodesIterator.foreach { ids -= _.value.stackId }
@@ -283,9 +279,9 @@ object StackHierarchyManager
 					// Disconnects the child from the parent, also updates all id numbers
 					nodeOptionForId(parentId).foreach { parentNode =>
 						val childIndex = childId.last
-						(parentNode / childIndex).headOption.foreach { childNode =>
+						(parentNode / childIndex).nextOption().foreach { childNode =>
 							// Disconnects the child node
-							parentNode.disconnectDirect(childNode)
+							parentNode.disconnectFromDirect(childNode)
 							// Updates the ids of grandchildren (and their children) to not include the removed old parent's id
 							childNode.allNodesIterator.foreach { c =>
 								val grandChildStackId = c.value.stackId
@@ -317,13 +313,13 @@ object StackHierarchyManager
 							childNode.allNodesIterator.foreach { n => ids(n.value.stackId) = newParentId + ids(n.value.stackId) }
 							// Removes the child from master nodes and attaches it to the new parent
 							graph -= childIndex
-							newParentNode.connect(childNode, childIndex)
+							newParentNode.connect(childIndex, childNode)
 						}
 					case None =>
 						// Otherwise adds the child as a new id + node
 						val newChildId = newParentId + indexCounter.next()
 						ids(child.stackId) = newChildId
-						newParentNode.connect(new Node(child), newChildId.last)
+						newParentNode.connect(newChildId.last, new Node(child))
 				}
 			}
 		}
@@ -354,8 +350,8 @@ object StackHierarchyManager
 				// Disconnects the child from the parent, also updates all id numbers
 				nodeOptionForId(parentId).foreach { parentNode =>
 					val childIndex = childId.last
-					(parentNode / childIndex).headOption.foreach { childNode =>
-						parentNode.disconnectDirect(childNode)
+					(parentNode / childIndex).nextOption().foreach { childNode =>
+						parentNode.disconnectFromDirect(childNode)
 						childNode.allNodesIterator.foreach { c =>
 							ids(c.value.stackId) = ids(c.value.stackId).dropUntil(childIndex)
 						}
@@ -368,8 +364,7 @@ object StackHierarchyManager
 		}
 	}
 	
-	private def addRoot(item: ReflectionStackable) =
-	{
+	private def addRoot(item: ReflectionStackable) = {
 		// Creates a new id
 		val newId = StackId.root(indexCounter.next())
 		// Adds the new id to id map as well as graph

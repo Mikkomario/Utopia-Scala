@@ -3,7 +3,7 @@ package utopia.vault.util.console
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.template.graph.GraphNode
-import utopia.flow.collection.template.tree.TreeLike2
+import utopia.flow.collection.template.tree.TreeLike
 import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.console.{ArgumentSchema, Command}
@@ -64,7 +64,7 @@ private object ConsoleCommands
 	}
 	private case class HierarchicalTable(name: String, otherParents: Seq[String] = Empty,
 	                                     primaryParent: Option[String] = None, children: Seq[HierarchicalTable] = Empty)
-		extends TreeLike2[HierarchicalTable]
+		extends TreeLike[HierarchicalTable]
 	{
 		// IMPLEMENTED  ------------------------
 		
@@ -187,13 +187,13 @@ class ConsoleCommands(implicit context: VaultContext) extends Extender[Seq[Comma
 	
 	// OTHER    --------------------------
 	
-	private def printTree[T <: TreeLike2[T]](tree: T, indentation: Int = 0)(treeToString: T => String): Unit = {
+	private def printTree[T <: TreeLike[T]](tree: T, indentation: Int = 0)(treeToString: T => String): Unit = {
 		val linear = linearPathFrom(tree)
 		println(s"${ "\t" * indentation }- ${ linear.view.map(treeToString).mkString(" -> ") }")
 		linear.last.children.foreach { printTree(_, indentation + 1)(treeToString) }
 	}
 	
-	private def linearPathFrom[T <: TreeLike2[T]](tree: T): Seq[T] = {
+	private def linearPathFrom[T <: TreeLike[T]](tree: T): Seq[T] = {
 		if (tree.children.hasSize(1))
 			tree +: linearPathFrom(tree.children.head)
 		else

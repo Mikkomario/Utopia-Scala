@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable.tree
 
-import utopia.flow.collection.template.tree.{Tree, TreeLike2}
+import utopia.flow.collection.template.tree.{Tree, TreeLike}
 
 /**
   * Common trait for mutable tree implementations
@@ -9,7 +9,7 @@ import utopia.flow.collection.template.tree.{Tree, TreeLike2}
  * @author Mikko Hilpinen
   * @since 1.11.2016, rewritten 8.9.2026 in v2.9
   */
-trait MutableTreeLike2[-N, +Repr <: MutableTreeLike2[_, Repr]] extends TreeLike2[Repr]
+trait MutableTreeLike[-N, +Repr <: MutableTreeLike[_, Repr]] extends TreeLike[Repr]
 {
 	// ABSTRACT ---------------------
 	

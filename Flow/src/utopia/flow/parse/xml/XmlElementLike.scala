@@ -2,7 +2,7 @@ package utopia.flow.parse.xml
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Pair, Single}
-import utopia.flow.collection.template.tree.TreeLike2
+import utopia.flow.collection.template.tree.TreeLike
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
@@ -61,7 +61,7 @@ object XmlElementLike
  * @author Mikko Hilpinen
  * @since 13.1.2017 (v1.3)
  */
-trait XmlElementLike[+Repr <: XmlElementLike[Repr]] extends TreeLike2[Repr] with ModelConvertible with View[Value]
+trait XmlElementLike[+Repr <: XmlElementLike[Repr]] extends TreeLike[Repr] with ModelConvertible with View[Value]
 {
 	// ABSTRACT --------------------------------
 	
