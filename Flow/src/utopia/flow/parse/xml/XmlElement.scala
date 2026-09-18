@@ -186,7 +186,7 @@ object XmlElement extends FromModelFactory[XmlElement]
 	}
 	
 	class XmlMutator(override protected val root: XmlElement, override protected val path: Seq[XmlElement],
-	                 override val node: XmlElement, override val generated: Boolean)
+	                 override val node: XmlElement, override val generated: Boolean = false)
 		extends TreeMutatorLike[NamespacedString, XmlElement, XmlElement, XmlMutator]
 	{
 		// IMPLEMENTED  --------------------------
@@ -200,6 +200,15 @@ object XmlElement extends FromModelFactory[XmlElement]
 		override protected def findNodeFor(nodes: Seq[XmlElement], nav: NamespacedString): Option[XmlElement] =
 			nodes.find { _.name ~== nav }
 		override protected def nodeFor(nav: NamespacedString): XmlMutator = wrapChild(XmlElement(nav), generated = true)
+		override protected def nodeForPath(parents: Seq[XmlMutator], path: Iterator[NamespacedString]): XmlMutator = {
+			val lastExisting = {
+				if (parents.hasSize > 1)
+					new XmlMutator(root, this.path ++ parents.view.tail.map { _.node }, parents.last.node)
+				else
+					this
+			}
+			path.foldLeft(lastExisting) { _ nodeFor _ }
+		}
 		
 		
 		// OTHER    ------------------------------
@@ -257,6 +266,8 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
 		parent.children.find { _.name ~== nav }
 	
 	override protected def nodeFor(nav: NamespacedString): XmlElement = XmlElement(nav)
+	override protected def nodeForPath(parents: Seq[XmlElement], path: Iterator[NamespacedString]): XmlElement =
+		nodeFor(path.last)
 	
 	
 	// OTHER    ------------------------

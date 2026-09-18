@@ -60,10 +60,20 @@ object TreeLikeTest extends App
 	assert(t1.pathTo(n4).get.map { _.value } == Vector(1, 4))
 	
 	assert(t1.findCommonParentOf(Pair(3, 4)) { _.value == _ }.get.value == 1)
+	assert(t1.findCommonParentOf(Pair(2, 3)) { _.value == _ }.get.value == 1)
 	assert(t1.rootsWhereIterator { _.value >= 2 }.map { _.value }.toVector == Vector(2, 4))
 	assert(t1.findWithPath { _.value >= 2 }.get.map { _.value } == Vector(1, 2))
 	assert(t1.pathsToRootsWhereIterator { _.value >= 3 }.map { _.map { _.value } }.toVector ==
 		Vector(Vector(1, 2, 3), Vector(1, 4)))
+	
+	// 1 -> 2 -> 3 -> 4
+	//                  -> 5
+	//                  -> 6
+	private val t3 = ValueTree(1).withChild(
+		ValueTree(2).withChild(ValueTree(3).withChild(ValueTree(4).withChildren(ValueTree(5), ValueTree(6)))))
+	
+	assert(t3.nodesBelowIterator.map { _.value }.toVector == Vector(2, 3, 4, 5, 6))
+	assert(t3.nodesBelowIteratorUpToDepth(3).map { _.value }.toVector == Vector(2, 3, 4))
 	
 	println("Success!")
 }

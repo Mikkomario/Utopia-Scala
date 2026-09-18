@@ -312,8 +312,8 @@ trait TreeLike[+Repr <: TreeLike[Repr]] extends MaybeEmpty[Repr]
 	 */
 	def findCommonParentOf[B](elements: Iterable[B])(contains: (Repr, B) => Boolean) =
 		elements.emptyOneOrMany.flatMap {
-			// Case: Targeting only a single element => Finds that element from this tree
-			case Left(only) => allNodesIterator.find { contains(_, only) }
+			// Case: Targeting only a single element => Finds that element's parent from this tree
+			case Left(only) => allNodesIterator.find { c => c.children.exists { contains(_, only) } }
 			// Case: Targeting multiple elements
 			case Right(elements) =>
 				// Searches for each element, including their full paths
@@ -321,14 +321,20 @@ trait TreeLike[+Repr <: TreeLike[Repr]] extends MaybeEmpty[Repr]
 					// Checks the common part within the element paths
 					val pathsIter = paths.iterator
 					val firstPath = pathsIter.next()
-					pathsIter
+					val commonPath = pathsIter
 						.foldLeftIterator(firstPath) { (commonPath, nextPath) =>
 							val commonElementsCount = commonPath.iterator.zip(nextPath)
 								.takeWhile { case (p1, p2) => p1 == p2 }.size
 							commonPath.take(commonElementsCount)
 						}
-						// Finds the last common element (assumes that this appears as the first element in all paths)
-						.takeTo { _.hasSize <= 1 }.last.lastOption
+						// Assumes that $this appears as the first element in all paths, hence hasSize <= 1 and .last.
+						.takeTo { _.hasSize <= 1 }.last
+					
+					// If possible, finds the last common element
+					// However, finds the second-last element in case the last element matches
+					// one of the searched elements
+					commonPath.lastOption.filterNot { common => paths.exists { _.lastOption.contains(common) } }
+						.orElse { commonPath.reverseIterator.drop(1).nextOption() }
 				}
 		}
 	

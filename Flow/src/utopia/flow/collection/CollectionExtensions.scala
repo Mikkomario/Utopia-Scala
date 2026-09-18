@@ -177,7 +177,6 @@ object CollectionExtensions
 		 *         1. An iterator that yields the items that come after the searched item
 		 *         1. Whether the searched item was found
 		 */
-		// TODO: Possibly just remove this function
 		def incompleteMapFirstWhere[B >: iter.A, To](find: iter.A => Boolean)(map: iter.A => B)
 		                                            (implicit buildFrom: BuildFrom[Repr, B, To]): (mutable.Builder[B, To], Iterator[B], Boolean) =
 		{

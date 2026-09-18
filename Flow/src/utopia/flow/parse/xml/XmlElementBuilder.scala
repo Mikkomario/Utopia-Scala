@@ -80,6 +80,13 @@ class XmlElementBuilder(initialName: NamespacedString, initialValue: Value = Val
 		children :+= newChild
 		newChild
 	}
+	override protected def nodeForPath(parents: Seq[XmlElementBuilder], path: Iterator[NamespacedString]): XmlElementBuilder = {
+		var lastParent = parents.last
+		while (path.hasNext) {
+			lastParent = lastParent.nodeFor(path.next())
+		}
+		lastParent
+	}
 	
 	
 	// OTHER    -----------------------------------

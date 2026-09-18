@@ -1,5 +1,6 @@
 package utopia.flow.collection.template.tree
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 
@@ -63,4 +64,5 @@ class NavigateUsingValues[A, -Nav >: A, Node <: TreeLike[Node] with View[A]](ove
 		parent.children.find { node => eq(node.value, nav) }
 	
 	override protected def nodeFor(nav: Nav): Node = wrapNav(nav)
+	override protected def nodeForPath(parents: Seq[Node], path: Iterator[Nav]): Node = nodeFor(path.last)
 }

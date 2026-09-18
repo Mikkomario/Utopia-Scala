@@ -2,7 +2,7 @@ package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.LazySingle
-import utopia.flow.collection.immutable.{Empty, SingleView}
+import utopia.flow.collection.immutable.{Empty, Single, SingleView}
 import utopia.flow.collection.template
 import utopia.flow.collection.template.tree
 import utopia.flow.collection.template.tree.{NavigateUsingValues, TreeNavigator}
@@ -111,7 +111,7 @@ object ValueTree
 	                 (implicit eq: EqualsFunction[A] = EqualsFunction.default): ValueTreeMutator[A] =
 	{
 		val valueTree = from(tree)
-		new ValueTreeMutator[A](valueTree, Empty, valueTree)
+		new ValueTreeMutator[A](valueTree, Single(valueTree), valueTree)
 	}
 	
 	
@@ -237,10 +237,10 @@ object ValueTree
 		}
 	}
 	
-	/*
+	/**
 	 * A mutator interface for value trees
 	 * @param root Modified root-level node
-	 * @param path Path to the targeted node
+	 * @param path Path to the targeted node, including that node.
 	 * @param node Targeted node
 	 * @param generated Whether the targeted node has been generated (i.e. didn't previously exist under 'root')
 	 * @param eq Implicit equals function used in navigation
@@ -263,7 +263,7 @@ object ValueTree
 				val pathIter = ascendingIter
 				pathIter.nextOption() match {
 					case Some(parent) => assign(parent, parent :+ node, pathIter)
-						// Case: Including a generated root node (not expected) => Yields the new node
+					// Case: Including a generated root node (not expected) => Yields the new node
 					case None => node
 				}
 			}
@@ -316,11 +316,20 @@ object ValueTree
 		override def filterDirect(f: ValueTree[A] => Boolean): ValueTree[A] = mapped { _.filterDirect(f) }
 		override def filter(f: ValueTree[A] => Boolean): ValueTree[A] = mapped { _.filter(f) }
 		
-		override protected def nodeFor(nav: A): ValueTreeMutator[A] =
-			wrapChild(ValueTree(nav).withoutChildren, generated = true)
-		
 		override protected def findUnder(parent: ValueTreeMutator[A], nav: A): Option[ValueTreeMutator[A]] =
 			parent.node.children.find { node => eq(node, nav) }.map { wrapChild(_) }
+		
+		override protected def nodeFor(nav: A): ValueTreeMutator[A] =
+			wrapChild(ValueTree(nav).withoutChildren, generated = true)
+		override protected def nodeForPath(parents: Seq[ValueTreeMutator[A]], path: Iterator[A]): ValueTreeMutator[A] = {
+			val lastExisting = {
+				if (parents.hasSize > 1)
+					new ValueTreeMutator(root, this.path ++ parents.view.tail.map { _.node }, parents.last.node)
+				else
+					this
+			}
+			path.foldLeft(lastExisting) { _ nodeFor _ }
+		}
 		
 		
 		// OTHER    -------------------------------
@@ -365,12 +374,12 @@ object ValueTree
 			// Case: Still going up => Replaces the updated node within the parent
 			else {
 				val nextOriginal = pathIter.next()
-				assign(nextOriginal, nextOriginal.replaceChild(original, updated), pathIter)
+				assign(nextOriginal, nextOriginal.replaceOrAppendDirect(original, updated), pathIter)
 			}
 		}
 		
 		private def wrapChild(child: ValueTree[A], generated: Boolean = false): ValueTreeMutator[A] =
-			new ValueTreeMutator[A](root, path :+ node, child, generated)
+			new ValueTreeMutator[A](root, path :+ child, child, generated)
 	}
 	
 	private case class _ValueTree[+A](override val value: A, override val children: Seq[ValueTree[A]], lazily: Boolean)
@@ -432,7 +441,8 @@ trait ValueTree[+A]
 	/**
 	 * @return A mutator interface targeting this node
 	 */
-	def mutate[B >: A](implicit eq: EqualsFunction[B]) = mutateUsing[B](eq)
+	def mutate[B >: A](implicit eq: EqualsFunction[B] = EqualsFunction.default) =
+		mutateUsing[B](eq)
 	
 	
 	// IMPLEMENTED  -------------------------

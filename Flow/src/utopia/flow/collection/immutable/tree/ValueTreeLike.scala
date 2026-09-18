@@ -79,15 +79,62 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	
 	/**
 	 * Replaces one of the child nodes of this tree
+	 * @param originalValue Value of the child node to replace
+	 * @param replacement Replacing node
+	 * @return A copy of this tree with the node matching 'originalValue' replaced with 'replacement'.
+	 *         If this tree didn't directly contain 'originalValue',
+	 *         yields a copy of this node with 'replacement' appended.
+	 */
+	def replaceOrAppendDirectValue[T >: A, B >: A](originalValue: T, replacement: => N[B])
+	                                              (implicit eq: EqualsFunction[T] = EqualsFunction.default) =
+		replaceDirectValue(originalValue, replacement).getOrElse { this :+ replacement }
+	/**
+	 * Replaces one of the child nodes of this tree
+	 * @param originalValue Value of the child node to replace
+	 * @param replacement Replacing node (call-by-name)
+	 * @return Returns either:
+	 *         - Left(self): If this node didn't contain a direct child with a value matching 'originalValue'
+	 *         - Right: A copy of this tree with the node matching 'originalValue' replaced with 'replacement'
+	 */
+	def replaceDirectValue[T >: A, B >: A](originalValue: T, replacement: => N[B])
+	                                      (implicit eq: EqualsFunction[T] = EqualsFunction.default) =
+		replaceFirstDirectWhere[B] { n => eq(n.value, originalValue) }(replacement)
+	/**
+	 * Replaces one of the child nodes of this tree
 	 * @param original Child node to replace
 	 * @param replacement Replacing node
 	 * @return Copy of this tree with 'original' replaced with 'replacement'.
-	 *         Note: If this tree didn't directly contain 'original', 'replacement' is still added.
+	 *         If this tree didn't directly contain 'original', yields a copy of this node with 'replacement' appended.
 	 */
-	def replaceChild[B >: A](original: Any, replacement: N[B]): CC[B] =
-		withChildren[B](children.mapOrAppend[N[B], Seq[N[B]]] { node =>
-			if (original == node) Some(replacement) else None
-		}(replacement))
+	def replaceOrAppendDirect[B >: A](original: TreeLike[_], replacement: N[B]) =
+		replaceDirect(original, replacement).getOrElse { this :+ replacement }
+	/**
+	 * Replaces one of the child nodes of this tree
+	 * @param original Child node to replace
+	 * @param replacement Replacing node (call-by-name)
+	 * @return Returns either:
+	 *         - Left(self): If this node didn't contain 'original' as a direct child
+	 *         - Right: A copy of this tree with 'original' replaced with 'replacement'
+	 */
+	def replaceDirect[B >: A](original: TreeLike[_], replacement: => N[B]) =
+		replaceFirstDirectWhere[B] { _ == original }(replacement)
+	/**
+	 * Replaces one of the direct child nodes of this node
+	 * @param find A function that yields true for the node to replace
+	 * @param replacement The replacing node. Call-by-name.
+	 * @return Returns either:
+	 *         - Left(self): If this node didn't contain a direct child that matched 'find'
+	 *         - Right: A copy of this tree with the first targeted node replaced with 'replacement'
+	 */
+	def replaceFirstDirectWhere[B >: A](find: Repr => Boolean)(replacement: => N[B]) = {
+		val (builder, remainderIter, found) =
+			children.incompleteMapFirstWhere[N[B], Seq[N[B]]](find) { _ => replacement }
+			
+		if (found)
+			Right(withChildren(CachingSeq(remainderIter, builder.result())))
+		else
+			Left(self)
+	}
 	
 	/**
 	 * Maps the topmost nodes in this tree, which match the specified filter function.
@@ -98,6 +145,22 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	def mapRootsWhere[B >: A](filter: Repr => Boolean)(f: Repr => N[B]): CC[B] =
 		mapDirect { c => if (filter(c)) f(c) else c.mapRootsWhere[B](filter)(f): N[B] }
 	
+	/**
+	 * Maps the first direct child node that satisfies the specified search condition.
+	 * @param find A search function that yields true for the node to map
+	 * @param map A mapping function applied to the found node
+	 * @return Either:
+	 *         - Left: This tree, if no direct child node satisfied the specified search condition, or
+	 *         - Right: A copy of this tree with a single child node mapped
+	 */
+	def mapFirstDirectWhere[B >: A](find: Repr => Boolean)(map: Repr => N[B]) = {
+		val (builder, remainderIter, found) = children.incompleteMapFirstWhere[N[B], Seq[N[B]]](find)(map)
+		
+		if (found)
+			Right(withChildren(CachingSeq[N[B]](remainderIter, builder.result())))
+		else
+			Left(self)
+	}
 	/**
 	 * Maps the first node that satisfies the specified search condition.
 	 * Targets all nodes under this one.
@@ -146,15 +209,27 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	}
 	
 	/**
-	 * Replaces a single branch within this tree with the specified branch, based on the branch root nav element.
+	 * Replaces a single branch directly under this node with the specified branch, based on the branch root value.
 	 * @param newBranch A tree to replace an existing branch with
 	 * @return Either:
-	 *             Left: This tree, if it didn't contain a node that could be replaced with the specified tree
-	 *             Right: A copy of this tree where the highest node
-	 *             with a nav element matching that of the specified node has been replaced with the specified node
+	 *          - Left(self) if this tree didn't contain a node with a value matching the specified branch root
+	 *          - Right: A copy of this tree with the specified branch
+	 *                   replacing the first direct child node that contained a matching value.
+	 */
+	def replaceDirectBranch[B >: A](newBranch: N[B] with View[B])(implicit eq: EqualsFunction[B] = EqualsFunction.default) =
+		mapFirstDirectWhere[B] { c => eq(c.value, newBranch.value) } { _ => newBranch }
+	/**
+	 * Replaces a single branch within this tree with the specified branch, based on the branch root value.
+	 * NB: The replaced node may be anywhere below this node.
+	 * @param newBranch A tree to replace an existing branch with
+	 * @return Either:
+	 *          - Left(self) if this tree didn't contain a node with a value matching the specified branch root
+	 *          - Right: A copy of this tree with the specified branch
+	 *                   replacing the first node that contained a matching value.
 	 */
 	def replaceBranch[B >: A](newBranch: N[B] with View[B])(implicit eq: EqualsFunction[B] = EqualsFunction.default) =
 		mapFirstWhere[B] { c => eq(c.value, newBranch.value) } { _ => newBranch }
+	
 	/**
 	 * Merges a branch into this tree at the first direct child node that shares a value with the specified branch root.
 	 *
@@ -163,9 +238,35 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 	 *
 	 * @param branch A branch to merge into this tree, if possible
 	 * @return Either:
+	 *          - Left(self) if this tree didn't contain a direct child node with matching value
+	 *          - Right: A copy of this tree with the specified branch
+	 *                   merged with the first child node that contained a matching value.
+	 */
+	def mergeDirectBranch[B >: A, T <: N[B] with TreeLike[T] with View[B]](branch: T)
+	                                                                      (implicit eq: EqualsFunction[B] = EqualsFunction.default) =
+	{
+		// Case: Branch has child nodes => Attempts to merge it with one of the existing (direct) children
+		if (branch.hasChildren)
+			mapFirstDirectWhere[B] { c => eq(c.value, branch.value) } { _.joinBranches[B, T](branch.children): N[B] }
+		// Case: Already contains a matching child => No need to merge
+		else if (containsDirectValue(branch.value))
+			Right(self)
+		// Case: No matching child => Yields Left
+		else
+			Left(self)
+	}
+	/**
+	 * Merges a branch into this tree at the first lower node that shares a value with the specified branch root.
+	 * The updated node may reside anywhere under this node.
+	 *
+	 * Applies the merge as a join; I.e. doesn't add duplicate nodes,
+	 * but adds all missing nodes even from the lower layers.
+	 *
+	 * @param branch A branch to merge into this tree, if possible
+	 * @return Either:
 	 *          - Left(self) if this tree didn't contain a node with matching value
 	 *          - Right: A copy of this tree with the specified branch
-	 *            merged with the first child node that contained a matching value.
+	 *                   merged with the first child node that contained a matching value.
 	 */
 	def mergeBranch[B >: A, T <: N[B] with TreeLike[T] with View[B]](branch: T)
 	                                                                (implicit eq: EqualsFunction[B] = EqualsFunction.default): Either[Repr, CC[B]] =
@@ -174,7 +275,7 @@ trait ValueTreeLike[+A, N[+_], +CC[+X] <: N[X], +Repr <: ValueTreeLike[A, N, CC,
 		if (branch.hasChildren)
 			mapFirstWhere[B] { n => eq(n.value, branch.value) } { _.joinBranches[B, T](branch.children): N[B] }
 		// Case: Already contains a matching node => No changes are needed
-		else if (containsDirectValue(branch.value))
+		else if (containsValue(branch.value))
 			Right(self)
 		// Case: No matching node to merge with => Yields Left.
 		else

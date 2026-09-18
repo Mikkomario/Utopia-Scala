@@ -1,6 +1,7 @@
 package utopia.flow.collection.immutable
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.immutable.VectorBuilder
@@ -146,7 +147,7 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 	  * @tparam A Type of items placed in the resulting collection.
 	  */
 	// WET WET from PairOrVectorBuilder (consider removing that class or adding a common extension)
-	class OptimizedSeqBuilder[A] extends mutable.Builder[A, IndexedSeq[A]]
+	class OptimizedSeqBuilder[A] extends mutable.Builder[A, IndexedSeq[A]] with MaybeEmpty[OptimizedSeqBuilder[A]]
 	{
 		// ATTRIBUTES   -------------------
 		
@@ -172,6 +173,8 @@ object OptimizedIndexedSeq extends SeqFactory[IndexedSeq]
 		
 		// IMPLEMENTED  -------------------
 		
+		override def self: OptimizedSeqBuilder[A] = this
+		override def isEmpty: Boolean = nextIndex == 0
 		override def knownSize = {
 			if (overflown)
 				lazyBuilder.current match {

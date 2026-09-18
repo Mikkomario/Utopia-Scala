@@ -81,7 +81,7 @@ trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike[Repr] with View[A]]
 	/**
 	 * @param value A value
 	 * @param eq Implicit equality function to apply. Default = `==`
-	 * @return Whether this node or any of this node's children contains the specified navigational element
+	 * @return Whether this node or any of this node's children contains the specified value
 	 */
 	def containsValue[N >: A](value: N)(implicit eq: EqualsFunction[N] = EqualsFunction.default): Boolean =
 		eq(value, this.value) || valuesBelowIterator.exists { eq(_, value) }
