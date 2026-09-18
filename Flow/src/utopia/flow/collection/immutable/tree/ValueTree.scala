@@ -73,6 +73,40 @@ object ValueTree
 	}
 	
 	/**
+	 * Creates 0-n trees from a series of (potentially overlapping) branches.
+	 * @param branches The branches that form the resulting trees (where each iterates from top to bottom)
+	 * @param lazily Whether these trees should resolve lazily. Default = false.
+	 * @param keyFrom A function that converts a value into a grouping key.
+	 *                Branches which yield identical keys will be placed under the same node.
+	 * @param group Maps the grouped values into a tree value.
+	 *              Receives:
+	 *              1. The grouping key
+	 *              1. A view into the values to group. Contains 1-n elements.
+	 * @tparam K Type of the assigned keys
+	 * @tparam V Type of the branch values (input)
+	 * @tparam G Type of group (=node) values
+	 * @return 0-n branches based on the specified input
+	 */
+	def groupedBranches[K, V, G](branches: IterableOnce[IterableOnce[V]], lazily: Boolean = false)
+	                            (keyFrom: V => K)(group: (K, IndexedSeqView[V]) => G): Seq[ValueTree[G]] =
+	{
+		// Forms the initial grouping
+		val treesIter = branches.iterator
+			.flatMap { b =>
+				val iter = b.iterator
+				iter.nextOption().map { iter -> _ }
+			}
+			.groupToSeqsBy { case (_, head) => keyFrom(head) }.iterator
+			// Converts each group into a tree
+			.map { case (key, branches) =>
+				apply(group(key, branches.view.map { _._2 }), lazily)
+					.withGroupedBranches(branches.iterator.map { _._1 })(keyFrom)(group)
+			}
+		// Forms the resulting collection, based on the desired collection type
+		if (lazily) treesIter.caching else treesIter.toOptimizedSeq
+	}
+	
+	/**
 	 * @param tree A tree to modify
 	 * @param eq Implicit equals function used for value-based navigation
 	 * @tparam A Type of the tree values
@@ -91,18 +125,26 @@ object ValueTree
 	/**
 	 * A factory interface used for constructing new value trees
 	 * @param value Value to wrap by the root node
-	 * @param lazily Whether the child nodes should be initialized lazily. Default = false.
+	 * @param isLazy Whether the child nodes should be initialized lazily. Default = false.
 	 * @param valueEquals A function used for matching values in tree navigation
 	 * @tparam A Type of the wrapped values
 	 */
-	case class ValueTreeFactory[A](value: A, lazily: Boolean = false)(implicit valueEquals: EqualsFunction[A])
+	case class ValueTreeFactory[A](value: A, isLazy: Boolean = false)(implicit valueEquals: EqualsFunction[A])
 		extends TreeFactory[template.tree.ValueTree[A], ValueTree[A]]
 	{
+		// COMPUTED ----------------------
+		
+		/**
+		 * @return A copy of this factory that yields lazily growing trees
+		 */
+		def lazily = if (isLazy) this else copy(isLazy = true)
+		
+		
 		// IMPLEMENTED  ------------------
 		
 		override def withChildren(children: IterableOnce[template.tree.ValueTree[A]]): ValueTree[A] = {
 			val childIter = children.iterator.map(ValueTree.from)
-			_ValueTree(value, if (lazily) childIter.caching else childIter.toOptimizedSeq, lazily)
+			_ValueTree(value, if (isLazy) childIter.caching else childIter.toOptimizedSeq, isLazy)
 		}
 		
 		
@@ -118,7 +160,7 @@ object ValueTree
 		 */
 		def iterate(goDeeper: A => IterableOnce[A]): ValueTree[A] = {
 			val childInput = goDeeper(value).iterator.map { v => copy(value = v).iterate(goDeeper) }
-			withChildren(if (lazily) childInput.caching else childInput.toOptimizedSeq)
+			withChildren(if (isLazy) childInput.caching else childInput.toOptimizedSeq)
 		}
 		
 		/**
@@ -145,24 +187,20 @@ object ValueTree
 		 * @param branches The branches to place under this node (where each iterates from top to bottom)
 		 * @param keyFrom A function that converts a value into a grouping key.
 		 *                Branches which yield identical keys will be placed under the same node.
-		 * @param group Maps the grouped values into a tree nav element.
+		 * @param group Maps the grouped values into a tree value.
 		 *              Receives:
 		 *              1. The grouping key
 		 *              1. A view into the values to group. Contains 1-n elements.
-		 * @param keyEquals An implicit equals function to use for comparing the generated keys.
-		 *                  Default = use ==.
 		 * @tparam K Type of the assigned keys
 		 * @tparam V Type of the branch values
 		 * @return This node with branches based on the specified input
 		 */
 		def withGroupedBranches[K, V](branches: IterableOnce[IterableOnce[V]])
-		                             (keyFrom: V => K)(group: (K, IndexedSeqView[V]) => A)
-		                             (implicit keyEquals: EqualsFunction[K]): ValueTree[A] =
+		                             (keyFrom: V => K)(group: (K, IndexedSeqView[V]) => A): ValueTree[A] =
 			withChildren(groupBranches(branches.iterator.map { _.iterator })(keyFrom)(group))
 			
 		private def groupBranches[K, V](branchIterators: IterableOnce[Iterator[V]])
-		                               (keyFrom: V => K)(group: (K, IndexedSeqView[V]) => A)
-		                               (implicit keyEquals: EqualsFunction[K]): Seq[ValueTree[A]] =
+		                               (keyFrom: V => K)(group: (K, IndexedSeqView[V]) => A): Seq[ValueTree[A]] =
 		{
 			// Generates the next layer of nodes
 			val childrenIter = branchIterators.iterator.flatMap { branch => branch.nextOption().map { _ -> branch } }
@@ -183,7 +221,7 @@ object ValueTree
 				}
 			
 			// Converts the generated iterator into the appropriate collection type
-			if (lazily)
+			if (isLazy)
 				childrenIter.caching
 			else
 				childrenIter.toOptimizedSeq
@@ -196,7 +234,7 @@ object ValueTree
 		 */
 		private def _branch(valuesIter: Iterator[A]): ValueTree[A] = valuesIter.nextOption() match {
 			case Some(nextValue) =>
-				if (lazily)
+				if (isLazy)
 					withChildren(LazySingle(copy(value = nextValue)._branch(valuesIter)))
 				else
 					withChild(copy(value = nextValue)._branch(valuesIter))

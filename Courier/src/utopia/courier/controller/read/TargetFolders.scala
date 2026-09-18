@@ -2,7 +2,7 @@ package utopia.courier.controller.read
 
 import utopia.courier.model.read.FolderPath
 import utopia.flow.collection.immutable.Pair
-import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.tree.ValueTree
 
 import scala.language.implicitConversions
 
@@ -27,7 +27,7 @@ object TargetFolders
 	// IMPLICIT -------------------------
 	
 	// Implicitly converts from a function
-	implicit def apply(f: LazyTree[FolderPath] => Iterator[FolderPath]): TargetFolders = new TargetFoldersFunction(f)
+	implicit def apply(f: ValueTree[FolderPath] => Iterator[FolderPath]): TargetFolders = new TargetFoldersFunction(f)
 	
 	
 	// OTHER    -------------------------
@@ -66,24 +66,24 @@ object TargetFolders
 	 */
 	object TargetAllFolders extends TargetFolders
 	{
-		override def apply(folderStructure: LazyTree[FolderPath]): Iterator[FolderPath] = {
-			// If the root folder contains sub-folders, returns those
+		override def apply(folderStructure: ValueTree[FolderPath]): Iterator[FolderPath] = {
+			// If the root folder contains subfolders, returns those
 			if (folderStructure.hasChildren)
-				folderStructure.navsBelowIterator
-			// If sub-folders are not enabled, returns the root folder instead
+				folderStructure.valuesBelowIterator
+			// If subfolders are not enabled, returns the root folder instead
 			else
-				Iterator.single(folderStructure.nav)
+				Iterator.single(folderStructure.value)
 		}
 	}
 	
 	private class TargetSpecificFolders(folders: Iterable[FolderPath]) extends TargetFolders
 	{
-		override def apply(folderStructure: LazyTree[FolderPath]): Iterator[FolderPath] = folders.iterator
+		override def apply(folderStructure: ValueTree[FolderPath]): Iterator[FolderPath] = folders.iterator
 	}
 	
-	private class TargetFoldersFunction(f: LazyTree[FolderPath] => Iterator[FolderPath]) extends TargetFolders
+	private class TargetFoldersFunction(f: ValueTree[FolderPath] => Iterator[FolderPath]) extends TargetFolders
 	{
-		override def apply(folderStructure: LazyTree[FolderPath]): Iterator[FolderPath] = f(folderStructure)
+		override def apply(folderStructure: ValueTree[FolderPath]): Iterator[FolderPath] = f(folderStructure)
 	}
 }
 
@@ -98,5 +98,5 @@ trait TargetFolders
 	 * @param folderStructure Available folder structure (lazily initialized)
 	 * @return An iterator that yields the targeted folders
 	 */
-	def apply(folderStructure: LazyTree[FolderPath]): Iterator[FolderPath]
+	def apply(folderStructure: ValueTree[FolderPath]): Iterator[FolderPath]
 }

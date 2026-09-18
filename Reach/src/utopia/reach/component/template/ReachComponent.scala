@@ -4,10 +4,9 @@ import utopia.firmament.component.Window
 import utopia.firmament.component.stack.Stackable
 import utopia.firmament.localization.LocalizedString
 import utopia.flow.async.context.Scheduler
-import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.tree.ValueTree
 import utopia.flow.collection.immutable.{Empty, Single}
 import utopia.flow.util.logging.Logger
-import utopia.flow.view.immutable.caching.PreInitializedLazy
 import utopia.flow.view.template.eventful.Changing
 import utopia.genesis.graphics.DrawLevel.{Background, Foreground, Normal}
 import utopia.genesis.graphics.{DrawLevel, Drawer, Priority}
@@ -116,7 +115,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	def absoluteBounds = c4.bounds.Bounds(absolutePosition, size)
 	
 	/**
-	  * @return The position of this component inside the so called top component (the canvas element)
+	  * @return The position of this component inside the so-called top component (the canvas element)
 	  */
 	def positionInTop = position + hierarchy.positionToTopModifier
 	/**
@@ -129,8 +128,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  *         below it are this component's children).
 	  *         Initialized lazily.
 	  */
-	def toTree: LazyTree[ReachComponent] =
-		LazyTree.iterate(PreInitializedLazy(this)) { c => c.children.iterator.map { PreInitializedLazy(_) } }
+	def toTree: ValueTree[ReachComponent] = ValueTree(this, lazily = true).iterate { _.children }
 	
 	/**
 	  * @return An image of this component with its current size
@@ -264,7 +262,7 @@ trait ReachComponent extends Stackable with PartOfComponentHierarchy
 	  * Typically this is not required, but might be necessary after connecting this component to the component
 	  * hierarchy, in case some revalidate() requests have been ignored.
 	  */
-	def resetEveryCachedStackSize() = toTree.bottomToTopNodesIterator.foreach { _.nav.resetCachedSize() }
+	def resetEveryCachedStackSize() = toTree.bottomToTopNodesIterator.foreach { _.value.resetCachedSize() }
 	
 	/**
 	 * Updates the layout of this component, and every subcomponent.

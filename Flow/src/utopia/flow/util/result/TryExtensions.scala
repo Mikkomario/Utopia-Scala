@@ -2,6 +2,7 @@ package utopia.flow.util.result
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.util.Mutate
 import utopia.flow.util.logging.Logger
 
@@ -156,15 +157,17 @@ object TryExtensions
 		/**
 		  * Converts this try into an option. Logs possible failure state.
 		  * @param message Message to log in case of a failure (call-by-name)
-		  * @param log Implicit logger to use to log the potential failure.
+		  * @param details Additional details to log (call-by-name). Default = empty.
+		 * @param log Implicit logger to use to log the potential failure.
 		  * @return Some if success, None otherwise
 		  */
-		def logWithMessage(message: => String)(implicit log: Logger) = t match {
-			case Success(a) => Some(a)
-			case Failure(error) =>
-				log(error, message)
-				None
-		}
+		def logWithMessage(message: => String, details: => Model = Model.empty)(implicit log: Logger) =
+			t match {
+				case Success(a) => Some(a)
+				case Failure(error) =>
+					log(error, message, details)
+					None
+			}
 		/**
 		  * Logs the captured failure, if applicable
 		  * @param message Message to record with the failure (call-by-name)

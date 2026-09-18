@@ -1,12 +1,14 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.tree.ValueTree
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollableOnce, UntilExternalFailureIterator}
-import utopia.flow.operator.{Identity, MaybeEmpty}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
+import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
@@ -14,16 +16,15 @@ import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.string.Lines
 import utopia.flow.util.Mutate
 import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
 import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
-import utopia.flow.util.logging.{CollectSingleFailureLogger, Logger}
-import utopia.flow.view.immutable.caching.Lazy
 
 import java.awt.Desktop
 import java.io._
 import java.nio.channels.FileChannel
 import java.nio.file._
-import java.nio.file.attribute.{AclEntry, AclEntryPermission, AclEntryType, AclFileAttributeView, DosFileAttributeView, FileAttribute, PosixFilePermission, PosixFilePermissions}
+import java.nio.file.attribute._
 import scala.io.Codec
 import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
@@ -200,7 +201,7 @@ object FileExtensions
 		  */
 		def allChildrenIterator: Iterator[Try[Path]] = {
 			implicit val log: CollectSingleFailureLogger = new CollectSingleFailureLogger()
-			new UntilExternalFailureIterator(toTree.topDownNodesBelowIterator.map { _.nav }, log)
+			new UntilExternalFailureIterator(toTree.topDownNodesBelowIterator.map { _.value }, log)
 		}
 		/**
 		  * @return Directories directly under this one (returns empty vector for regular files). May fail.
@@ -320,23 +321,19 @@ object FileExtensions
 		  * @return A lazily initialized tree structure based on this path,
 		  *         where each node represents a file or a directory.
 		  */
-		def toTree(implicit log: Logger): LazyTree[Path] = {
+		def toTree(implicit log: Logger): ValueTree[Path] = {
+			val rootF = ValueTree(p).lazily
 			// Case: Regular file => Doesn't need any scanning
 			if (isExistingRegularFile)
-				LazyTree.initializedEmpty(p)
+				rootF.withoutChildren
 			// Case: Directory => lazily reads the directory contents when going downwards
 			else
-				LazyTree.iterate[Path](Lazy.initialized(p)) { path =>
+				rootF.iterate { path =>
 					// Case: Directory => lazily scans further
 					if (path.isExistingDirectory)
-						path.children match {
-							// Case: Directory scanning succeeded => opens a new layer of nodes
-							case Success(children) => children.map(Lazy.initialized)
-							// Case: Directory reading failed => logs as an error and acts as if the directory was empty
-							case Failure(error) =>
-								log(error, s"Failed to read the children of $path")
-								Empty
-						}
+						path.children
+							.logWithMessage("Failed to scan directory contents", Model.from("path" -> path.toJson))
+							.getOrElse(Empty)
 					// Case: Regular file => No need to scan for child nodes
 					else
 						Empty

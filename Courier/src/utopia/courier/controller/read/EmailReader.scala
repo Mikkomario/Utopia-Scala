@@ -5,7 +5,7 @@ import utopia.courier.model.read.{DeletableEmail, DeletionRule, FolderPath, Read
 import utopia.courier.model.{Email, EmailAddress}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
-import utopia.flow.collection.immutable.caching.LazyTree
+import utopia.flow.collection.immutable.tree.ValueTree
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.AutoCloseWrapper
@@ -263,12 +263,13 @@ class EmailReader[A](settings: ReadSettings,
 					// Connects to the mail server
 					store.connect(settings.hostAddress, settings.authentication.user, settings.authentication.password)
 					// Determines the targeted folders
-					val folderTree = LazyTree
-						.iterate(Lazy { store.getDefaultFolder -> FolderPath(Empty) }) { case (folder, path) =>
+					val folderTree = ValueTree(Lazy { store.getDefaultFolder -> FolderPath(Empty) }, lazily = true)
+						.iterate { lazyFolder =>
+							val (folder, path) = lazyFolder.value
 							folder.list().iterator.map { subFolder => Lazy { subFolder -> (path/subFolder.getName) } }
 						}
 					// Prepares the folders for reading
-					val rawFoldersIterator = targetFolders(folderTree.map { _._2 })
+					val rawFoldersIterator = targetFolders(folderTree.mapValues { _.value._2 })
 						// Resolves the resulting paths
 						.map { path =>
 							// Case: Root/default folder was targeted
@@ -278,16 +279,17 @@ class EmailReader[A](settings: ReadSettings,
 							else
 								path.parts
 									// Traverses the tree using the specified path
-									.foldLeftIterator(Success(folderTree): Try[LazyTree[(Folder, FolderPath)]]) { (parent, nextPart) =>
-										parent.flatMap { p =>
-											p.children.find { _.nav._2.name ~== nextPart }
-												.toTry { new NoSuchElementException(
-													s"$p doesn't contain a folder named $nextPart") }
-										}
+									.foldLeftIterator[Try[ValueTree[Lazy[(Folder, FolderPath)]]]](Success(folderTree)) {
+										(parent, nextPart) =>
+											parent.flatMap { p =>
+												p.children.find { _.value.value._2.name ~== nextPart }
+													.toTry { new NoSuchElementException(
+														s"$p doesn't contain a folder named $nextPart") }
+											}
 									}
 									// Fails if targeting a non-existing folder
 									.takeTo { _.isFailure }
-									.last.map { _.nav._1 }
+									.last.map { _.value.value._1 }
 						}
 					// Calls the specified function using a prepared message iterator
 					// Forms the message processing iterator and gives it to the specified function
