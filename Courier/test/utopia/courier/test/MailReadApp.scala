@@ -83,7 +83,7 @@ object MailReadApp extends App
 	private val readCount = ask("How many emails do you want to read? (default = 1)").intOr(1)
 	private val targeting = TargetFolders { tree =>
 		val foldersStr = ask(s"Which folders do you wish to read?\nAvailable folders: ${
-			tree.leavesIterator.map { _.nav }.mkString(", ")}\nHint: Specify a comma-separated list")
+			tree.leavesIterator.map { _.value }.mkString(", ")}\nHint: Specify a comma-separated list")
 		foldersStr.split(',').iterator.map { s => FolderPath(s.trim) }
 	}
 	

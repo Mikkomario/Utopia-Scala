@@ -57,7 +57,7 @@ class JsonSettingsAccess(rootDirectory: Path = FileUtils.workingDirectory, fileN
 		if (rootDirectory.notExists)
 			Failure(new FileNotFoundException(s"The specified root directory ${rootDirectory.absolute} doesn't exist"))
 		else {
-			val targetFilesIterator = rootDirectory.toTree.topDownNodesIterator.map { _.nav }.filter { p =>
+			val targetFilesIterator = rootDirectory.toTree.topDownNodesIterator.map { _.value }.filter { p =>
 				val (fileName, fileType) = p.fileNameAndType.toTuple
 				fileType.equalsIgnoreCase("json") && fileNameRegex(fileName)
 			}

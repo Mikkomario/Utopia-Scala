@@ -41,7 +41,7 @@ object ScribeConsoleApp extends App
 	// Loads column length rules, if possible
 	private val lengthRuleKeys = Vector("scribe", "length", "rule", "json")
 	FileUtils.workingDirectory.toTree.topDownNodesIterator
-		.findMap { _.nav.iterateChildren { _.find { _.fileName.containsInOrder(lengthRuleKeys) } }.getOrElse(None) }
+		.findMap { _.value.iterateChildren { _.find { _.fileName.containsInOrder(lengthRuleKeys) } }.getOrElse(None) }
 		.foreach { ColumnLengthRules.loadFrom(_, ScribeContext.databaseName) }
 	
 	private val reviewCommands = new LogReviewCommands()
