@@ -23,8 +23,7 @@ object ValueTree
 	 * @tparam A Type of the value to wrap
 	 * @return A root level node wrapping that value
 	 */
-	implicit def wrap[A](value: A)(implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
-		apply(value).withoutChildren
+	implicit def wrap[A](value: A): ValueTree[A] = apply(value).withoutChildren
 	/**
 	 * Implicitly wraps a value with n child nodes
 	 * @param valueAndChildren A pair of two values:
@@ -33,8 +32,7 @@ object ValueTree
 	 * @tparam A Type of the wrapped values
 	 * @return A new value tree, based on the specified input
 	 */
-	implicit def wrapWithChildren[A](valueAndChildren: (A, IterableOnce[ValueTree[A]]))
-	                                (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
+	implicit def wrapWithChildren[A](valueAndChildren: (A, IterableOnce[ValueTree[A]])): ValueTree[A] =
 		apply(valueAndChildren._1).withChildren(valueAndChildren._2)
 	
 	
@@ -46,20 +44,17 @@ object ValueTree
 	 * @tparam A Type of the wrapped value
 	 * @return A factory for constructing value trees
 	 */
-	def apply[A](value: A, lazily: Boolean = false)(implicit valueEquals: EqualsFunction[A] = EqualsFunction.default) =
-		new ValueTreeFactory[A](value)
+	def apply[A](value: A, lazily: Boolean = false) = new ValueTreeFactory[A](value)
 	
 	/**
 	 * @param node A node to wrap
 	 * @tparam A Type of the node's value
 	 * @return A value tree from the specified node
 	 */
-	def from[A](node: template.tree.ValueTree[A])
-	           (implicit valueEquals: EqualsFunction[A] = EqualsFunction.default): ValueTree[A] =
-		node match {
-			case t: ValueTree[A] => t
-			case t => apply(t.value).withChildren(t.children.map[ValueTree[A]](from))
-		}
+	def from[A](node: template.tree.ValueTree[A]): ValueTree[A] = node match {
+		case t: ValueTree[A] => t
+		case t => apply(t.value).withChildren(t.children.map[ValueTree[A]](from))
+	}
 	
 	/**
 	 * Creates a node out of a single non-branching path
@@ -126,10 +121,9 @@ object ValueTree
 	 * A factory interface used for constructing new value trees
 	 * @param value Value to wrap by the root node
 	 * @param isLazy Whether the child nodes should be initialized lazily. Default = false.
-	 * @param valueEquals A function used for matching values in tree navigation
 	 * @tparam A Type of the wrapped values
 	 */
-	case class ValueTreeFactory[A](value: A, isLazy: Boolean = false)(implicit valueEquals: EqualsFunction[A])
+	case class ValueTreeFactory[A](value: A, isLazy: Boolean = false)
 		extends TreeFactory[template.tree.ValueTree[A], ValueTree[A]]
 	{
 		// COMPUTED ----------------------

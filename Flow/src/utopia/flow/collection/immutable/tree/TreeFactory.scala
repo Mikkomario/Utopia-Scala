@@ -1,6 +1,6 @@
 package utopia.flow.collection.immutable.tree
 
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.immutable.tree.TreeFactory.{AppendingFactory, MappingFactory, ReplacingFactory}
 
 import scala.collection.{SeqView, View}
@@ -86,6 +86,14 @@ trait TreeFactory[-N, +T]
 	
 	
 	// OTHER    -----------------------
+	
+	/**
+	 * @param child1 First node under this one
+	 * @param child2 Second node under this one
+	 * @param more More nodes under this one
+	 * @return A new tree node with the specified children directly under it
+	 */
+	def withChildren(child1: N, child2: N, more: N*): T = withChildren(Pair(child1, child2) ++ more)
 	
 	/**
 	 * @param child Child node to include

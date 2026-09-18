@@ -24,6 +24,9 @@
     - The previously used constructor is now named `.withConnections(IterableOnce)`
   - **template.GraphNode** was replaced with **template.graph.GraphNodeLike**
     - `/` now yields **Iterator** instead of **Iterable**
+    - Function-based graph-searching now receives two input values:
+      1. A view to the node value
+      2. A view into the edges leaving from the node
   - **immutable.ViewGraphNode** was replaced with **immutable.graph.GraphNode**
   - **mutable.GraphNode** was replaced with **mutable.graph.MutableGraphNode**
     - The `.connect(...)` function now accepts the parameters in reverse order

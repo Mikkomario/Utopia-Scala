@@ -1,6 +1,6 @@
 package utopia.flow.test.collection
 
-import utopia.flow.collection.immutable.Graph
+import utopia.flow.collection.immutable.graph.Graph
 import utopia.flow.collection.CollectionExtensions._
 
 /**
@@ -25,13 +25,13 @@ object GraphSearchTest extends App
 		 |         |
 		(7) -[1]- (8)
 	 */
-	val graph = Graph(Set(
+	val graph = Graph.withConnections(Set(
 		(1, 1, 2), (2, 8, 3),
 		(1, 7, 4), (2, 2, 5),
 		(4, 3, 5), (5, 4, 6),
 		(4, 1, 7), (5, 1, 8),
 		(7, 1, 8)
-	), isTwoWayBound = true)
+	), twoWayBound = true)
 	
 	// TEST 1   ------------------------
 	
@@ -40,7 +40,7 @@ object GraphSearchTest extends App
 	//      1) 1 -> 2 -> 5 -> 4,
 	//      2) 1 -> 2 -> 5 -> 8 -> 7 -> 4
 	// 1 -> 4 should become available early on as well
-	val s1 = graph(1).searchForOne { _.value == 4 } { _.value }
+	val s1 = graph(1).searchForOne { (node, _) => node.value == 4 } { _.value }
 	println("Search starts")
 	println(s1.current)
 	
@@ -133,7 +133,7 @@ object GraphSearchTest extends App
 	//      3.1) ... -> 5 -> 2 (cost 5)
 	//      3.2) ... -> 5 -> 6 (cost 7)
 	println("\n\nStarts test 2")
-	val s2 = graph(4).search { _.value % 2 == 0 } { _.value }
+	val s2 = graph(4).search { (node, _) => node.value % 2 == 0 } { _.value }
 	
 	assert(s2.current.minFutureCost == 0, s2.current.minFutureCost)
 	assert(s2.current.foundResults)
@@ -234,7 +234,7 @@ object GraphSearchTest extends App
 	// Tests exclusive search first, then the inclusive version
 	println("\n\nTest 3")
 	
-	val s3 = graph(1).searchForOne { _.value > 2 } { _.value }
+	val s3 = graph(1).searchForOne { (node, _) => node.value > 2 } { _.value }
 	
 	assert(s3.current.isEmpty)
 	assert(s3.current.temporaryStages.view.map { _.node.value }.toSet == Set(1))
@@ -271,7 +271,7 @@ object GraphSearchTest extends App
 	
 	// Tests using search with findOneCheaperThan
 	println("\nTest 3 v2")
-	val s3v2 = graph(1).search { _.value > 2 } { _.value }
+	val s3v2 = graph(1).search { (node, _) => node.value > 2 } { _.value }
 	
 	assert(s3v2.findOneCheaperThan(7).exists { r =>
 		r.node.value == 5 && r.cost == 3 && r.isConfirmedAsOptimal

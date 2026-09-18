@@ -66,8 +66,8 @@ trait TreeLike[+Repr <: TreeLike[Repr]] extends MaybeEmpty[Repr]
 	  */
 	def size: Int = children.foldLeft(children.size)((size, child) => size + child.size)
 	/**
-	  * The depth of this tree. A tree with no children has depth of 0, a tree with only direct
-	  * children has depth of 1, a tree with grand children has depth of 2 and so on.
+	  * The depth of this tree. A tree with no children has a depth of 0, a tree with only direct
+	  * children has a depth of 1, a tree with grand children has a depth of 2, and so on.
 	  */
 	def depth: Int = children.foldLeft(0)((maxDepth, child) => math.max(maxDepth, 1 + child.depth))
 	
@@ -135,7 +135,7 @@ trait TreeLike[+Repr <: TreeLike[Repr]] extends MaybeEmpty[Repr]
 	  *         The nodes returned are ordered from top to bottom first,
 	  *         and then from left to right within a single "layer".
 	  */
-	def topDownNodesBelow: Vector[Repr] = topDownNodesBelowIterator.toVector
+	def topDownNodesBelow: Seq[Repr] = topDownNodesBelowIterator.toOptimizedSeq
 	/**
 	  * @return An iterator that returns this node and all the children of this node,
 	  *         returning leaf nodes before the rest of the branches.
