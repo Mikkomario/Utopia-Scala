@@ -107,9 +107,17 @@ object GraphSearchTest extends App
 	println("Leaves from (4) & (7)")
 	println(s1.next())
 	
+	println("Results:")
+	s1.current.successes.foreach { r =>
+		println(s"- ${ r.routes.size } routes with cost ${ r.cost }")
+		r.routes.foreach { route =>
+			println(s"\t- ${ route.iterator.map { _.end.value }.mkString(" > ") }; Cost = ${
+				route.iterator.map { _.value }.mkString(" + ") }")
+		}
+	}
 	assert(s1.current.minFutureCost >= 6, s1.current.minFutureCost)
 	assert(s1.current.isConfirmedAsOptimal)
-	assert(s1.current.successes.exists { r => r.cost == 6 && r.routes.size == 2 })
+	assert(s1.current.successes.exists { r => r.cost == 6 && r.routes.size == 2 }, s1.current.successes) // FIXME
 	assert(!s1.hasNext)
 	
 	// TEST 2   ------------------------

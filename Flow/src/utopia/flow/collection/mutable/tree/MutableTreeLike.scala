@@ -1,6 +1,6 @@
 package utopia.flow.collection.mutable.tree
 
-import utopia.flow.collection.template.tree.{Tree, TreeLike}
+import utopia.flow.collection.template.tree.TreeLike
 
 /**
   * Common trait for mutable tree implementations
@@ -48,15 +48,15 @@ trait MutableTreeLike[-N, +Repr <: MutableTreeLike[_, Repr]] extends TreeLike[Re
 	 * removed
 	 * @param node The node that is removed from under this node
 	 */
-	def -=(node: Tree): Unit = {
-		removeChild(node)
+	def -=(node: TreeLike[_]): Unit = {
+		removeDirect(node)
 		children.foreach { child => child -= node }
 	}
 	/**
 	 * Removes a node from the direct children under this node
 	 * @param child The node that is removed from under this node
 	 */
-	def removeChild(child: Tree) = filterDirect { _ != child }
+	def removeDirect(child: TreeLike[_]) = filterDirect { _ != child }
 	
 	/**
 	  * Removes the direct children of this node that match the specified function

@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.{Graph, GraphTravelResults, NodeTravelStage}
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template.graph.GraphNodeLike.PathsFinder
@@ -20,6 +20,21 @@ object GraphNodeLike
 {
 	// NESTED   --------------------
 	
+	/**
+	 * A mutable / stateful interface for finding the cheapest paths through a graph
+	 * @param start The starting node
+	 * @param destinations Searched destinations
+	 * @param startCost Initial cost (typically 0)
+	 * @param exclusive Whether looking for a single result, only (default = true)
+	 * @param costOf A function that calculates the cost of traversing an edge
+	 * @param sumOf A sum function for the cost
+	 * @param ord Implicit ordering for the cost
+	 * @tparam N Type of node values
+	 * @tparam E Type of edge values
+	 * @tparam Node Type of graph nodes
+	 * @tparam Edge Type of graph edges
+	 * @tparam C Type of counted cost
+	 */
 	private class PathsFinder[N, E, Node <: GraphNodeLike[N, E, Node, Edge], Edge <: GraphEdge[E, Node], C]
 	(start: Node, destinations: Iterable[NodeTarget[N, E]], startCost: C, exclusive: Boolean = true)
 	(costOf: Edge => C)(sumOf: (C, C) => C)
@@ -63,41 +78,81 @@ object GraphNodeLike
 		
 		// NESTED   -------------------------
 		
+		/**
+		 * A node wrapper used for continuing the search from that node
+		 * @param currentNode The wrapped node
+		 * @param currentCost The accumulated cost so far
+		 * @param pathHistory Routes traversed so far. May contain multiple entries, if joining multiple pathfinders.
+		 */
 		private class PathFinder(val currentNode: Node, val currentCost: C, val pathHistory: Seq[Seq[Edge]])
 		{
-			def next(blockedNodes: scala.collection.Set[Node]) = {
-				currentNode.leavingEdges.view.filterNot { e => blockedNodes.contains(e.end) }.map { edge =>
+			/**
+			 * Moves to the next reachable & unvisited nodes
+			 * @param blockedNodes Nodes that should no longer be visited
+			 * @return An iterator that yields the next reachable nodes
+			 */
+			def next(blockedNodes: scala.collection.Set[Node]) =
+				currentNode.leavingEdges.iterator.filterNot { e => blockedNodes.contains(e.end) }.map { edge =>
 					new PathFinder(edge.end, sumOf(currentCost, costOf(edge)), pathHistory.map { _ :+ edge })
 				}
-			}
 		}
 		
+		/**
+		 * An iterator used for advancing the graph search
+		 * @param destinations Searched destinations
+		 * @param isExclusive Whether searching for only a single result
+		 */
 		private class FinderIterator(destinations: Iterable[NodeTarget[N, E]], isExclusive: Boolean)
 			extends Iterator[GraphTravelResults[Node, Edge, C]]
 		{
 			// ATTRIBUTES   ----------------
 			
-			// Contains nodes from which a pathfinder has LEFT
+			/**
+			 * Contains nodes from which a pathfinder has LEFT
+			 */
 			private val blockedNodesBuffer = mutable.Set[Node]()
-			// Contains an entry for each encountered search result. The contained values may not be the final results.
+			/**
+			 * Contains an entry for each encountered search result. The contained values may not be the final results.
+			 */
 			private val resultsBuffer = mutable.Map[Node, (Seq[Seq[Edge]], C)]()
 			
-			// Prepared pathfinders for the next iteration
+			/**
+			 * Contains the prepared pathfinders for the next iteration.
+			 * Keys are the current pathfinder nodes.
+			 */
 			private var nextOrigins: Map[Node, PathFinder] =
 				Map(start -> new PathFinder(start, startCost, Single(Empty)))
-			// Smallest achievable cost for the next iteration,
-			// assuming that cost function always returns a positive (> 0) value
+			/**
+			 * Contains the smallest hypothetically achievable cost for the next iteration,
+			 * assuming that the cost function always returns a positive (> 0) value.
+			 */
 			private var nextMinCost = startCost
-			// Destination search functions for which no nodes have been found
-			// In 'inclusive' mode, this will remain as 'destinations' throughout the whole process
+			/**
+			 * Contains the destinations for which no nodes have been found.
+			 * In 'inclusive' mode, this remains as 'destinations' throughout the whole process.
+			 */
 			private var remainingDestinations = destinations
-			// Destination search functions, discovered routes, achieved cost values, plus found node,
-			// Listed for cases where a node has been found, but where a better result may still be achieved
-			// Only filled in 'exclusive' mode
+			/**
+			 * Contains destinations, for which a potential result has been found.
+			 * I.e. these may be later populated with better results.
+			 *
+			 * Each entry contains:
+			 *      1. The search destination
+			 *      1. The best routes so far
+			 *      1. The lowest achieved cost
+			 *      1. The discovered node
+			 *
+			 * Only filled in 'exclusive' mode.
+			 */
 			private var unprovenDestinations: Iterable[(NodeTarget[N, E], Seq[Seq[Edge]], C, Node)] = Empty
+			/**
+			 * Contains destinations for which the best possible result has been acquired.
+			 */
 			private val provenDestinationsBuffer = mutable.Set[Node]()
 			
-			// Contains true once the search process has completed
+			/**
+			 * Contains true once the search process has completed
+			 */
 			private var completed = false
 			
 			
@@ -106,7 +161,7 @@ object GraphNodeLike
 			override def hasNext: Boolean = !completed
 			
 			override def next() = {
-				// Selects the next iteration origins - Nodes with the lowest current cost
+				// Selects the next iteration origins - I.e. nodes with the lowest current cost
 				val (delayedOrigins, iterationOrigins) = nextOrigins
 					.divideBy { case (_, finder) => ord.equiv(finder.currentCost, nextMinCost) }.toTuple
 				
@@ -116,145 +171,16 @@ object GraphNodeLike
 				
 				// Takes the next step and merges routes that arrived to the same node
 				// Will reject new arrivals to nodes visited earlier with a better cost
-				val newFinders = iterationOrigins.values.flatMap { _.next(blockedNodesBuffer) }
-					.groupBy { _.currentNode }
-					.flatMap { case (location, finders) =>
-						val bestNewCost = finders.map { _.currentCost }.min
-						// Only recognizes the new results if they were better than some previously encountered origins
-						// In which case either merges or discards the previous origins
-						val earlierResults = nextOrigins.get(location)
-						// Case: Found better or at least as good routes to the already discovered nodes
-						if (earlierResults.forall { _.currentCost >= bestNewCost }) {
-							// Includes the previously found "origins" in the merging process
-							val bestFinders = (finders ++ earlierResults)
-								.filter { f => ord.equiv(f.currentCost, bestNewCost) }
-							// Case: Only one finder arrived to this location => picks it as it is
-							if (bestFinders hasSize 1)
-								Some(bestFinders.head)
-							// Case: Merging => Takes the finders of smallest cost and combines them
-							else
-								Some(bestFinders.reduce { (a, b) =>
-									new PathFinder(location, a.currentCost, a.pathHistory ++ b.pathHistory)
-								})
-						}
-						// Case: The new routes were more expensive than the ones found before => Discards them
-						else
-							None
-					}
-				
+				val newFinders = advance(iterationOrigins.valuesIterator)
 				
 				// Updates the next origins and the minimum cost value
-				nextOrigins = delayedOrigins ++ newFinders.map { f => f.currentNode -> f }
+				nextOrigins = delayedOrigins ++ newFinders.view.map { f => f.currentNode -> f }
 				if (nextOrigins.nonEmpty)
 					nextMinCost = nextOrigins.valuesIterator.map { _.currentCost }.min
 				
 				// Case: Iteration yielded new routes => updates results and destinations, etc.
-				if (newFinders.nonEmpty) {
-					// Checks whether already arrived to some or all destinations
-					// Found destinations contains 4 parts:
-					//      1) The original destination function
-					//      2) Destination node
-					//      3) Routes
-					//      4) Cost
-					val (nextDestinations, foundDestinations) = remainingDestinations.flatDivideWith { destination =>
-						val arrived = newFinders.filter { o => destination(o.currentNode, o.currentNode.leavingEdges) }
-						// Case: No finder arrived to this destination yet => Keeps it as a remaining destination
-						if (arrived.isEmpty)
-							Single(Left(destination))
-						// Case: One or more finders arrived to this destination
-						//       => Creates a summary of the (currently) best results
-						else if (isExclusive) {
-							val bestResults = arrived.filterMinBy { _.currentCost }.toOptimizedSeq
-							val bestResult = bestResults.head
-							val routes = (bestResults.tail.filter { _.currentNode == bestResult.currentNode } :+
-								bestResult)
-								.flatMap { _.pathHistory }.distinct
-							// The latest result may still be improved upon
-							Single(Right((destination, routes, bestResult.currentCost, bestResult.currentNode)))
-						}
-						// Case: One or more finders arrived to a node identified by this destination
-						//       => Determines the best result for each encountered node
-						else
-							arrived.groupBy { _.currentNode }.map { case (node, arrived) =>
-								// WET WET
-								val bestResults = arrived.filterMinBy { _.currentCost }.toSeq
-								val bestResult = bestResults.head
-								val routes = bestResults.flatMap { _.pathHistory }.distinct
-								Right((destination, routes, bestResult.currentCost, node))
-							}
-					}
-					// Checks whether it's possible to get a better result than one already found
-					// Results are considered "unproven"
-					// until the acquired minimum cost exceeds that found for the destination
-					// Note: Only used in "exclusive" mode where each destination corresponds with a single node
-					if (exclusive) {
-						val (newlyProvenDestinations, remainsUnprovenDestinations) = unprovenDestinations
-							.divideBy { nextMinCost <= _._3 }.toTuple
-						// Remembers the proven destinations in order to prevent their removal
-						provenDestinationsBuffer ++= newlyProvenDestinations.view.map { _._4 }
-						// Each entry contains 4 values:
-						//      1) New result node
-						//      2) New result routes
-						//      3) New best cost
-						//      4) Node to possibly remove from the results
-						val updatedUnprovenResults = remainsUnprovenDestinations
-							.map { case (destination, previousRoutes, previousMinCost, previousNode) =>
-								// Finds new search results which are better or as good as the results found before
-								val arrived = newFinders
-									.filter { o => destination(o.currentNode, o.currentNode.leavingEdges) }
-									.filter { _.currentCost <= previousMinCost }
-								// Case: New competing results found
-								//       => Merges them to the previous results or overrides previous results with them
-								if (arrived.nonEmpty) {
-									val bestResults = arrived.filterMinBy { _.currentCost }
-									val bestResult = bestResults.find { _.currentNode == previousNode }
-										.getOrElse(bestResults.head)
-									val newNode = bestResult.currentNode
-									val discoveredRoutes = bestResults
-										.filter { _.currentNode == newNode }.flatMap { _.pathHistory }
-									
-									// Case: The new results are better than those found before
-									//       => Replaces the old results
-									if (bestResult.currentCost < previousMinCost) {
-										// If targeted different nodes, may remove the other node from the results
-										(destination, newNode, discoveredRoutes.toOptimizedSeq, bestResult.currentCost,
-											Some(previousNode).filterNot { _ == newNode })
-									}
-									// Case: The new results are as good as the previous
-									//       => Merges them if they're for the same node, otherwise ignores them
-									else if (newNode == previousNode)
-										(destination, previousNode, previousRoutes ++ discoveredRoutes,
-											previousMinCost, None)
-									else
-										(destination, previousNode, previousRoutes, previousMinCost, None)
-								}
-								// Case: No competing results found => Keeps the previous entry
-								else
-									(destination, previousNode, previousRoutes, previousMinCost, None)
-							}
-						
-						if (updatedUnprovenResults.nonEmpty) {
-							// Performs result-removal first, if appropriate
-							resultsBuffer --= updatedUnprovenResults.view.flatMap { _._5 }.filterNot { node =>
-								provenDestinationsBuffer.contains(node) || updatedUnprovenResults.exists { _._2 == node }
-							}
-							// Next adds the updated results to the results buffer
-							resultsBuffer ++= updatedUnprovenResults
-								.view.map { case (_, node, routes, cost, _) => node -> (routes -> cost) }
-						}
-						
-						// Updates the remaining destinations
-						remainingDestinations = nextDestinations
-						unprovenDestinations = updatedUnprovenResults
-							.map { case (destination, node, routes, cost, _) => (destination, routes, cost, node) } ++
-							foundDestinations
-					}
-					
-					// Adds new results to the buffer
-					if (foundDestinations.nonEmpty)
-						resultsBuffer ++= foundDestinations
-							.map { case (_, routes, cost, node) => node -> (routes -> cost) }
-				}
+				if (newFinders.nonEmpty)
+					updateResults(newFinders)
 				
 				// Checks for completion
 				// Completes if either:
@@ -266,16 +192,16 @@ object GraphNodeLike
 					// Tests for #2
 					(remainingDestinations.isEmpty &&
 						// Tests for #3
-						unprovenDestinations.view.map { _._3 }.maxOption.forall { _ <= nextMinCost })
+						unprovenDestinations.iterator.map { _._3 }.maxOption.forall { _ <= nextMinCost })
 				
-				// Converts the search results into graph travel results
-				// Result-based stages are processed immediately because the results collection is mutable
-				val resultStages = resultsBuffer.view
+				// Converts the search results into graph-travel results
+				// Result-based stages are processed immediately because the results-collection is mutable
+				val resultStages = resultsBuffer.iterator
 					.map { case (node, (routes, cost)) =>
 						NodeTravelStage(node, routes, cost, isDestination = true,
 							isConfirmedAsOptimal = completed || cost <= nextMinCost)
 					}
-					.toVector
+					.toOptimizedSeq
 				// Other stages are added only when requested
 				val pathFinderStagesIterator = nextOrigins.valuesIterator.map { pf =>
 					NodeTravelStage(pf.currentNode, pf.pathHistory, pf.currentCost,
@@ -288,6 +214,171 @@ object GraphNodeLike
 					foundResults = resultsBuffer.nonEmpty,
 					foundAllResults = if (isExclusive) remainingDestinations.isEmpty else completed,
 					isConfirmedAsOptimal = completed)
+			}
+			
+			
+			// OTHER    -------------------------
+			
+			private def advance(finders: IterableOnce[PathFinder]) = {
+				// Takes the next step and merges routes that arrived to the same node
+				// Will reject new arrivals to nodes visited earlier with a better cost
+				finders.iterator.flatMap { _.next(blockedNodesBuffer) }.groupToSeqsBy { _.currentNode }
+					.flatMap { case (location, finders) =>
+						val bestNewCost = finders.map { _.currentCost }.min
+						val earlierResults = nextOrigins.get(location)
+						// Case: Found better or at least as good routes to the already discovered nodes
+						if (earlierResults.forall { _.currentCost >= bestNewCost }) {
+							// Includes the previously found "origin" in the merging process
+							scala.collection.View.concat(finders, earlierResults)
+								.filter { f => ord.equiv(f.currentCost, bestNewCost) }
+								.toOptimizedSeq.oneOrMany match
+							{
+								// Case: Only one finder arrived to this location => picks it as it is
+								case Left(bestFinder) => Some(bestFinder)
+									// Case: Multiple finders with the same cost => Combines them into one
+								case Right(bestFinders) =>
+									Some(bestFinders.reduce { (a, b) =>
+										new PathFinder(location, a.currentCost, a.pathHistory ++ b.pathHistory)
+									})
+							}
+						}
+						// Case: The new routes were more expensive than the ones found before => Discards them
+						else
+							None
+					}
+			}
+			
+			/**
+			 * Updates [[resultsBuffer]], [[proveDestinations]], [[unprovenDestinations]] and [[remainingDestinations]]
+			 * @param updatedFinders Pathfinders that were recently updated. Not empty.
+			 */
+			private def updateResults(updatedFinders: Iterable[PathFinder]): Unit = {
+				// Checks whether already arrived to some or all destinations.
+				// Found destinations contain 4 parts:
+				//      1) The original destination function
+				//      2) Destination node
+				//      3) Routes
+				//      4) Cost
+				val (nextDestinations, foundDestinations) = remainingDestinations.flatDivideWith { destination =>
+					val arrived = updatedFinders.filter { o => destination(o.currentNode, o.currentNode.leavingEdges) }
+					// Case: No finder arrived to this destination yet => Keeps it as a remaining destination
+					if (arrived.isEmpty)
+						Single(Left(destination))
+					// Case: One or more finders arrived to this (exclusive) destination
+					//       => Creates a summary of the (currently) best results
+					else if (isExclusive) {
+						val bestResults = arrived.filterMinBy { _.currentCost }.toOptimizedSeq
+						val bestResult = bestResults.head
+						val targetNode = bestResult.currentNode
+						// Combines all discovered unique routes to the target node
+						val routes = (
+							bestResults.view.tail.iterator.filter { _.currentNode == targetNode } ++
+							Single(bestResult))
+							.flatMap { _.pathHistory }.distinct.toOptimizedSeq
+						// The latest result may still be improved upon
+						Single(Right((destination, routes, bestResult.currentCost, targetNode)))
+					}
+					// Case: One or more finders arrived to a node identified by this (non-exclusive) destination
+					//       => Determines the best result for each encountered node
+					else
+						arrived.groupToSeqsBy { _.currentNode }.map { case (node, arrived) =>
+							// WET WET
+							val bestResults = arrived.filterMinBy { _.currentCost }
+							val bestResult = bestResults.head
+							val routes = bestResults.iterator.flatMap { _.pathHistory }.distinct.toOptimizedSeq
+							Right((destination, routes, bestResult.currentCost, node))
+						}
+				}
+				// In exclusive mode, checks whether it's possible to get a better result than one already found.
+				// Results are considered "unproven" until the acquired minimum cost exceeds
+				// that found for the destination.
+				if (exclusive) {
+					// Checks for destinations that are now proven optimal.
+					// Calculates the new state of the unproven destinations.
+					val updatedUnprovenResults = proveDestinations(updatedFinders)
+					
+					// Updates the results buffer
+					if (updatedUnprovenResults.nonEmpty) {
+						// Performs result-removal first, if appropriate
+						resultsBuffer --= updatedUnprovenResults.view.flatMap { _._5 }.filterNot { node =>
+							provenDestinationsBuffer.contains(node) || updatedUnprovenResults.exists { _._2 == node }
+						}
+						// Next adds the updated results to the results buffer
+						resultsBuffer ++= updatedUnprovenResults
+							.view.map { case (_, node, routes, cost, _) => node -> (routes -> cost) }
+					}
+					
+					// Updates the remaining destinations
+					remainingDestinations = nextDestinations
+					unprovenDestinations = updatedUnprovenResults
+						.map { case (destination, node, routes, cost, _) => (destination, routes, cost, node) } ++
+						foundDestinations
+				}
+				
+				// Adds new results to the buffer
+				if (foundDestinations.nonEmpty)
+					resultsBuffer ++= foundDestinations.map { case (_, routes, cost, node) => node -> (routes -> cost) }
+			}
+			
+			/**
+			 * Checks which destinations are now proven optimal and which are not.
+			 * Calculates the updated state of the unproven destinations.
+			 *
+			 * This function is only needed in exclusive mode.
+			 *
+			 * @param updatedFinders Pathfinders that were updated. Not empty.
+			 * @return New unproven destinations.
+			 *         Each entry contains:
+			 *              1. The search destination
+			 *              1. The best routes so far
+			 *              1. The lowest achieved cost
+			 *              1. The discovered node
+			 */
+			private def proveDestinations(updatedFinders: Iterable[PathFinder]) = {
+				// Checks which destinations can now be proven optimal
+				val (newlyProvenDestinations, remainsUnprovenDestinations) = unprovenDestinations
+					.divideBy { nextMinCost <= _._3 }.toTuple
+				// Remembers the proven destinations in order to prevent their removal
+				provenDestinationsBuffer ++= newlyProvenDestinations.view.map { _._4 }
+				
+				// Checks whether unproven results may be improved upon
+				remainsUnprovenDestinations.map { case (destination, previousRoutes, previousMinCost, previousNode) =>
+					// Finds updated search results that are better or as good as the results found before
+					val arrived = updatedFinders.iterator
+						.filter { o => destination(o.currentNode, o.currentNode.leavingEdges) }
+						.filter { _.currentCost <= previousMinCost }
+						.toOptimizedSeq
+					// Case: New competing results found
+					//       => Merges them to the previous results or overrides previous results with them
+					if (arrived.nonEmpty) {
+						val bestResults = arrived.filterMinBy { _.currentCost }
+						val bestResult = bestResults.find { _.currentNode == previousNode }
+							.getOrElse(bestResults.head)
+						val newNode = bestResult.currentNode
+						val discoveredRoutes = bestResults.iterator
+							.filter { _.currentNode == newNode }.flatMap { _.pathHistory }.distinct.toOptimizedSeq
+						
+						// Case: The new results are better than those found before
+						//       => Replaces the old results
+						if (bestResult.currentCost < previousMinCost) {
+							// If targeted different nodes, may remove the other node from the results
+							(destination, newNode, discoveredRoutes, bestResult.currentCost,
+								Some(previousNode).filterNot { _ == newNode })
+						}
+						// Case: The new results are as good as the previous
+						//       => Merges them if they're for the same node, otherwise ignores them
+						else if (newNode == previousNode)
+							(destination, previousNode,
+								scala.collection.View.concat(previousRoutes ++ discoveredRoutes)
+									.iterator.distinct.toOptimizedSeq,
+								previousMinCost, None)
+						else
+							(destination, previousNode, previousRoutes, previousMinCost, None)
+					}
+					// Case: No competing results found => Keeps the previous entry
+					else
+						(destination, previousNode, previousRoutes, previousMinCost, None)
+				}
 			}
 		}
 	}

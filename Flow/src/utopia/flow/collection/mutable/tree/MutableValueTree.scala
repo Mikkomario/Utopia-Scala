@@ -36,7 +36,7 @@ object MutableValueTree
  */
 class MutableValueTree[A](override val value: A, initialChildren: Seq[MutableValueTree[A]] = Empty)
 	extends ValueTree[A] with ValueTreeLike[A, MutableValueTree, MutableValueTree[A]]
-		with MutableTreeLike[template.tree.ValueTree[A], MutableValueTree[A]]
+		with MutableTreeLike[template.tree.ValueTree[A], MutableValueTree[A]] with TreeNavigator[A, MutableValueTree[A]]
 {
 	// ATTRIBUTES  --------------------------
 	
@@ -46,6 +46,7 @@ class MutableValueTree[A](override val value: A, initialChildren: Seq[MutableVal
 	// IMPLEMENTED  -------------------------
 	
 	override def self: MutableValueTree[A] = this
+	override protected def current: MutableValueTree[A] = this
 	override def children: Seq[MutableValueTree[A]] = _children
 	
 	override def +=(child: ValueTree[A]): Unit = _children :+= MutableValueTree.from(child)
@@ -62,4 +63,20 @@ class MutableValueTree[A](override val value: A, initialChildren: Seq[MutableVal
 	
 	override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, MutableValueTree[N]] =
 		NavigateUsingValues.from[N, MutableValueTree[N]](MutableValueTree.from[N](this)) { nav: N => MutableValueTree(nav) }
+	
+	override protected def findUnder(parent: MutableValueTree[A], nav: A): Option[MutableValueTree[A]] =
+		parent.children.find { _.value == nav }
+	
+	override protected def nodeFor(nav: A): MutableValueTree[A] = {
+		val newNode = MutableValueTree(nav)
+		this += newNode
+		newNode
+	}
+	override protected def nodeForPath(parents: Seq[MutableValueTree[A]], path: Iterator[A]): MutableValueTree[A] = {
+		var lastParent = parents.last
+		while (path.hasNext) {
+			lastParent = lastParent.nodeFor(path.next())
+		}
+		lastParent
+	}
 }

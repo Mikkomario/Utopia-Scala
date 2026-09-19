@@ -317,7 +317,7 @@ object ValueTree
 		override def filter(f: ValueTree[A] => Boolean): ValueTree[A] = mapped { _.filter(f) }
 		
 		override protected def findUnder(parent: ValueTreeMutator[A], nav: A): Option[ValueTreeMutator[A]] =
-			parent.node.children.find { node => eq(node, nav) }.map { wrapChild(_) }
+			parent.node.children.find { node => eq(node, nav) }.map { parent.wrapChild(_) }
 		
 		override protected def nodeFor(nav: A): ValueTreeMutator[A] =
 			wrapChild(ValueTree(nav).withoutChildren, generated = true)

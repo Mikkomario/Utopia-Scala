@@ -5,6 +5,20 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.Extender
 
+object ValueTreeLike
+{
+	/**
+	 * Implicitly accesses a value tree as a navigator
+	 * @param tree A tree to navigate
+	 * @param eq Implicit equals function to apply
+	 * @tparam A Type of the navigation elements / wrapped values
+	 * @return A navigator for the specified tree
+	 */
+	implicit def asNavigator[A, CC[_], T <: TreeLike[T] with View[A]](tree: ValueTreeLike[A, CC, T])
+	                                                                 (implicit eq: EqualsFunction[A] = EqualsFunction.default): TreeNavigator[A, CC[A]] =
+		tree.navigateUsing(eq)
+}
+
 /**
   * Common trait for tree implementations where each node wraps a value
   * @author Mikko Hilpinen

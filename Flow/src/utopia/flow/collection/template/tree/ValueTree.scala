@@ -3,24 +3,8 @@ package utopia.flow.collection.template.tree
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.operator.equality.EqualsFunction
 
-import scala.language.implicitConversions
-
 object ValueTree
 {
-	// IMPLICIT ----------------------
-	
-	/**
-	 * Implicitly accesses a value tree as a navigator
-	 * @param tree A tree to navigate
-	 * @param eq Implicit equals function to apply
-	 * @tparam A Type of the navigation elements / wrapped values
-	 * @return A navigator for the specified tree
-	 */
-	implicit def asNavigator[A](tree: ValueTree[A])
-	                           (implicit eq: EqualsFunction[A] = EqualsFunction.default): TreeNavigator[A, ValueTree[A]] =
-		tree.navigateUsing(eq)
-	
-	
 	// OTHER    ----------------------
 	
 	/**
@@ -48,4 +32,4 @@ object ValueTree
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-trait ValueTree[+A] extends ValueTreeLike[A, ValueTree, ValueTree[A]]
+trait ValueTree[+A] extends Tree with ValueTreeLike[A, ValueTree, ValueTree[A]]

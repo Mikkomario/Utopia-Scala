@@ -8,8 +8,8 @@ import scala.annotation.unchecked.uncheckedVariance
 import scala.math.Ordered.orderingToOrdered
 
 /**
-  * A mutable interface for finding graph search results
-  * @param progressIterator An iterator that yields the next set of travel results
+  * A mutable interface for finding graph-search results
+  * @param progressIterator An iterator that advances the graph-search process and yields intermediate result-states.
   * @param startNode Node to start the search from
   * @param startCost Starting cost to apply
   * @param includeStartAsResult Whether to include 'startNode' as a result (default = false)
@@ -19,8 +19,8 @@ import scala.math.Ordered.orderingToOrdered
   * @tparam C Type of the accumulated cost
   */
 class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravelResults[Node, Edge, C]],
-                                        startNode: Node, startCost: C,
-                                        includeStartAsResult: Boolean = false, autocomplete: Boolean = false)
+                                          startNode: Node, startCost: C,
+                                          includeStartAsResult: Boolean = false, autocomplete: Boolean = false)
 	extends Iterator[GraphTravelResults[Node, Edge, C]]
 {
 	// ATTRIBUTES   --------------------------
@@ -46,17 +46,16 @@ class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravel
 	def resultsIterator = Iterator.single(current) ++ this
 	
 	/**
-	  * May advance this search in order to find a successful search result.
+	  * Possibly advances this search in order to find a successful search result.
 	  * @return The first available successful search result.
 	  *         None if this search didn't yield any results.
 	  *
 	  *         Note: This result might not be complete nor optimal.
 	  */
-	def anySuccess =
-		resultsIterator.findMap { _.successes.headOption }
+	def anySuccess = resultsIterator.findMap { _.successes.headOption }
 	/**
-	  * May advance this search in order to find successful search results.
-	  * @return The first available result which contains all targeted items.
+	  * Possibly advances this search in order to find successful search results.
+	  * @return The first available result that contains all targeted items.
 	  *         None if this search didn't yield complete results.
 	  *
 	  *         Note: This result might not be complete nor optimal.
@@ -64,15 +63,15 @@ class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravel
 	def fullSuccess = resultsIterator.find { _.foundAllResults }
 	
 	/**
-	  * May advance this search in order to find one successful search result
+	  * Possibly advances this search in order to find one successful search result
 	  * for which an optimal route has been found.
-	  * @return The first available search result where the optimal route has been identified.
+	  * @return The first available search result where the optimal route has been found.
 	  *         None if this search didn't yield any results.
 	  */
 	def anyOptimalSuccess =
 		resultsIterator.findMap { _.successes.find { _.isConfirmedAsOptimal } }
 	/**
-	  * May complete this search in order to find the optimal results.
+	  * Possibly completes this search in order to find the optimal results.
 	  * @return Optimal search results, if successful. None if partial or unsuccessful.
 	  */
 	def fullOptimalSuccess =
@@ -84,19 +83,19 @@ class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravel
 	override def hasNext: Boolean = progressIterator.hasNext
 	
 	override def next(): GraphTravelResults[Node, Edge, C] = {
-		// Proceeds with the iterator
-		val r = progressIterator.next()
-		// Stores the iteration result locally, also
-		// May need to add the start completion to the iteration results
+		// Advances the graph search
+		val result = progressIterator.next()
+		// Stores the iteration result locally.
+		// May need to add the start completion to the iteration results.
 		if (includeStartAsResult) {
-			val merged = r.copy(stages = startStage +: r.stages, foundResults = true,
-				foundAllResults = r.foundAllResults || autocomplete)
+			val merged = result.copy(stages = startStage +: result.stages, foundResults = true,
+				foundAllResults = result.foundAllResults || autocomplete)
 			_latestResult = merged
 			merged
 		}
 		else {
-			_latestResult = r
-			r
+			_latestResult = result
+			result
 		}
 	}
 	
@@ -113,34 +112,37 @@ class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravel
 	}
 	
 	/**
-	  * Finds a search result which is cheaper than the specified cost threshold.
-	  * Terminates the search if it becomes impossible to achieve the specified threshold,
-	  * therefore making this function more cost-effective than a full search.
+	  * Finds a search result that is cheaper than the specified cost threshold.
+	  * Terminates this search if it becomes impossible to achieve the specified threshold,
+	  * making this function more cost-effective than a full search.
 	  *
 	  * A requirement for finding the optimal results may also be applied.
-	  * In this case, this search will continue until the identified search result has been optimized.
-	  * Otherwise, this search completes as soon as small-enough cost has been achieved.
+	  * In such a case, this search will continue until the identified search result has been optimized.
+	  * Otherwise, this search completes as soon as a small-enough cost has been achieved.
 	  *
-	  * @param costThreshold A cost threshold, under which the result must fall (exclusive).
+	  * @param costThreshold An exclusive maximum cost threshold for the acquired results.
 	  * @param optimize Whether the acquired results should be optimized before returning.
-	  *                 If false (default), this search will not attempt to find optimal routes but will
+	 *
+	  *                 If false (default), this search will not attempt to find optimal routes, and will
 	  *                 accept any route that is cheaper than the specified cost threshold.
-	  *                 If true, optimization will be performed after the initial search has succeeded.
-	  * @param ord Implicit ordering to use when comparing cost values.
+	  *
+	 *                 If true, optimization will be performed after the initial search has succeeded.
+	  *
+	 * @param ord Implicit ordering to use when comparing cost values.
 	  *
 	  * @return A search result cheaper than the specified cost threshold. None if no such result could be found.
 	  */
 	def findOneCheaperThan(costThreshold: C, optimize: Boolean = false)(implicit ord: Ordering[C]) =
 		findCheaperThan(costThreshold, acceptPartialResults = true, optimize = optimize).flatMap { result =>
-			val successView = result.successes.view
-			val optionsView = if (optimize) successView.filter { _.isConfirmedAsOptimal } else successView
-			optionsView.filter { _.cost < costThreshold }.minByOption { _.cost }
+			val successIter = result.successes.iterator
+			val optionsIter = if (optimize) successIter.filter { _.isConfirmedAsOptimal } else successIter
+			optionsIter.filter { _.cost < costThreshold }.minByOption { _.cost }
 		}
 	
 	/**
-	  * Finds results which are cheaper than the specified cost threshold.
+	  * Finds results that are cheaper than the specified cost threshold.
 	  * Terminates the search if it becomes impossible to achieve the specified threshold,
-	  * therefore making this function more cost-effective than a full search.
+	  * making this function more cost-effective than a full search.
 	  *
 	  * This search may be applied as full (i.e. requiring all search results to be identified)
 	  * or as partial (i.e. requiring only that a single cheap-enough result has been identified).
@@ -148,26 +150,29 @@ class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravel
 	  * it contains too expensive values, as long as they are optimal values
 	  * and there exists one or more cheaper values.
 	  *
-	  * A requirement for finding the optimal results may also be applied.
-	  * In this case, this search will continue until the identified search result or results have been optimized.
-	  * Otherwise, this search completes as soon as small-enough cost has been achieved.
+	 * A requirement for finding the optimal results may also be applied.
+	 * In such a case, this search will continue until the identified search result has been optimized.
+	 * Otherwise, this search completes as soon as a small-enough cost has been achieved.
 	  *
-	  * @param costThreshold A cost threshold, under which the result must fall (exclusive).
+	  * @param costThreshold An exclusive maximum cost threshold for the acquired results.
 	  * @param acceptPartialResults Whether partial results should be accepted.
+	 *
 	  *                             If true, this search may complete
 	  *                             as soon as the first search result has been found.
-	  *                             If false (default), all results must be found before this search is completed.
-	  * @param optimize Whether the acquired results should be optimized before returning.
+	  *
+	 *                             If false (default), all results must be found before this search is completed.
+	  *
+	 * @param optimize Whether the acquired results should be optimized before returning.
 	  *                 If false (default), this search will not attempt to find optimal routes but will
 	  *                 accept any route that is cheaper than the specified cost threshold.
 	  *                 If true, optimization will be performed after the initial search has succeeded.
 	  * @param ord Implicit ordering to use when comparing cost values.
 	  *
-	  * @return Search results which fulfilled the specified conditions.
+	  * @return Search results that fulfilled the specified conditions.
 	  *         None if no such results could be acquired.
 	  *
 	  *         Note: Even if this function returns None, [[current]] may still contain a semi-successful value
-	  *         (just not one which fulfills all the specified conditions).
+	  *         (just not one that fulfills all the specified conditions).
 	  */
 	def findCheaperThan(costThreshold: C, acceptPartialResults: Boolean = false,
 	                    optimize: Boolean = false)
@@ -186,7 +191,7 @@ class GraphSearchProcess[+Node, +Edge, C](progressIterator: Iterator[GraphTravel
 					if (optimize && !preliminary.successes
 						.exists { r => r.isConfirmedAsOptimal && r.cost < costThreshold })
 						find { _.successes.exists { r => r.isConfirmedAsOptimal && r.cost < costThreshold } }
-					// Case: Found an optimal result or sub-optimal results are accepted => Returns this result
+					// Case: Found an optimal result or suboptimal results are accepted => Returns this result
 					else
 						Some(preliminary)
 				}

@@ -73,12 +73,70 @@ object ValueTreeTest extends App
 	assert(n1(2, 3, 4).value == 4)
 	assert(n1(10, 11, 12).value == 12)
 	
-	// Tests immutable ValueTree functions
+	// Tests functions defined in FilterableTreeLike
+	
 	// 1 -> 2 -> 3
 	//   -> 4
 	private val t2 = ValueTree(1).withChildren(
 		ValueTree(2).withChild(ValueTree(3)),
 		ValueTree(4))
+	
+	// withoutChildren
+	{
+		val t = t2.withoutChildren
+		assert(t.value == 1)
+		assert(t.children.isEmpty)
+	}
+	
+	// filterDirect
+	{
+		val t = t2.filterDirect { _.value <= 2 }
+		assert(t.value == 1)
+		assert(t.children.size == 1)
+		assert(t.get(4).isEmpty)
+		assert(t.get(2).exists { _.hasChildren })
+	}
+	
+	// filter
+	{
+		val t = t2.filter { _.value <= 2 }
+		assert(t.value == 1)
+		assert(t.children.size == 1)
+		assert(t.get(4).isEmpty)
+		assert(t.get(2).exists { _.isEmpty })
+	}
+	
+	// -
+	{
+		val n1 = ValueTree(2).withoutChildren
+		val n2 = ValueTree(1).withChild(n1)
+		val t = ValueTree(3).withChildren(n2, ValueTree(4))
+		
+		val t2 = t - n2
+		assert(t2.value == 3)
+		assert(t2.children.only.get.value == 4)
+		
+		val t3 = t - n1
+		assert(t3.value == 3)
+		assert(t3.children.size == 2)
+		assert(t3.get(1).exists { _.isEmpty })
+	}
+	
+	// withoutDirect
+	{
+		val n1 = ValueTree(2).withoutChildren
+		val n2 = ValueTree(1).withChild(n1)
+		val t = ValueTree(3).withChildren(n2, ValueTree(4))
+		
+		val t2 = t.withoutDirect(n2)
+		assert(t2.value == 3)
+		assert(t2.children.only.get.value == 4)
+		
+		assert(t.withoutDirect(n1) == t)
+	}
+	
+	
+	// Tests immutable ValueTree functions
 	
 	// withValue
 	{
@@ -310,14 +368,13 @@ object ValueTreeTest extends App
 	}
 	
 	// excluded
-	// TODO: Continue debugging
 	{
 		val t3 = m1(2, 3).excluded
 		assert(t3.value == 1)
 		assert(t3.children.size == 2, t3)
 		assert(t3.children.map { _.value } == Vector(2, 4))
 		assert(t3.get(4) == t2.get(4))
-		assert(t3.get(2).exists { _.isEmpty })
+		assert(t3.get(2).exists { _.isEmpty }, t3)
 		
 		val t4 = m1(2).excluded
 		assert(t4.value == 1)
