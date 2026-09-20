@@ -1,8 +1,10 @@
 package utopia.flow.test.collection.tree
 
-import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.immutable.{Empty, Pair}
 import utopia.flow.collection.immutable.tree.ValueTree
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.mutable.tree.MutableValueTree
+import utopia.flow.operator.Identity
 import utopia.flow.util.EitherExtensions._
 
 /**
@@ -422,6 +424,79 @@ object ValueTreeTest extends App
 		val t4 = m2(7).mapFirstWhere { _.value > 0 } { _.mapLocalValue { -_ } }.toOption.get
 		assert(t4.get(2) == t1.get(2))
 		assert(t4.get(7).exists { _.children.map { _.value } == Vector(-8, 9) })
+	}
+	
+	// Tests constructor functions
+	
+	// from (mutable)
+	{
+		val mt = MutableValueTree(1)
+		mt += MutableValueTree(2)
+		mt(2) += MutableValueTree(3)
+		
+		val t = ValueTree.from(mt)
+		assert(t.value == 1)
+		assert(t.children.only.get.value == 2)
+		assert(t.get(2, 3).get.isEmpty)
+	}
+	
+	// branch
+	{
+		val t = ValueTree.branch(Vector(1, 2, 3))
+		assert(t.value == 1)
+		assert(t.children.only.get.value == 2)
+		assert(t.get(2, 3).get.isEmpty)
+	}
+	
+	// groupedBranches
+	{
+		val trees = ValueTree.groupedBranches(
+			Vector(Vector(1, 2, 3), Vector(1, 2, 4), Vector(5, 6, 7), Vector(5, 8), Empty))(Identity) { (k, _) => k }
+		
+		assert(trees.size == 2)
+		
+		val t1 = trees.find { _.value == 1 }.get
+		assert(t1.children.only.get.value == 2)
+		assert(t1.get(2, 3).get.isEmpty)
+		assert(t1.get(2, 4).get.isEmpty)
+		assert(t1.get(2).get.children.size == 2)
+		
+		val t2 = trees.find { _.value == 5 }.get
+		assert(t2.children.map { _.value } == Vector(6, 8))
+		assert(t2.get(6).get.children.only.get.value == 7)
+		assert(t2.get(8).get.isEmpty)
+	}
+	
+	// iterate
+	{
+		/*
+			Expected output:
+			16 -> 8 -> 4 -> 2 -> -2
+						 -> -4 -> -2
+					-> -8 -> -4 -> -2
+			   -> -16 -> -8 -> -4 -> -2
+		 */
+		val t = ValueTree(16).iterate { i =>
+			val div = Some(i / 2).filter { _.abs > 1 }
+			val reverse = if (i > 0) Some(-i) else None
+			
+			Vector.concat(div, reverse)
+		}
+		
+		assert(t.children.map { _.value } == Vector(8, -16))
+		assert(t(8).children.map { _.value } == Vector(4, -8))
+		assert(t.size == 13, t)
+		
+		t.allNodesIterator.foreach { n =>
+			if (n.value == -2)
+				assert(n.isEmpty, n)
+			else if (n.value == 2)
+				assert(n.children.only.get.value == -2, n)
+			else if (n.value > 0)
+				assert(n.children.map { _.value } == Vector(n.value / 2, -n.value), n)
+			else
+				assert(n.children.only.get.value == n.value/2, n)
+		}
 	}
 	
 	println("Success!")
