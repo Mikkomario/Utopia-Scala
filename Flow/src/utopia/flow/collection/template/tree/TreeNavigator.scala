@@ -1,37 +1,22 @@
 package utopia.flow.collection.template.tree
 
-import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
+import utopia.flow.collection.template.LookupPath
 
 import scala.annotation.unchecked.uncheckedVariance
 
 /**
- * Common trait for implementations that provide tree navigation based on some navigation elements
+ * Common trait for implementations that provide tree navigation based on some navigation elements.
+ * These also have the ability to generate nodes for nav elements not present in the viewed tree.
  * @tparam N Type of navigational elements accepted
  * @tparam Node Type of nodes yielded
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-trait TreeNavigator[-N, +Node]
+trait TreeNavigator[-N, +Node] extends LookupPath[N, Node]
 {
 	// ABSTRACT --------------------------
 	
-	/**
-	 * @return The node that's targeted with an empty path
-	 */
-	protected def current: Node
-	
-	/**
-	 * Checks whether a tree node matches a navigational element
-	 * @param parent Node under which other nodes are sought.
-	 *
-	 *               NB: Must be part of the navigated tree, i.e. <= Node.
-	 *                   If this condition is met, this may be kept @uncheckedVariance.
-	 *
-	 * @param nav Navigational element to find
-	 * @return A node directly under 'parent', which matches the specified 'nav'
-	 */
-	protected def findUnder(parent: Node @uncheckedVariance, nav: N): Option[Node]
 	/**
 	 * Generates a new node
 	 * @param nav A nav element that didn't match a node in this tree
@@ -115,27 +100,4 @@ trait TreeNavigator[-N, +Node]
 	 * @return Node at the end of that path. May be generated.
 	 */
 	def apply(path: Iterable[N]) = this/path
-	
-	/**
-	 * Finds a child directly under this node that matches the specified navigational step
-	 * @param nav The navigational step to take next if a matching node is found
-	 * @return The first child that matches the specified step. None if no such (direct) child was found.
-	 */
-	def get(nav: N) = findUnder(current, nav)
-	/**
-	 * @param first First step to take
-	 * @param second Second step to take
-	 * @param more More steps to take
-	 * @return Node at the end of the specified path.
-	 *         None if no existing node lies at the end of that path.
-	 */
-	def get(first: N, second: N, more: N*): Option[Node] = get(Pair(first, second) ++ more)
-	/**
-	 * @param path A path of navigational steps to take. Ordered.
-	 * @return Node at the end of that path.
-	 *         None if no existing node lies at the end of that path.
-	 */
-	def get(path: IterableOnce[N]) =
-		path.foldLeftIterator[Option[Node]](Some(current)) { case (node, nav) => node.flatMap { findUnder(_, nav) } }
-			.takeTo { _.isEmpty }.last
 }

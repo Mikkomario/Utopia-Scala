@@ -251,7 +251,8 @@ object ValueTree
 	class ValueTreeMutator[A](root: ValueTree[A], path: Seq[ValueTree[A]], private val node: ValueTree[A],
 	                          generated: Boolean = false)
 	                         (implicit eq: EqualsFunction[A])
-		extends TreeNavigator[A, ValueTreeMutator[A]] with ValueTreeLike[A, template.tree.ValueTree, ValueTree, ValueTree[A]]
+		extends TreeNavigator[A, ValueTreeMutator[A]]
+			with ValueTreeLike[A, template.tree.ValueTree, ValueTree, ValueTree[A]]
 	{
 		// COMPUTED ---------------------------
 		
