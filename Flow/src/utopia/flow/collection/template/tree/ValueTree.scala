@@ -1,6 +1,7 @@
 package utopia.flow.collection.template.tree
 
 import utopia.flow.collection.immutable.Empty
+import utopia.flow.collection.template.PathNavigator
 import utopia.flow.operator.equality.EqualsFunction
 
 object ValueTree
@@ -22,7 +23,7 @@ object ValueTree
 	{
 		override def self: ValueTree[A] = this
 		
-		override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
+		override def navigateUsing[N >: A](equals: EqualsFunction[N]): PathNavigator[N, ValueTree[N]] =
 			NavigateUsingValues.from[N, ValueTree[N]](this).apply { ValueTree(_) }(equals)
 	}
 }

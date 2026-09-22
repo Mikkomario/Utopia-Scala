@@ -4,12 +4,14 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.{Graph, GraphTravelResults, NodeTravelStage}
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
+import utopia.flow.collection.template.LookupPath
 import utopia.flow.collection.template.graph.GraphNodeLike.PathsFinder
 import utopia.flow.collection.template.graph.NodeTarget.AnyNode
-import utopia.flow.operator.Identity
+import utopia.flow.operator.{Identity, MaybeEmpty}
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.Extender
 
@@ -394,7 +396,7 @@ object GraphNodeLike
  * @since 10.4.2019
  */
 trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: GraphEdge[E, Repr]]
-	extends View[N] with Extender[N]
+	extends View[N] with Extender[N] with MaybeEmpty[Repr]
 {
     // ABSTRACT --------------------
 	
@@ -435,7 +437,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 		val visitedNodes = mutable.Set[Any](this)
 		_allNodesIterator(visitedNodes)
 	}
-	private def _allNodesIterator(visitedNodes: mutable.Set[Any]): Iterator[Repr] = {
+	private def _allNodesIterator(visitedNodes: mutable.Set[Any]): Iterator[Repr] =
 		Iterator.single(self) ++ leavingEdges.iterator.flatMap { edge =>
 			val node = edge.end
 			if (visitedNodes.contains(node))
@@ -445,7 +447,6 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 				node._allNodesIterator(visitedNodes)
 			}
 		}
-	}
 	/**
 	  * @return An iterator that returns all nodes within this graph, starting with this one.
 	  *         The iterator is ordered in a way that the nodes are returned from closest to furthest.
@@ -475,8 +476,8 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  *         then routes of length 1 to this node's siblings, then routes of length 2 and so on.
 	  *
 	  *         The values returned by the returned iterator consist of two parts:
-	  *         1) Route to the node in question as a sequence of edges
-	  *         2) The node at the end of that route
+	  *         1. Route to the node in question as a sequence of edges
+	  *         1. The node at the end of that route
 	  */
 	def shortestRoutesIterator: Iterator[(Seq[Edge], Repr)] = {
 		val visitedNodes = mutable.Set[Any](this)
@@ -584,14 +585,30 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	def routesToSelf = routesTo(self)
 	
 	/**
-	  * @return An interactive search process which targets all nodes in this graph
+	  * @return An interactive search process that targets all nodes in this graph
 	  */
 	def searchShortestRoutesToAll = searchAllNodes[Int] { _: Edge => 1 }
+	
+	/**
+	 * @param valueEquals Implicit equals-function for comparing node values with nav input
+	 * @tparam Nav Type of nav input accepted
+	 * @return An interface for traversing a path in this graph, using node values.
+	 */
+	def lookup[Nav >: N](implicit valueEquals: EqualsFunction[Nav] = EqualsFunction.default): LookupPath[Nav, Repr] =
+		lookupUsing[Nav](valueEquals)
+	/**
+	 * @param edgeValueEquals The equality function used to compare edge values with navigation input.
+	 * @return A path-traversal interface from this node, based on edge values and the specified equals-function.
+	 */
+	def traverseEdges[Nav >: E](implicit edgeValueEquals: EqualsFunction[Nav] = EqualsFunction.default): LookupPath[Nav, Repr] =
+		traverseEdgesUsing[Nav](edgeValueEquals)
 	
 	
 	// IMPLEMENTED  ----------------------
 	
 	override def wrapped: N = value
+	
+	override def isEmpty: Boolean = leavingEdges.isEmpty
 	
 	override def toString = s"Node($value)"
 
@@ -603,6 +620,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @param edgeType The content of the traversed edge(s)
 	  * @return An iterator that yields the node(s) at the end of the edge(s)
 	  */
+	@deprecated("Please use traverseEdges instead", "v2.9")
 	def /[E2 >: E](edgeType: E2) = leavingEdges.iterator.filter { _.value == edgeType }.map { _.end }
 	/**
 	  * Traverses a deep path that consists of edges between nodes
@@ -610,6 +628,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  *             An empty path is considered to point to this node.
 	  * @return The node(s) at the end of the path
 	  */
+	@deprecated("Please use traverseEdges instead", "v2.9")
 	def /[E2 >: E](path: IterableOnce[E2]): Seq[Repr] =
 		path
 			.foldLeftIterator[Seq[Repr]](Single(self)) { (nodes, nextElem) =>
@@ -623,6 +642,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @param more More edges
 	  * @return The node(s) at the end of the path
 	  */
+	@deprecated("Please use traverseEdges instead", "v2.9")
 	def /[E2 >: E](first: E2, second: E2, more: E2*): Seq[Repr] = this / (Pair(first, second) ++ more)
 	
 	/**
@@ -637,6 +657,20 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @return Whether this node is at all connected to the specified node
 	  */
 	def isConnectedTo(other: NodeTarget[N, E]) = allNodesIterator.exists { n => other(n, n.leavingEdges) }
+	
+	/**
+	 * @param valueEquals Equality function to use in navigation
+	 * @tparam Nav Type of navigation input accepted
+	 * @return A path-traversal interface from this node, based on node values and the specified equals-function.
+	 */
+	def lookupUsing[Nav >: N](valueEquals: EqualsFunction[Nav]): LookupPath[Nav, Repr] =
+		LookupGraphPathViaNodes[Nav, Repr](self)(valueEquals)
+	/**
+	 * @param edgeValueEquals The equality function used to compare edge values with navigation input.
+	 * @return A path-traversal interface from this node, based on edge values and the specified equals-function.
+	 */
+	def traverseEdgesUsing[Nav >: E](edgeValueEquals: EqualsFunction[Nav]): LookupPath[Nav, Repr] =
+		LookupGraphPathViaEdges[Nav, Repr](self)(edgeValueEquals)
 	
     /**
      * Finds an edge pointing to another node, if there is one

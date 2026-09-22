@@ -1,6 +1,7 @@
 package utopia.flow.collection.template.tree
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.template.PathNavigator
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 
@@ -48,7 +49,7 @@ object NavigateUsingValues
 }
 
 /**
- * A simple [[TreeNavigator]] implementation that supports value trees
+ * A simple [[PathNavigator]] implementation that supports value trees
  * @param current The wrapped (root) node
  * @param wrapNav A function that wraps a nav element into a tree node
  * @param eq An implicit equals function used for comparing nav elements and node values. Default = use ==.
@@ -58,7 +59,7 @@ object NavigateUsingValues
 class NavigateUsingValues[A, -Nav >: A, Node <: TreeLike[Node] with View[A]](override protected val current: Node)
                                                                             (wrapNav: Nav => Node)
                                                                             (implicit eq: EqualsFunction[Nav] = EqualsFunction.default)
-	extends TreeNavigator[Nav, Node]
+	extends PathNavigator[Nav, Node]
 {
 	override protected def findUnder(parent: Node, nav: Nav): Option[Node] =
 		parent.children.find { node => eq(node.value, nav) }

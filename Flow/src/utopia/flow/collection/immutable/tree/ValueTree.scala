@@ -4,8 +4,8 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.iterable.LazySingle
 import utopia.flow.collection.immutable.{Empty, Single, SingleView}
 import utopia.flow.collection.template
-import utopia.flow.collection.template.tree
-import utopia.flow.collection.template.tree.{NavigateUsingValues, TreeNavigator}
+import utopia.flow.collection.template.{PathNavigator, tree}
+import utopia.flow.collection.template.tree.NavigateUsingValues
 import utopia.flow.operator.Identity
 import utopia.flow.operator.equality.EqualsFunction
 
@@ -251,7 +251,7 @@ object ValueTree
 	class ValueTreeMutator[A](root: ValueTree[A], path: Seq[ValueTree[A]], private val node: ValueTree[A],
 	                          generated: Boolean = false)
 	                         (implicit eq: EqualsFunction[A])
-		extends TreeNavigator[A, ValueTreeMutator[A]]
+		extends PathNavigator[A, ValueTreeMutator[A]]
 			with ValueTreeLike[A, template.tree.ValueTree, ValueTree, ValueTree[A]]
 	{
 		// COMPUTED ---------------------------
@@ -300,7 +300,7 @@ object ValueTree
 		override def children: Seq[ValueTree[A]] = node.children
 		override def value: A = node.value
 		
-		override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
+		override def navigateUsing[N >: A](equals: EqualsFunction[N]): PathNavigator[N, ValueTree[N]] =
 			NavigateUsingValues[N, N, ValueTree[N]](ValueTree.from(node)) {
 				nav: N => ValueTree(nav).withoutChildren }(equals)
 		
@@ -448,7 +448,7 @@ trait ValueTree[+A]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, ValueTree[N]] =
+	override def navigateUsing[N >: A](equals: EqualsFunction[N]): PathNavigator[N, ValueTree[N]] =
 		NavigateUsingValues[N, N, ValueTree[N]](ValueTree.from(this)) {
 			nav: N => ValueTree(nav).withoutChildren }(equals)
 	

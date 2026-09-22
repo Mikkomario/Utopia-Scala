@@ -1,6 +1,7 @@
 package utopia.flow.collection.template.tree
 
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.template.PathNavigator
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.Extender
@@ -15,7 +16,7 @@ object ValueTreeLike
 	 * @return A navigator for the specified tree
 	 */
 	implicit def asNavigator[A, CC[_], T <: TreeLike[T] with View[A]](tree: ValueTreeLike[A, CC, T])
-	                                                                 (implicit eq: EqualsFunction[A] = EqualsFunction.default): TreeNavigator[A, CC[A]] =
+	                                                                 (implicit eq: EqualsFunction[A] = EqualsFunction.default): PathNavigator[A, CC[A]] =
 		tree.navigateUsing(eq)
 }
 
@@ -37,7 +38,7 @@ trait ValueTreeLike[+A, +CC[_], +Repr <: TreeLike[Repr] with View[A]]
 	 * @tparam N Type of the compared items
 	 * @return A new navigator interface
 	 */
-	def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, CC[N]]
+	def navigateUsing[N >: A](equals: EqualsFunction[N]): PathNavigator[N, CC[N]]
 	
 	
 	// COMPUTED    ----------------------

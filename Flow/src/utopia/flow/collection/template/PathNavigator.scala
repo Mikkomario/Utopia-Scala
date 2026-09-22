@@ -1,19 +1,18 @@
-package utopia.flow.collection.template.tree
+package utopia.flow.collection.template
 
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair}
-import utopia.flow.collection.template.LookupPath
 
 import scala.annotation.unchecked.uncheckedVariance
 
 /**
- * Common trait for implementations that provide tree navigation based on some navigation elements.
- * These also have the ability to generate nodes for nav elements not present in the viewed tree.
+ * Common trait for implementations that provide tree-like navigation based on some navigation elements.
+ * These also have the ability to generate nodes for nav elements not present in the viewed tree / structure.
  * @tparam N Type of navigational elements accepted
  * @tparam Node Type of nodes yielded
  * @author Mikko Hilpinen
  * @since 05.06.2026, v2.9
  */
-trait TreeNavigator[-N, +Node] extends LookupPath[N, Node]
+trait PathNavigator[-N, +Node] extends LookupPath[N, Node]
 {
 	// ABSTRACT --------------------------
 	

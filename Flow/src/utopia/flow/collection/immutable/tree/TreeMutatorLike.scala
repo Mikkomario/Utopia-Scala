@@ -1,7 +1,8 @@
 package utopia.flow.collection.immutable.tree
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.template.tree.{TreeLike, TreeNavigator}
+import utopia.flow.collection.template.PathNavigator
+import utopia.flow.collection.template.tree.TreeLike
 import utopia.flow.util.Mutate
 
 import scala.annotation.tailrec
@@ -17,7 +18,7 @@ import scala.annotation.unchecked.uncheckedVariance
  * @since 07.08.2026, v2.9
  */
 trait TreeMutatorLike[-Nav, N, Node <: CopyableTreeLike[N, Node], +Repr <: TreeLike[Node]]
-	extends TreeNavigator[Nav, Repr] with CopyableTreeLike[N, Node]
+	extends PathNavigator[Nav, Repr] with CopyableTreeLike[N, Node]
 {
 	// ABSTRACT   ------------------------
 	

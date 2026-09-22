@@ -2,7 +2,8 @@ package utopia.flow.collection.mutable.tree
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.template
-import utopia.flow.collection.template.tree.{NavigateUsingValues, TreeNavigator, ValueTree, ValueTreeLike}
+import utopia.flow.collection.template.PathNavigator
+import utopia.flow.collection.template.tree.{NavigateUsingValues, ValueTree, ValueTreeLike}
 import utopia.flow.operator.equality.EqualsFunction
 
 object MutableValueTree
@@ -36,7 +37,7 @@ object MutableValueTree
  */
 class MutableValueTree[A](override val value: A, initialChildren: Seq[MutableValueTree[A]] = Empty)
 	extends ValueTree[A] with ValueTreeLike[A, MutableValueTree, MutableValueTree[A]]
-		with MutableTreeLike[template.tree.ValueTree[A], MutableValueTree[A]] with TreeNavigator[A, MutableValueTree[A]]
+		with MutableTreeLike[template.tree.ValueTree[A], MutableValueTree[A]] with PathNavigator[A, MutableValueTree[A]]
 {
 	// ATTRIBUTES  --------------------------
 	
@@ -61,7 +62,7 @@ class MutableValueTree[A](override val value: A, initialChildren: Seq[MutableVal
 	
 	override def clear(): Unit = _children = Empty
 	
-	override def navigateUsing[N >: A](equals: EqualsFunction[N]): TreeNavigator[N, MutableValueTree[N]] =
+	override def navigateUsing[N >: A](equals: EqualsFunction[N]): PathNavigator[N, MutableValueTree[N]] =
 		NavigateUsingValues.from[N, MutableValueTree[N]](MutableValueTree.from[N](this)) { nav: N => MutableValueTree(nav) }
 	
 	override protected def findUnder(parent: MutableValueTree[A], nav: A): Option[MutableValueTree[A]] =

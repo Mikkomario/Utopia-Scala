@@ -65,7 +65,7 @@ trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLik
 	/**
 	 * @return Factory used for constructing copies of this node
 	 */
-	protected def factory: GraphFactory[NC, EC]
+	def factory: GraphFactory[NC, EC]
 	
 	/**
 	 * @param f A filtering function applied to edges leaving from this node

@@ -2,12 +2,16 @@ package utopia.flow.collection.immutable.graph
 
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
+import utopia.flow.collection.immutable.graph.GraphNode.GraphNodeValuesNavigator
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.collection.template
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 
 import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable
+import scala.language.implicitConversions
 
 object GraphNode extends GraphFactory[GraphNode, GraphEdge]
 {
@@ -15,6 +19,14 @@ object GraphNode extends GraphFactory[GraphNode, GraphEdge]
 	
 	override def node[N, E](value: N, edges: IterableOnce[GraphEdge[N, E]]): GraphNode[N, E] = apply(value, edges)
 	override def edge[N, E](value: E, end: View[GraphNode[N, E]]): GraphEdge[N, E] = GraphEdge(value, end)
+	
+	
+	// IMPLICIT -----------------------------
+	
+	// Implicitly provides a navigation interface
+	implicit def autoNavigate[Nav, E](node: GraphNode[Nav, E])
+	                                 (implicit valueEquals: EqualsFunction[Nav] = EqualsFunction.default): GraphNodeValuesNavigator[Nav, E] =
+		node.navigateUsing[Nav](valueEquals)
 	
 	
 	// OTHER    -----------------------------
@@ -36,10 +48,27 @@ object GraphNode extends GraphFactory[GraphNode, GraphEdge]
 	 * @tparam E Type of edge values
 	 * @return An immutable graph node, based on that node
 	 */
-	def from[N, E](node: template.graph.GraphNode[N, E]): GraphNode[N, E] = node match {
-		case n: GraphNode[N, E] => n
-		case n => apply(n.value, n.leavingEdges.iterator.map(GraphEdge.from))
-	}
+	def from[N, E](node: template.graph.GraphNode[N, E]): GraphNode[N, E] = _from[N, E](node, mutable.Map())
+	// Uses previously cached results, where possible
+	private def _from[N, E](node: template.graph.GraphNode[N, E],
+	                        conversions: mutable.Map[template.graph.GraphNode[N, E], GraphNode[N, E]]): GraphNode[N, E] =
+		conversions.getOrElse(node, {
+			node match {
+				// Case: Already of the desired type => No conversion is needed
+				case n: GraphNode[N, E] => n
+				// Case: Another type of node => Creates an immutable copy of it
+				case n =>
+					// The edge end nodes are resolved lazily, in order for the conversions to be ready by that time
+					val edges = n.leavingEdges.map {
+						case e: GraphEdge[N, E] => e
+						case e => GraphEdge(e.value, Lazy { _from(e.end, conversions) })
+					}
+					val node = apply(n.value, edges)
+					// Caches the conversion result
+					conversions += (n -> node)
+					node
+			}
+		})
 	
 	/**
 	 * @param value Value to wrap by this node
@@ -92,6 +121,13 @@ object GraphNode extends GraphFactory[GraphNode, GraphEdge]
 					GraphEdge(edgeValue, endView.mapValue { endValue => _iterate(cache, endValue)(edges) })
 				}
 			})))
+			
+	
+	// NESTED   ---------------------------
+	
+	class GraphNodeValuesNavigator[N, +E](override protected val current: GraphNode[N, E])
+	                                     (implicit override protected val valueEquals: EqualsFunction[N])
+		extends ImmutableGraphViaNodesNavigator[N, E, GraphNode]
 }
 
 /**
@@ -106,10 +142,22 @@ class GraphNode[+N, +E](override val value: N, override val leavingEdges: Iterab
 	extends template.graph.GraphNode[N, E]
 		with CopyableGraphNodeLike[N, E, GraphNode, GraphEdge, GraphNode[N, E], GraphEdge[N, E]]
 {
+	// COMPUTED -----------------------------
+	
+	/**
+	 * @param valueEquals An implicit equals-function used for matching node values with nav input.
+	 *                    Default = use ==.
+	 * @tparam Nav Type of the accepted nav input
+	 * @return A navigator interface into this graph, which utilizes the specified equals-function
+	 */
+	def navigate[Nav >: N](implicit valueEquals: EqualsFunction[Nav] = EqualsFunction.default) =
+		navigateUsing[Nav](valueEquals)
+	
+	
 	// IMPLEMENTED  -------------------------
 	
 	override def self: GraphNode[N, E] = this
-	override protected def factory: GraphFactory[GraphNode, GraphEdge] = GraphNode
+	override def factory: GraphFactory[GraphNode, GraphEdge] = GraphNode
 	
 	override def toGraph: Graph[N, E] = Graph(allNodesIterator)
 	
@@ -123,6 +171,14 @@ class GraphNode[+N, +E](override val value: N, override val leavingEdges: Iterab
 	
 	
 	// OTHER    ----------------------------
+	
+	/**
+	 * @param valueEquals Equals-function used for matching node values with nav input
+	 * @tparam Nav Type of the accepted nav input
+	 * @return A navigator interface into this graph, which utilizes the specified equals-function
+	 */
+	def navigateUsing[Nav >: N](valueEquals: EqualsFunction[Nav]) =
+		new GraphNodeValuesNavigator[Nav, E](self)(valueEquals)
 	
 	private def _filter(mappedNodes: mutable.Map[Any, GraphNode[N, E] @uncheckedVariance])
 	                   (f: (N, GraphEdge[N, E]) => Boolean): GraphNode[N, E] =

@@ -3,7 +3,7 @@ package utopia.flow.parse.xml
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.tree.{CopyableFromNodesTreeLike, TreeFactory, TreeMutatorLike}
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
-import utopia.flow.collection.template.tree.TreeNavigator
+import utopia.flow.collection.template.PathNavigator
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
@@ -239,7 +239,7 @@ case class XmlElement(name: NamespacedString, value: Value = Value.emptyWithType
                       attributeMap: Map[Namespace, Model] = Map.empty,
                       override val children: Seq[XmlElement] = Empty)
 	extends XmlElementLike[XmlElement] with CopyableFromNodesTreeLike[XmlElement]
-		with TreeNavigator[NamespacedString, XmlElement]
+		with PathNavigator[NamespacedString, XmlElement]
 {
 	// ATTRIBUTES   ----------------------------
 	
