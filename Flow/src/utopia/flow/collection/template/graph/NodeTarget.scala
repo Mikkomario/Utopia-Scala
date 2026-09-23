@@ -22,19 +22,6 @@ object NodeTarget
 	  */
 	implicit def apply(node: View[Any]): NodeTarget[Any, Any] = new SpecificNodeTarget(node)
 	
-	/**
-	  * @param f A function that receives:
-	  *          1. A graph node (as a View)
-	  *          1. View to the leaving node edges
-	  *
-	  *          And yields whether that's the targeted node
-	  * @tparam N Type of node values accepted
-	  * @tparam E Type of edge values accepted
-	  * @return A node target that uses the specified function
-	  */
-	implicit def apply[N, E](f: (View[N], View[Iterable[GraphEdge[E, View[N]]]]) => Boolean): NodeTarget[N, E] =
-		new _NodeTarget[N, E](f)
-	
 	
 	// OTHER    -------------------------
 	
@@ -44,6 +31,26 @@ object NodeTarget
 	  * @return A node target that only accepts nodes with that value (using ==)
 	  */
 	def value[A](value: A): NodeTarget[A, Any] = new SpecificValueTarget[A](value)
+	
+	/**
+	 * @param f A function that accepts or rejects a node value
+	 * @tparam N Type of tested node values
+	 * @return A new node target, based on the specified function
+	 */
+	def node[N](f: N => Boolean): NodeTarget[N, Any] = new OnlyNodeTarget[N](f)
+	
+	/**
+	 * @param f A function that receives:
+	 *          1. A graph node (as a View)
+	 *          1. View to the leaving node edges
+	 *
+	 *          And yields whether that's the targeted node
+	 * @tparam N Type of node values accepted
+	 * @tparam E Type of edge values accepted
+	 * @return A node target that uses the specified function
+	 */
+	def apply[N, E](f: (View[N], View[Iterable[GraphEdge[E, View[N]]]]) => Boolean): NodeTarget[N, E] =
+		new _NodeTarget[N, E](f)
 	
 	
 	// NESTED   -------------------------
@@ -61,6 +68,11 @@ object NodeTarget
 	private class SpecificValueTarget[-A](value: A) extends NodeTarget[A, Any]
 	{
 		override def apply(node: View[A], edges: => Iterable[GraphEdge[Any, View[A]]]): Boolean = node.value == value
+	}
+	
+	private class OnlyNodeTarget[-N](f: N => Boolean) extends NodeTarget[N, Any]
+	{
+		override def apply(node: View[N], edges: => Iterable[GraphEdge[Any, View[N]]]): Boolean = f(node.value)
 	}
 	
 	private class _NodeTarget[-N, -E](f: (View[N], View[Iterable[GraphEdge[E, View[N]]]]) => Boolean)

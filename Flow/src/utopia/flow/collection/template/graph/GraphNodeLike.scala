@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.{Graph, GraphTravelResults, NodeTravelStage}
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.mutable.graph.GraphSearchProcess
 import utopia.flow.collection.mutable.iterator.OrderedDepthIterator
 import utopia.flow.collection.template.LookupPath
@@ -15,6 +15,7 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.Extender
 
+import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.mutable
 import scala.math.Ordered.orderingToOrdered
 
@@ -580,7 +581,8 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	}
 	
 	/**
-	 * @return Finds all circular routes from this node to itself without traversing through any other node more than once
+	 * Finds all circular routes (edge combinations) that connect this node to itself.
+	 * @return An iterator that yields all possible routes to the specified node.
 	 */
 	def routesToSelf = routesTo(self)
 	
@@ -620,7 +622,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @param edgeType The content of the traversed edge(s)
 	  * @return An iterator that yields the node(s) at the end of the edge(s)
 	  */
-	@deprecated("Please use traverseEdges instead", "v2.9")
+	@deprecated("Deprecated for removal. Please use traverseEdges instead", "v2.9")
 	def /[E2 >: E](edgeType: E2) = leavingEdges.iterator.filter { _.value == edgeType }.map { _.end }
 	/**
 	  * Traverses a deep path that consists of edges between nodes
@@ -628,7 +630,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  *             An empty path is considered to point to this node.
 	  * @return The node(s) at the end of the path
 	  */
-	@deprecated("Please use traverseEdges instead", "v2.9")
+	@deprecated("Deprecated for removal. Please use traverseEdges instead", "v2.9")
 	def /[E2 >: E](path: IterableOnce[E2]): Seq[Repr] =
 		path
 			.foldLeftIterator[Seq[Repr]](Single(self)) { (nodes, nextElem) =>
@@ -642,7 +644,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @param more More edges
 	  * @return The node(s) at the end of the path
 	  */
-	@deprecated("Please use traverseEdges instead", "v2.9")
+	@deprecated("Deprecated for removal. Please use traverseEdges instead", "v2.9")
 	def /[E2 >: E](first: E2, second: E2, more: E2*): Seq[Repr] = this / (Pair(first, second) ++ more)
 	
 	/**
@@ -689,37 +691,42 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
     def edgesTo(other: NodeTarget[N, E]) = leavingEdges.filter { edge => other(edge.end, edge.end.leavingEdges) }
 	
 	/**
-	  * Finds all routes (edge combinations) that connect this node to the provided node. Routes
-	  * can't contain the same node multiple times so no looping routes are included. An exception to this is the case
-	  * where this node is targeted. In that case, the resulting routes start and end at this node.
-	  * @param node The node this node may be connected to
-	  * @return All possible routes to the provided node. In case this node is the searched node,
-	  * however, a single empty route will be returned. The end node will always be at the end of
-	  * each route and nowhere else. If there are no connecting routes, an empty array is returned.
+	  * Finds all routes (edge combinations) that connect this node to the specified node.
+	 * No looping routes are included, except when finding routes to self.
+	  *
+	 * @param node The searched node
+	  * @return An iterator that yields all possible routes to the specified node.
 	  */
-	def routesTo(node: NodeTarget[N, E]): Iterable[Seq[Edge]] = {
-		// If trying to find routes to self, will have to handle limitations a bit differently
+	def routesTo(node: NodeTarget[N, E]): Iterator[Seq[Edge]] = {
+		// Case: Searching for routes to self => Starts from the next nodes instead
 		if (node(self, leavingEdges))
-			leavingEdges.find { _.end == self } match {
-				case Some(zeroRoute) => Single(Single(zeroRoute))
-				case None => leavingEdges.flatMap { e => e.end.routesTo(node, Set()).map { route => e +: route } }
+			leavingEdges.iterator.flatMap { edge =>
+				// Case: Direct edge to self => Won't apply recursion
+				if (edge.end == self)
+					Single(Single(edge))
+				else
+					edge.end._routesTo(node, Set()).map { b => (b += edge).result().reverse }
 			}
+		// Case: Searching for routes to another node => Uses the default implementation
 		else
-			routesTo(node, Set())
+			_routesTo(node, Set()).map { _.result().reverse }
 	}
 	// Uses recursion
-	private def routesTo(node: NodeTarget[N, E], visitedNodes: Set[Any]): Iterable[Seq[Edge]] = {
+	private def _routesTo(node: NodeTarget[N, E],
+	                      visitedNodes: Set[Any]): Iterator[mutable.Builder[Edge @uncheckedVariance, Seq[Edge]]] =
+	{
 		// Tries to find the destination from each connected edge that leads to a new node
 		val newVisitedNodes = visitedNodes + self
-		
-		// Checks whether there exist edges to the final node
-		val availableEdges = leavingEdges.filterNot { e => newVisitedNodes.contains(e.end) }
-		availableEdges.find { edge => node(edge.end, edge.end.leavingEdges) } match {
-			case Some(directRoute) => Single(Single(directRoute))
-			case None =>
-				// If there didn't exist a direct path, tries to find an indirect one
-				// Attaches this element at the beginning of each returned route (if there were any returned)
-				availableEdges.flatMap { e => e.end.routesTo(node, newVisitedNodes).map { route => e +: route } }
+		leavingEdges.iterator.filterNot { e => newVisitedNodes.contains(e.end) }.flatMap { edge =>
+			// Case: Reached the targeted node => Applies a direct route to it
+			if (node(edge.end, edge.end.leavingEdges)) {
+				val routeBuilder = OptimizedIndexedSeq.newBuilder[Edge]
+				routeBuilder += edge
+				Single(routeBuilder)
+			}
+			// Case: No direct route => Searches for indirect routes
+			else
+				edge.end._routesTo(node, newVisitedNodes).map { _ += edge }
 		}
 	}
 	
@@ -805,19 +812,18 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 		customSearchForEach(Single(node), startCost)(costOf)(sumOf)
 	
 	/**
-	  * Finds the shortest routes to a certain sub-group of nodes within this graph
-	  * @param filter A function used for identifying, which nodes are targeted and which are not.
-	  * @return Search results
+	  * Finds the shortest routes to a certain subgroup of nodes within this graph
+	  * @param filter A function used for identifying which nodes are targeted and which are not.
+	  * @return Search results that include the shortest route or routes to each reachable node that fulfilled 'filter'.
 	  */
-	def shortestRoutesTo(filter: NodeTarget[N, E]) =
-		cheapestRoutesTo(filter) { _ => 1 }
+	def shortestRoutesTo(filter: NodeTarget[N, E]) = cheapestRoutesTo(filter) { _ => 1 }
 	/**
-	  * Finds the cheapest routes to a certain sub-group of nodes within this graph
-	  * @param filter A function used for identifying, which nodes are targeted and which are not.
+	  * Finds the cheapest routes to a certain subgroup of nodes within this graph
+	  * @param filter A function used for identifying which nodes are targeted and which are not.
 	  * @param costOf A function for determining the cost of a single edge-traversal.
 	  * @param n Numeric implementation for the cost values
 	  * @tparam C Type of cost values used.
-	  * @return Search results
+	  * @return Search results that include the shortest route or routes to each reachable node that fulfilled 'filter'.
 	  */
 	def cheapestRoutesTo[C](filter: NodeTarget[N, E])(costOf: Edge => C)(implicit n: Numeric[C]) =
 		search(filter)(costOf).finish()
@@ -827,8 +833,7 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	  * @return An interface for advancing the search process and for accessing the results,
 	  *         including preliminary search results.
 	  */
-	def searchShortestRoutesTo(target: NodeTarget[N, E]) =
-		search(target) { _ => 1 }
+	def searchShortestRoutesTo(target: NodeTarget[N, E]) = search(target) { _ => 1 }
 	/**
 	  * Starts a graph search.
 	  * Throughout this interactive process, discovers ALL nodes accepted by the specified filter function.
@@ -866,18 +871,17 @@ trait GraphNodeLike[+N, +E, +Repr <: GraphNodeLike[N, E, Repr, Edge], +Edge <: G
 	
 	/**
 	  * Finds the shortest routes to a certain group of nodes
-	  * @param nodes Searched nodes
-	  * @return Search results
+	  * @param nodes Searched nodes (exclusive)
+	  * @return Search results that contain the shortest route or routes to each of the specified targets
 	  */
-	def shortestRoutesToEach(nodes: Iterable[NodeTarget[N, E]]) =
-		cheapestRoutesToEach(nodes) { _ => 1 }
+	def shortestRoutesToEach(nodes: Iterable[NodeTarget[N, E]]) = cheapestRoutesToEach(nodes) { _ => 1 }
 	/**
 	  * Finds the cheapest routes to a certain group of nodes
 	  * @param nodes Searched nodes
 	  * @param costOf A function for determining the cost of a single edge-traversal.
 	  * @param n Numeric implementation for the cost values
 	  * @tparam C Type of cost values used.
-	  * @return Search results
+	  * @return Search results that contain the shortest route or routes to each of the specified targets
 	  */
 	def cheapestRoutesToEach[C](nodes: Iterable[NodeTarget[N, E]])(costOf: Edge => C)(implicit n: Numeric[C]) =
 		searchForEach(nodes)(costOf).finish()

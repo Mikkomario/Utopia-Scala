@@ -59,9 +59,8 @@ object GraphNode extends GraphFactory[GraphNode, GraphEdge]
 				// Case: Another type of node => Creates an immutable copy of it
 				case n =>
 					// The edge end nodes are resolved lazily, in order for the conversions to be ready by that time
-					val edges = n.leavingEdges.map {
-						case e: GraphEdge[N, E] => e
-						case e => GraphEdge(e.value, Lazy { _from(e.end, conversions) })
+					val edges = n.leavingEdges.map { edge =>
+						GraphEdge(edge.value, Lazy { _from(edge.end, conversions) })
 					}
 					val node = apply(n.value, edges)
 					// Caches the conversion result

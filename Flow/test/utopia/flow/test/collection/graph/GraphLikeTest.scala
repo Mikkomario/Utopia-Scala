@@ -27,7 +27,7 @@ object GraphLikeTest extends App
 		nodes("B").connect(2, nodes("C"))
 		nodes("C").connect(3, nodes("D"))
 		nodes("D").connect(4, nodes("E"))
-		nodes("B").connect(2, nodes("D"))
+		nodes("B").connect(4, nodes("D"))
 		nodes("D").connect(4, nodes("B"))
 		nodes("E").connect(5, nodes("F"))
 		nodes("C").connect(3, nodes("G"))
@@ -83,7 +83,7 @@ object GraphLikeTest extends App
 	}
 	
 	// allEdgesIterator
-	assert(c.allEdgesIterator.map { _.value }.toVector == Vector(3, 3, 4, 4, 5, 2, 2),
+	assert(c.allEdgesIterator.map { _.value }.toVector == Vector(3, 3, 4, 4, 5, 2, 4),
 		c.allEdgesIterator.map { _.value }.mkString(" -> "))
 	
 	// allValuesIterator
@@ -99,9 +99,15 @@ object GraphLikeTest extends App
 		assert(t.get("B", "C", "D", "E", "F").isDefined)
 	}
 	
+	// routesTo
+	assert(b.routesTo(e).map { _.iterator.map { _.end.value }.mkString }.toSet == Set("DE", "CDE"))
+	assert(b.routesTo(d).map { _.iterator.map { _.end.value }.mkString }.toSet == Set("D", "CD"))
+	
 	// routesToSelf
-	assert(b.routesToSelf.only.get.iterator.map { _.end.value }.mkString == "CDB")
-	assert(d.routesToSelf.only.get.iterator.map { _.end.value }.mkString == "BCD")
+	assert(b.routesToSelf.iterator.map { _.iterator.map { _.end.value }.mkString }.toSet == Set("CDB", "DB"),
+		b.routesToSelf.map { _.map { _.end.value }.mkString }.mkString(" & "))
+	assert(d.routesToSelf.iterator.map { _.iterator.map { _.end.value }.mkString }.toSet == Set("BCD", "BD"),
+		d.routesToSelf.map { _.map { _.end.value }.mkString }.mkString(" & "))
 	
 	// lookup
 	assert(a.lookup.get("B", "C", "D", "E", "F").isDefined)
@@ -112,13 +118,41 @@ object GraphLikeTest extends App
 	assert(a.traverseEdges.get(1, 2, 3).exists { _.value == "D" })
 	assert(a.traverseEdges.get(1, -1).isEmpty)
 	
+	// isDirectlyConnectedTo
+	assert(b.isDirectlyConnectedTo(c))
+	assert(c.isDirectlyConnectedTo { (n, _) => n.value == "G" })
+	assert(!b.isDirectlyConnectedTo(e))
+	
+	// isConnectedTo
+	assert(b.isConnectedTo(c))
+	assert(b.isConnectedTo(e))
+	assert(b.isConnectedTo { (n, _) => n.value == "G" })
+	assert(!b.isConnectedTo(a))
+	
+	// edgeTo
+	assert(b.edgesTo(c).exists { _.value == 2 })
+	
+	// shortestRoutesToOne
+	assert(b.shortestRoutesToOne(e).get.routes.only.get.iterator.map { _.end.value }.mkString == "DE")
+	
+	// cheapestRoutesToOne
+	assert(b.cheapestRoutesToOne(e) { _.value }.get.routes.only.get.iterator.map { _.end.value }.mkString == "DE")
+	assert(b.cheapestRoutesToOne(e) { _.value - 2 }.get.routes.only.get.iterator.map { _.end.value }.mkString == "CDE",
+		b.cheapestRoutesToOne(e) { _.value - 2 }.get.routes.only.get.iterator.map { _.end.value }.mkString)
+	assert(b.cheapestRoutesToOne(e) { _.value - 1 }.get.routes.size == 2)
+	
+	// shortestRoutesTo
+	// FIXME: Understood shortestRoutesTo wrong. Yields a route to each node that fulfils the specified filter.
+	assert(b.shortestRoutesTo { (_, edges) => edges.isEmpty }.optimalSuccesses.only.exists { _.node.value == "G" },
+		b.shortestRoutesTo { (_, edges) => edges.isEmpty }.optimalSuccesses
+			.iterator.map { _.anyRoute.iterator.map { _.end.value }.mkString(">") }.mkString(" & "))
 	
 	/*
 					  +--3-> G
 					  |
 		A -1-> B -2-> C -3-> +
 			   |             |
-			   + <---2/4---> D -4-> E -5-> F
+			   + <----4----> D -4-> E -5-> F
 	 */
 	
 	println("Success!")
