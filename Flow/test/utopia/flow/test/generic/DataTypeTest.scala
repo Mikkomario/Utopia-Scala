@@ -1,11 +1,10 @@
 package utopia.flow.test.generic
 
-import utopia.flow.collection.mutable.GraphNode
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.enumeration.ConversionReliability
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{AnyType, DoubleType, InstantType, LocalDateTimeType, StringType}
+import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.time.Month.{August, February}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Today, Year}
@@ -20,17 +19,6 @@ import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
 object DataTypeTest extends App
 {
 	assert("01".toInt == 1)
-	
-	val testNode = new GraphNode[String, Int]("Test1")
-	val testNode2 = new GraphNode[String, Int]("Test2")
-	val testNode3 = new GraphNode[String, Int]("Test3")
-	testNode2.setConnection(testNode3, 3)
-	testNode.setConnection(testNode2, 2)
-	
-	assert(testNode.isDirectlyConnectedTo(testNode2))
-	assert(testNode.isConnectedTo(testNode3))
-	assert((testNode / Vector(2, 3)).nonEmpty)
-	assert(testNode.routesTo(testNode3).size == 1)
 	
 	DataType.values.foreach { println(_) }
 	

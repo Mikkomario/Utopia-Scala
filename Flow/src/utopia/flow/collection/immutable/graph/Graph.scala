@@ -12,6 +12,7 @@ import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.mutable
+import scala.language.implicitConversions
 
 object Graph
 {

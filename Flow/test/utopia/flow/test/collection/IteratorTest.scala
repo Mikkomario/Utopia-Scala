@@ -69,7 +69,7 @@ object IteratorTest extends App
 	assert(forever.next() == 1)
 	assert(foreverValueCalls == 1)
 	
-	private val grouped = Vector("api", "aamu", "banana", "car", "cost", "ananas").iterator.groupBy { _.head }
+	private val grouped = Vector("api", "aamu", "banana", "car", "cost", "ananas").iterator.groupConsecutiveBy { _.head }
 	assert(grouped.hasNext)
 	assert(grouped.next() == ('a', Pair("api", "aamu")))
 	assert(grouped.hasNext)

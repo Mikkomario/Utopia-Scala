@@ -36,6 +36,7 @@ sealed trait ExcavationStatus extends Ordered[ExcavationStatus]
 	override def compare(that: ExcavationStatus) = orderIndex - that.orderIndex
 }
 
+@deprecated("Deprecated for removal", "v2.9")
 object ExcavationStatus
 {
 	/**

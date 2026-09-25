@@ -431,6 +431,14 @@ trait ValueTree[+A]
 	 */
 	def lazily: Boolean
 	
+	/**
+	 * Maps all values in this tree
+	 * @param f A mapping function to apply to each value in this tree
+	 * @tparam B Mapping result type
+	 * @return Copy of this tree where every value has been mapped
+	 */
+	def mapValues[B](f: A => B): ValueTree[B]
+	
 	
 	// COMPUTED -----------------------------
 	
@@ -455,13 +463,8 @@ trait ValueTree[+A]
 	
 	// OTHER    -----------------------------
 	
-	/**
-	 * Maps all values in this tree
-	 * @param f A mapping function to apply to each value in this tree
-	 * @tparam B Mapping result type
-	 * @return Copy of this tree where every value has been mapped
-	 */
-	def mapValues[B](f: A => B): ValueTree[B]
+	@deprecated("Renamed to .mapValues(...)", "v2.9")
+	def map[B](f: A => B) = mapValues(f)
 	
 	/**
 	 * @param eq Equals function to apply. Used in navigation.

@@ -3,6 +3,8 @@ package utopia.nexus.result
 import utopia.nexus.http.Response
 import utopia.nexus.http.Request
 
+import scala.language.implicitConversions
+
 @deprecated("Replaced with ContentWriter", "v2.0")
 object ResultParser
 {

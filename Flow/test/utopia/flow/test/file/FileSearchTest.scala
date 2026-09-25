@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext
  * @author Mikko
  * @since 6.1.2020, v1.6.1
  */
+@deprecated("Deprecated for removal", "v2.9")
 object FileSearchTest extends App
 {
 	

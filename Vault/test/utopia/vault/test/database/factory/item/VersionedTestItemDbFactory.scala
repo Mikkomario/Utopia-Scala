@@ -1,9 +1,9 @@
 package utopia.vault.test.database.factory.item
 
 import utopia.flow.generic.model.immutable.Model
+import utopia.vault.model.template.Deprecates
 import utopia.vault.nosql.factory.row.FromTimelineRowFactory
 import utopia.vault.nosql.factory.row.model.FromValidatedRowModelFactory
-import utopia.vault.nosql.template.Deprecatable
 import utopia.vault.test.database.storable.item.VersionedTestItemDbModel
 import utopia.vault.test.model.partial.item.VersionedTestItemData
 import utopia.vault.test.model.stored.item.VersionedTestItem
@@ -15,7 +15,7 @@ import utopia.vault.test.model.stored.item.VersionedTestItem
   */
 object VersionedTestItemDbFactory 
 	extends FromValidatedRowModelFactory[VersionedTestItem] with FromTimelineRowFactory[VersionedTestItem] 
-		with Deprecatable
+		with Deprecates
 {
 	// ATTRIBUTES	--------------------
 	
@@ -27,7 +27,7 @@ object VersionedTestItemDbFactory
 	
 	// IMPLEMENTED	--------------------
 	
-	override def nonDeprecatedCondition = model.nonDeprecatedCondition
+	override def activeCondition = model.activeCondition
 	
 	override def table = model.table
 	

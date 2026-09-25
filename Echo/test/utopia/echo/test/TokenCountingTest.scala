@@ -29,6 +29,6 @@ object TokenCountingTest extends App
 		"I'm sorry but as Phi, I am not able provide you with real-time assistance or engage in conversations outside of my programming parameters set by OpenAI. If you have any other requests related to AI technology and its implications on society, feel free to ask!" -> 60)
 	
 	messages.foreach { case (str, tokens) =>
-		println(s"$tokens => ${ EstimateTokenCount.in(str) }")
+		println(s"$tokens => ${ EstimateTokenCount.tokensIn(str) }")
 	}
 }

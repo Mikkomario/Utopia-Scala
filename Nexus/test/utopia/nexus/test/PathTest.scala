@@ -7,6 +7,7 @@ import utopia.nexus.http.Path
  * @author Mikko Hilpinen
  * @since 22.8.2017
  */
+@deprecated("Deprecated for removal", "v2.0.1")
 object PathTest extends App
 {
     val path = Path("a", "b", "c")

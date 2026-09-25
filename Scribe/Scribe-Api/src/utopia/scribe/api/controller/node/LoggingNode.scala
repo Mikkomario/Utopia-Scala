@@ -94,7 +94,7 @@ class LoggingNode[-C <: PostContext](override val name: String = "log",
 	
 	private def post(mutate: Mutate[ClientIssue])(implicit context: C) = {
 		// Parses the issues from the request body
-		context.handleModelArrayPost(ClientIssue) { issues =>
+		context.parseArrayBody(ClientIssue) { issues =>
 			// Records each issue asynchronously
 			issues.foreach { i => Scribe.record(mutate(i)) }
 			RequestResult(status = Accepted)

@@ -12,6 +12,7 @@ import utopia.flow.generic.model.template.HasPropertiesLike.{HasConstants, HasPr
 import utopia.nexus.rest.Context
 import utopia.nexus.rest.ResourceSearchResult.{Error, Follow, Ready}
 
+@deprecated("Deprecated for removal", "v2.0.1")
 private object TestRestResource
 {
     // Parses all model type children from a model
@@ -29,6 +30,7 @@ private object TestRestResource
  * @author Mikko Hilpinen
  * @since 10.10.2017
  */
+@deprecated("Deprecated for removal", "v2.0.1")
 class TestRestResource(val name: String, initialValues: HasConstants = Model.empty)
     extends Resource[Context]
 {

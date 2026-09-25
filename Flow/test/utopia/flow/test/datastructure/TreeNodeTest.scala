@@ -10,6 +10,7 @@ import utopia.flow.operator.equality.EqualsFunction
  * @author Mikko Hilpinen
  * @since 5.4.2021, v
  */
+@deprecated("Deprecated for removal", "v2.9")
 object TreeNodeTest extends App
 {
 	implicit val equals: EqualsFunction[Any] = EqualsFunction.default

@@ -10,6 +10,7 @@ import utopia.flow.view.immutable.caching.Lazy
  * @author Mikko Hilpinen
  * @since 14.03.2025, v2.6
  */
+@deprecated("Deprecated for removal", "v2.9")
 object ViewGraphTest extends App
 {
 	private var edgesCreated = 0

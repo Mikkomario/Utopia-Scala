@@ -25,17 +25,17 @@ object CopyableGraphNodeLike
 		mappedNodes += (root -> result)
 		result
 	}
-	private def flatMap[N, E, Node <: GraphNodeLike[N, E, Node, GraphEdge[E, Node]], NC[_, _], EC[_, _], N2, E2]
+	private def flatMap[N, Node <: GraphNodeLike[N, _, Node, Edge], Edge <: GraphEdge[_, Node], NC[_, _], EC[_, _], N2, E2]
 	                   (root: Node, newValue: N2, factory: GraphFactory[NC, EC], mappedNodes: mutable.Map[Any, NC[N2, E2]])
-	                   (edgeMap: (N, N2, E) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
+	                   (edgeMap: (N, N2, Edge) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
 	{
 		// Maps the edge end nodes lazily
 		val newEdges = root.leavingEdges.flatMap { edge =>
-			edgeMap(root.value, newValue, edge.value).iterator.map { case (newContent, endView) =>
+			edgeMap(root.value, newValue, edge).iterator.map { case (newContent, endView) =>
 				factory.edge(newContent,
 					endView.mapValue { newValue =>
 						mappedNodes.getOrElseUpdate(edge.end,
-							flatMap[N, E, Node, NC, EC, N2, E2](edge.end, newValue, factory, mappedNodes)(edgeMap))
+							flatMap[N, Node, Edge, NC, EC, N2, E2](edge.end, newValue, factory, mappedNodes)(edgeMap))
 					})
 			}
 		}
@@ -141,7 +141,7 @@ trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLik
 	 * @param f A mapping function applied to all edges in this graph.
 	 *          Receives two values:
 	 *          1. Value of the node from which the edge originates
-	 *          1. The edge value to map
+	 *          1. The edge to map
 	 *
 	 *          Yields 0-n edge representations, where each contains two values:
 	 *          1. New edge value to apply
@@ -150,7 +150,7 @@ trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLik
 	 * @tparam E2 Type of new edge values
 	 * @return A copy of this node with mapped edges
 	 */
-	def flatMapEdges[N2 >: N, E2](f: (N, E) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
+	def flatMapEdges[N2 >: N, E2](f: (N, Edge) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
 		flatMap[N2, E2](Identity) { (value, _, edge) => f(value, edge) }
 	/**
 	 * Modifies all edges and node values in this graph, possibly adding or removing edges.
@@ -159,7 +159,7 @@ trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLik
 	 *          Receives three values:
 	 *          1. Original value of the node from which the edge originates
 	 *          1. Mapped value of the node from which the edge originates
-	 *          1. The edge value to map
+	 *          1. The edge to map
 	 *
 	 *          Yields 0-n edge representations, where each contains two values:
 	 *          1. New edge value to apply
@@ -168,6 +168,6 @@ trait CopyableGraphNodeLike[+N, +E, NC[_, +_], EC[+_, +_], +Repr <: GraphNodeLik
 	 * @tparam E2 Type of new edge values
 	 * @return A copy of this node with mapped values and edges
 	 */
-	def flatMap[N2, E2](mapSelf: N => N2)(mapEdge: (N, N2, E) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
-		CopyableGraphNodeLike.flatMap[N, E, Repr, NC, EC, N2, E2](self, mapSelf(value), factory, mutable.Map())(mapEdge)
+	def flatMap[N2, E2](mapSelf: N => N2)(mapEdge: (N, N2, Edge) => IterableOnce[(E2, View[N2])]): NC[N2, E2] =
+		CopyableGraphNodeLike.flatMap[N, Repr, Edge, NC, EC, N2, E2](self, mapSelf(value), factory, mutable.Map())(mapEdge)
 }

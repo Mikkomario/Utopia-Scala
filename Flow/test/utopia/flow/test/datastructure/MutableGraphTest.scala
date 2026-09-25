@@ -5,6 +5,7 @@ import utopia.flow.collection.mutable.GraphNode
 /**
  * This test tests the features implemented in graph, graphNode and graphEdge
  */
+@deprecated("Deprecated for removal", "v2.9")
 object MutableGraphTest extends App
 {
 	println("Running Graph Test")

@@ -6,6 +6,8 @@ import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.view.immutable.View
 import utopia.flow.view.template.Extender
 
+import scala.language.implicitConversions
+
 object ValueTreeLike
 {
 	/**

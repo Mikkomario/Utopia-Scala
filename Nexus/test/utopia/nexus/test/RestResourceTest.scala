@@ -17,10 +17,9 @@ import java.nio.file.Paths
 /**
  * This test makes sure the rest test resource and the request handler are working
  */
+@deprecated("Deprecated for removal", "v2.0.1")
 object RestResourceTest extends App
 {
-    
-    
     // Creates the main resources first
     implicit val settings: ServerSettings = ServerSettings("https://localhost:9999")
     

@@ -17,13 +17,13 @@ object ContentTypeTest extends App
     val applicationString = Application.toString()
     
     assert(applicationString == "application")
-    assert(ContentCategory.parse(applicationString) == Application)
+    assert(ContentCategory(applicationString) == Application)
     
     val customCategory = Custom("test")
     val customString = customCategory.toString()
     
     assert(customString == "X-test")
-    assert(ContentCategory.parse(customString) == customCategory)
+    assert(ContentCategory(customString) == customCategory)
     
     // Tests content type parsing
     val json = Application.json
