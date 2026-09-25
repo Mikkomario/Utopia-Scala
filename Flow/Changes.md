@@ -15,7 +15,6 @@
     - **KeptOpenWriter**
     - **FileLogger** and **LogProcessToFile**
 - Rewrote **Tree** and **Graph** classes
-  - TODO: Document the other changes
   - **template.TreeLike** was replaced with **template.tree.ValueTreeLike**
   - **immutable.Tree** was replaced with **immutable.tree.ValueTree**
     - `.map(...)` is no longer available, and is now named `.mapValues(...)`
@@ -23,10 +22,10 @@
   - **immutable.Graph** was replaced with a new version under package `graph`
     - The previously used constructor is now named `.withConnections(IterableOnce)`
   - **template.GraphNode** was replaced with **template.graph.GraphNodeLike**
-    - `/` now yields **Iterator** instead of **Iterable**
-    - Function-based graph-searching now receives two input values:
-      1. A view to the node value
-      2. A view into the edges leaving from the node
+    - `/` is now deprecated and yields **Iterator** instead of **Iterable**
+    - Function-based graph-searching now receives **NodeTarget** instead of a function
+      - Functions are implicitly convertible to **NodeTarget**, but they require 2 parameters instead of 1.
+    - `.routesTo(...)` and `.routesToSelf` now yield an **Iterator**
   - **immutable.ViewGraphNode** was replaced with **immutable.graph.GraphNode**
   - **mutable.GraphNode** was replaced with **mutable.graph.MutableGraphNode**
     - The `.connect(...)` function now accepts the parameters in reverse order
@@ -59,12 +58,14 @@
 - Added **ClosesAfterIdle** that handles automated closing
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 - Parallel mapping now supports custom builders
-- Added **WithoutIndexIterator**
+- Added **WithoutIndexIterator** and **AppendIfDistinctIterator**
 ### New methods
 - **ActionQueue**
   - Added `.currentSize`
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **CachingSeq**
+  - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
 - **FromModelFactory**
   - Added `.preparingWith(...)`
 - **HasInclusiveOrderedEnds**
@@ -77,6 +78,7 @@
   - Added `.writeTo(OutputStream, Int)`
 - **IterableOnce** (via **CollectionExtensions**)
   - Added `.isDistinct`
+  - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
   - Added `.popHead` and `.popIndex(Int)`
   - Added `.groupMapMap(...)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`

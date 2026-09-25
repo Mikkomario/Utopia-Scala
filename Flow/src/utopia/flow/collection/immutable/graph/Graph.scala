@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.Graph.GraphFactory
-import utopia.flow.collection.immutable.{Empty, Pair, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.view.immutable.View
@@ -66,9 +66,9 @@ object Graph
 				empty
 			else {
 				val appliedConnections = connections match {
-					case v: scala.collection.View[(N, E, N)] => if (isLazy) v.caching else v.toSet
+					case v: scala.collection.View[(N, E, N)] => if (isLazy) v.caching else v.toOptimizedSeq
 					case i: Iterable[(N, E, N)] => i
-					case i => if (isLazy) i.caching else Set.from(i)
+					case i => if (isLazy) i.caching else OptimizedIndexedSeq.from(i)
 				}
 				_apply(appliedConnections, twoWayBound)
 			}
@@ -103,8 +103,8 @@ object Graph
 		
 		override val connectionsIterator: Iterator[(Nothing, Nothing, Nothing)] = Iterator.empty
 		
-		override val nodeValues: Iterable[Nothing] = Empty
-		override val nodes: Iterable[GraphNode[Nothing, Nothing]] = Empty
+		override val nodeValues = Empty
+		override val nodes = Empty
 		override val headOption: Option[GraphNode[Nothing, Nothing]] = None
 		
 		override val edgesByTarget: Map[Any, (GraphNode[Nothing, Nothing], Seq[(GraphNode[Nothing, Nothing], GraphEdge[Nothing, Nothing])])] =
@@ -116,7 +116,7 @@ object Graph
 		override def lazily: Graph[Nothing, Nothing] = if (isLazy) this else new EmptyGraph(isLazy = true)
 		override def reversed: Graph[Nothing, Nothing] = this
 		
-		override def subgraphs: Iterable[Graph[Nothing, Nothing]] = Single(this)
+		override def subgraphs = Single(this)
 		
 		override def node[N2 >: Nothing](nodeValue: N2): GraphNode[N2, Nothing] = GraphNode(nodeValue)
 		
@@ -128,7 +128,7 @@ object Graph
 		
 		override def map[N2, E2](mapNode: Nothing => N2)(mapEdge: Nothing => E2): Graph[N2, E2] = this
 		
-		override def subGraphFrom[N2 >: Nothing](startNodeValue: N2): Graph[N2, Nothing] = this
+		override def subgraphFrom[N2 >: Nothing](startNodeValue: N2): Graph[N2, Nothing] = this
 		
 		override def +[N2 >: Nothing, E2 >: Nothing](connection: (N2, E2, N2)): Graph[N2, E2] =
 			_withConnections(Single(connection))
@@ -167,18 +167,10 @@ object Graph
 		}
 		
 		override val nodeValues = {
-			val valuesIter = connections.iterator.flatMap { case (v1, _, v2) => Pair(v1, v2) }
-			if (isLazy)
-				valuesIter.distinct.caching
-			else
-				valuesIter.toSet
+			val valuesIter = connections.iterator.flatMap { case (v1, _, v2) => Pair(v1, v2) }.distinct
+			if (isLazy) valuesIter.caching else valuesIter.toOptimizedSeq
 		}
-		override val nodes = {
-			if (isLazy)
-				nodeValues.map(generator)
-			else
-				nodeValues.view.map(generator).toOptimizedSeq
-		}
+		override val nodes = nodeValues.map(generator)
 		
 		override lazy val edgesByTarget = _edgesByTarget
 		
@@ -264,18 +256,18 @@ object Graph
 						if (c.current.contains(connection))
 							this
 						else
-							_withConnections(c :+ connection)
+							_withConnections(c.appendIfDistinct(connection))
 						
 					case s: Seq[(N, E, N)] =>
 						if (s.contains(connection))
 							this
 						else
-							_withConnections(s :+ connection)
+							_withConnections(s.appendIfDistinct(connection))
 				}
 			else if (connections.exists { _ == connection })
 				this
 			else
-				super.+[N2, E2](connection)
+				_withConnections(connections ++ Single(connection))
 		}
 		
 		private def _filterNodeValues(f: N => Boolean) = {
@@ -291,20 +283,19 @@ object Graph
 		
 		override val isTwoWayBound: Boolean = false
 		
-		override val nodeValues: Iterable[N] = {
+		override val nodeValues: Seq[N] = {
 			if (isLazy)
 				nodes match {
 					case caching: CachingSeq[GraphNode[N, E]] => caching.map { _.value }
 					case nodes => nodes.view.map { _.value }.caching
 				}
 			else
-				nodes.view.map { _.value }.toSet
+				nodes.map { _.value }
 		}
 		
 		override lazy val edgesByTarget = _edgesByTarget
 		
-		override val subgraphs: Iterable[Graph[N, E]] =
-			LazyInitIterator { subGraphsIteratorFrom(nodeValues.iterator) }.caching
+		override val subgraphs = LazyInitIterator { subGraphsIteratorFrom(nodeValues.iterator) }.caching
 		
 		
 		// IMPLEMENTED  -----------------------
@@ -371,11 +362,11 @@ trait Graph[+N, +E] extends MaybeEmpty[Graph[N, E]]
 	/**
 	 * All included node values
 	 */
-	def nodeValues: Iterable[N]
+	def nodeValues: Seq[N]
 	/**
 	 * @return All nodes within this graph
 	 */
-	def nodes: Iterable[GraphNode[N, E]]
+	def nodes: Seq[GraphNode[N, E]]
 	/**
 	 * @return The first node in this graph. None if this graph is empty.
 	 *         Functionally equivalent to 'nodes.headOption', but may be faster to compute.
@@ -391,7 +382,7 @@ trait Graph[+N, +E] extends MaybeEmpty[Graph[N, E]]
 	 * @return All graphs within this graph that are not connected with each other.
 	 *         If all the nodes in this graph are connected, returns only a single graph.
 	 */
-	def subgraphs: Iterable[Graph[N, E]]
+	def subgraphs: Seq[Graph[N, E]]
 	
 	/**
 	 * @param nodeValue A node value
@@ -549,8 +540,10 @@ trait Graph[+N, +E] extends MaybeEmpty[Graph[N, E]]
 	 * @param startNodeValue Value of the node from which the resulting graph will originate
 	 * @return A graph that contains only nodes reachable from the specified node.
 	 */
-	def subGraphFrom[N2 >: N](startNodeValue: N2) =
+	def subgraphFrom[N2 >: N](startNodeValue: N2) =
 		factory(LazyInitIterator { node(startNodeValue).allNodesIterator })
+	@deprecated("Renamed to subgraphFrom", "v2.9")
+	def subGraphFrom[N2 >: N](startNodeValue: N2) = subgraphFrom(startNodeValue)
 	
 	/**
 	 * @param connection A new connection consisting of three parts:
@@ -560,7 +553,7 @@ trait Graph[+N, +E] extends MaybeEmpty[Graph[N, E]]
 	 * @return A copy of this graph with specified connection added/included
 	 */
 	def +[N2 >: N, E2 >: E](connection: (N2, E2, N2)) =
-		_withConnections(connectionsIterator ++ Single(connection))
+		_withConnections(connectionsIterator.appendIfDistinct(connection))
 	@deprecated("Please use + instead", "v2.9")
 	def withEdge[N2 >: N, E2 >: E](start: N2, edge: E2, end: N2) = this.+[N2, E2]((start, edge, end))
 	
@@ -577,7 +570,7 @@ trait Graph[+N, +E] extends MaybeEmpty[Graph[N, E]]
 	 * @return A copy of this graph with specified connections added
 	 */
 	def ++[N2 >: N, E2 >: E](newConnections: IterableOnce[(N2, E2, N2)]) =
-		_withConnections(connectionsIterator ++ newConnections)
+		_withConnections(connectionsIterator.appendAllIfDistinct(newConnections))
 	
 	/**
 	 * @param nodeValue Node value to exclude from this graph
@@ -662,7 +655,7 @@ trait Graph[+N, +E] extends MaybeEmpty[Graph[N, E]]
 		
 		override def next() = {
 			// Gets the next starting node
-			val nextValue = prepared.value.get
+			val nextValue = prepared.pop().get
 			val nextRoot = node(nextValue)
 			
 			// Resolves (possibly lazily) all nodes accessible via that node

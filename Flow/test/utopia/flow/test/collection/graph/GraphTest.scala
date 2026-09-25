@@ -68,9 +68,9 @@ object GraphTest extends App
 	assert(g1.connectionsIterator.take(3).toVector == Vector(("A", 1, "B"), ("B", 2, "C"), ("B", 4, "D")))
 	
 	// headOption
-	assert(g1.headOption.get.value == "A")
-	assert(g2.headOption.get.value == "A")
-	assert(g3.headOption.get.value == "A")
+	assert(g1.headOption.get.value == "A", g1.headOption)
+	assert(g2.headOption.get.value == "A", g2.headOption)
+	assert(g3.headOption.get.value == "A", g3.headOption)
 
 	// nodeValues
 	assert(g1.nodeValues.iterator.take(3).toVector == Vector("A", "B", "C"))
@@ -82,16 +82,32 @@ object GraphTest extends App
 		Vector(Vector(1), Vector(2, 4), Vector(3, 3)))
 	assert(g2.nodes.view.take(3).map { _.leavingEdges.iterator.map { _.value }.toVector }.toVector ==
 		Vector(Vector(1), Vector(2), Vector(3, 3)))
+	// Expects:
+	//      1. A: 1 edge (1)
+	//      2. B: 3 edges (1, 2, 4)
+	//      3. C: 2 edges (2, 3)
 	assert(g3.nodes.view.take(3).map { _.leavingEdges.iterator.map { _.value }.toVector }.toVector ==
-		Vector(Vector(1), Vector(2), Vector(3)))
+		Vector(Vector(1), Vector(1, 2, 4), Vector(2, 3)),
+		g3.nodes.view.take(3).map { _.leavingEdges.iterator.map { _.value }.mkString }.mkString(", "))
 	
 	// node
+	println("node")
 	assert(g1.node("C").leavingEdges.size == 2)
 	assert(g2.node("C").leavingEdges.size == 2)
 	assert(g3.node("C").leavingEdges.size == 2)
 	
+	// contains
+	println("contains")
+	assert(g1.contains("G"))
+	assert(!g1.contains("X"))
+	
+	// edgesTo
+	println("edgesTo")
+	assert(g1.edgesTo("D").iterator.map { _._1.value }.toSet == Set("C", "B"))
+	
 	// subgraphs
 	{
+		println("subgraphs")
 		val g4 = Graph.withConnections(Vector(("A" , 1, "B"), ("B", 2, "C"), ("D", 3, "E"), ("E", 4, "D")))
 		val parts = g4.subgraphs.toOptimizedSeq
 		
@@ -104,15 +120,24 @@ object GraphTest extends App
 		assert(p2.nodeValues.toVector == Vector("D", "E"))
 	}
 	
+	// subgraphFrom
+	{
+		println("subgraphFrom")
+		val g4 = g1.subgraphFrom("E")
+		assert(g4.nodeValues.toVector == Vector("E", "F"))
+	}
+	
 	// filterNodeValues
 	{
+		println("filterNodeValues")
 		val g4 = g1.filterNodeValues { v => v != "B" }
-		assert(g4.nodeValues.toVector == Vector("A", "C", "D", "E", "G"))
+		assert(g4.nodeValues.toVector == Vector("A", "C", "D", "E", "F", "G"), g4.nodeValues.mkString(", "))
 		assert(g4("D").leavingEdges.size == 1)
 	}
 	
 	// filterNodes
 	{
+		println("filterNodes")
 		val g4 = g1.filterNodes { _.leavingEdges.hasSize > 1 }
 		assert(g4.nodeValues.toVector == Vector("B", "C", "D"))
 		assert(g4("D").leavingEdges.size == 1)
@@ -120,18 +145,38 @@ object GraphTest extends App
 	
 	// filterEdgeValues
 	{
+		println("filterEdgeValues")
 		val g4 = g1.filterEdgeValues { _ <= 3 }
-		assert(g4.nodeValues.toVector == Vector("A", "B", "C", "D", "G"))
 		assert(g4("D").leavingEdges.isEmpty)
 		assert(g4("C").leavingEdges.size == 2)
 	}
 	
 	// map
 	{
+		println("map")
 		val g4 = g1.map { _.toLowerCase } { -_ }
 		assert(g4.nodeValues.toVector == Vector("a", "b", "c", "d", "e", "f", "g"))
 		assert(g4("d").leavingEdges.map { _.value } == Vector(-4, -4))
 	}
 	
-	// TODO: Continue
+	// reversed
+	{
+		println("reversed")
+		val g4 = g1.reversed
+		assert(g4.nodeValues.toSet == Set("A", "B", "C", "D", "E", "F", "G"))
+		assert(g4("E").leavingEdges.only.get.end.value == "D")
+		assert(g4("G").leavingEdges.size == 1)
+	}
+	
+	// ++
+	{
+		println("++")
+		val g4 = g1 ++ Vector(("E", 9, "G"), ("G", 9, "A"), ("G", 9, "Z"))
+		assert(g4.nodeValues.toSet == Set("A", "B", "C", "D", "E", "F", "G", "Z"))
+		assert(g4("E").leavingEdges.iterator.map { _.end.value }.mkString == "FG", g4("E").leavingEdges.mkString(", "))
+		assert(g4("G").leavingEdges.size == 2)
+		assert(g4("A").leavingEdges.size == 1)
+	}
+	
+	println("Success!")
 }

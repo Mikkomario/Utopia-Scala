@@ -23,4 +23,6 @@ trait GraphEdge[+A, +Node] extends View[A] with Extender[A]
 	// IMPLEMENTED  --------------
 	
 	override def wrapped: A = value
+	
+	override def toString: String = s"Edge($value).to($end)"
 }

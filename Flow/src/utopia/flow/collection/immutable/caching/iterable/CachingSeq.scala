@@ -1,9 +1,9 @@
 package utopia.flow.collection.immutable.caching.iterable
 
 import utopia.flow.collection.CollectionExtensions._
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.CompoundingSeqBuilder
-import utopia.flow.collection.mutable.iterator.PollableOnce
+import utopia.flow.collection.mutable.iterator.{AppendIfDistinctIterator, PollableOnce}
 import utopia.flow.view.immutable.View
 
 import scala.annotation.unchecked.uncheckedVariance
@@ -283,5 +283,70 @@ class CachingSeq[+A](source: Iterator[A], preCached: Seq[A] = Empty, externallyK
 				val diff = index - builder.size
 				cacheNext(diff + 1).getOption(diff)
 			}
+	}
+	
+	/**
+	 * Appends a new item to this collection if it's distinct
+	 * @param suffix Item to append
+	 * @tparam B Type of the appended item
+	 * @return A copy of this collection containing the specified item
+	 */
+	def appendIfDistinct[B >: A](suffix: B) = {
+		val known = current
+		if (known.isEmpty) {
+			// Case: Appending to an empty collection => Yields a collection with a single item only
+			if (isEmpty)
+				CachingSeq(Iterator.empty, preCached = Single(suffix))
+			// Case: Appending to an uncached collection => Determines the distinct status lazily
+			else
+				CachingSeq(new AppendIfDistinctIterator[B](cacheIterator, Iterator.single(suffix)), preCached = known)
+		}
+		// Case: Known to contain the specified item => Yields this
+		else if (known.contains(suffix))
+			this
+		// Case: This collection has been fully cached and doesn't contain the specified item => Appends it
+		else if (isFullyCached)
+			CachingSeq(Iterator.single(suffix), preCached = known)
+		// Case: Appending to a partially cached collection => Determines the distinct status lazily
+		else
+			CachingSeq(new AppendIfDistinctIterator[B](cacheIterator, Iterator.single(suffix)), preCached = known)
+	}
+	/**
+	 * Appends n items to this collection. Filters out items that already appear within this collection.
+	 * @param suffix New items to add
+	 * @tparam B Type of the new items
+	 * @return A copy of this collection containing all the specified items
+	 */
+	def appendAllIfDistinct[B >: A](suffix: IterableOnce[B]): CachingSeq[B] = suffix.nonEmptyCollection match {
+		case Some(suffix) =>
+			val known = current
+			// Case: Nothing cached yet
+			if (known.isEmpty) {
+				// Case: This collection is empty => Creates a new collection from the suffix
+				if (isEmpty)
+					CachingSeq.from(suffix)
+				// Case: Merging two non-empty collections => Uses the default implementation
+				else
+					CachingSeq(new AppendIfDistinctIterator[B](iterator, suffix.iterator))
+			}
+			// Case: This collection is fully cached => Filters out cached items from the suffix
+			else if (isFullyCached) {
+				val distinctSuffix = suffix.iterator.filterNot(known.contains)
+				if (distinctSuffix.hasNext)
+					CachingSeq(distinctSuffix, preCached = known)
+				// Case: No non-distinct additions => Yields this
+				else
+					this
+			}
+			// Case: Some items have been cached => Checks whether all new items are known duplicates
+			else {
+				val trimmedSuffix = suffix.iterator.dropWhile(known.contains)
+				if (trimmedSuffix.hasNext)
+					CachingSeq(new AppendIfDistinctIterator[B](cacheIterator, trimmedSuffix), preCached = known)
+				else
+					this
+			}
+		// Case: Nothing to append => Yields this
+		case None => this
 	}
 }

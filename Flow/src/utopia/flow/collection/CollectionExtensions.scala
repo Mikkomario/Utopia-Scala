@@ -146,6 +146,44 @@ object CollectionExtensions
 		// OTHER    ---------------------------
 		
 		/**
+		 * @param item An item to append to this collection if it is distinct
+		 * @param buildFrom Implicit build-from for the resulting collection
+		 * @tparam B type of items in the resulting collection
+		 * @tparam To Type of the resulting collection
+		 * @return A copy of this collection that contains the specified item
+		 */
+		def appendIfDistinct[B >: iter.A, To](item: B)(implicit buildFrom: BuildFrom[Repr, B, To]): To =
+			ops.nonEmptyIterator match {
+				case Some(iter) =>
+					buildFrom.fromSpecific(coll)(new AppendIfDistinctIterator[B](iter, Iterator.single(item)))
+				// Case: Appending to an empty collection => Yields a collection with the addition, only
+				case None => buildFrom.fromSpecific(coll)(Single(item))
+			}
+		/**
+		 * Appends 0-n items to this collection, but only those which don't already appear in this collection
+		 * @param addition Items to append, if distinct
+		 * @param buildFrom Implicit build-from
+		 * @tparam B type of items in the resulting collection
+		 * @tparam To Type of the resulting collection
+		 * @return Copy of this collection where all elements from 'addition',
+		 *         that don't yet appear in this collection, have been appended.
+		 */
+		def appendAllIfDistinct[B >: iter.A, To](addition: IterableOnce[B])
+		                                        (implicit buildFrom: BuildFrom[Repr, B, To]): To =
+			addition.nonEmptyIterator match {
+				case Some(addition) =>
+					ops.nonEmptyIterator match {
+						// Case: Combining two non-empty collections => Appends only distinct items
+						case Some(iter) =>
+							buildFrom.fromSpecific(coll)(new AppendIfDistinctIterator[B](iter, addition))
+						// Case: This collection is empty => Yields a copy of the addition
+						case None => buildFrom.fromSpecific(coll)(addition)
+					}
+				// Case: Nothing to append => Yields a copy of this collection
+				case None => buildFrom.fromSpecific(coll)(ops)
+			}
+		
+		/**
 		 * Maps the first item that matches provided condition, leaves the other items as they were
 		 * @param find      A function for finding the mapped item
 		 * @param map       A mapping function for that item
@@ -2428,38 +2466,6 @@ object CollectionExtensions
 		
 		
 		// OTHER    ----------------------------
-		
-		/**
-		 * @param item An item to append to this collection, provided it is distinct
-		 * @param buildFrom Implicit build-from
-		 * @tparam B type of items in the resulting collection
-		 * @tparam That Type of the resulting collection
-		 * @return Copy of this collection that contains the specified item
-		 */
-		def appendIfDistinct[B >: seq.A, That](item: B)(implicit buildFrom: BuildFrom[Repr, B, That]): That = {
-			if (ops.contains(item))
-				buildFrom.fromSpecific(coll)(ops)
-			else
-				buildFrom.fromSpecific(coll)(ops :+ item)
-		}
-		/**
-		 * Appends 0-n items to this collection, but only those which don't already appear in this collection
-		 * @param items Items to append, if distinct
-		 * @param buildFrom Implicit build-from
-		 * @tparam B type of items in the resulting collection
-		 * @tparam That Type of the resulting collection
-		 * @return Copy of this collection where all elements from 'items', which don't yet appear in this collection,
-		 *         have been appended.
-		 */
-		def appendAllIfDistinct[B >: seq.A, That](items: IterableOnce[B])
-		                                         (implicit buildFrom: BuildFrom[Repr, B, That]): That =
-		{
-			val iter = items.iterator
-			if (iter.hasNext)
-				buildFrom.fromSpecific(coll)(ops ++ items.iterator.filterNot(ops.contains))
-			else
-				buildFrom.fromSpecific(coll)(ops)
-		}
 		
 		/**
 		  * Maps a single item in this sequence
