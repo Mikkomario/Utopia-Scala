@@ -42,10 +42,13 @@ object LogProcessToFile
 		/**
 		 * @return A new logger
 		 */
-		def apply() = err.filterNot { _ == out } match {
-			case Some(err) => new LogProcessToFile(Pair(out, err).map { KeptOpenWriter(_, keepOpenDuration) })
-			// Case: Logging both standard output and error output to the same file
-			case None => new LogProcessToFile(Pair.twice(KeptOpenWriter(out, keepOpenDuration)))
+		def apply() = {
+			val writerF = KeptOpenWriter(keepOpenDuration)
+			err.filterNot { _ == out } match {
+				case Some(err) => new LogProcessToFile(Pair(out, err).map(writerF.to))
+					// Case: Logging both standard output and error output to the same file
+				case None => new LogProcessToFile(Pair.twice(writerF.to(out)))
+			}
 		}
 	}
 }

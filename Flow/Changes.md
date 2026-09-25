@@ -32,6 +32,7 @@
   - **template.GraphEdge** was replaced with **template.graph.GraphEdgeLike**
   - **immutable.GraphEdge** and **ViewGraphEdge** were replaced with a new version under package `graph`
     - The new version accepts different generic type parameters
+- Replaced all use-cases of **PrintWriter** with **BufferedPrintWriter** that has more suitable error-handling logic.
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
@@ -94,10 +95,14 @@
   - Added `.setAndLock(...)`, `.trySetAndLock(...)`, `.updateAndLock(...)` and `.tryUpdateAndLock(...)`
 - **MayBeSet** (object)
   - Added `.view(MayBeSet)`
+- **OutputStream** (via **StreamExtensions**)
+  - Added `.buffered`
 - **Pair**
   - Added `.bestMatch(...)`
 - **PartialMapView** (object)
   - Added multiple new constructors
+- **Path** (via **FileExtensions**)
+  - Added `.openOutputStream(...)` and `.openWriter(...)`
 - **Pointer**
   - Added new functions for **Pointer**s that contain **Map**s
   - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` for **Seq**-based **Pointer**s

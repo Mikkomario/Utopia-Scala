@@ -1,8 +1,8 @@
 package utopia.flow.parse
 
-import AutoClose._
+import utopia.flow.parse.AutoClose._
 
-import java.io.{BufferedInputStream, InputStream, OutputStream, OutputStreamWriter, PrintWriter}
+import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream, OutputStreamWriter}
 import java.nio.charset.Charset
 import scala.io.Codec
 
@@ -76,7 +76,15 @@ object StreamExtensions
 	implicit class RichOutputStream(val stream: OutputStream) extends AnyVal
 	{
 		/**
-		 * Writes to this stream using a [[PrintWriter]].
+		 * @return A buffered copy of this stream. Yields this stream if already buffered.
+		 */
+		def buffered = stream match {
+			case s: BufferedOutputStream => s
+			case s => new BufferedOutputStream(s)
+		}
+		
+		/**
+		 * Writes to this stream using a [[BufferedPrintWriter]].
 		 *
 		 * Note: This stream is closed once the specified function finishes.
 		 *
@@ -85,25 +93,26 @@ object StreamExtensions
 		 * @tparam A Type of 'f' results
 		 * @return Results of 'f'. Throws if 'f' throws, or if writer-construction fails.
 		 */
-		def writeUsing[A](f: PrintWriter => A)(implicit codec: Codec): A =
-			writeUsing(codec.charSet)(f)
+		def writeUsing[A](f: BufferedPrintWriter => A)(implicit codec: Codec): A = writeUsing(codec.charSet)(f)
 		/**
-		 * Writes to this stream using a [[PrintWriter]].
+		 * Writes to this stream using a [[BufferedPrintWriter]].
 		 *
 		 * Note: This stream is closed once the specified function finishes.
 		 *
 		 * @param charset Character-set to use
+		 * @param bufferSize Applied buffer size. Default = 8M.
 		 * @param autoFlush Whether to automatically flush this stream whenever a new line is printed.
 		 *                  Default = false.
 		 * @param f A function that receives a print writer for writing into this stream
 		 * @tparam A Type of 'f' results
 		 * @return Results of 'f'. Throws if 'f' throws, or if writer-construction fails.
 		 */
-		def writeUsing[A](charset: Charset, autoFlush: Boolean = false)(f: PrintWriter => A) =
+		def writeUsing[A](charset: Charset, bufferSize: Int = BufferedPrintWriter.defaultBufferSize,
+		                  autoFlush: Boolean = false)
+		                 (f: BufferedPrintWriter => A) =
 			stream.consume { stream =>
-				new OutputStreamWriter(stream, charset).consume { writer =>
-					new PrintWriter(writer, autoFlush).consume(f)
-				}
+				new OutputStreamWriter(stream, charset)
+					.consume { new BufferedPrintWriter(_, bufferSize, autoFlush).consume(f) }
 			}
 	}
 }

@@ -1,8 +1,7 @@
 package utopia.flow.parse.file
 
 import utopia.flow.collection.mutable.iterator.{OptionsIterator, PollingIterator}
-
-import java.io.PrintWriter
+import utopia.flow.parse.BufferedPrintWriter
 
 /**
  * A reader / writer which can be used for editing a text-based file. This class only provides an interface
@@ -10,7 +9,7 @@ import java.io.PrintWriter
  * @author Mikko Hilpinen
  * @since 4.10.2021, v1.12.1
  */
-class FileEditor(sourceLinesIterator: PollingIterator[String], writer: PrintWriter)
+class FileEditor(sourceLinesIterator: PollingIterator[String], writer: BufferedPrintWriter)
 {
 	// COMPUTED ----------------------
 	

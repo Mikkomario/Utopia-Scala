@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
 import utopia.flow.time.Duration
 
+import java.io.PrintWriter
 import scala.io.Codec
 
 object FileLogger
@@ -44,7 +45,7 @@ class FileLogger(private var dir: Path = "log", groupDuration: Duration = Durati
 	// Changes the targeted file each day
 	private val writerPointer = DeprecatingLazy {
 		val date = Today.toLocalDate
-		KeptOpenWriter(dir/s"$date.txt", 10.seconds) -> date
+		KeptOpenWriter(10.seconds).to(dir/s"$date.txt") -> date
 	} { _._2 == Today.toLocalDate }
 	
 	
@@ -80,7 +81,7 @@ class FileLogger(private var dir: Path = "log", groupDuration: Duration = Durati
 		val fileWriteResult = writer { w =>
 			w.println(header)
 			details.propertiesIterator.foreach { detail => w.println(s"\t- ${ detail.name }: ${ detail.value }") }
-			error.foreach { _.printStackTrace(w) }
+			error.foreach { _.printStackTrace(new PrintWriter(w)) }
 		}
 		// May print to sysErr also
 		if (fileWriteResult.isFailure || copyToSysErr) {

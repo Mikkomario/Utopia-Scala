@@ -332,7 +332,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	// A public-facing version of maxContextSizeP. Omits the safety margin, which is added to the incoming requests.
 	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin * 2 - 1 }
 	
-	private val debugLogger = logDir.map { dir => KeptOpenWriter((dir/s"$Today-Vast-AI-log.txt").unique, 30.seconds) }
+	private val debugLogger = logDir.map { dir => KeptOpenWriter(30.seconds).to((dir/s"$Today-Vast-AI-log.txt").unique) }
 	
 	/**
 	 * A process that shuts down idle and partially used processors.

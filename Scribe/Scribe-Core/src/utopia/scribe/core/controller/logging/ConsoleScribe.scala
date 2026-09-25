@@ -4,27 +4,27 @@ import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.enumeration.End.{First, Last}
+import utopia.flow.parse.BufferedPrintWriter
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Now, Today}
+import utopia.flow.time.{Duration, Now, Today}
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.Use
 import utopia.flow.util.logging.{Logger, SysErrLogger}
+import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.caching.DeprecatingLazy
 import utopia.scribe.core.controller.logging.ConsoleScribe.timeFormat
+import utopia.scribe.core.model.cached.logging.RecordableError
 import utopia.scribe.core.model.enumeration.Severity
 import utopia.scribe.core.model.enumeration.Severity.Warning
 
-import java.io.PrintWriter
+import java.io.OutputStreamWriter
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
-import utopia.flow.time.Duration
-
 import scala.io.Codec
 
 object ConsoleScribe
@@ -93,12 +93,14 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 	private val lastLogTimePointer = Volatile(Now.toLocalDateTime)
 	// Stores writers separately. Unlike normal PrintWriters, these must not be closed.
 	// First value is standard out, the second is error
-	private lazy val writers = Pair(System.out, System.err).map { new PrintWriter(_, true) }
+	private lazy val writers = Pair(System.out, System.err).map { stream =>
+		new BufferedPrintWriter(new OutputStreamWriter(stream), autoFlush = true)
+	}
 	private lazy val fileWriter = logDirectory.map { dir =>
 		implicit val codec: Codec = Codec.UTF8
 		DeprecatingLazy {
 			val date = Today.toLocalDate
-			Use(backupLogger) { implicit l => KeptOpenWriter(dir/s"$date.txt", 10.seconds) -> date }
+			Use(backupLogger) { implicit l => KeptOpenWriter(10.seconds).to(dir/s"$date.txt") -> date }
 		} { _._2 == Today.toLocalDate }
 	}
 	
@@ -138,7 +140,7 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		}
 	}
 	
-	private def writeWith(out: PrintWriter, time: LocalDateTime, duration: Duration, context: String,
+	private def writeWith(out: BufferedPrintWriter, time: LocalDateTime, duration: Duration, context: String,
 	                      error: Option[Throwable], message: String,
 	                      occurrenceDetails: Model, severity: Severity, variantDetails: Model) =
 	{
@@ -156,7 +158,7 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		}
 		
 		// Writes the stack trace, if applicable
-		error.foreach { _.printStackTrace(out) }
+		error.flatMap(RecordableError.apply).foreach { _.logLinesIterator.foreach(out.println) }
 	}
 	
 	

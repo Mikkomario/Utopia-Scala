@@ -10,6 +10,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxEquals, EqualsFunction}
 import utopia.flow.operator.{Identity, MaybeEmpty}
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.BufferedPrintWriter
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.file.FileConflictResolution.Overwrite
 import utopia.flow.parse.json.JsonConvertible
@@ -997,39 +998,29 @@ object FileExtensions
 		  * @param codec  Encoding used (implicit)
 		  * @return This path. Failure if writing failed.
 		  */
-		def writeLines(lines: IterableOnce[String], append: Boolean = false)(implicit codec: Codec) = {
-			Try {
-				new FileOutputStream(p.toFile, append)
-					.consume {
-						new OutputStreamWriter(_, codec.charSet)
-							.consume {
-								new PrintWriter(_).consume { writer =>
-									lines.iterator.foreach(writer.println)
-								}
-							}
-					}
-			}.map { _ => p  }
-		}
+		def writeLines(lines: IterableOnce[String], append: Boolean = false)(implicit codec: Codec) =
+			Try { _writeUsing(append) { writer => lines.iterator.foreach(writer.println); p } }
 		/**
 		  * Writes into this file with a function. An output stream is opened for the duration of the function.
 		  * @param writer A writer function that uses an output stream (may throw)
-		  * @return Writer function result. Failure if writing function threw or stream couldn't be opened
+		  * @return Writer function result. Failure if the writing function threw or stream couldn't be opened
 		  */
 		def writeWith[A](writer: BufferedOutputStream => A) = _writeWith(append = false)(writer)
 		/**
 		  * Writes a file using a function.
-		  * A PrintWriter instance is acquired for the duration of the function execution.
-		  * @param writer A function that uses a PrintWriter and then returns
+		  * A BufferedWriter instance is acquired for the duration of the function execution.
+		  * @param writer A function that uses a BufferedWriter and then returns
 		  * @param codec  Implicit codec used when writing the file
 		  * @tparam A Writer function result type
 		  * @return Writer function result. Failure if the writing process, or the function, threw an exception.
 		  */
-		def writeUsing[A](writer: PrintWriter => A)(implicit codec: Codec) =
+		def writeUsing[A](writer: BufferedPrintWriter => A)(implicit codec: Codec) =
 			_writeUsing(append = false)(writer)
-		def _writeUsing[A](append: Boolean)(writer: PrintWriter => A)(implicit codec: Codec) =
+		def _writeUsing[A](append: Boolean)(writer: BufferedPrintWriter => A)(implicit codec: Codec) =
 			_writeWith(append) { _.writeUsing(writer) }
 		private def _writeWith[A](append: Boolean)(writer: BufferedOutputStream => A) =
-			Try { new FileOutputStream(p.toFile, append).consume { new BufferedOutputStream(_).consume(writer) } }
+			Try { openOutputStream(append = append).consume(writer) }
+		
 		/**
 		  * Writes into this file by reading data from a reader.
 		  * @param reader Reader that supplies the data
@@ -1067,13 +1058,13 @@ object FileExtensions
 		  */
 		def appendWith[U](writer: BufferedOutputStream => U) = _writeWith(append = true)(writer)
 		/**
-		  * Appends new lines to a file utilizing a PrintWriter
-		  * @param writer A function that uses a PrintWriter
+		  * Appends new lines to a file utilizing a BufferedWriter
+		  * @param writer A function that uses a BufferedWriter
 		  * @param codec  Implicit codec used when writing the file
 		  * @tparam U Arbitrary result type
 		  * @return This path. Failure if the writing process, or the specified function, threw an exception.
 		  */
-		def appendUsing[U](writer: PrintWriter => U)(implicit codec: Codec) =
+		def appendUsing[U](writer: BufferedPrintWriter => U)(implicit codec: Codec) =
 			_writeUsing(append = true)(writer)
 		/**
 		  * Writes the specified text lines to the end of this file
@@ -1088,6 +1079,32 @@ object FileExtensions
 		  * @return This path. Failure if reading or writing failed or the file stream couldn't be opened
 		  */
 		def appendFromReader(reader: Reader) = writeFromReader(reader, append = true)
+		
+		/**
+		 * Opens a new writer to this file. May throw.
+		 * @param bufferSize Buffer size to apply. Default = 8M.
+		 * @param append Whether to append the existing file contents.
+		 *               Default = false = existing contents will be overwritten.
+		 * @param autoFlush Whether to automatically flush this writer whenever println is called. Default = false.
+		 * @param codec Implicit character encoding used.
+		 * @return A new open writer to this file.
+		 */
+		def openWriter(bufferSize: Int = 8192, append: Boolean = false, autoFlush: Boolean = false)
+		              (implicit codec: Codec) =
+			new BufferedPrintWriter(
+				new OutputStreamWriter(openOutputStream(bufferSize, append), codec.charSet), bufferSize, autoFlush)
+		/**
+		 * Opens a buffered output stream to this file. May throw.
+		 * @param bufferSize Buffer size to apply. Default = 8M.
+		 * @param append Whether to append the existing file contents.
+		 *               Default = false = existing contents will be overwritten.
+		 * @return An open output stream to this file
+		 */
+		def openOutputStream(bufferSize: Int = 8192, append: Boolean = false) =
+			new BufferedOutputStream(
+				Files.newOutputStream(p, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+					if (append) StandardOpenOption.APPEND else StandardOpenOption.TRUNCATE_EXISTING),
+				bufferSize)
 		
 		/**
 		  * Reads data from this file

@@ -5,6 +5,7 @@ import utopia.access.model.enumeration.ContentCategory.{Application, Text}
 import utopia.flow.async.TryFuture
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.operator.MaybeEmpty
+import utopia.flow.parse.BufferedPrintWriter
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.xml.XmlElement
@@ -176,10 +177,12 @@ object WriteResponseBody
 		 * @param exc Implicit execution context
 		 * @return A new streamed response body -writer
 		 */
-		def usingWriter(contentType: ContentType, autoFlush: Boolean = false)(write: PrintWriter => Unit)
+		def usingWriter(contentType: ContentType, autoFlush: Boolean = false)(write: BufferedPrintWriter => Unit)
 		               (implicit exc: ExecutionContext) =
 			apply(contentType.withCharsetSpecified) { stream =>
-				Future { Try { stream.writeUsing(contentType.charset.getOrElse(codec.charSet), autoFlush)(write) } }
+				Future { Try {
+					stream.writeUsing(contentType.charset.getOrElse(codec.charSet), autoFlush = autoFlush)(write)
+				} }
 			}
 		
 		/**
