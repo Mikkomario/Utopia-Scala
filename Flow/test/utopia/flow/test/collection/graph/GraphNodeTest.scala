@@ -4,13 +4,15 @@ import utopia.flow.collection.immutable.graph.GraphNode
 import utopia.flow.collection.mutable.graph.MutableGraphNode
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
+import utopia.flow.collection.template.graph.NodeTarget
 
 /**
  * Tests functions defined in GraphLike using an immutable GraphNode implementation, based on a mutable version.
  * @author Mikko Hilpinen
  * @since 20.09.2026, v2.9
  */
-object GraphLikeTest extends App
+object GraphNodeTest extends App
 {
 	// Sets up the test graph
 	/*
@@ -18,7 +20,7 @@ object GraphLikeTest extends App
 					  |
 		A -1-> B -2-> C -3-> +
 			   |             |
-			   + <---2/4---> D -4-> E -5-> F
+			   + <----4----> D -4-> E -5-> F
 	 */
 	private val a = {
 		val nodes = Vector("A", "B", "C", "D", "E", "F", "G").iterator
@@ -134,6 +136,8 @@ object GraphLikeTest extends App
 	
 	// shortestRoutesToOne
 	assert(b.shortestRoutesToOne(e).get.routes.only.get.iterator.map { _.end.value }.mkString == "DE")
+	assert(b.shortestRoutesToOne { (_, edges) => edges.isEmpty }.get.node.value == "G",
+		b.shortestRoutesToOne { (_, edges) => edges.isEmpty })
 	
 	// cheapestRoutesToOne
 	assert(b.cheapestRoutesToOne(e) { _.value }.get.routes.only.get.iterator.map { _.end.value }.mkString == "DE")
@@ -142,10 +146,48 @@ object GraphLikeTest extends App
 	assert(b.cheapestRoutesToOne(e) { _.value - 1 }.get.routes.size == 2)
 	
 	// shortestRoutesTo
-	// FIXME: Understood shortestRoutesTo wrong. Yields a route to each node that fulfils the specified filter.
-	assert(b.shortestRoutesTo { (_, edges) => edges.isEmpty }.optimalSuccesses.only.exists { _.node.value == "G" },
+	assert(b.shortestRoutesTo { (_, edges) => edges.isEmpty }.optimalSuccesses
+		.iterator.flatMap { _.routes }.map { _.iterator.map { _.end.value }.mkString }.toSet == Set("CG", "DEF"),
 		b.shortestRoutesTo { (_, edges) => edges.isEmpty }.optimalSuccesses
 			.iterator.map { _.anyRoute.iterator.map { _.end.value }.mkString(">") }.mkString(" & "))
+	
+	// shortestRoutesToEach
+	assert(b.shortestRoutesToEach(Pair(e, NodeTarget { (_, edges) => edges.value.isEmpty })).optimalSuccesses
+		.iterator.flatMap { _.routes }.map { _.iterator.map { _.end.value }.mkString }.toSet == Set("DE", "CG"))
+	
+	// filterDirect
+	{
+		val b2 = b.filterDirect { _.value <= 2 }
+		
+		assert(b2.leavingEdges.only.get.value == 2)
+		assert(b2("C", "D").leavingEdges.size == 2)
+	}
+	
+	// filter
+	{
+		val b2 = b.filter { (_, edge) => edge.value <= 3 }
+		
+		assert(b2.leavingEdges.only.get.value == 2)
+		assert(b2.get("C", "D").get.isEmpty)
+	}
+	
+	// Mutable nodes
+	{
+		val m = MutableGraphNode.from(a)
+		val nav = m.lookup
+		
+		assert(m.leavingEdges.only.get.end.value == "B")
+		assert(nav.get("B", "C").get.leavingEdges.size == 2)
+		
+		val md = nav.get("B", "C", "D").get
+		assert(md.leavingEdges.size == 2)
+		
+		m.disconnectFrom(md)
+		
+		assert(nav.get("B", "C", "D").isEmpty)
+		assert(nav.get("B", "C").get.leavingEdges.size == 1)
+		assert(nav.get("B").get.leavingEdges.size == 1)
+	}
 	
 	/*
 					  +--3-> G
