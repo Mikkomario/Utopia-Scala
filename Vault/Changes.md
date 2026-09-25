@@ -37,6 +37,7 @@
   for situations where the parameter is of type **HasInclusiveEnds** (e.g. a **NumericSpan**)
 - Optimized `.toMultiMap(...)` in **AccessManyColumns**
   - The new implementation also contains an optional `includeDefault: Boolean `-parameter
+- Removed some deprecated functions from **References**
 
 ## v2.1 - 15.03.2026
 This update focuses on more advanced interfaces:

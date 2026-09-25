@@ -15,7 +15,6 @@ import scala.collection.mutable
   * @author Mikko Hilpinen
   * @since 12.11.2016
   */
-// TODO: Refactor to use immutable graph classes instead
 object ConversionHandler
 {
 	// TYPES    ------------------------

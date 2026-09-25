@@ -44,6 +44,8 @@
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
 ### Deprecations
+- Deprecated **Guild**, **Mine**, **Miner**, **Explorer**, **Entourage** and **ExcavationStatus**
+  - These will be removed in a future release
 - Multiple renames in **FromModelFactory**
   - Renamed `.fromPath(Path)` to `.fromJsonFile(Path)`
   - Renamed `.mapParseResult(...)` to `.mapResult(...)` and `.flatMapParseResult(...)` to `.tryMapResult(...)`
@@ -78,10 +80,11 @@
   - Added `.writeTo(OutputStream, Int)`
 - **IterableOnce** (via **CollectionExtensions**)
   - Added `.isDistinct`
-  - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
   - Added `.popHead` and `.popIndex(Int)`
   - Added `.groupMapMap(...)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
+  - Added `.mergeOrAppend(...)`
+  - Added `.incompleteMapFirstWhere(...)`
   - Added `.completion` to parallel mapping output options
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
@@ -89,6 +92,8 @@
   - Added `.expiring`
 - **LockablePointer**
   - Added `.setAndLock(...)`, `.trySetAndLock(...)`, `.updateAndLock(...)` and `.tryUpdateAndLock(...)`
+- **MayBeSet** (object)
+  - Added `.view(MayBeSet)`
 - **Pair**
   - Added `.bestMatch(...)`
 - **PartialMapView** (object)
@@ -121,11 +126,16 @@
   1. `rethrows: Boolean` - Whether to rethrow original errors (default = false)
   2. `logFailures: Boolean` - Whether to automatically log all yielded failures (default = false)
 - Added synchronization to **LockablePointer**'s locking behavior
-- Moved `.withoutIndex(...)` and `.findAndPop(...)` from **Seq** to **IterableOnce** in **CollectionExtensions**
+- **OptimizedSeqBuilder** now extends **MayBeEmpty**
+- Moved `.withoutIndex(...)`, `.findAndPop(...)`, `.appendIfDistinct(...)`, `.appendAllIfDistinct(...)`, 
+  `.mapFirstWhere(...)`, `.mapOrAppend(...)` and `.replaceOrAppend(...) ` 
+  from **Seq** to **IterableOnce** in **CollectionExtensions**
   - Also optimized/rewrote the implementations
+- `.logWithMessage(...)` in **Try** now receives an optional second parameter `details: Model`
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
+- Internal refactoring within **ConversionHandler**
 
 ## v2.8 - 15.03.2026
 This major update focuses on the following areas:
