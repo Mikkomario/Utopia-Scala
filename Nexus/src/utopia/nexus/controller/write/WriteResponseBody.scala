@@ -282,8 +282,8 @@ trait WriteResponseBody extends MaybeEmpty[WriteResponseBody]
 	def contentLength: Option[Long]
 	
 	/**
-	 * Populates a response body's stream. This function may block during the writing,
-	 * if [[contentLength]] is specified. Otherwise, the writing should be completed asynchronously.
+	 * Populates a response body's stream. This function may block during the writing IF [[contentLength]] is specified.
+	 * Otherwise, the writing should be completed asynchronously.
 	 *
 	 * Note: When streaming the content in chunks, call 'stream.flush()' in order to start sending out data.
 	 *

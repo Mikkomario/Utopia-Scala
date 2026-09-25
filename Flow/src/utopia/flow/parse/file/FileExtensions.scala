@@ -1091,8 +1091,7 @@ object FileExtensions
 		 */
 		def openWriter(bufferSize: Int = 8192, append: Boolean = false, autoFlush: Boolean = false)
 		              (implicit codec: Codec) =
-			new BufferedPrintWriter(
-				new OutputStreamWriter(openOutputStream(bufferSize, append), codec.charSet), bufferSize, autoFlush)
+			openOutputStream(bufferSize, append).openWriter(bufferSize, autoFlush)
 		/**
 		 * Opens a buffered output stream to this file. May throw.
 		 * @param bufferSize Buffer size to apply. Default = 8M.

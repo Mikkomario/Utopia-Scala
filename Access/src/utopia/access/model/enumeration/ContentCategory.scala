@@ -53,15 +53,19 @@ object ContentCategory
 		override val isCustom: Boolean = false
 		
 		/**
-		  * A content type for json documents
+		  * A content type for JSON documents
 		  */
 		lazy val json = /("json")
 		/**
-		  * A content type for xml documents
+		 * Content type for newline-delimited JSON documents
+		 */
+		lazy val ndJson = /("ndjson")
+		/**
+		  * A content type for XML documents
 		  */
 		lazy val xml = /("xml")
 		/**
-		  * A content type for pdf (portable document format)
+		  * A content type for PDF (portable document format)
 		  */
 		lazy val pdf = /("pdf")
 		/**

@@ -2,6 +2,8 @@
 
 ## v1.7.1 (in development)
 ### New methods
+- **ContentCategory.Application**
+  - Added `.ndJson`
 - **Headers**
   - Added `.retryAfter`
 ### Other changes

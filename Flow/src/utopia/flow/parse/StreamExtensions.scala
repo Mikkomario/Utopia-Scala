@@ -114,5 +114,15 @@ object StreamExtensions
 				new OutputStreamWriter(stream, charset)
 					.consume { new BufferedPrintWriter(_, bufferSize, autoFlush).consume(f) }
 			}
+		
+		/**
+		 * Opens a new writer to this stream. May throw.
+		 * @param bufferSize Buffer size to apply. Default = 8M.
+		 * @param autoFlush Whether to automatically flush this writer whenever println is called. Default = false.
+		 * @param codec Implicit character encoding used.
+		 * @return A new open writer to this stream.
+		 */
+		def openWriter(bufferSize: Int = 8192, autoFlush: Boolean = false)(implicit codec: Codec) =
+			new BufferedPrintWriter(new OutputStreamWriter(stream, codec.charSet), bufferSize, autoFlush)
 	}
 }

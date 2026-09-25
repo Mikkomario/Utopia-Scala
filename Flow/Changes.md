@@ -97,6 +97,7 @@
   - Added `.view(MayBeSet)`
 - **OutputStream** (via **StreamExtensions**)
   - Added `.buffered`
+  - Added `.openWriter(...)`
 - **Pair**
   - Added `.bestMatch(...)`
 - **PartialMapView** (object)
