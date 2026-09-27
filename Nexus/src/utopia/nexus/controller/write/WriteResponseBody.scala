@@ -3,15 +3,19 @@ package utopia.nexus.controller.write
 import utopia.access.model.ContentType
 import utopia.access.model.enumeration.ContentCategory.{Application, Text}
 import utopia.flow.async.TryFuture
+import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Empty
 import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.BufferedPrintWriter
 import utopia.flow.parse.StreamExtensions._
 import utopia.flow.parse.json.JsonConvertible
 import utopia.flow.parse.xml.XmlElement
+import utopia.flow.util.StringExtensions._
 
 import java.io.{OutputStream, PrintWriter}
 import java.nio.charset.{Charset, StandardCharsets}
+import scala.collection.View
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 import scala.util.Try
@@ -47,63 +51,40 @@ object WriteResponseBody
 	 * @return The specified JSON as a buffered response body
 	 */
 	def json(json: String) = string(json, Application.json)
-	// TODO: Add support for NDJSON
 	/**
 	 * @param content JSON content to write
+	 * @param minBufferSize Minimum number of 'content' entries that should be buffered before switching
+	 *                      into streamed content.
+	 *                      Default = 1 = Streaming may be started after the first entry.
+	 *                      Use a negative number to force buffering.
+	 * @param minBufferLength Minimum number of characters that
+	 *                        should be buffered before switching into streamed content.
+	 *                        Default = 1024.
+	 *                        Use a negative number to force buffering.
 	 * @param exc Implicit execution context
-	 * @return The specified JSON content as a JSON array. May be a streamed / chunked response body.
+	 * @return The specified JSON content as a JSON array.
+	 *         May be either streamed or buffered, based on the content collection type & size.
 	 */
-	def jsonArray(content: IterableOnce[JsonConvertible])(implicit exc: ExecutionContext) = {
-		val kn = content.knownSize
-		// Case: Empty content => Writes a fixed string
-		if (kn == 0)
-			json("[]")
-		// Case: One item only => Buffers it regardless of collection type
-		else if (kn == 1)
-			json(s"[${ content.iterator.next().toJson }]")
-		else
-			content match {
-				// Case: Lazily cached collection that's partially uncached
-				//       => Writes the cached portion at once, and the others one item at a time
-				case c: CachingSeq[JsonConvertible] if !c.isFullyCached =>
-					stream.usingWriter(Application.json) { writer =>
-						writer.print('[')
-						val prebuffered = c.current
-						var nextIsFirst = true
-						
-						def write(value: JsonConvertible) = {
-							if (nextIsFirst)
-								nextIsFirst = false
-							else
-								writer.print(", ")
-							writer.print(value.toJson)
-						}
-						
-						prebuffered.foreach(write)
-						writer.flush()
-						c.iterator.drop(prebuffered.size).foreach(write)
-						writer.print(']')
-					}
-				// Case: Cached collection => Buffers to JSON
-				case i: Iterable[JsonConvertible] => json(s"[${ i.iterator.map { _.toJson }.mkString(", ") }]")
-				// Case: Iterator => Streams one item at a time
-				case i =>
-					stream.usingWriter(Application.json) { writer =>
-						writer.print('[')
-						val iter = i.iterator
-						iter.nextOption().foreach { value =>
-							writer.print(value.toJson)
-							writer.flush()
-						}
-						iter.foreach { value =>
-							writer.print(", ")
-							writer.print(value.toJson)
-							writer.flush()
-						}
-						writer.print(']')
-					}
-			}
-	}
+	def jsonArray(content: IterableOnce[JsonConvertible], minBufferSize: Int = 1, minBufferLength: Int = 1024)
+	             (implicit exc: ExecutionContext) =
+		jsonFlow(content, Application.json, ",", "[", "]", minBufferSize, minBufferLength)
+	/**
+	 * @param content JSON content to write
+	 * @param minBufferSize Minimum number of 'content' entries that should be buffered before switching
+	 *                      into streamed content.
+	 *                      Default = 1 = Streaming may be started after the first entry.
+	 *                      Use a negative number to force buffering.
+	 * @param minBufferLength Minimum number of characters that
+	 *                        should be buffered before switching into streamed content.
+	 *                        Default = 1024.
+	 *                        Use a negative number to force buffering.
+	 * @param exc Implicit execution context
+	 * @return The specified JSON content as newline-delimited JSON.
+	 *         May be either streamed or buffered, based on the content collection type & size.
+	 */
+	def ndJson(content: IterableOnce[JsonConvertible], minBufferSize: Int = 1, minBufferLength: Int = 1024)
+	          (implicit exc: ExecutionContext) =
+		jsonFlow(content, Application.ndJson, "\n", minBufferSize = minBufferSize, minBufferLength = minBufferLength)
 	
 	/**
 	 * @param xml The XML element to write to the response body
@@ -144,6 +125,110 @@ object WriteResponseBody
 	 */
 	def bytes(bytes: Array[Byte]): WriteResponseBody =
 		if (bytes.isEmpty) NoBody else WriteBytes(bytes)
+	
+	/**
+	 * Yields streamed or buffered JSON content
+	 * @param content The entries to convert to JSON
+	 * @param contentType Applied content type
+	 * @param separator Separator to place between the JSON entries
+	 * @param prefix Content prefix (default = empty)
+	 * @param suffix Content suffix (default = empty)
+	 * @param minBufferSize Minimum number of 'content' entries that should be buffered before switching
+	 *                      into streamed content.
+	 *                      Default = 0 = Streaming may be started from 0 elements.
+	 * @param minBufferLength Minimum number of characters that
+	 *                        should be buffered before switching into streamed content.
+	 *                        Default = 1024.
+	 * @param exc Implicit execution context
+	 * @return Content-writing implementation for the specified content
+	 */
+	private def jsonFlow(content: IterableOnce[JsonConvertible], contentType: ContentType, separator: String,
+	                     prefix: String = "", suffix: String = "", minBufferSize: Int = 0, minBufferLength: Int = 1024)
+	                    (implicit exc: ExecutionContext) =
+	{
+		// Case: Streaming is not allowed => Buffers all content
+		if (minBufferSize < 0 || minBufferLength < 0)
+			string(s"$prefix${ content.iterator.map { _.toJson }.mkString(separator) }$suffix", contentType)
+		// Case: Streaming may be applicable => Checks input collection type, whether it's cached or lazy
+		else {
+			val (buffered, remainderIter)  = content match {
+				case c: CachingSeq[JsonConvertible] => c.current -> c.cacheIterator
+				case v: View[JsonConvertible] => Empty -> v.iterator
+				case i: Iterable[JsonConvertible] => i -> Iterator.empty
+				case i => Empty -> i.iterator
+			}
+			// Buffers the cached portion as JSON
+			// Also includes up to 'minStreamCount' number of additional elements
+			val bufferedJson = {
+				val bufferIter = {
+					if (minBufferSize > 0)
+						buffered.iterator ++ remainderIter.take(minBufferSize)
+					else
+						buffered.iterator
+				}
+				bufferIter.map { _.toJson }.mkString(separator)
+			}
+			// Case: There's also a lazy remainder => Checks whether that should be buffered, also
+			if (remainderIter.hasNext) {
+				// Case: The buffered content is already quite long => Streams the remainder
+				if (minBufferLength == 0 || bufferedJson.length >= minBufferLength)
+					stream.usingWriter(contentType) { writer =>
+						writer.write(s"$prefix$bufferedJson")
+						remainderIter.foreach { item =>
+							writer.write(separator)
+							writer.write(item.toJson)
+							writer.flush()
+						}
+						writer.write(suffix)
+					}
+				// Case: Streaming is conditional => Buffers up to a certain character count
+				else {
+					val buffer = new StringBuilder()
+					buffer ++= prefix
+					buffer ++= bufferedJson
+					var bufferLen = bufferedJson.length
+					val separatorLen = separator.length
+					
+					// Ensures that there's content, so that the separators are placed correctly
+					if (bufferedJson.isEmpty) {
+						val firstAddition = remainderIter.next().toJson
+						buffer ++= firstAddition
+						bufferLen += firstAddition.length
+					}
+					
+					while (remainderIter.hasNext && bufferLen < minBufferLength) {
+						val nextAddition = remainderIter.next().toJson
+						buffer ++= separator
+						buffer ++= nextAddition
+						bufferLen += separatorLen + nextAddition.length
+					}
+					
+					// Case: There's still more content => Streams the remainder
+					if (remainderIter.hasNext)
+						stream.usingWriter(contentType) { writer =>
+							// Writes the buffered portion & flushes
+							writer.print(buffer.toString())
+							writer.flush()
+							
+							// Writes the remainder one item at a time, flushing between each
+							remainderIter.foreach { nextItem =>
+								writer.print(separator)
+								writer.print(nextItem.toJson)
+								writer.flush()
+							}
+							
+							writer.print(suffix)
+						}
+					// Case: The whole content fit into the character limit => Yields the buffered content
+					else
+						string(s"$buffer$suffix", contentType)
+				}
+			}
+			// Case: The input was fully buffered => Yields the buffered content
+			else
+				string(s"$prefix$bufferedJson$suffix", contentType)
+		}
+	}
 	
 	
 	// NESTED   -------------------------

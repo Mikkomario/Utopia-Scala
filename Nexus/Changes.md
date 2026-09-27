@@ -11,6 +11,12 @@ Built with Scala v2.13.18
   - Renamed `.handleModelArrayPost(...)` to `.parseArrayBody(...)`
   - Renamed `.handleArrayPost(...)` to `.withArrayBody(...)`
   - Renamed `.handlePossibleValuePost(...)` to `.withPossiblyEmptyBody(...)`
+### New methods
+- **WriteResponseBody** (object)
+  - Added `.ndJson(...)`
+### Other changes
+- WriteResponseBody.jsonArray(...) now starts streaming the content only if its long enough.
+  - This behavior is configurable via the new `minBufferSize: Int` and `minBufferLength: Int` parameters.
 
 ## v2.0 - 15.03.2026
 This update rewrote every class in this project. The main ideas are the same, but brought up-to-date. 
