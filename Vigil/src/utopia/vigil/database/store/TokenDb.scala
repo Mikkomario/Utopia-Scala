@@ -68,7 +68,7 @@ object TokenDb
 	 *                   1. Name of the granted child scope.
 	 *
 	 *                   Call-by-name.
-	 * @param otherScopes Other scopes to register (outside of scope relations / -link)
+	 * @param otherScopes Other scopes to register (outside the scope relations / -link). Default = empty.
 	 * @param devTokenTemplateName Name of the developer token template. Default = "developer".
 	 * @param devTokenName Name of the developer token. Default = "Developer key".
 	 * @param connection Implicit DB connection
@@ -100,7 +100,7 @@ object TokenDb
 	 *                   1. Name of the granted child scope.
 	 *
 	 *                   Call-by-name.
-	 * @param otherScopes Other scopes to register (outside of scope relations / -link)
+	 * @param otherScopes Other scopes to register (outside the scope relations / -link)
 	 * @param devTokenTemplateName Name of the developer token template. Default = "developer".
 	 * @param devTokenName Name of the developer token. Default = "Developer key".
 	 * @param connection Implicit DB connection
