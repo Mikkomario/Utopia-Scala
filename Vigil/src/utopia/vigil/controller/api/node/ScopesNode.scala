@@ -22,6 +22,8 @@ import utopia.vigil.model.post.NewScope
 
 /**
  * An API node for interacting with authentication scopes
+ * @param readScope Scope required for accessing the GET (all) function
+ * @param editScope Scope required for editing auth. scopes (recommended: developer or at least admin)
  * @author Mikko Hilpinen
  * @since 24.05.2026, v0.1
  */
@@ -93,9 +95,10 @@ class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget) extends ApiNode
 		override def name: String = "accessible"
 		override def allowedMethods: Iterable[Method] = Single(Get)
 		
+		// This function doesn't need any specific authorization scope
 		override def apply(method: Method, remainingPath: Seq[String])
 		                  (implicit context: AuthContext[Any] with PostContext): RequestResult =
-			context.authorizedFor(readScope) { (token, connection) =>
+			context.authorized { (token, connection) =>
 				implicit val c: Connection = connection
 				RequestResult(AccessScopes.whereTokenLinks.ofToken(token.id).pullResponseModels)
 			}

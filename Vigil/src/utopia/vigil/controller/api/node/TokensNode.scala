@@ -41,7 +41,8 @@ object TokensNode
 	// IMPLICIT ----------------------------
 	
 	// Implicitly treats this object as a node factory
-	def objectAsFactory(o: TokensNode.type): TokensNodeFactory[AuthContext[Any]] = o.factory
+	implicit def objectAsFactory(o: TokensNode.type): TokensNodeFactory[AuthContext[Any]] = o.factory
+	implicit def factoryAsInstance[C <: AuthContext[Any]](f: TokensNodeFactory[C]): TokensNode[C] = f()
 	
 	
 	// OTHER    ----------------------------
