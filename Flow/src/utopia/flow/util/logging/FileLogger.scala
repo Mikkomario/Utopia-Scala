@@ -30,7 +30,7 @@ object FileLogger
  * A logger implementation that writes to a file
  * @author Mikko Hilpinen
  * @since 24.7.2022, v1.16
-  * @param dir Directory where new log files will be generated
+  * @param dir Directory where new log files will be generated. Default = log.
   * @param groupDuration Duration within which the log entries will be grouped together (default = 0 = no grouping)
   * @param copyToSysErr Whether log entries should be copied to System.err (default = false)
  */

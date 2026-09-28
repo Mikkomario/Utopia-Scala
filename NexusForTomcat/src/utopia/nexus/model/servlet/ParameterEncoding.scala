@@ -10,7 +10,7 @@ object ParameterEncoding
 	/**
 	 * A value indicating that no parameter encoding is applied
 	 */
-	lazy val none = apply(None)
+	val none = apply(None)
 	
 	
 	// IMPLICIT ------------------------

@@ -66,12 +66,6 @@ abstract class LogicWrappingServlet extends HttpServlet
 	def logic: ServletLogic
 	
 	
-	// COMPUTED -------------------------------
-	
-	// FIXME: These easily form a cyclic loop within the application, at least when combined with ApiRoot
-	
-	
-	
 	// IMPLEMENTED  ---------------------------
 	
 	override def service(req: HttpServletRequest, resp: HttpServletResponse) = {

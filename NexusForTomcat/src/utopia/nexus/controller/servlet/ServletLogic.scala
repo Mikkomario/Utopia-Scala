@@ -6,6 +6,35 @@ import utopia.nexus.model.request.Request.StreamedRequest
 import utopia.nexus.model.response.Response
 import utopia.nexus.model.servlet.ParameterEncoding
 
+import scala.language.implicitConversions
+
+object ServletLogic
+{
+	// IMPLICIT    ----------------------
+	
+	/**
+	 * @param f A function that handles incoming requests
+	 * @param log Implicit logging implementation used
+	 * @param jsonParser Implicit JSON parser used
+	 * @param expectedParameterEncoding Implicit expected parameter encoding
+	 * @return A new ServletLogic implementation that wraps the specified function
+	 */
+	implicit def apply(f: StreamedRequest => Response)
+	                  (implicit log: Logger, jsonParser: JsonParser, expectedParameterEncoding: ParameterEncoding): ServletLogic =
+		new _ServletLogic(f)
+	
+	
+	// NESTED   -------------------------
+	
+	private class _ServletLogic(f: StreamedRequest => Response)
+	                           (implicit override val logger: Logger, override val jsonParser: JsonParser,
+	                            override val expectedParameterEncoding: ParameterEncoding)
+		extends ServletLogic
+	{
+		override def apply(request: StreamedRequest): Response = f(request)
+	}
+}
+
 /**
   * Common trait for logical servlet implementations
   * @author Mikko Hilpinen
@@ -31,7 +60,7 @@ trait ServletLogic
 	/**
 	  * Receives a request and produces a response
 	  * @param request Request to receive
-	  * @return A response to return back to the client
+	  * @return A response to return to the client
 	  */
 	def apply(request: StreamedRequest): Response
 }

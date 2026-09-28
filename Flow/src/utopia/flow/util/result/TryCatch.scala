@@ -133,6 +133,14 @@ sealed trait TryCatch[+A] extends MayHaveFailed[A] with MayHaveFailedLike[A, Try
 
 object TryCatch
 {
+	// ATTRIBUTES -----------------------
+	
+	/**
+	 * A success instance that contains ().
+	 */
+	lazy val unit = Success(())
+	
+	
 	// COMPUTED -------------------------
 	
 	/**

@@ -123,7 +123,10 @@
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
   - Added `.notSurroundedWith(String, Boolean)`
 - **TryCatch**
-  - Added `.mapFailure(...)`
+  - Object
+    - Added `.unit`
+  - Instance
+    - Added `.mapFailure(...)`
 - **Value**
   - Added `.getModelOrString`
 ### Other changes
