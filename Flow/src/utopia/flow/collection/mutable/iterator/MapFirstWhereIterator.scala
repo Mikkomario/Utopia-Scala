@@ -42,6 +42,7 @@ class MapFirstWhereIterator[-A, +B >: A](source: Iterator[A])(find: A => Boolean
 	// IMPLEMENTED  -------------------------
 	
 	override def hasNext: Boolean = source.hasNext
+	override def knownSize = source.knownSize
 	
 	override def next(): B = {
 		val a = source.next()

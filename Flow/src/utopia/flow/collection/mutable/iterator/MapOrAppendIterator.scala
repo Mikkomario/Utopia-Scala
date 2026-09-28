@@ -34,6 +34,7 @@ class MapOrAppendIterator[-A, +B >: A](source: Iterator[A])(f: A => Option[B])(a
 	// IMPLEMENTED  --------------------------
 	
 	override def hasNext: Boolean = mappedFlag.isNotSet || source.hasNext
+	override def knownSize = if (mappedFlag.isSet) source.knownSize else -1
 	
 	override def next(): B = source.nextOption() match {
 		case Some(a) =>

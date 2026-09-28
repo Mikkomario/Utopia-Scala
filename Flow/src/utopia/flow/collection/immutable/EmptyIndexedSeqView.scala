@@ -10,5 +10,6 @@ import scala.collection.AbstractIndexedSeqView
 class EmptyIndexedSeqView[+A] extends AbstractIndexedSeqView[A]
 {
 	override def length: Int = 0
+	
 	override def apply(i: Int): A = throw new IndexOutOfBoundsException(s"Index $i is out of bounds (empty view)")
 }

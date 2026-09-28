@@ -14,7 +14,7 @@ object PollingIterator
 	  * @tparam A Type of iterated items
 	  * @return A pollable copy of the source iterator
 	  */
-	def apply[A](source: Iterator[A]): PollingIterator[A] = new PollingIteratorImplementation[A](source)
+	def apply[A](source: Iterator[A]): PollingIterator[A] = new _PollingIterator[A](source)
 	
 	/**
 	  * @param iterator An iterator to convert into a polling iterator
@@ -30,7 +30,7 @@ object PollingIterator
 	
 	// NESTED   ---------------------------
 	
-	private class PollingIteratorImplementation[A](source: Iterator[A]) extends PollingIterator[A]
+	private class _PollingIterator[A](source: Iterator[A]) extends PollingIterator[A]
 	{
 		// ATTRIBUTES   -------------------------
 		
@@ -42,9 +42,17 @@ object PollingIterator
 		def poll = pollCache.value
 		
 		override def hasNext = pollCache.isInitialized || source.hasNext
+		override def knownSize = {
+			val sourceSize = source.knownSize
+			if (sourceSize < 0)
+				-1
+			else if (pollCache.isInitialized)
+				sourceSize + 1
+			else
+				sourceSize
+		}
 		
 		override def next() = pollCache.popCurrent().getOrElse { source.next() }
-		
 		override def skipPolled() = pollCache.reset()
 		
 		override def map[B](f: A => B) = pollCache.popCurrent() match {

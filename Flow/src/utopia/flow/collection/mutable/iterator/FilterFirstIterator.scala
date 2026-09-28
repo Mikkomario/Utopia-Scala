@@ -54,6 +54,7 @@ class FilterFirstIterator[+A](source: Iterator[A])(shouldExclude: A => Boolean) 
 				case None => false
 			}
 	}
+	override def knownSize = if (excluded) source.knownSize else -1
 	
 	override def next(): A = polled match {
 		// Case: Item already polled => Pops the polled item

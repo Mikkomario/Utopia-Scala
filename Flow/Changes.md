@@ -142,6 +142,7 @@
   from **Seq** to **IterableOnce** in **CollectionExtensions**
   - Also optimized/rewrote the implementations
 - `.logWithMessage(...)` in **Try** now receives an optional second parameter `details: Model`
+- Added `knownSize` implementations to various custom **Iterator**s
 - Changed how namespaced **Console** commands are printed/listed
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25

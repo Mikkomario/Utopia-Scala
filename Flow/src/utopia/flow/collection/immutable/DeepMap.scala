@@ -132,7 +132,7 @@ object DeepMap
 }
 
 /**
-  * A map where keys are paths which may contain one or more items
+  * A map where keys are paths that may contain one or more items
   * @author Mikko Hilpinen
   * @since 25.12.2021, v1.14.1
   */
@@ -177,10 +177,12 @@ case class DeepMap[K, +V] private(private val wrapped: Map[K, Either[DeepMap[K, 
 		}
 	}
 	
-	override def size: Int = wrapped.valuesIterator.map {
-		case Right(_) => 1
-		case Left(nested) => nested.size
-	}.sum
+	override def size: Int = wrapped.valuesIterator
+		.map {
+			case Right(_) => 1
+			case Left(nested) => nested.size
+		}
+		.sum
 	
 	@throws[NoSuchElementException]("If there is no value on that path")
 	override def apply(path: Iterable[K]) =

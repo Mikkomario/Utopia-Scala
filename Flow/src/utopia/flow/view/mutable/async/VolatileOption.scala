@@ -89,14 +89,24 @@ class VolatileOption[A](initialValue: Option[A])(implicit log: Logger)
         private val cachedNext = Lazy { value }
         private var isConsumed = false
         
-        override def hasNext = !isConsumed && cachedNext.value.isDefined
         
-        override def next() =
-        {
+        // IMPLEMENTED  -------------
+        
+        override def hasNext = !isConsumed && cachedNext.value.isDefined
+        override def knownSize = {
+            if (isConsumed)
+                0
+            else
+                cachedNext.current match {
+                    case Some(cached) => if (cached.isDefined) 1 else 0
+                    case None => -1
+                }
+        }
+
+        override def next() = {
             if (isConsumed)
                 throw new NoSuchElementException("Called next() twice for OptionIterator")
-            else
-            {
+            else {
                 isConsumed = true
                 cachedNext.value.get
             }

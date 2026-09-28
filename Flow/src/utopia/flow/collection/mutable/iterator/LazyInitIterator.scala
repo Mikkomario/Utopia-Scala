@@ -20,5 +20,10 @@ object LazyInitIterator
 class LazyInitIterator[+A](source: Lazy[Iterator[A]]) extends Iterator[A]
 {
 	override def hasNext = source.value.hasNext
+	override def knownSize = source.current match {
+		case Some(s) => s.knownSize
+		case None => -1
+	}
+	
 	override def next() = source.value.next()
 }

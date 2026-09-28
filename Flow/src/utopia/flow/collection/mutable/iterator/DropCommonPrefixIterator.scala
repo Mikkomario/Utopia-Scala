@@ -50,6 +50,7 @@ class DropCommonPrefixIterator[+A](source: Iterator[A], other: Iterator[_ >: A])
 		else
 			firstDistinct.isDefined || (source.hasNext && !other.hasNext)
 	}
+	override def knownSize = if (firstDistinctConsumed) source.knownSize else -1
 	
 	override def next(): A = {
 		if (firstDistinctConsumed)

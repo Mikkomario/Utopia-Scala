@@ -49,6 +49,15 @@ class FoldingIterator[-A, V](start: V, source: Iterator[A])(f: (V, A) => V) exte
 	// IMPLEMENTED  ----------------------------
 	
 	override def hasNext = !startConsumed || source.hasNext
+	override def knownSize = {
+		val kn = source.knownSize
+		if (kn < 0)
+			-1
+		else if (startConsumed)
+			kn
+		else
+			kn + 1
+	}
 	
 	override def next() = {
 		// Case: Folding source iterator values

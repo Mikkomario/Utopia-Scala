@@ -26,6 +26,15 @@ class WithoutIndexIterator[+A](source: Iterator[A], skippedIndex: Int) extends I
 			source.hasNext
 		}
 	}
+	override def knownSize = {
+		val sourceSize = source.knownSize
+		if (sourceSize < 0 || hasSkipped)
+			sourceSize
+		else if (sourceSize < untilSkip)
+			sourceSize
+		else
+			sourceSize - 1
+	}
 	
 	override def next(): A = {
 		// Case: Already skipped => Delegates

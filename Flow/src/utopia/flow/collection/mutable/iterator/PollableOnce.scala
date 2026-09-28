@@ -47,6 +47,7 @@ class PollableOnce[+A](value: => A) extends Iterator[A]
 	// IMPLEMENTED  --------------------------
 	
 	override def hasNext = !isConsumed
+	override def knownSize = if (_isConsumed) 0 else 1
 	
 	override def next() = get()
 	

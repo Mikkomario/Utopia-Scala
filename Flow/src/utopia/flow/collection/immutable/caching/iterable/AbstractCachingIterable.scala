@@ -76,7 +76,17 @@ abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @unchecked
 	
 	override def size =
 		Some(knownSize).filter { _ >= 0 }.getOrElse { builder.currentSize + AppendingIterator.size }
-	override def knownSize = externallyKnownSize.getOrElse { if (isFullyCached) builder.knownSize else -1 }
+	override def knownSize = externallyKnownSize.getOrElse {
+		builder.sizeIfKnown match {
+			case Some(builderSize) =>
+				if (isFullyCached)
+					builderSize
+				else
+					source.sizeIfKnown.map { builderSize + _ }.getOrElse(-1)
+				
+			case None => -1
+		}
+	}
 	
 	override def sizeCompare(otherSize: Int) = {
 		// Utilizes knownSize, if available
@@ -174,6 +184,8 @@ abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @unchecked
 	private object AppendingIterator extends Iterator[A]
 	{
 		override def hasNext = source.hasNext
+		override def knownSize = source.knownSize
+		
 		override def next() = {
 			val n = source.next()
 			builder += n
@@ -184,9 +196,16 @@ abstract class AbstractCachingIterable[+A, +B <: CompoundingBuilder[A @unchecked
 	// Reads builder items, appends to builder if necessary
 	private class AppendIfNecessaryIterator extends Iterator[A]
 	{
+		// ATTRIBUTES   ---------------------
+		
 		private val builderSource = builder.iterator
 		
+		
+		// IMPLEMENTED  ---------------------
+		
 		override def hasNext = builderSource.hasNext || source.hasNext
+		override def knownSize =
+			builderSource.sizeIfKnown.flatMap { s1 => source.sizeIfKnown.map { s1 + _ } }.getOrElse(-1)
 		
 		override def next() = {
 			// Appends a new item to the builder if would otherwise run out of items

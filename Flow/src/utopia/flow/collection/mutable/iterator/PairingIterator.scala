@@ -94,6 +94,7 @@ class PairingIterator[A](start: => A, source: Iterator[A]) extends Iterator[Pair
 	// IMPLEMENTED  ---------------------------
 	
 	override def hasNext = source.hasNext
+	override def knownSize = source.knownSize
 	
 	override def next() = {
 		val first = nextFirst

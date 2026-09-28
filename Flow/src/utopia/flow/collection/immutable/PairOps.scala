@@ -358,6 +358,7 @@ trait PairOps[+A, +CC[X] <: Iterable[X], +C <: Iterable[A], +P[X] <: CC[X], +Rep
 		// IMPLEMENTED  ----------------------
 		
 		override def hasNext = nextIndex < 2
+		override def knownSize = 1 - nextIndex
 		
 		override def next() = {
 			nextIndex += 1

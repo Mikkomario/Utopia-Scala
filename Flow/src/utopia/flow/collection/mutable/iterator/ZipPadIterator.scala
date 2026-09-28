@@ -58,6 +58,18 @@ class ZipPadIterator[+A, +B](first: Iterator[A], second: Iterator[B], firstPaddi
 	extends Iterator[(A, B)]
 {
 	override def hasNext = first.hasNext || second.hasNext
+	override def knownSize = {
+		val s1 = first.knownSize
+		if (s1 < 0)
+			-1
+		else {
+			val s2 = second.knownSize
+			if (s2 < 0)
+				-1
+			else
+				s1 max s2
+		}
+	}
 	
 	override def next() =
 		first.nextOption().getOrElse(firstPadding) -> second.nextOption().getOrElse(secondPadding)

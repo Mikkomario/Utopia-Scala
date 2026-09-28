@@ -24,7 +24,7 @@ class LimitedLengthIterator[+A](source: Iterator[A], val maxLength: Int) extends
 	def nonConsumed = !isConsumed
 	
 	/**
-	  * @return Maximum number of remaining number of items that can be returned
+	  * @return Maximum number of remaining items that can be returned
 	  */
 	def remainingMaxLength = maxLength - consumeCount
 	
@@ -32,6 +32,17 @@ class LimitedLengthIterator[+A](source: Iterator[A], val maxLength: Int) extends
 	// IMPLEMENTED  ---------------------------
 	
 	override def hasNext = nonConsumed && source.hasNext
+	override def knownSize = {
+		if (isConsumed)
+			0
+		else {
+			val sourceSize = source.knownSize
+			if (sourceSize < 0)
+				-1
+			else
+				sourceSize.min(remainingMaxLength)
+		}
+	}
 	
 	override def next() = {
 		if (isConsumed)

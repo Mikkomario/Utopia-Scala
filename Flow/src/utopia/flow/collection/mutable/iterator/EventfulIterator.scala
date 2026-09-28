@@ -42,6 +42,7 @@ class EventfulIterator[A](initialValue: A, source: Iterator[A])(implicit log: Lo
 			pointer.lock()
 		result
 	}
+	override def knownSize = source.knownSize
 	
 	override def next() = {
 		val n = source.next()
