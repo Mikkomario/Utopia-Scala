@@ -3,7 +3,7 @@ package utopia.flow.util.console
 import utopia.flow.async.process.Breakable
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.tree.ValueTree
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Single}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.StringUtils
@@ -173,11 +173,15 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 					}
 				// Case: Requests a list of commands => Prints the list
 				case None =>
-					val groupedCommands = commandsP.value.valuesIterator.groupMapReduce { _._1 } { _._2 } { _ ++ _ }
+					val groupedCommands = commandsP.value.valuesIterator.groupMapReduce { _._1.headOption } {
+						case (ns, commands) =>
+							val remainder = if (ns.isEmpty) Empty else ns.tail
+							commands.map { remainder -> _ }
+					} { _ ++ _ }
 					groupedCommands.oneOrMany match {
 						case Left((_, commands)) => listCommands(commands, "Available commands")
 						case Right(namespaces) =>
-							namespaces.iterator.map { case (ns, commands) => ns.mkString(":") -> commands }
+							namespaces.iterator.map { case (ns, commands) => ns.mkString -> commands }
 								.toOptimizedSeq.sortBy { _._1 }
 								.foreach { case (namespace, commands) => listCommands(commands, namespace) }
 					}
@@ -318,16 +322,10 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 					}
 					// Checks for duplicate command names and displays those with the namespace included
 					val contentsStr = root.valuesIterator
-						.flatMap { case (ns, commands) => commands.iterator.map { c => (ns, c.name) } }
-						.groupToSeqsBy { _._2 }.iterator
-						.flatMap { case (commandName, versions) =>
-							if (versions.hasSize > 1)
-								versions.iterator.map { case (ns, name) =>
-									s"${ ns.view.drop(lastNamespace.size).mkString(":").appendIfNotEmpty(":") }$name"
-								}
-							// Unique command names are displayed without the namespace
-							else
-								Single(commandName)
+						.flatMap { case (ns, commands) =>
+							val nsStr = ns.view.withoutCommonPrefixWith(lastNamespace)
+								.mkString(":").appendIfNotEmpty(":")
+							commands.iterator.map { c => s"$nsStr${ c.name }" }
 						}
 						.toOptimizedSeq.sorted.mkString(", ")
 					
@@ -418,9 +416,9 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 	
 	/**
 	 * Finds the targeted namespace (node)
-	 * @param commands A tree listing all available commands ana namespaces
+	 * @param commands A tree listing all available commands and namespaces
 	 * @param namespace Targeted namespace
-	 * @return Node which matches the targeted namespace. None if no node matched that namespace.
+	 * @return Node that matches the targeted namespace. None if no node matched that namespace.
 	 */
 	private def targetNamespace(commands: Commands, namespace: Seq[String]): Option[Commands] = {
 		// Option 1: Checks for an absolute namespace match
@@ -479,16 +477,15 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 			println(s"Did you mean ${ namespace.mkString(":").appendIfNotEmpty(":") }${command.nameAndAlias}?") }
 	}
 	
-	private def listCommands(commands: Iterable[Command], header: String) = {
-		println(StringUtils.asciiTableFrom[Command](
-			commands.toOptimizedSeq.sortBy { _.name },
+	private def listCommands(commands: Iterable[(Seq[String], Command)], header: String) =
+		println(StringUtils.asciiTableFrom[(Seq[String], Command)](
+			commands.toOptimizedSeq.sortedWith(Ordering.by { _._1.mkString(":") }, Ordering.by { _._2.name }),
 			Vector(
-				"Name" -> { _.name },
-				"Alias" -> { _.alias },
-				"Arguments" -> { _.argumentsSchema.arguments.iterator.map { _.name }.mkString("\n") },
-				"Description" -> { _.help.splitToLinesIterator(40).mkString("\n") }
+				"Name" -> { c => s"${ c._1.mkString(":").appendIfNotEmpty(":") }${ c._2.name }" },
+				"Alias" -> { _._2.alias },
+				"Arguments" -> { _._2.argumentsSchema.arguments.iterator.map { _.name }.mkString("\n") },
+				"Description" -> { _._2.help.splitToLinesIterator(40).mkString("\n") }
 			),
 			header
 		))
-	}
 }

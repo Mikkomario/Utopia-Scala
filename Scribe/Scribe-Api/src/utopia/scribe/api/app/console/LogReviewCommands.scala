@@ -60,7 +60,6 @@ object LogReviewCommands
 
 /**
  * Provides console commands for reviewing log entries
- *
  * @author Mikko Hilpinen
  * @since 27.08.2025, v1.1
  */

@@ -338,6 +338,28 @@ object CollectionExtensions
 			buildFrom.fromSpecific(coll)(ops.iterator.flatMap { a => f(a).iterator.map { a -> _ } })
 		
 		/**
+		 * @param other Another collection
+		 * @param buildFrom Implicit build-from
+		 * @tparam To Resulting collection type
+		 * @return A copy of this collection without the first n elements shared with 'other'.
+		 */
+		def withoutCommonPrefixWith[To](other: IterableOnce[_ >: iter.A])
+		                               (implicit buildFrom: BuildFrom[Repr, iter.A, To]): To =
+			other.nonEmptyIterator match {
+				case Some(otherIter) =>
+					val iter = ops.iterator
+					// Case: Valid use-case => Lazily removes the common prefix
+					if (iter.hasNext)
+						buildFrom.fromSpecific(coll)(new DropCommonPrefixIterator(iter, otherIter))
+					// Case: Removing prefix from an empty collection => Yields a copy of this collection
+					else
+						buildFrom.fromSpecific(coll)(ops)
+				
+				// Case: No prefix to remove => Yields a copy of this collection
+				case None => buildFrom.fromSpecific(coll)(ops)
+			}
+		
+		/**
 		 * Attempts to perform an operation on the items in this collection,
 		 * but terminates and fails if a failure is encountered.
 		 * @param f A function that receives an item and yields either a success or failure.

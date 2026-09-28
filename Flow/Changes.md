@@ -61,7 +61,7 @@
 - Added **ClosesAfterIdle** that handles automated closing
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 - Parallel mapping now supports custom builders
-- Added **WithoutIndexIterator** and **AppendIfDistinctIterator**
+- Added **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
 ### New methods
 - **ActionQueue**
   - Added `.currentSize`
@@ -83,6 +83,7 @@
   - Added `.isDistinct`
   - Added `.popHead` and `.popIndex(Int)`
   - Added `.groupMapMap(...)`
+  - Added `.dropCommonPrefixWith(IterableOnce)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
   - Added `.mergeOrAppend(...)`
   - Added `.incompleteMapFirstWhere(...)`
@@ -141,6 +142,7 @@
   from **Seq** to **IterableOnce** in **CollectionExtensions**
   - Also optimized/rewrote the implementations
 - `.logWithMessage(...)` in **Try** now receives an optional second parameter `details: Model`
+- Changed how namespaced **Console** commands are printed/listed
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**

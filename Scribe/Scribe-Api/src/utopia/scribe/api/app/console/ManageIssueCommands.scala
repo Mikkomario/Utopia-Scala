@@ -23,7 +23,9 @@ import scala.io.StdIn
 import scala.util.{Failure, Success}
 
 /**
- * Provides commands for managing the currently open issue
+ * Provides commands for managing the currently open issue.
+ * @param openIssueP A pointer that contains the currently opened issue IDs.
+ *                   Acquired from [[LogReviewCommands]]'s openIssueIdPointer.
  * @author Mikko Hilpinen
  * @since 27.08.2025, v1.1
  */
