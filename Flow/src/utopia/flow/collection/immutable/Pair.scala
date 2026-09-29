@@ -369,6 +369,10 @@ case class Pair[+A](first: A, second: A)
 	// IMPLEMENTED  ----------------------
 	
 	override def self = this
+	override def toPair = this
+	
+	override def view = new PairView[A](first, second)
+	
 	override def iterableFactory = OptimizedIndexedSeq
 	
 	override def unary_- = Pair(second, first)
@@ -381,11 +385,6 @@ case class Pair[+A](first: A, second: A)
 		OptimizedIndexedSeq.from(coll)
 	override protected def _newSpecificBuilder: mutable.Builder[A @uncheckedVariance, IndexedSeq[A]] =
 		OptimizedIndexedSeq.newBuilder
-	
-	
-	// IMPLEMENTED  ----------------------
-	
-	override def view = new PairView[A](first, second)
 	
 	override def toString = s"($first, $second)"
 	

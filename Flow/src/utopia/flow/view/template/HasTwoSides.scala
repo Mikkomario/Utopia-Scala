@@ -33,6 +33,10 @@ trait HasTwoSides[+A]
 	  * @return A tuple based on this pair
 	  */
 	def toTuple = first -> second
+	/**
+	 * @return A pair containing the first and the second item of this collection
+	 */
+	def toPair = Pair(first, second)
 	
 	/**
 	  * @return An iterator that returns values in this pair, along with the sides on which those values appear.

@@ -61,7 +61,7 @@
 - Added **ClosesAfterIdle** that handles automated closing
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 - Parallel mapping now supports custom builders
-- Added **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
+- Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
 ### New methods
 - **ActionQueue**
   - Added `.currentSize`
@@ -82,6 +82,8 @@
 - **IterableOnce** (via **CollectionExtensions**)
   - Added `.isDistinct`
   - Added `.popHead` and `.popIndex(Int)`
+  - Added `.divideByIterator(...)`, `.divideWithIterator(...)`, `.flatDivideWithIterator(...)`, `.lazyDivideBy(...)`, 
+    `.lazyDivideWith(...)` and `.lazyFlatDivideWith(...)`
   - Added `.groupMapMap(...)`
   - Added `.dropCommonPrefixWith(IterableOnce)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`

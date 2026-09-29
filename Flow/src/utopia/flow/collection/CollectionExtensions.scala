@@ -859,6 +859,66 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * @param f A function that receives an item from this collection and yields either true or false.
+		 * @return A new divided iterator that contains two sides:
+		 *              1. Left: An iterator that yields items for which 'f' yielded false
+		 *              1. Right: An iterator that yields items for which 'f' yielded true
+		 */
+		def divideByIterator(f: A => Boolean) = DividingIterator.by(i)(f)
+		/**
+		 * @param f A mapping function that receives an item from this collection and
+		 *          yields an item either to the right or to the left.
+		 * @tparam L Type of left map results
+		 * @tparam R Type of right map results
+		 * @tparam C Lowest common type between L and R
+		 * @return A new divided iterator for both the left and the right results
+		 */
+		def divideWithIterator[L <: C, R <: C, C](f: A => Either[L, R]) =
+			DividingIterator[A, L, R, C](i)(f)
+		/**
+		 * @param f A mapping function that receives an item from this collection and
+		 *          yields n items that fall either to the right or to the left.
+		 * @tparam L Type of left map results
+		 * @tparam R Type of right map results
+		 * @tparam C Lowest common type between L and R
+		 * @return A new divided iterator for both the left and the right results
+		 */
+		def flatDivideWithIterator[L <: C, R <: C, C](f: A => IterableOnce[Either[L, R]]) =
+			DividingIterator.flat[A, L, R, C](i)(f)
+		
+		/**
+		 * Lazily divides this collection into two
+		 * @param f A function that receives an item from this collection and yields either true or false.
+		 * @return Two lazily built collections as a pair:
+		 *              1. A collection for all items for which 'f' yields false
+		 *              1. A collection for all items for which 'f' yields true
+		 */
+		def lazyDivideBy(f: A => Boolean) = divideByIterator(f).toPair.map { _.caching }
+		/**
+		 * Lazily divides this collection into two
+		 * @param f A function that receives an item from this collection and yields either a left or right result.
+		 * @tparam L Type of left results
+		 * @tparam R Type of right results
+		 * @return Left results (1) and right results (2), as lazily built collections
+		 */
+		def lazyDivideWith[L, R](f: A => Either[L, R]) = {
+			val iter = divideWithIterator(f)
+			iter.left.caching -> iter.right.caching
+		}
+		/**
+		 * Lazily divides this collection into two
+		 * @param f A function that receives an item from this collection
+		 *          and yields n items that fall either to the left or to the right.
+		 * @tparam L Type of left results
+		 * @tparam R Type of right results
+		 * @return Left results (1) and right results (2), as lazily built collections
+		 */
+		def lazyFlatDivideWith[L, R](f: A => IterableOnce[Either[L, R]]) = {
+			val iter = flatDivideWithIterator(f)
+			iter.left.caching -> iter.right.caching
+		}
+		
+		/**
 		 * @param f A key-mapping function
 		 * @param reduce A function for combining two items mapped to the same key
 		 * @tparam K Type of mapped keys
