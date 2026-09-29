@@ -92,6 +92,7 @@
   - Added `.completion` to parallel mapping output options
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
+  - Added `.emptyOneOrMany()`
 - **Lazy** (object)
   - Added `.expiring`
 - **LockablePointer**

@@ -18,6 +18,7 @@ import utopia.flow.operator.ordering.CombinedOrdering
 import utopia.flow.util.HasSize
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.result.TryExtensions._
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.result.{MayHaveFailed, PossiblyFailingFutures, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
@@ -3432,6 +3433,16 @@ object CollectionExtensions
 		 *         Yields None if this iterator contained more than one item, or no items.
 		 */
 		def only() = i.collectNext(2).only
+		/**
+		 * Checks whether this iterator contains 0, 1, or 2+ items.
+		 * Immediately advances this iterator by 2 in the process.
+		 * @return Returns either:
+		 *         - None: If this iterator is empty
+		 *         - Some(Left(only)): If this iterator only contained a single item
+		 *         - Some(Right(iterator)): If this iterator contained 2 or more items
+		 */
+		def emptyOneOrMany() =
+			i.collectNext(2).emptyOneOrMany.map { _.mapRight { _.iterator ++ i } }
 		
 		/**
 		 * Creates a new iterator that provides access only up to the next 'n' elements of this iterator
