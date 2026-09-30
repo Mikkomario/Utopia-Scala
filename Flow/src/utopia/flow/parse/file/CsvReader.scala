@@ -2,7 +2,6 @@ package utopia.flow.parse.file
 
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.parse.string.Regex
 
 import java.nio.file.Path
 import scala.io.Codec
@@ -17,7 +16,7 @@ object CsvReader
 {
 	// ATTRIBUTES	---------------------
 	
-	private val defaultSeparator = Regex(";").ignoringQuotations
+	private val defaultSeparator = ';'
 	
 	
 	// OTHER    -------------------------
@@ -32,7 +31,7 @@ object CsvReader
 	  * @return Failure if file handling failed. Function result otherwise.
 	  */
 	@deprecated("Please use CsvRows.iterateRaw.path(Path)(...) instead, but notice the different default column-separator", "v2.9")
-	def iterateRawRowsIn[A](path: Path, separator: Regex = defaultSeparator)(f: Iterator[IndexedSeq[String]] => A)
+	def iterateRawRowsIn[A](path: Path, separator: Char = defaultSeparator)(f: Iterator[IndexedSeq[String]] => A)
 	                       (implicit codec: Codec) =
 		CsvRows.separatedBy(separator).iterateRaw.path(path)(f)
 	
@@ -48,7 +47,7 @@ object CsvReader
 	  * @return Failure if file handling failed. function result otherwise.
 	  */
 	@deprecated("Please use CsvRows.iterate.path(Path)(...) instead, but notice the different default column-separator", "v2.9")
-	def iterateLinesIn[A](path: Path, separator: Regex = defaultSeparator, ignoreEmptyStringValues: Boolean = false)
+	def iterateLinesIn[A](path: Path, separator: Char = defaultSeparator, ignoreEmptyStringValues: Boolean = false)
 	                     (f: Iterator[Model] => A)(implicit codec: Codec, jsonParser: JsonParser) =
 		CsvRows.separatedBy(separator).withoutEmptyValuesIf(ignoreEmptyStringValues).iterate.path(path)(f)
 	
@@ -61,7 +60,7 @@ object CsvReader
 	  * @param codec     Implicit encoding context
 	  * @return Failure if file handling failed. Success otherwise.
 	  */
-	def foreachLine(path: Path, separator: Regex = defaultSeparator, ignoreEmptyStringValues: Boolean = false)
+	def foreachLine(path: Path, separator: Char = defaultSeparator, ignoreEmptyStringValues: Boolean = false)
 	               (f: Model => Unit)(implicit codec: Codec, jsonParser: JsonParser) =
 		iterateLinesIn(path, separator, ignoreEmptyStringValues) { _.foreach(f) }
 }

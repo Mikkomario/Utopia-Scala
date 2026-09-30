@@ -56,12 +56,11 @@ object PollingIterator
 		override def skipPolled() = pollCache.reset()
 		
 		override def map[B](f: A => B) = pollCache.popCurrent() match {
-			case Some(polled) => PollableOnce(polled).map(f) ++ source.map(f)
+			case Some(polled) => (Iterator.single(polled) ++ source).map(f)
 			case None => source.map(f)
 		}
-		override def flatMap[B](f: A => IterableOnce[B]) = pollCache.popCurrent() match
-		{
-			case Some(polled) => PollableOnce(polled).flatMap(f) ++ source.flatMap(f)
+		override def flatMap[B](f: A => IterableOnce[B]) = pollCache.popCurrent() match {
+			case Some(polled) => (Iterator.single(polled) ++ source).flatMap(f)
 			case None => source.flatMap(f)
 		}
 	}
@@ -117,8 +116,7 @@ trait PollingIterator[+A] extends Iterator[A]
 	  * @return The next item that will satisfy the specified condition. This will also be returned by .pollOption
 	  *         and .nextOption()
 	  */
-	def pollToNextWhere(condition: A => Boolean) =
-	{
+	def pollToNextWhere(condition: A => Boolean) = {
 		while (pollOption.exists { item => !condition(item) }) {
 			next()
 		}

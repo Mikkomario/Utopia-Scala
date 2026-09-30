@@ -34,7 +34,10 @@
     - The new version accepts different generic type parameters
 - Replaced all use-cases of **PrintWriter** with **BufferedPrintWriter** that has more suitable error-handling logic.
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
-- **CsvReader** now requires access to an implicit **JsonParser** and parses individual values with it
+- Rewrote CSV-parsing logic
+  - Separators are now characters instead **Regex**es
+  - **CsvReader** (which is now deprecated) now requires access to an implicit **JsonParser** 
+    and parses individual values with it
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
