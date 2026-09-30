@@ -1,0 +1,4 @@
+h1,header 2, another header
+1, 2, value 3
+v4, "value, containing a comma",
+v6, value containing ""escaped quotes"", ' v6

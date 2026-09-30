@@ -14,12 +14,19 @@ import scala.io.Codec
 import scala.util.Try
 
 /**
-  * Used for parsing JSON strings into objects
+  * Used for parsing JSON strings into objects.
+ *
+ * Note: This implementation is pretty old and very inefficient.
+ * It is highly recommended to use another JSON parser, for example JsonBunny from the BunnyMunch module.
+ *
   * @author Mikko Hilpinen
   * @since 22.7.2019, v1.6+
   */
+// FIXME: If given an input string containing quotations, discards the content before the first quote
 object JsonReader extends JsonParser
 {
+	private val starterMarkers = Vector("\"", "[", "{")
+	
 	val defaultEncoding = Codec.UTF8
 	
 	/**
@@ -58,34 +65,37 @@ object JsonReader extends JsonParser
 	  * @return Parsed value or failure if json was invalid
 	  */
 	def apply(json: String) = {
-		Try {
-			// First finds the indices of each meaningful json marker
-			val indices = allIndicesOf(Set(Quote.marker, Separator.marker, ArrayStart.marker, ArrayEnd.marker,
-				ObjectStart.marker, ObjectEnd.marker), json)
-			
-			// Finds quoted areas and filters other markers into non-quoted areas
-			val (quotes, nonQuotes) = separateQuotes(indices(Quote.marker), json.length)
-			val arrayRanges = openCloseRangesFrom(onlyIndicesInRanges(indices(ArrayStart.marker), nonQuotes),
-				onlyIndicesInRanges(indices(ArrayEnd.marker), nonQuotes))
-			val objectRanges = openCloseRangesFrom(onlyIndicesInRanges(indices(ObjectStart.marker), nonQuotes),
-				onlyIndicesInRanges(indices(ObjectEnd.marker), nonQuotes))
-			
-			val eventRanges = (quotes.map { _ -> Quote } ++ arrayRanges.map { _ -> ArrayStart } ++
-				objectRanges.map { _ -> ObjectStart }).sortBy { _._1.start }
-			
-			// Finds the first event, which determines the type of parsed item
-			if (eventRanges.isEmpty)
-			{
-				// If there are no events, parses a simple value
-				parseNonStringValueFrom(json)
+		if (starterMarkers.exists(json.startsWith))
+			Try {
+				// First finds the indices of each meaningful json marker
+				val indices = allIndicesOf(Set(Quote.marker, Separator.marker, ArrayStart.marker, ArrayEnd.marker,
+					ObjectStart.marker, ObjectEnd.marker), json)
+				
+				// Finds quoted areas and filters other markers into non-quoted areas
+				val (quotes, nonQuotes) = separateQuotes(indices(Quote.marker), json.length)
+				val arrayRanges = openCloseRangesFrom(onlyIndicesInRanges(indices(ArrayStart.marker), nonQuotes),
+					onlyIndicesInRanges(indices(ArrayEnd.marker), nonQuotes))
+				val objectRanges = openCloseRangesFrom(onlyIndicesInRanges(indices(ObjectStart.marker), nonQuotes),
+					onlyIndicesInRanges(indices(ObjectEnd.marker), nonQuotes))
+				
+				val eventRanges = (quotes.map { _ -> Quote } ++ arrayRanges.map { _ -> ArrayStart } ++
+					objectRanges.map { _ -> ObjectStart }).sortBy { _._1.start }
+				
+				// Finds the first event, which determines the type of parsed item
+				if (eventRanges.isEmpty)
+				{
+					// If there are no events, parses a simple value
+					parseNonStringValueFrom(json)
+				}
+				else
+				{
+					val (firstRange, firstEvent) = eventRanges.head
+					parse(firstEvent, firstRange, Data(json, eventRanges,
+						onlyIndicesInRanges(indices(Separator.marker), nonQuotes)), State(0, 1)).parsed
+				}
 			}
-			else
-			{
-				val (firstRange, firstEvent) = eventRanges.head
-				parse(firstEvent, firstRange, Data(json, eventRanges,
-					onlyIndicesInRanges(indices(Separator.marker), nonQuotes)), State(0, 1)).parsed
-			}
-		}
+		else
+			Try { parseNonStringValueFrom(json) }
 	}
 	
 	// Event count should be increased for this event already when calling this method

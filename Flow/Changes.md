@@ -34,6 +34,7 @@
     - The new version accepts different generic type parameters
 - Replaced all use-cases of **PrintWriter** with **BufferedPrintWriter** that has more suitable error-handling logic.
 - **Logger** implementations now require a different `.apply(...)` variant that include details as a **Model**
+- **CsvReader** now requires access to an implicit **JsonParser** and parses individual values with it
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
@@ -45,6 +46,10 @@
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
 ### Deprecations
+- Deprecated **CsvReader** in favor of the new **CsvRows** object
+  - The new interface supports a wider range of use-cases
+  - When migrating, notice that **CsvRows** uses comma as the default column-separator, 
+    whereas **CsvReader** uses semicolon by default.
 - Deprecated **Guild**, **Mine**, **Miner**, **Explorer**, **Entourage** and **ExcavationStatus**
   - These will be removed in a future release
 - Multiple renames in **FromModelFactory**
@@ -55,11 +60,14 @@
 ### Bugfixes
 - `Regex.whitespace` would previously match to newline characters, also. 
   The new version uses `\h`, matching only horizontal whitespaces.
+- **JsonReader** would previously omit content within strings that contained quotations
 ### New features
 - Added **MappingFunnel**, which can perform parallel mapping similar to **ActionQueue**, 
   except supporting variable cost / "width".
 - Added **ClosesAfterIdle** that handles automated closing
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
+- Added **CsvRows**, a new CSV-parsing interface
+  - This interface also supports multiline input (although it must be enabled separately)
 - Parallel mapping now supports custom builders
 - Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
 ### New methods
