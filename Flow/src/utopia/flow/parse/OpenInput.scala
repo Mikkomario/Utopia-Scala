@@ -1,7 +1,7 @@
 package utopia.flow.parse
 
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
-import utopia.flow.parse.OpenInput.MappedInput
+import utopia.flow.parse.OpenInput.{MappedInput, TryMappedInput}
 
 import java.io.{File, InputStream}
 import java.nio.charset.Charset
@@ -19,6 +19,15 @@ object OpenInput
 			delegate.stream(stream)(map andThen f)
 		
 		override def file[A](file: File)(f: O => A)(implicit codec: Codec): Try[A] = delegate.file(file)(map andThen f)
+	}
+	
+	private class TryMappedInput[I, O](delegate: OpenInput[I], map: I => Try[O]) extends OpenInput[O]
+	{
+		override def stream[C](stream: InputStream)(f: O => C)(implicit codec: Codec): Try[C] =
+			delegate.stream(stream) { map(_).map(f) }.flatten
+
+		override def file[A](file: File)(f: O => A)(implicit codec: Codec): Try[A] =
+			delegate.file(file) { map(_).map(f) }.flatten
 	}
 }
 
@@ -167,6 +176,13 @@ trait OpenInput[+I]
 	 * @return A copy of this interface that presents mapped input
 	 */
 	def map[I2](f: I => I2): OpenInput[I2] = new MappedInput(this, f)
+	/**
+	 * @param f A mapping function applied to this interface's input.
+	 *          May yield a failure.
+	 * @tparam I2 Type of mapped input
+	 * @return A copy of this interface that presents mapped input, when successful
+	 */
+	def tryMap[I2](f: I => Try[I2]): OpenInput[I2] = new TryMappedInput(this, f)
 	
 	/**
 	 * @param f A function that receives opened input data and buffers it
