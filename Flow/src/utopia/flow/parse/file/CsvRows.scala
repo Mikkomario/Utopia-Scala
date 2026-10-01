@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.collection.mutable.builder.BuilderExtensions._
 import utopia.flow.generic.model.immutable.{Constant, Model}
 import utopia.flow.parse.json.JsonParser
-import utopia.flow.parse.string.{FromSource, OpenSource, Regex}
+import utopia.flow.parse.string.{OpenSource, Regex}
 import utopia.flow.util.StringExtensions._
 
 import scala.io.Source
@@ -86,7 +86,7 @@ object CsvRows
 		 * @param jsonParser Implicit JSON parser used for parsing individual column values
 		 * @return An interface for buffering all rows
 		 */
-		def from(implicit jsonParser: JsonParser) = new CsvRowsFrom(separator, ignoreEmptyStringValues)
+		def from(implicit jsonParser: JsonParser) = iterate.buffered
 		/**
 		 * @param jsonParser Implicit JSON parser used for parsing individual column values
 		 * @return An interface for iterating through rows
@@ -141,20 +141,6 @@ object CsvRows
 				case None => processor(Iterator.empty)
 			}
 		}
-	}
-	
-	class CsvRowsFrom(separator: Char, ignoreEmptyStringValues: Boolean)(implicit jsonParser: JsonParser)
-		extends FromSource[Iterator[Model], IndexedSeq[Model]]
-	{
-		// ATTRIBUTES   --------------------
-		
-		override protected val open: OpenSource[Iterator[Model]] =
-			new IterateCsvRowsFrom(separator, ignoreEmptyStringValues)
-		
-		
-		// IMPLEMENTED  -------------------
-		
-		override protected def buffer(input: Iterator[Model]): IndexedSeq[Model] = input.toOptimizedSeq
 	}
 	
 	private class CsvRowsIterator(source: Iterator[Char], separator: Char) extends Iterator[IndexedSeq[String]]

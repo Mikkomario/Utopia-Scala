@@ -55,6 +55,7 @@
     whereas **CsvReader** uses semicolon by default.
 - Deprecated **Guild**, **Mine**, **Miner**, **Explorer**, **Entourage** and **ExcavationStatus**
   - These will be removed in a future release
+- Deprecated **FromSource**, replacing it with **BufferedInput**
 - Multiple renames in **FromModelFactory**
   - Renamed `.fromPath(Path)` to `.fromJsonFile(Path)`
   - Renamed `.mapParseResult(...)` to `.mapResult(...)` and `.flatMapParseResult(...)` to `.tryMapResult(...)`
@@ -71,6 +72,9 @@
 - Added **ExpiringUnusedCache**, a cache which eventually removes unused elements
 - Added **CsvRows**, a new CSV-parsing interface
   - This interface also supports multiline input (although it must be enabled separately)
+- Added **ReadInput**, **OpenInput** and **BufferInput**, 
+  which are more rich and more general interfaces for the existing **OpenSource** and **FromSource**
+  - Also added **OpenInputWrapper**
 - Parallel mapping now supports custom builders
 - Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
 ### New methods
@@ -161,6 +165,7 @@
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
+- Rewrote **StringFrom** to no longer depend on **Source** (except for the `.take(Int)` implementation)
 - Internal refactoring within **ConversionHandler**
 
 ## v2.8 - 15.03.2026

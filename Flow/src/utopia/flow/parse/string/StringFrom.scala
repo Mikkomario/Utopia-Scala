@@ -1,18 +1,33 @@
 package utopia.flow.parse.string
 
-import scala.io.Source
+import utopia.flow.parse.{BufferInput, ReadInput}
+import utopia.flow.parse.StreamExtensions._
+
+import java.io.{ByteArrayOutputStream, File, InputStream}
+import java.nio.file.{Files, Path}
+import scala.io.{Codec, Source}
+import scala.util.Try
 
 /**
   * This object contains some utility methods for producing / reading strings
   * @author Mikko Hilpinen
   * @since 1.11.2019, v1.6.1+
   */
-object StringFrom extends FromSource[String, String]
+object StringFrom extends ReadInput[String]
 {
 	// IMPLEMENTED  ------------------------
 	
-	override protected def open: OpenSource[String] = Open
-	override protected def buffer(input: String): String = input
+	override def stream(stream: InputStream)(implicit codec: Codec): Try[String] = {
+		Try {
+			// Buffers the input into a byte array and uses it to form the string
+			val buffer = new ByteArrayOutputStream(8192)
+			stream.writeTo(buffer, 8192)
+			new String(buffer.toByteArray, codec.charSet)
+		}
+	}
+	
+	override def file(file: File)(implicit codec: Codec): Try[String] = _path(file.toPath)
+	override def path(path: Path)(implicit codec: Codec) = _path(path)
 	
 	
 	// OTHER    ----------------------------
@@ -21,26 +36,15 @@ object StringFrom extends FromSource[String, String]
 	 * @param maxCharacters Maximum characters to read
 	 * @return A copy of this interface only reading strings up to 'maxCharacters' length
 	 */
-	def take(maxCharacters: Int): FromSource[String, String] = new TakeStringFrom(maxCharacters)
+	def take(maxCharacters: Int) = source { _.take(maxCharacters) }
 	
+	/**
+	 * @param f A function used for extracting a string from a [[Source]]
+	 * @return An interface for reading extracted strings from various sources
+	 */
+	def source(f: Source => Iterator[Char]) =
+		BufferInput(OpenSource) { source => f(source).mkString }
 	
-	// NESTED   ----------------------------
-	
-	private object Open extends OpenSource[String]
-	{
-		override protected def presentSource[A](source: Source, processor: String => A): A = processor(source.mkString)
-	}
-	
-	private class TakeStringFrom(maxCharacters: Int) extends FromSource[String, String]
-	{
-		override protected val open: OpenSource[String] = new OpenPart(maxCharacters)
-		
-		override protected def buffer(input: String): String = input
-	}
-	
-	private class OpenPart(maxCharacters: Int) extends OpenSource[String]
-	{
-		override protected def presentSource[A](source: Source, processor: String => A): A =
-			processor(source.take(maxCharacters).mkString)
-	}
+	private def _path(path: Path)(implicit codec: Codec) =
+		Try { new String(Files.readAllBytes(path), codec.charSet) }
 }

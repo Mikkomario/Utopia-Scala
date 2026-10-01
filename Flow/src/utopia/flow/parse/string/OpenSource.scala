@@ -1,19 +1,23 @@
 package utopia.flow.parse.string
 
 import utopia.flow.parse.AutoClose._
+import utopia.flow.parse.OpenInput
 
 import java.io.{File, InputStream}
-import java.nio.charset.Charset
-import java.nio.file.Path
 import scala.io.{Codec, Source}
 import scala.util.Try
+
+object OpenSource extends OpenSource[Source]
+{
+	override protected def presentSource[A](source: Source, processor: Source => A): A = processor(source)
+}
 
 /**
   * Common trait for interfaces that read data from a [[Source]] instance.
   * @author Mikko Hilpinen
   * @since 1.11.2019, v2.7
   */
-trait OpenSource[+I]
+trait OpenSource[+I] extends OpenInput[I]
 {
 	// ABSTRACT ----------------------------
 	
@@ -25,83 +29,15 @@ trait OpenSource[+I]
 	protected def presentSource[A](source: Source, processor: I => A): A
 	
 	
-	// OTHER    ----------------------------
+	// IMPLEMENTED  ------------------------
 	
-	/**
-	  * Iterates over lines read from a stream.
-	  * @param stream   An input stream
-	  * @param encoding Character encoding used (Eg. "UTF-8")
-	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @return Parse function result
-	  */
-	def stream[A](stream: InputStream, encoding: String)(f: I => A) =
-		_apply(Source.fromInputStream(stream, encoding))(f)
-	/**
-	  * Iterates over lines read from a stream.
-	  * @param stream An input stream
-	  * @param f      Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @param codec  Character encoding used (implicit)
-	  * @return Parse function result
-	  */
-	def stream[A](stream: InputStream)(f: I => A)(implicit codec: Codec) =
+	override def stream[A](stream: InputStream)(f: I => A)(implicit codec: Codec) =
 		_apply(Source.fromInputStream(stream)(codec))(f)
-	/**
-	  * Iterates over lines read from a stream.
-	  * @param stream   An input stream
-	  * @param encoding Character encoding used (Eg. UTF-8)
-	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @return Parse function result
-	  */
-	def stream[A](stream: InputStream, encoding: Charset)(f: I => A): Try[A] = this.stream(stream)(f)(Codec(encoding))
+		
+	override def file[A](file: File)(f: I => A)(implicit codec: Codec) = _apply(Source.fromFile(file)(codec))(f)
 	
-	/**
-	  * Iterates over lines read from a file.
-	  * @param file     An input file
-	  * @param encoding Character encoding used (Eg. "UTF-8")
-	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @return Parse function result
-	  */
-	def file[A](file: File, encoding: String)(f: I => A) = _apply(Source.fromFile(file, encoding))(f)
-	/**
-	  * Iterates over lines read from a file.
-	  * @param file  An input file
-	  * @param f     Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @param codec Character encoding used (implicit)
-	  * @return Parse function result
-	  */
-	def file[A](file: File)(f: I => A)(implicit codec: Codec) = _apply(Source.fromFile(file)(codec))(f)
-	/**
-	  * Iterates over lines read from a file.
-	  * @param file     An input file
-	  * @param encoding Character encoding used (Eg. UTF-8)
-	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @return Parse function result
-	  */
-	def file[A](file: File, encoding: Charset)(f: I => A): Try[A] = this.file(file)(f)(Codec(encoding))
-	/**
-	  * Iterates over lines read from a file.
-	  * @param path     Path to target file
-	  * @param encoding Character encoding used (Eg. "UTF-8")
-	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @return Parse function result
-	  */
-	def path[A](path: Path, encoding: String)(f: I => A) = file(path.toFile, encoding)(f)
-	/**
-	  * Iterates over lines read from a file.
-	  * @param path  Path to target file
-	  * @param f     Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @param codec Character encoding used (implicit)
-	  * @return Parse function result
-	  */
-	def path[A](path: Path)(f: I => A)(implicit codec: Codec) = file(path.toFile)(f)(codec)
-	/**
-	  * Iterates over lines read from a file.
-	  * @param path     Path to target file
-	  * @param encoding Character encoding used (Eg. UTF-8)
-	  * @param f        Parsing function. Please note that the accepted iterator won't work outside this function.
-	  * @return Parse function result
-	  */
-	def path[A](path: Path, encoding: Charset)(f: I => A): Try[A] = file(path.toFile)(f)(Codec(encoding))
+	
+	// OTHER    ----------------------------
 	
 	private def _apply[A](open: => Source)(process: I => A) = Try { open.consume { presentSource(_, process) } }
 }
