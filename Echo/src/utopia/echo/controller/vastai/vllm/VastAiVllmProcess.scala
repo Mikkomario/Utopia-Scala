@@ -177,6 +177,7 @@ object VastAiVllmProcess
  * @since 26.02.2026, v1.5
  */
 // TODO: Add separate timeout for individual status phases (i.e. if keeps at same status for >X minutes, fail)
+// TODO: Add an option to stop the instance instead of destroying it on process completion
 class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
                         gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
                         getLocalPort: => Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
@@ -264,8 +265,7 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 		hurryFlag =>
 			// Requests for offers
 			val requiredDiskSpace = modelSize + additionalReservedDisk
-			vastAiClient.send(GetOffers(requiredDiskSpace, selectOffer.filters, selectOffer.ordering, selectOffer.limit,
-					selectOffer.offerType))
+			vastAiClient.send(GetOffers.forSelector(selectOffer, requiredDiskSpace))
 				.tryFlatMap { offers =>
 					// Won't include the currently used machine IDs
 					val usedMachineIds = takenMachineIdsP.value

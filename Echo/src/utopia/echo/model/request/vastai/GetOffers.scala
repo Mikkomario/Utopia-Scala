@@ -6,6 +6,7 @@ import utopia.annex.controller.ApiClient
 import utopia.annex.model.request.ApiRequest
 import utopia.annex.model.response.RequestResult
 import utopia.disciple.model.request.RequestBody
+import utopia.echo.controller.vastai.SelectOffer
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.offer.OfferType.OnDemand
@@ -20,6 +21,20 @@ import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
 import scala.concurrent.Future
+
+object GetOffers
+{
+	/**
+	 * Creates a request suitable for a specific [[SelectOffer]] implementation.
+	 * @param selector Select offer logic to use.
+	 * @param allocatedStorage Amount of allocated storage for the instance. Can't be adjusted later. Default = 8 GB.
+	 * @param deprecationView A view that contains true if this request should be retracted (default = always false)
+	 * @return A new request for listing available offers
+	 */
+	def forSelector(selector: SelectOffer, allocatedStorage: ByteCount = 8.gb,
+	                deprecationView: View[Boolean] = AlwaysFalse) =
+		apply(allocatedStorage, selector.filters, selector.ordering, selector.limit, selector.offerType, deprecationView)
+}
 
 /**
  * Used for querying for available offers
