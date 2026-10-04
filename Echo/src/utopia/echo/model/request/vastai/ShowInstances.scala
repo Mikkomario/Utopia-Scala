@@ -23,7 +23,7 @@ object ShowInstances extends GetRequest[Seq[VastAiInstance]]
 	override val deprecated: Boolean = false
 	
 	
-	// IMPLEMENTED  -----------------------
+	// IMPLEMENTED  ------------------------
 	
 	override def send(prepared: ApiClient.PreparedRequest): Future[RequestResult[Seq[VastAiInstance]]] =
 		prepared.parseValue { body =>

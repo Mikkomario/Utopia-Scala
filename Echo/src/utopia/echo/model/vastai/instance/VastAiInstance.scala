@@ -66,7 +66,7 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
  * @param clientRunTime How long this client has been on
  * @param hostRunTime How long this host has been active
  * @param creditBalance User's credit balance in $, if available
- * @param uptime Up-time for this instance
+ * @param uptime Uptime for this instance
  * @param label Custom label/name given to this instance
  * @param template Information about the template used to create this instance
  * @param cpuUtilization Ratio of CPU resources currently utilized (0,1)
