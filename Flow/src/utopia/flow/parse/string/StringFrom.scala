@@ -6,7 +6,7 @@ import utopia.flow.parse.StreamExtensions._
 import java.io.{ByteArrayOutputStream, File, InputStream}
 import java.nio.file.{Files, Path}
 import scala.io.{Codec, Source}
-import scala.util.Try
+import scala.util.{Success, Try}
 
 /**
   * This object contains some utility methods for producing / reading strings
@@ -28,6 +28,9 @@ object StringFrom extends ReadInput[String]
 	
 	override def file(file: File)(implicit codec: Codec): Try[String] = _path(file.toPath)
 	override def path(path: Path)(implicit codec: Codec) = _path(path)
+	
+	override def string(string: String): Try[String] = Success(string)
+	override def lines(lines: IterableOnce[String]): Try[String] = Success(lines.iterator.mkString("\n"))
 	
 	
 	// OTHER    ----------------------------

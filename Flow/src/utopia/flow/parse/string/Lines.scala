@@ -1,6 +1,7 @@
 package utopia.flow.parse.string
 
 import scala.io.Source
+import scala.util.Try
 
 /**
  * Provides interfaces for parsing and for iterating over lines read from data sources
@@ -31,5 +32,8 @@ object Lines
 	{
 		override protected def presentSource[A](source: Source, processor: Iterator[String] => A): A =
 			processor(source.getLines())
+		
+		override def string[A](string: String)(f: Iterator[String] => A): Try[A] = Try { f(string.linesIterator) }
+		override def lines[A](lines: IterableOnce[String])(f: Iterator[String] => A): Try[A] = Try { f(lines.iterator) }
 	}
 }

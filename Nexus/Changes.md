@@ -12,6 +12,8 @@ Built with Scala v2.13.18
   - Renamed `.handleArrayPost(...)` to `.withArrayBody(...)`
   - Renamed `.handlePossibleValuePost(...)` to `.withPossiblyEmptyBody(...)`
 ### New methods
+- **StreamOrReader**
+  - Added `.bufferAsNdJson` and `.bufferUsing(ReadInput)`
 - **WriteResponseBody** (object)
   - Added `.ndJson(...)`
 ### Other changes

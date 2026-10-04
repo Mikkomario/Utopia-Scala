@@ -16,6 +16,9 @@ object ReadInput
 	{
 		override def stream(stream: InputStream)(implicit codec: Codec): Try[B] = delegate.stream(stream).map(f)
 		override def file(file: File)(implicit codec: Codec): Try[B] = delegate.file(file).map(f)
+		
+		override def string(string: String): Try[B] = delegate.string(string).map(f)
+		override def lines(lines: IterableOnce[String]): Try[B] = delegate.lines(lines).map(f)
 	}
 }
 
@@ -43,6 +46,17 @@ trait ReadInput[+A]
 	 * @return Processed result. Failure if file-reading failed.
 	 */
 	def file(file: File)(implicit codec: Codec): Try[A]
+	
+	/**
+	 * @param string A string
+	 * @return Parsed string contents, or a failure
+	 */
+	def string(string: String): Try[A]
+	/**
+	 * @param lines Lines to read/parse
+	 * @return Parsed string contents, or a failure
+	 */
+	def lines(lines: IterableOnce[String]): Try[A]
 	
 	
 	// OTHER	--------------------------

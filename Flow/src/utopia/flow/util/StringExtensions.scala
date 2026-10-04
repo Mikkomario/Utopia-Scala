@@ -17,7 +17,12 @@ import utopia.flow.view.mutable.caching.ResettableLazy
  */
 object StringExtensions
 {
+	// ATTRIBUTES   --------------------
+	
 	private val space = ' '
+	
+	
+	// EXTENSIONS   ---------------------
 	
 	/**
 	 * Extends standard scala string
@@ -1093,6 +1098,20 @@ object StringExtensions
 		}
 	}
 	
+	implicit class RichLines(val i: IterableOnce[String]) extends AnyVal
+	{
+		/**
+		 * @return An iterator that yields all characters in these lines, including the newline characters between lines
+		 */
+		def toCharsIterator: Iterator[Char] = i.nonEmptyIterator match {
+			case Some(linesIter) => new LinesToCharsIterator(linesIter)
+			case None => Iterator.empty
+		}
+	}
+	
+	
+	// NESTED   --------------------------
+	
 	private class StringIndexOfIterator(string: String, searched: String, ignoreCase: Boolean) extends Iterator[Int]
 	{
 		// ATTRIBUTES	------------------
@@ -1117,6 +1136,24 @@ object StringExtensions
 		override def next() = nextIndex.pop() match {
 			case Some(index) => index
 			case None => throw new NoSuchElementException("Iterator.next() called after running out of items")
+		}
+	}
+	
+	// NB: Assumes non-empty input
+	private class LinesToCharsIterator(lines: Iterator[String]) extends Iterator[Char]
+	{
+		// ATTRIBUTES   ---------------------
+		
+		private var currentLineIter = lines.next().iterator
+		
+		
+		// IMPLEMENTED  ---------------------
+		
+		override def hasNext: Boolean = currentLineIter.hasNext || lines.hasNext
+		
+		override def next(): Char = currentLineIter.nextOption().getOrElse {
+			currentLineIter = lines.next().iterator
+			'\n'
 		}
 	}
 }

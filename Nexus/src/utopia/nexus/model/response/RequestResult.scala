@@ -113,6 +113,9 @@ object RequestResult
 		def mapContent(f: Mutate[ResponseContent]): ContentResult = withContent(f(content))
 	}
 	
+	/**
+	 * An empty request result with status 204
+	 */
 	case object Empty extends Empty
 	{
 		// ATTRIBUTES   -----------------

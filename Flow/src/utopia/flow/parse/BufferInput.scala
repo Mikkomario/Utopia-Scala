@@ -4,6 +4,7 @@ import utopia.flow.collection.immutable.OptimizedIndexedSeq
 
 import java.io.{File, InputStream}
 import scala.io.Codec
+import scala.util.Try
 
 object BufferInput
 {
@@ -62,4 +63,7 @@ trait BufferInput[I, +A] extends ReadInput[A]
 	
 	override def stream(stream: InputStream)(implicit codec: Codec) = open.stream(stream)(buffer)
 	override def file(file: File)(implicit codec: Codec) = open.file(file)(buffer)
+	
+	override def string(string: String): Try[A] = open.string(string)(buffer)
+	override def lines(lines: IterableOnce[String]): Try[A] = open.lines(lines)(buffer)
 }

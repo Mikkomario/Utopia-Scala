@@ -2,7 +2,7 @@ package utopia.nexus.model.request
 
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.generic.model.immutable.Value
-import utopia.flow.parse.EmptyInputStream
+import utopia.flow.parse.{EmptyInputStream, ReadInput}
 import utopia.flow.parse.json.JsonParser
 import utopia.flow.parse.string.{Lines, StringFrom}
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
@@ -283,21 +283,21 @@ trait StreamOrReader extends AutoCloseable
 	def charset: Charset
 	
 	/**
-	 * @throws IllegalStateException If a buffered reader has already been acquired using this interface,
+	 * @throws java.lang.IllegalStateException If a buffered reader has already been acquired using this interface,
 	 *                               or if [[close]] has already been called.
 	 * @return The accessible input stream
 	 */
 	@throws[IllegalStateException]("If a BufferedReader has already been acquired")
 	def stream: InputStream
 	/**
-	 * @throws IllegalStateException If already closed
+	 * @throws java.lang.IllegalStateException If already closed
 	 * @return A buffered reader for reading the streamed content
 	 */
 	@throws[IllegalStateException]("If already closed")
 	def reader: BufferedReader
 	
 	/**
-	 * @throws IllegalStateException If already closed
+	 * @throws java.lang.IllegalStateException If already closed
 	 * @return If a buffered reader has been initialized, yields that as a Right.
 	 *         Otherwise, if the stream (only) has been acquired, yields that as a Left.
 	 *         Otherwise, may yield either format, depending on the implementation.
@@ -338,12 +338,30 @@ trait StreamOrReader extends AutoCloseable
 	def bufferAsJson(implicit jsonParser: JsonParser, log: Logger) =
 		buffer(jsonParser.apply) { lines => jsonParser(lines.mkString("\n")) }
 	/**
+	 * Buffers this stream's contents into a collection of [[utopia.flow.generic.model.immutable.Value]]s,
+	 * assuming that the streamed content is newline-delimited JSON.
+	 * @param jsonParser JSON parser used for processing the streamed JSON
+	 * @return Parsed values. Failure if parsing failed on any row, or if this interface had already closed.
+	 */
+	def bufferAsNdJson(implicit jsonParser: JsonParser, log: Logger) =
+		buffer { stream => jsonParser.ndJson(stream) } { lines => lines.map(jsonParser.apply).toTry }
+	/**
 	 * Buffers this stream's contents into XML (assumes that the content is XML)
 	 * @return The XML element parsed from the stream.
 	 *         Failure if parsing failed or if this interface had already closed.
 	 */
 	def bufferToXml(implicit log: Logger) =
 		buffer { XmlReader.parseStream(_, charset) } { lines => XmlReader.parseString(lines.mkString("\n")) }
+	/**
+	 * Buffers this stream's contents using an input reader
+	 * @param reader Input reader that can handle both streamed and reader contents
+	 * @param log Implicit logging implementation to use
+	 * @param codec Implicit encoding expected on streamed input
+	 * @tparam A Type of parsed contents, if successful
+	 * @return Parsed stream contents, or a failure.
+	 */
+	def bufferUsing[A](reader: ReadInput[A])(implicit log: Logger, codec: Codec) =
+		buffer[A] { reader.stream(_) }(reader.lines)
 	/**
 	 * Buffers the contents of this stream.
 	 *

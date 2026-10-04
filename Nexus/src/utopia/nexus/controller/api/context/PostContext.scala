@@ -53,8 +53,8 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	// ATTRIBUTES   ------------------------
 	
 	/**
-	 * Parses the request body into a value, caching the result.
-	 * The value is initialized lazily, on-demand.
+	 * Parses the request body into a value, based on the request's content type and caching the result.
+	 * This value is initialized lazily, on-demand.
 	 *
 	 * Contains either:
 	 *      - Right: The parsed request body as a [[Value]]
@@ -188,7 +188,8 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	 *          Yields the request result to send to the client.
 	 * @return Result of 'f', or a failure if body-parsing failed
 	 */
-	def withArrayBody(f: Seq[Value] => RequestResult) = withPossiblyEmptyBody { v: Value => f(v.getVector) }
+	def withArrayBody(f: Seq[Value] => RequestResult) =
+		withPossiblyEmptyBody { v: Value => f(v.getVector) }
 	@deprecated("Renamed to .withArrayBody(...)", "v2.0.1")
 	def handleArrayPost(f: Seq[Value] => RequestResult) = withArrayBody(f)
 	

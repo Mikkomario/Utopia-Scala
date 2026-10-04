@@ -2,14 +2,25 @@ package utopia.flow.parse.string
 
 import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.OpenInput
+import utopia.flow.util.StringExtensions._
 
 import java.io.{File, InputStream}
+import scala.collection.View
 import scala.io.{Codec, Source}
 import scala.util.Try
 
 object OpenSource extends OpenSource[Source]
 {
 	override protected def presentSource[A](source: Source, processor: Source => A): A = processor(source)
+	
+	override def string[A](string: String)(f: Source => A): Try[A] = Try { f(Source.fromString(string)) }
+	override def lines[A](lines: IterableOnce[String])(f: Source => A): Try[A] = {
+		val chars = lines match {
+			case i: Iterable[String] => View.fromIteratorProvider { () => i.toCharsIterator }
+			case i => lines.toCharsIterator.toVector
+		}
+		Try { f(Source.fromIterable(chars)) }
+	}
 }
 
 /**

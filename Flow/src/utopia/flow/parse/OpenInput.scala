@@ -17,17 +17,22 @@ object OpenInput
 	{
 		override def stream[C](stream: InputStream)(f: O => C)(implicit codec: Codec): Try[C] =
 			delegate.stream(stream)(map andThen f)
-		
 		override def file[A](file: File)(f: O => A)(implicit codec: Codec): Try[A] = delegate.file(file)(map andThen f)
+		
+		override def string[A](string: String)(f: O => A): Try[A] = delegate.string(string)(map andThen f)
+		override def lines[A](lines: IterableOnce[String])(f: O => A): Try[A] = delegate.lines(lines)(map andThen f)
 	}
 	
 	private class TryMappedInput[I, O](delegate: OpenInput[I], map: I => Try[O]) extends OpenInput[O]
 	{
 		override def stream[C](stream: InputStream)(f: O => C)(implicit codec: Codec): Try[C] =
 			delegate.stream(stream) { map(_).map(f) }.flatten
-
 		override def file[A](file: File)(f: O => A)(implicit codec: Codec): Try[A] =
 			delegate.file(file) { map(_).map(f) }.flatten
+		
+		override def string[A](string: String)(f: O => A): Try[A] = delegate.string(string) { map(_).map(f) }.flatten
+		override def lines[A](lines: IterableOnce[String])(f: O => A): Try[A] =
+			delegate.lines(lines) { map(_).map(f) }.flatten
 	}
 }
 
@@ -62,6 +67,21 @@ trait OpenInput[+I]
 	 */
 	def file[A](file: File)(f: I => A)(implicit codec: Codec): Try[A]
 	
+	/**
+	 * @param string A string
+	 * @param f Parsing function that receives the prepared input.
+	 * @tparam A Type of 'f' results
+	 * @return Result of 'f'. Failure if 'f' threw an exception.
+	 */
+	def string[A](string: String)(f: I => A): Try[A]
+	/**
+	 * @param lines A sequence of lines
+	 * @param f Parsing function that receives the prepared input.
+	 * @tparam A Type of 'f' results
+	 * @return Result of 'f'. Failure if 'f' threw an exception.
+	 */
+	def lines[A](lines: IterableOnce[String])(f: I => A): Try[A]
+	
 	
 	// COMPUTED ----------------------------
 	
@@ -71,7 +91,7 @@ trait OpenInput[+I]
 	 * @return Interface for reading buffered contents from this input
 	 */
 	def buffered[A](implicit ev: I <:< IterableOnce[A]): ReadInput[IndexedSeq[A]] =
-		bufferUsing {OptimizedIndexedSeq.from(_)}
+		bufferUsing { OptimizedIndexedSeq.from(_) }
 	
 	
 	// OTHER    ----------------------------
@@ -96,6 +116,13 @@ trait OpenInput[+I]
 	 * @return Result of 'f'. Failure if file-reading failed or if 'f' threw an exception.
 	 */
 	def apply[A](path: Path)(f: I => A)(implicit codec: Codec) = this.path[A](path)(f)
+	/**
+	 * @param string A string
+	 * @param f Parsing function that receives the prepared input.
+	 * @tparam A Type of 'f' results
+	 * @return Result of 'f'. Failure if 'f' threw an exception.
+	 */
+	def apply[A](string: String)(f: I => A): Try[A] = this.string[A](string)(f)
 	
 	/**
 	 * Provides access to stream contents

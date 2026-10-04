@@ -202,10 +202,11 @@ case class Request[+A](method: Method, body: A, url: String, path: Seq[String] =
 		bufferedJsonValue.map(withBody)
 	
 	/**
-	 * Buffers this requests body into a [[Value]].
+	 * Buffers this request's body into a [[Value]].
 	 *
 	 * This operation is supported for the following content types:
 	 *      - `*`/json => Contents will be parsed as JSON
+	 *      - `*`/ndjson => Contents will be parsed as JSON into a Vector type value, assuming one object/value per line
 	 *      - `*`/xml => Contents will be parsed into an [[utopia.flow.parse.xml.XmlElement]],
 	 *                   and then converted into a [[Model]], then into a Value.
 	 *      - text/`*` => Contents will be parsed into a String and wrapped into a Value
@@ -213,10 +214,11 @@ case class Request[+A](method: Method, body: A, url: String, path: Seq[String] =
 	 *
 	 * @param jsonParser JSON parser used for interpreting JSON content, if applicable
 	 * @param log Implicit logging implementation used for recording failures during stream-closing
-	 * @return This request's body buffered into a Value.
+	 * @return This request's body buffered into a [[Value]].
 	 *         Failure if buffering failed, or if the content type was not supported.
 	 */
-	def bufferedValue(implicit jsonParser: JsonParser, log: Logger, ev: A <:< StreamOrReader) = {
+	def bufferedValue(implicit jsonParser: JsonParser, log: Logger, ev: A <:< StreamOrReader): Try[Value] = {
+		// Case: Empty body => Yields an empty value
 		if (isEmpty || value.isEmpty.isCertainlyTrue)
 			Success(Value.empty)
 		else
@@ -224,6 +226,7 @@ case class Request[+A](method: Method, body: A, url: String, path: Seq[String] =
 				case Some(contentType) =>
 					contentType.subType.toLowerCase match {
 						case "json" => body.bufferAsJson
+						case "ndjson" => body.bufferAsNdJson.map { values => values: Value }
 						case "xml" => body.bufferToXml.map { _.toSimpleModel.toValue }
 						case _ =>
 							if (contentType.category == Text)
@@ -231,7 +234,7 @@ case class Request[+A](method: Method, body: A, url: String, path: Seq[String] =
 							else
 								Failure(new UnsupportedOperationException(s"Can't buffer $contentType into a Value"))
 					}
-				case None =>  body.bufferAsJson
+				case None => body.bufferAsJson
 			}
 	}
 	/**

@@ -10,6 +10,7 @@ import utopia.flow.util.StringExtensions._
 
 import scala.io.Source
 import scala.language.implicitConversions
+import scala.util.Try
 
 /**
  * An interface for parsing CSV rows from files, streams, etc.
@@ -113,19 +114,37 @@ object CsvRows
 	{
 		override protected def presentSource[A](source: Source, processor: Iterator[IndexedSeq[String]] => A): A =
 			processor(new CsvRowsIterator(source, separator))
+		
+		override def string[A](string: String)(f: Iterator[IndexedSeq[String]] => A): Try[A] =
+			Try { f(new CsvRowsIterator(string.iterator, separator)) }
+		
+		override def lines[A](lines: IterableOnce[String])(f: Iterator[IndexedSeq[String]] => A): Try[A] =
+			Try { f(new CsvRowsIterator(lines.toCharsIterator, separator)) }
 	}
 	
 	class IterateCsvRowsFrom(separator: Char, ignoreEmptyStringValues: Boolean)(implicit jsonParser: JsonParser)
 		extends OpenSource[Iterator[Model]]
 	{
-		override protected def presentSource[A](source: Source, processor: Iterator[Model] => A): A = {
+		// IMPLEMENTED  -----------------------
+		
+		override protected def presentSource[A](source: Source, processor: Iterator[Model] => A): A =
+			_apply(source)(processor)
+		
+		override def string[A](string: String)(f: Iterator[Model] => A): Try[A] = Try { _apply(string.iterator)(f) }
+		override def lines[A](lines: IterableOnce[String])(f: Iterator[Model] => A): Try[A] =
+			Try { _apply(lines.toCharsIterator)(f) }
+		
+		
+		// OTHER    -------------------------
+		
+		private def _apply[A](charsIter: Iterator[Char])(f: Iterator[Model] => A) = {
 			// Splits and cleans the line entries
-			val rowsIter = new CsvRowsIterator(source, separator)
+			val rowsIter = new CsvRowsIterator(charsIter, separator)
 			// Looks for the header row
 			rowsIter.nextOption() match {
 				case Some(headers) =>
 					// Converts the remaining rows into models using the discovered headers
-					processor(rowsIter.map { line =>
+					f(rowsIter.map { line =>
 						val namedValuesIter = {
 							if (ignoreEmptyStringValues)
 								headers.iterator.zip(line).filter { _._2.nonEmpty }
@@ -137,8 +156,8 @@ object CsvRows
 								.map { case (header, value) => Constant(header, jsonParser.valueOf(value)) }
 								.toOptimizedSeq)
 					})
-				// Case: Empty document
-				case None => processor(Iterator.empty)
+					// Case: Empty document
+				case None => f(Iterator.empty)
 			}
 		}
 	}

@@ -24,7 +24,9 @@ trait OpenInputWrapper[+I] extends OpenInput[I]
 	
 	override def stream[A](stream: InputStream)(f: I => A)(implicit codec: Codec): Try[A] =
 		wrapped.stream(stream)(f)(codec)
-	
 	override def file[A](file: File)(f: I => A)(implicit codec: Codec): Try[A] =
 		wrapped.file(file)(f)(codec)
+	
+	override def string[A](string: String)(f: I => A): Try[A] = wrapped.string(string)(f)
+	override def lines[A](lines: IterableOnce[String])(f: I => A): Try[A] = wrapped.lines(lines)(f)
 }

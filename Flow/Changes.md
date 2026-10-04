@@ -75,6 +75,7 @@
 - Added **ReadInput**, **OpenInput** and **BufferInput**, 
   which are more rich and more general interfaces for the existing **OpenSource** and **FromSource**
   - Also added **OpenInputWrapper**
+- Added NDJSON parsing support to **JsonParser**
 - Parallel mapping now supports custom builders
 - Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
 ### New methods
@@ -141,6 +142,7 @@
   - Added `.inserted(String, Int)`
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
   - Added `.notSurroundedWith(String, Boolean)`
+  - Added `.toCharsIterator` to **IterableOnce** instances of type **String**
 - **TryCatch**
   - Object
     - Added `.unit`
