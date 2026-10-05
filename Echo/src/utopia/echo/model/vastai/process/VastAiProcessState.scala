@@ -112,23 +112,32 @@ object VastAiProcessState
 		override def withInstanceStatus(status: InstanceStatus): VastAiProcessState = Running(status)
 	}
 	/**
-	 * Status while the instance is being destroyed
+	 * Status while the instance is being stopped or destroyed
 	 * @param instanceStatus Current instance status, if available
+	 * @param destroying Whether the instance is being destroyed.
+	 *                   False if only stopping the instance.
 	 */
-	case class Stopping(instanceStatus: Option[InstanceStatus]) extends VastAiProcessState
+	case class Stopping(instanceStatus: Option[InstanceStatus], destroying: Boolean) extends VastAiProcessState
 	{
+		// ATTRIBUTES   ----------------------
+		
 		override val wrapped: ProcessState = ProcessState.Stopping
 		override val shouldBeUsed: Boolean = false
 		override val mayBecomeUsable: Boolean = false
 		
+		
+		// IMPLEMENTED  ----------------------
+		
 		override def isUsable: Boolean = instanceStatus.exists { _.instanceIsUsable }
 		
-		override def withInstanceStatus(status: InstanceStatus): VastAiProcessState = Stopping(Some(status))
+		override def withInstanceStatus(status: InstanceStatus): VastAiProcessState =
+			copy(instanceStatus = Some(status))
 	}
 	/**
-	 * Status after the instance has been successfully destroyed
+	 * Status after the instance has been successfully stopped or destroyed
+	 * @param destroyed Whether the instance was destroyed. False if the instance was only stopped.
 	 */
-	case object Terminated extends VastAiProcessState
+	case class Terminated(destroyed: Boolean) extends VastAiProcessState
 	{
 		override val wrapped: ProcessState = ProcessState.Stopped
 		override val instanceStatus: Option[InstanceStatus] = None
@@ -144,17 +153,22 @@ object VastAiProcessState
 	 * @param cause Cause of this failure
 	 * @param previousStatus Status immediately before this failure
 	 * @param remainingInstanceId ID of an instance that couldn't be terminated.
-	 *                            Presence of this indicates that costs may be incurring in the background.
+	 *                            The presence of this indicates that costs may be incurring in the background.
 	 *                            None if no active instance remains.
 	 */
 	case class Failed(cause: Throwable, previousStatus: VastAiProcessState, remainingInstanceId: Option[Int] = None)
 		extends VastAiProcessState
 	{
+		// ATTRIBUTES   ----------------------
+		
 		override val wrapped: ProcessState = ProcessState.Completed
 		override val instanceStatus: Option[InstanceStatus] = None
 		override val isUsable: Boolean = false
 		override val shouldBeUsed: Boolean = false
 		override val mayBecomeUsable: Boolean = false
+		
+		
+		// IMPLEMENTED  ----------------------
 		
 		override def withInstanceStatus(status: InstanceStatus): VastAiProcessState = this
 	}

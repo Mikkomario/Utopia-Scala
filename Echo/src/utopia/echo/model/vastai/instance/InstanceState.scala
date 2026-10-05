@@ -15,7 +15,7 @@ sealed trait InstanceState
 	def keys: Seq[String]
 	
 	/**
-	 * @return Whether the instance is (technically) usable in this state
+	 * @return Whether the instance is (technically) usable in this state.
 	 */
 	def instanceIsUsable: Boolean
 	/**
@@ -23,6 +23,10 @@ sealed trait InstanceState
 	 *         False if the instance is unusable OR if the instance may become unusable in the near future.
 	 */
 	def instanceShouldBeUsed: Boolean
+	/**
+	 * @return Whether the instance may be re-acquired in this state.
+	 */
+	def instanceMayBeReused: Boolean
 }
 
 object InstanceState
@@ -57,6 +61,7 @@ object InstanceState
 		override val keys: Seq[String] = Vector("loading", "creating", "")
 		override val instanceIsUsable: Boolean = false
 		override val instanceShouldBeUsed: Boolean = false
+		override val instanceMayBeReused: Boolean = true
 	}
 	/**
 	 * State when the instance is usable
@@ -66,6 +71,7 @@ object InstanceState
 		override val keys: Seq[String] = Vector("running", "open", "connect")
 		override val instanceIsUsable: Boolean = true
 		override val instanceShouldBeUsed: Boolean = true
+		override val instanceMayBeReused: Boolean = true
 	}
 	/**
 	 * State once the instance has been stopped / deactivated. Still preserves data & incurs costs.
@@ -75,6 +81,7 @@ object InstanceState
 		override val keys: Seq[String] = Pair("stopped", "inactive")
 		override val instanceIsUsable: Boolean = false
 		override val instanceShouldBeUsed: Boolean = false
+		override val instanceMayBeReused: Boolean = true
 	}
 	
 	/**
@@ -85,6 +92,7 @@ object InstanceState
 		override val keys: Seq[String] = Pair("offline", "connecting")
 		override val instanceIsUsable: Boolean = false
 		override val instanceShouldBeUsed: Boolean = false
+		override val instanceMayBeReused: Boolean = false
 	}
 	
 	/**
@@ -95,6 +103,7 @@ object InstanceState
 		override val keys: Seq[String] = Vector("scheduling", "rebooting", "recycling")
 		override val instanceIsUsable: Boolean = true
 		override val instanceShouldBeUsed: Boolean = false
+		override val instanceMayBeReused: Boolean = false
 	}
 	
 	/**
@@ -103,8 +112,10 @@ object InstanceState
 	 */
 	case class Unknown(status: String) extends InstanceState
 	{
-		override def keys: Seq[String] = Single(status)
 		override val instanceIsUsable: Boolean = true
 		override val instanceShouldBeUsed: Boolean = false
+		override val instanceMayBeReused: Boolean = false
+		
+		override def keys: Seq[String] = Single(status)
 	}
 }

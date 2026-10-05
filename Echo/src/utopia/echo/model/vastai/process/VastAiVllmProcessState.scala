@@ -4,15 +4,12 @@ import utopia.annex.controller.LockingRequestQueue
 import utopia.echo.model.response.openai.OpenAiModelInfo
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading}
-import utopia.echo.model.vastai.instance.{InstanceState, VastAiInstance}
 import utopia.echo.model.vastai.instance.offer.Offer
-import utopia.echo.model.vastai.process.ApiHostingResult.Disconnected
+import utopia.echo.model.vastai.instance.{InstanceState, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, ApiSetup, InstanceAcquisition, Stopping}
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.util.StringExtensions._
-
-import scala.util.Failure
 
 /**
  * An enumeration for different states of an LLM-hosting Vast AI process
@@ -293,33 +290,41 @@ object VastAiVllmProcessState
 		def withRequestsPending(pending: Int) = copy(requestsPending = pending)
 	}
 	/**
-	 * State at which the Vast AI instance (if one was acquired) is being destroyed.
+	 * State at which the Vast AI instance (if one was acquired) is being stopped or destroyed.
 	 * @param apiStatus Result of the API-hosting attempts
+	 * @param instance The instance that's being stopped or destroyed. None if no instance was acquired.
+	 * @param destroying Whether the instance is being destroyed. False if it's only being stopped.
 	 */
-	case class DestroyingInstance(apiStatus: ApiHostingResult) extends VastAiVllmProcessState
+	case class StoppingInstance(apiStatus: ApiHostingResult, instance: Option[VastAiInstance], destroying: Boolean)
+		extends VastAiVllmProcessState
 	{
 		override val phase: VastAiVllmProcessPhase = Stopping
 		override val isUsable: Boolean = false
-		override val availableInstance: Option[VastAiInstance] = None
+		override val availableInstance: Option[VastAiInstance] = if (destroying) None else instance
 		
-		override def toString = s"destroying: $apiStatus"
+		override def toString = s"${ if (destroying) "destroying" else "stopping" }: $apiStatus"
 		
-		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
+		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = copy(instance = Some(instance))
 	}
 	/**
-	 * State at which the
+	 * State at which the underlying Vast AI instance has been destroyed, stopped, or failed to be destroyed.
 	 * @param apiStatus Result of the API-hosting attempts
 	 * @param finalInstanceProcessState Final state of the utilized VastAiProcess (normally either Terminated or Failed)
+	 * @param instance The last acquired state of the rented Vast AI instance. None if no instance was acquired.
+	 * @param destroyed Whether the instance was properly destroyed.
+	 *                  False if only stopped, or if failed to destroy or stop the instance
+	 *                  (in which case the instance might still be active).
 	 */
-	case class Stopped(apiStatus: ApiHostingResult, finalInstanceProcessState: VastAiProcessState)
+	case class Stopped(apiStatus: ApiHostingResult, finalInstanceProcessState: VastAiProcessState,
+	                   instance: Option[VastAiInstance], destroyed: Boolean)
 		extends VastAiVllmProcessState
 	{
 		override val phase: VastAiVllmProcessPhase = VastAiVllmProcessPhase.Stopped
 		override val isUsable: Boolean = false
-		override val availableInstance: Option[VastAiInstance] = None
+		override val availableInstance: Option[VastAiInstance] = if (destroyed) None else instance
 		
 		override def toString = s"stopped: $apiStatus => $finalInstanceProcessState"
 		
-		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = this
+		override def atInstanceState(instance: VastAiInstance): VastAiVllmProcessState = copy(instance = Some(instance))
 	}
 }

@@ -6,8 +6,8 @@
 - Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
 - **TokenUsage** now extends **ModelConvertible**
 - **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
-- Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances, but manages 
-  the amount of processed tokens more carefully.
+- Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances but manages 
+  the number of processed tokens more carefully.
   - The constructor is now different, because of this
   - The return value of `.status` is also different
   - Accepted process recorder is also different
@@ -21,6 +21,7 @@
 - Vast AI process classes now require implicit **Scheduler** access
 ### New features
 - Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**
+- Vast AI instances can now be stopped instead of destroyed and may be reused automatically
 ### New methods
 - **StatelessBufferedReplyGeneratorLike**
   - Added `.mapExpectedReplySize(...)` and `.mapExpectedThinkSize(...)`

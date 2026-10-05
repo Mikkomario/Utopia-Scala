@@ -23,9 +23,9 @@ object MachineCost extends FromModelFactoryWithSchema[MachineCost]
 /**
  * Contains information about a machine's rental cost, in $/h (unless otherwise stated)
  * @param total Total cost in $/h. Already includes:
- *                  - Base cost
- *                  - Storage cost
- *                  - VRAM cost
+ *              - Base cost
+ *              - Storage cost
+ *              - VRAM cost
  * @param base Base cost in $/h
  * @param storagePerGbPerMonth Storage cost in $/GB/month
  * @param vramPerMega VRAM cost in $/MB/h

@@ -3,7 +3,7 @@ package utopia.echo.controller.vastai
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.client.VastAiApiClient
-import utopia.echo.model.request.vastai.{DestroyInstance, ShowInstance}
+import utopia.echo.model.request.vastai.{DestroyInstance, ShowInstance, StopOrStartInstance}
 import utopia.echo.model.vastai.instance.{LiveInstance, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiProcessState
 import utopia.echo.model.vastai.process.VastAiProcessState._
@@ -21,7 +21,7 @@ import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.Pointer
 import utopia.flow.view.mutable.async.Volatile
-import utopia.flow.view.mutable.eventful.AssignableOnce
+import utopia.flow.view.mutable.eventful.{AssignableOnce, LockableFlag}
 import utopia.flow.view.template.eventful.{Changing, Flag}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -37,11 +37,15 @@ object VastAiProcess
 	 * @param maxConsecutiveStatusCheckFailures Maximum number of consecutive GET instance request failures,
 	 *                                          the instance is automatically destroyed.
 	 *                                          Default = None = No limit on request failures.
-	 *  * @param debugLogger Logging implementation for performing debug logging (optional)
+	 * @param debugLogger Logging implementation for performing debug logging (optional)
 	 * @param acquireInstance A function called when this process starts.
 	 *                        Accepts a flag that is set to true if stop() is called for this process.
 	 *                        Acquires an instance (ID) to use.
 	 *                        May yield a failure, in which case this process terminates in state [[Failed]].
+	 * @param shouldDestroy A function that determines whether a live instance should be destroyed.
+	 *                      Should yield false in situations where the instance should only be stopped instead.
+	 *                      Notice that stopped instances still incur costs.
+	 *                      Default = always yield true = always destroy.
 	 * @param exc Implicit execution context
 	 * @param scheduler Implicit scheduler for timed events
 	 * @param log Implicit logging implementation
@@ -50,9 +54,10 @@ object VastAiProcess
 	 */
 	def apply(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveStatusCheckFailures: Option[Int] = None,
 	          debugLogger: Option[KeptOpenWriter] = None)
-	         (acquireInstance: Flag => Future[Try[Int]])
+	         (acquireInstance: Flag => Future[Try[Int]])(shouldDestroy: VastAiInstance => Boolean = { _ => true })
 	         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, client: VastAiApiClient) =
-		new VastAiProcess(statusUpdateInterval, maxConsecutiveStatusCheckFailures, debugLogger)(acquireInstance)
+		new VastAiProcess(statusUpdateInterval, maxConsecutiveStatusCheckFailures, debugLogger)(acquireInstance)(
+			shouldDestroy)
 }
 
 /**
@@ -64,16 +69,19 @@ object VastAiProcess
  *                                          Default = None = No limit on request failures.
  * @param debugLogger Logging implementation for performing debug logging (optional)
  * @param acquireInstance A function called when this process starts.
- *                        Accepts a flag that is set to true if stop() is called for this process.
+ *                        Accepts a flag that is set to true if [[stop]] is called for this process.
  *                        Yields the ID of the instance to use.
  *                        May yield a failure, in which case this process terminates in state [[Failed]].
+ * @param shouldDestroy A function that determines whether a live instance should be destroyed.
+ *                      Should yield false in situations where the instance should only be stopped instead.
+ *                      Notice that stopped instances still incur costs.
+ *                      Default = always yield true = always destroy.
  * @author Mikko Hilpinen
  * @since 25.02.2026, v1.5
  */
-// TODO: Add support for stopping the instance instead of destroying it
 class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveStatusCheckFailures: Option[Int] = None,
                     debugLogger: Option[KeptOpenWriter] = None)
-                   (acquireInstance: Flag => Future[Try[Int]])
+                   (acquireInstance: Flag => Future[Try[Int]])(shouldDestroy: VastAiInstance => Boolean = { _ => true })
                    (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, client: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
 {
@@ -112,6 +120,13 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	 */
 	lazy val liveInstanceFuture =
 		instancePointerFuture.mapSuccess { new LiveInstance(_, detailedStatePointer, startTime) }
+		
+	private val _destroyedFlag = LockableFlag()
+	/**
+	 * A flag that's set once/if the rented instance is destroyed.
+	 * Stops changing once set, or if the instance is stopped instead of destroyed.
+	 */
+	val destroyedFlag = _destroyedFlag.view
 	
 	
 	// INITIAL CODE -------------------------
@@ -126,6 +141,11 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	 *         None if no instance is or was managed.
 	 */
 	def instanceId = instanceIdFutureP.value.flatMap { _.currentResult.flatMap { _.toOption } }
+	/**
+	 * @return The latest Vast AI instance state.
+	 *         None if no instance has been acquired at this point.
+	 */
+	def instance = instancePointerP.value.flatMap { _.toOption.map { _.value } }
 	
 	/**
 	 * @return The current detailed state of this process
@@ -145,15 +165,20 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 				debugLog("Instance selected")
 				// Prepares to terminate the contract once this process completes or is requested to stop,
 				// or if the instance becomes inaccessible
-				val terminationStartPromise = Promise[Future[RequestResult[_]]]()
+				val terminationStartPromise = Promise[(Boolean, Future[RequestResult[_]])]()
 				def terminationRequested = terminationStartPromise.isCompleted
-				def terminate(): Unit = this.synchronized {
-					if (!terminationRequested) {
-						debugLog("Terminating the Vast AI process")
-						terminationStartPromise.success(client.send(DestroyInstance(instanceId)))
-						_stateP.update { previous => Stopping(previous.instanceStatus) }
+				def terminate(instanceState: => Option[VastAiInstance] = None, forceKill: Boolean = false): Unit =
+					this.synchronized {
+						if (!terminationRequested) {
+							val destroys = forceKill || instanceState.orElse(instance).forall(shouldDestroy)
+							debugLog(s"Terminating the Vast AI process and ${
+								if (destroys) "destroying" else "stopping" } the instance")
+							val resultFuture = client.send(
+								if (destroys) DestroyInstance(instanceId) else StopOrStartInstance(instanceId).stop)
+							terminationStartPromise.success(destroys -> resultFuture)
+							_stateP.update { previous => Stopping(previous.instanceStatus, destroying = destroys) }
+						}
 					}
-				}
 				val terminator = ChangeListener[Boolean] { e =>
 					if (e.newValue) {
 						terminate()
@@ -163,9 +188,9 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 						Continue
 				}
 				
-				// Case: Already requested to stop => Destroys the instance immediately
+				// Case: Already requested to stop => Destroys or stops the instance immediately
 				if (shouldHurry) {
-					terminate()
+					terminate(forceKill = true)
 					instancePointerP.setOne(Failure(
 						new IllegalStateException("Requested to stop before the instance was acquired")))
 				}
@@ -183,44 +208,59 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 								debugLog("Initial instance version loaded")
 								val instanceP = Volatile.lockable(instance)
 								instancePointerP.setOne(Success(instanceP.readOnly))
-								_stateP.value = {
+								_stateP.update { previousState =>
 									if (terminationRequested)
-										Stopping(Some(instance.status))
+										previousState.withInstanceStatus(instance.status)
 									else
 										Running(instance.status)
 								}
 								// Once monitoring completes, locks the instance pointer
 								debugLog("Starts monitoring the instance status")
-								monitorInstance(instanceId, instanceP)(terminate).onComplete { result =>
-									instanceP.lock()
-									result.logWithMessage("Unexpected failure during the monitoring process")
-								}
+								monitorInstance(instanceId, instanceP) {
+									() => terminate(instanceState = Some(instanceP.value), forceKill = true) }
+									.onComplete { result =>
+										instanceP.lock()
+										result.logWithMessage("Unexpected failure during the monitoring process")
+									}
 							
 							// Case: Failed to acquire the initial instance => Proceeds to destroy the instance
 							case failure: RequestFailure =>
 								debugLog("Failed to acquire the initial instance version")
 								instancePointerP.setOne(failure.toFailure)
-								terminate()
+								terminate(forceKill = true)
 						}
 				}
 				
 				// Waits for the contract to terminate
-				debugLog("Waiting until terminated")
-				terminationStartPromise.future.flatten.waitForResult() match {
-					case _: Response.Success[_] =>
-						debugLog("Terminated")
-						_stateP.value = Terminated
-					case failure: RequestFailure =>
-						debugLog("Termination failed")
-						_stateP.update { previousState => Failed(failure.cause, previousState, Some(instanceId)) }
+				debugLog("Waiting until terminated...")
+				terminationStartPromise.future.waitFor() match {
+					case Success((destroying, terminationFuture)) =>
+						debugLog("Termination initiated. Waiting for completion...")
+						terminationFuture.waitForResult() match {
+							case _: Response.Success[_] =>
+								debugLog("Terminated")
+								_stateP.value = Terminated(destroyed = destroying)
+								_destroyedFlag.set()
+								
+							case failure: RequestFailure =>
+								debugLog("Termination failed")
+								_stateP.update { previousState => Failed(failure.cause, previousState, Some(instanceId)) }
+						}
+					case Failure(error) =>
+						log(error, "Unexpected failure while waiting for instance termination")
+						debugLog(s"Interrupted before termination: ${ error.getMessage }")
+						_stateP.update { previousState => Failed(error, previousState, Some(instanceId)) }
 				}
+				// Finalizes the state
 				hurryFlag.removeListener(terminator)
 				_stateP.lock()
+				_destroyedFlag.lock()
 			
 			// Case: Renting failed => Completes immediately
 			case Failure(error) =>
 				_stateP.value = Failed(error, Starting)
 				instancePointerP.setOne(Failure(error))
+				_destroyedFlag.lock()
 		}
 	}
 	

@@ -1,16 +1,18 @@
 package utopia.echo.controller.vastai.vllm
 
 import utopia.annex.controller.{LockingRequestQueue, RequestQueue}
+import utopia.annex.model.response.{RequestFailure, Response}
 import utopia.annex.util.RequestResultExtensions._
 import utopia.disciple.controller.Gateway
 import utopia.disciple.model.request.Timeout
 import utopia.echo.controller.client.{LlmServiceClient, VastAiApiClient}
+import utopia.echo.controller.vastai.InstanceReuseLogic.NeverReuse
 import utopia.echo.controller.vastai.vllm.VastAiVllmProcess.{defaultGateway, takenMachineIdsP, unsupportedStatuses}
-import utopia.echo.controller.vastai.{SelectOffer, SshExecutor, VastAiProcess}
+import utopia.echo.controller.vastai.{InstanceReuseLogic, SelectOffer, SshExecutor, VastAiProcess}
 import utopia.echo.model.enumeration.ServiceState
 import utopia.echo.model.enumeration.ServiceState.NotInstalled
 import utopia.echo.model.request.openai.ListOpenAiModels
-import utopia.echo.model.request.vastai.{AcceptOffer, AttachSshKey, GetOffers, GetSshKeys}
+import utopia.echo.model.request.vastai._
 import utopia.echo.model.response.openai.OpenAiModelInfo
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.unit.ByteCount
@@ -21,7 +23,7 @@ import utopia.echo.model.vastai.instance.offer.RunType.DirectSsh
 import utopia.echo.model.vastai.instance.{InstanceStatus, NewInstanceFoundation, SshConnection, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.NotStarted
 import utopia.echo.model.vastai.process.VastAiVllmProcessState._
-import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiVllmProcessRecord, VastAiVllmProcessState}
+import utopia.echo.model.vastai.process.{ApiHostingResult, VastAiProcessState, VastAiVllmProcessRecord, VastAiVllmProcessState}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.TryFuture
 import utopia.flow.async.context.Scheduler
@@ -29,6 +31,8 @@ import utopia.flow.async.process.ShutdownReaction.SkipDelay
 import utopia.flow.async.process.{Delay, LoopingProcess, Process, Wait}
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
+import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.parse.string.StringFrom
@@ -81,6 +85,8 @@ object VastAiVllmProcess
 	 * @param modelSize Size of the used model. Used for calculating the reserved disk space.
 	 *                  If various model sizes are used, specify the largest.
 	 * @param additionalReservedDisk Additional disk space to reserve, beyond the model size. Default = 5 GB.
+	 * @param instanceReuseLogic Logic applied for reusing already rented Vast AI instances.
+	 *                           Default = never reuse instances.
 	 * @param gateway [[Gateway]] instance to use for connecting to the rented instance.
 	 *                Default = new Gateway with 4 max connections.
 	 *                Note: The used Gateway instance determines the generated request queue's width.
@@ -115,20 +121,34 @@ object VastAiVllmProcess
 	 *                          1. Maximum context size applied or applicable
 	 *                          1. Name of the model to start vLLM with.
 	 *                             Optional if vLLM is started automatically by the image / template.
+	 * @param shouldDestroy A function that determines whether a live instance should be destroyed.
+	 *                      Should yield false in situations where the instance should only be stopped instead.
+	 *                      Notice that stopped instances still incur costs.
+	 *
+	 *                      Receives two parameters:
+	 *                      1. Last state of the Vast AI instance in question
+	 *                      1. Whether the API was successfully hosted. False if the API was not hosted yet.
+	 *
+	 *                      Never called in situations where the instance is unstable or disconnected,
+	 *                      or where the API became unresponsive (indicating a low-quality instance).
+	 *
+	 *                      Default = always yield true = always destroy.
 	 * @return A new process instance
 	 */
 	def apply(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
-	          gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
-	          localPort: Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
-	          maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
+	          instanceReuseLogic: InstanceReuseLogic = NeverReuse, gateway: => Gateway = defaultGateway,
+	          installScriptPath: Option[Path] = None, localPort: Int = 8000, remotePort: Int = 8000,
+	          maxGpuUtil: Double = 0.9, maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
 	          setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
 	          noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
 	          instanceLabel: String = "", debugLogger: Option[KeptOpenWriter] = None)
 	         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
+	         (shouldDestroy: (VastAiInstance, Boolean) => Boolean = { (_, _) => true })
 	         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, client: VastAiApiClient) =
-		new VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk, gateway, installScriptPath, localPort,
-			remotePort, maxGpuUtil, maxParallelRequests, extraStartupArgs, setupTimeout, recoveryTimeout,
-			noResponseTimeout, statusCheckInterval, instanceLabel, debugLogger)(chooseImage)
+		new VastAiVllmProcess(selectOffer, modelSize, additionalReservedDisk, instanceReuseLogic, gateway,
+			installScriptPath, localPort, remotePort, maxGpuUtil, maxParallelRequests, extraStartupArgs, setupTimeout,
+			recoveryTimeout, noResponseTimeout, statusCheckInterval, instanceLabel, debugLogger)(
+			chooseImage)(shouldDestroy)
 }
 
 /**
@@ -137,6 +157,8 @@ object VastAiVllmProcess
  * @param modelSize Size of the used model. Used for calculating the reserved disk space.
  *                  If various model sizes are used, specify the largest.
  * @param additionalReservedDisk Additional disk space to reserve, beyond the model size. Default = 5 GB.
+ * @param instanceReuseLogic Logic applied for reusing already rented Vast AI instances.
+ *                           Default = never reuse instances.
  * @param gateway [[Gateway]] instance to use for connecting to the rented instance.
  *                Default = new Gateway with 4 max connections.
  *                Note: The used Gateway instance determines the generated request queue's width.
@@ -173,19 +195,33 @@ object VastAiVllmProcess
  *                          1. Maximum context size applied or applicable
  *                          1. Name of the model to start vLLM with.
  *                             Optional if vLLM is started automatically by the image / template.
+ * @param shouldDestroy A function that determines whether a live instance should be destroyed.
+ *                      Should yield false in situations where the instance should only be stopped instead.
+ *                      Notice that stopped instances still incur costs.
+ *
+ *                      Receives two parameters:
+ *                      1. Last state of the Vast AI instance in question
+ *                      1. Whether the API was successfully hosted. False if the API was not hosted yet.
+ *
+ *                      Never called in situations where the instance is unstable or disconnected,
+ *                      or where the API became unresponsive (indicating a low-quality instance).
+ *
+ *                      Default = always yield true = always destroy.
  * @author Mikko Hilpinen
  * @since 26.02.2026, v1.5
  */
+// TODO: Refactor by extracting more general features to another class or trait (supporting the ComfyUI use-case, for example)
 // TODO: Add separate timeout for individual status phases (i.e. if keeps at same status for >X minutes, fail)
-// TODO: Add an option to stop the instance instead of destroying it on process completion
 class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, additionalReservedDisk: ByteCount = 5.gb,
-                        gateway: => Gateway = defaultGateway, installScriptPath: Option[Path] = None,
-                        getLocalPort: => Int = 8000, remotePort: Int = 8000, maxGpuUtil: Double = 0.9,
-                        maxParallelRequests: Option[Int] = None, extraStartupArgs: String = "",
-                        setupTimeout: Duration = Duration.infinite, recoveryTimeout: Duration = 60.seconds,
-                        noResponseTimeout: Duration = Duration.infinite, statusCheckInterval: Duration = 30.seconds,
-                        instanceLabel: String = "", debugLogger: Option[KeptOpenWriter] = None)
+                        instanceReuseLogic: InstanceReuseLogic = NeverReuse, gateway: => Gateway = defaultGateway,
+                        installScriptPath: Option[Path] = None, getLocalPort: => Int = 8000, remotePort: Int = 8000,
+                        maxGpuUtil: Double = 0.9, maxParallelRequests: Option[Int] = None,
+                        extraStartupArgs: String = "", setupTimeout: Duration = Duration.infinite,
+                        recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = Duration.infinite,
+                        statusCheckInterval: Duration = 30.seconds, instanceLabel: String = "",
+                        debugLogger: Option[KeptOpenWriter] = None)
                        (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
+                       (shouldDestroy: (VastAiInstance, Boolean) => Boolean = { (_, _) => true })
                        (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger,
                         vastAiClient: VastAiApiClient)
 	extends Process(shutdownReaction = Some(SkipDelay))
@@ -263,16 +299,70 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 	private val vastAiProcess = VastAiProcess(statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5),
 		debugLogger = debugLogger) {
 		hurryFlag =>
-			// Requests for offers
-			val requiredDiskSpace = modelSize + additionalReservedDisk
-			vastAiClient.send(GetOffers.forSelector(selectOffer, requiredDiskSpace))
-				.tryFlatMap { offers =>
-					// Won't include the currently used machine IDs
-					val usedMachineIds = takenMachineIdsP.value
-					selectFromOffers(offers.filterNot { o => usedMachineIds.contains(o.machineId) }, requiredDiskSpace,
-						hurryFlag || this.hurryFlag)
-				}
-				.toTryFuture
+			// Checks for instance-reuse
+			val reuseResultFuture: Future[Option[Int]] = {
+				// Case: Instances may be reused => Checks whether any are available
+				if (instanceReuseLogic.reuses)
+					vastAiClient.send(ShowInstances).map {
+						// Case: Available instances read => Checks whether any are unused and accepted
+						case Response.Success(instances, _, _) =>
+							// Case: No instances available => No reuse
+							if (instances.isEmpty)
+								None
+							else {
+								val machineIds = takenMachineIdsP.value
+								val unused = {
+									if (machineIds.isEmpty)
+										instances
+									else
+										instances.filterNot { instance => machineIds(instance.machineId) }
+								}
+								// Case: All rented instances are taken => No reuse
+								if (unused.isEmpty)
+									None
+								// Case: Unused instances exist => Checks whether any are accepted
+								else
+									instanceReuseLogic.findReusableFrom(unused).map { _.id }
+							}
+						// Case: Failed to check for reusable instances => Logs and skips reuse
+						case failure: RequestFailure =>
+							log(failure.cause, "Failed to check for reusable instances")
+							None
+					}
+				// Case: Reuse is disabled => Won't check for available instances
+				else
+					Future.successful(None)
+			}
+			reuseResultFuture.flatMap {
+				// Case: Reusing an instance => Success
+				case Some(reusableInstanceId) => TryFuture.success(reusableInstanceId)
+				// Case: Renting a new instance
+				case None =>
+					// Case: Interrupted => Fails
+					if (hurryFlag.isSet || this.hurryFlag.isSet)
+						TryFuture.failure(new InterruptedException(
+							"Process was interrupted before an instance could be selected"))
+					else {
+						// Requests for offers
+						val requiredDiskSpace = modelSize + additionalReservedDisk
+						vastAiClient.send(GetOffers.forSelector(selectOffer, requiredDiskSpace))
+							.tryFlatMap { offers =>
+								// Won't include the currently used machine IDs
+								val usedMachineIds = takenMachineIdsP.value
+								selectFromOffers(offers.filterNot { o => usedMachineIds.contains(o.machineId) },
+									requiredDiskSpace, hurryFlag || this.hurryFlag)
+							}
+							.toTryFuture
+					}
+			}
+	} { instance =>
+		// Includes the API state for the destroy-check
+		detailedState match {
+			case _ :HostingApi => shouldDestroy(instance, true)
+			// Case: API is being stopped => If timed out, always destroys the instance (because it's unstable)
+			case StoppingApi(_, _, timedOut) => if (timedOut) false else shouldDestroy(instance, true)
+			case _ => shouldDestroy(instance, false)
+		}
 	}
 	
 	/**
@@ -478,29 +568,62 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount, addition
 			val clientResult = clientP.getOrElseUpdate {
 				Failure(new IllegalStateException("No API was hosted - reason unknown"))
 			}
-			stateP.value = DestroyingInstance(clientResult match {
-				case Success(_) =>
-					requestTimedOutStateP.value match {
-						case Some(timeoutState) => ApiHostingResult.Disconnected(timeoutState)
-						case None => ApiHostingResult.Stopped
-					}
-				case Failure(error) => ApiHostingResult.Failed(error)
-			})
+			// Queues the stopping state once the underlying instance is actually being stopped or destroyed
+			vastAiProcess.detailedStatePointer.addListener { stateChange =>
+				// Checks whether the instance is being stopped or destroyed, or whether it's still running
+				val stoppingDetails = stateChange.newValue match {
+					// Case: Stopping (expected) => Prepares to enter StoppingInstance phase
+					case VastAiProcessState.Stopping(_, destroying) => Some(destroying)
+					case VastAiProcessState.Terminated(destroyed) => Some(destroyed)
+					case VastAiProcessState.Failed(cause, _, remainingId) =>
+						remainingId.foreach { remainingId =>
+							log(cause, s"Failed to terminate Vast AI instance", Model.from("instanceId" -> remainingId))
+							debugLog(s"$remainingId: Failed to terminate Vast AI instance: ${ cause.getMessage }")
+						}
+						Some(false)
+						
+					// Case: Running => Continues monitoring the process state
+					case _ => None
+				}
+				stoppingDetails match {
+					// Case: Underlying instance is stopping or stopped => Enters the StoppingInstance phase
+					case Some(destroying) =>
+						stateP.value = StoppingInstance(
+							// Checks the last API state
+							apiStatus = clientResult match {
+								case Success(_) =>
+									requestTimedOutStateP.value match {
+										// Case: Timed out => Considers the API to have disconnected
+										case Some(timeoutState) => ApiHostingResult.Disconnected(timeoutState)
+										// Case: No timeout
+										//       => Considers the API to have stopped after successful hosting
+										case None => ApiHostingResult.Stopped
+									}
+								// Case: API setup failed
+								case Failure(error) => ApiHostingResult.Failed(error)
+							},
+							instance = vastAiProcess.instance, destroying = destroying)
+						
+					// Case: The underlying process is still running => Continues tracking it
+					case None => Continue
+				}
+			}
 		}
 		finally {
-			// Destroys the Vast AI instance
-			debugLog(s"${ vastAiProcess.instanceId.mkString }: Destroying the Vast AI instance")
+			// Destroys or stops the Vast AI instance
+			debugLog(s"${ vastAiProcess.instanceId.mkString }: Destroying or stopping the Vast AI instance")
 			vastAiProcess.stop().waitFor()
-				.logWithMessage("Failure while waiting for the Vast AI instance to be destroyed")
+				.logWithMessage("Failure while waiting for the Vast AI instance to be destroyed / stopped")
 			// Finalizes the state
 			val hostingResult = stateP.mutate { state =>
 				val hostingResult = state match {
-					case DestroyingInstance(hostingResult) => hostingResult
+					case StoppingInstance(hostingResult, _, _) => hostingResult
 					case state =>
-						log(s"Unexpected state after instance-destruction: $state")
+						log(s"${ vastAiProcess.instanceId.mkString }:Unexpected state after instance-destruction: $state")
 						ApiHostingResult.Failed(new IllegalStateException("Unexpected state at instance destruction"))
 				}
-				hostingResult -> Stopped(hostingResult, vastAiProcess.detailedState)
+				hostingResult -> Stopped(hostingResult, vastAiProcess.detailedState, vastAiProcess.instance,
+					destroyed = vastAiProcess.destroyedFlag.isSet)
 			}
 			stateP.lock()
 			offerP.lock()

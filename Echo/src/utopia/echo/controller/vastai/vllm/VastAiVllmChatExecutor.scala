@@ -7,19 +7,22 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
 import utopia.echo.controller.client.VastAiApiClient
-import utopia.echo.controller.vastai.SelectOffer
+import utopia.echo.controller.vastai.InstanceReuseLogic.NeverReuse
 import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.maxRetries
+import utopia.echo.controller.vastai.{InstanceReuseLogic, SelectOffer}
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
 import utopia.echo.model.enumeration.ServiceState
 import utopia.echo.model.llm.{LlmDesignator, LlmVramUse}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.openai.BufferedOpenAiChatCompletionRequest
+import utopia.echo.model.request.vastai.DestroyInstance
 import utopia.echo.model.response.openai.BufferedOpenAiReply
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.unit.ByteCountExtensions._
-import utopia.echo.model.vastai.instance.NewInstanceFoundation
+import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading, Unknown}
 import utopia.echo.model.vastai.instance.offer.Offer
+import utopia.echo.model.vastai.instance.{NewInstanceFoundation, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
 import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted, Stopping}
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecorder, VastAiVllmProcessorStatus}
@@ -29,11 +32,12 @@ import utopia.flow.async.process.WaitTarget.WaitDuration
 import utopia.flow.async.process._
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
+import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.event.listener.ChangeListener
 import utopia.flow.event.model.ChangeResponse.{Continue, Detach}
 import utopia.flow.event.model.ChangeResponsePriority.After
 import utopia.flow.generic.casting.ValueConversions._
+import utopia.flow.generic.model.immutable.Model
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
@@ -65,9 +69,17 @@ object VastAiVllmChatExecutor
 	 * @param selectOffer Logic for selecting Vast AI offers to take
 	 * @param modelSize Size of the used model, including how much VRAM should be reserved for requests.
 	 *                  If multiple models are used, the size of the largest model should be returned.
-	 * @param coreInstanceCount Number of Vast AI instance to reserve immediately (or when the first request is received).
+	 * @param assumedVram VRAM amount assumed before any instances have been reserved.
+	 *                    Used for calculating the default maximum context size.
+	 * @param instanceReuseLogic Logic for reusing already rented Vast AI instances.
+	 *                           Default = never reuse instances.
+	 * @param coreInstanceCount Number of Vast AI instances to reserve immediately (or when the first request is received).
 	 *                          Default = 1.
 	 * @param maxInstanceCount Maximum number of instances that may be run at once. Default = 4.
+	 * @param stopInstanceCount Number of instances to keep in stopped state instead of destroying them.
+	 *                          Stopped instances incur continual costs, but are faster (and cheaper) to set up than
+	 *                          renting completely new instances.
+	 *                          Default = 0 = all instances are destroyed when they're not used.
 	 * @param instanceActivationQueueSizeThreshold Number of queued requests,
 	 *                                             at which an additional instance should be acquired.
 	 *                                             Default = 24.
@@ -106,6 +118,10 @@ object VastAiVllmChatExecutor
 	 * @param setupTimeout Timeout for the setup process.
 	 *                     If the API doesn't become usable before this timeout, the instance is destroyed.
 	 *                     Default = infinite (not recommended).
+	 * @param reuseSetupTimeout Timeout for the setup process, after which instances are destroyed instead of stopped,
+	 *                          if terminated during loading. Used for filtering out unresponsive instances.
+	 *                          Has no effect if maxStopInstances <= 0.
+	 *                          Default = 5 minutes.
 	 * @param recoveryTimeout Timeout for recovering from SSH and/or vLLM failures. Default = 60 seconds.
 	 * @param noResponseTimeout Timeout for started API requests.
 	 *                          If this timeout is reached, the request queue is closed
@@ -113,10 +129,14 @@ object VastAiVllmChatExecutor
 	 *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
 	 * @param idleShutdownThreshold A time threshold, at which completely idle processes are stopped.
 	 *                              Default = 15 min.
+	 * @param partialUseShutdownThreshold A time threshold, at which partially used processes are stopped.
+	 *                                    Default = 25 minutes.
 	 * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
 	 * @param logDir Directory where debug log entries will be placed (optional)
 	 * @param startsLazily Whether this executor should only start when the first request is received.
 	 *                     Default = false = instances are acquired immediately.
+	 * @param keepStoppedInstances Whether stopped instances should be preserved when this executor is stopped.
+	 *                             Default = false = stopped instances are destroyed.
 	 * @param chooseImage A function for choosing the image or Vast AI template to use.
 	 *                    Accepts the selected offer and the applied maximum context size, yields:
 	 *                          1. Instance-creation settings
@@ -130,8 +150,10 @@ object VastAiVllmChatExecutor
 	 * @param log Implicit logging implementation
 	 * @return a new executor interface
 	 */
-	def apply(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount, coreInstanceCount: Int = 1,
-	          maxInstanceCount: Int = 4, instanceActivationQueueSizeThreshold: Int = 24,
+	def apply(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
+	          instanceReuseLogic: InstanceReuseLogic = NeverReuse, coreInstanceCount: Int = 1,
+	          maxInstanceCount: Int = 4, stopInstanceCount: Int = 0,
+	          instanceActivationQueueSizeThreshold: Int = 24,
 	          instanceActivationPendingTokensThreshold: TokenCount = 24000,
 	          instanceAccelerationPendingTokensThreshold: TokenCount = 48000, maxConnectionsPerInstance: Int = 28,
 	          additionalReservedDisk: ByteCount = 5.gb, defaultContextSize: Option[TokenCount] = None,
@@ -139,18 +161,20 @@ object VastAiVllmChatExecutor
 	          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
 	          recorder: Option[VastAiVllmProcessRecorder], installScriptPath: Option[Path] = None,
 	          remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
-	          recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
-	          idleShutdownThreshold: Duration = 15.minutes, partialUseShutdownThreshold: Duration = 25.minutes,
-	          label: String = "chat-executor", logDir: Option[Path] = None, startsLazily: Boolean = false)
+	          reuseSetupTimeout: Duration = 5.minutes, recoveryTimeout: Duration = 60.seconds,
+	          noResponseTimeout: Duration = 10.minutes, idleShutdownThreshold: Duration = 15.minutes,
+	          partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
+	          logDir: Option[Path] = None, startsLazily: Boolean = false, keepStoppedInstances: Boolean = false)
 	         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
 	         (thinks: String => Boolean)
 	         (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient, log: Logger) =
-		new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, coreInstanceCount, maxInstanceCount,
-			instanceActivationQueueSizeThreshold, instanceActivationPendingTokensThreshold,
-			instanceAccelerationPendingTokensThreshold, maxConnectionsPerInstance, additionalReservedDisk,
-			defaultContextSize, contextSafetyMargin, backupExecutor, recorder, installScriptPath, remotePort,
-			maxGpuUtil, setupTimeout, recoveryTimeout, noResponseTimeout, idleShutdownThreshold,
-			partialUseShutdownThreshold, label, logDir, startsLazily)(chooseImage)(thinks)
+		new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, instanceReuseLogic, coreInstanceCount,
+			stopInstanceCount, maxInstanceCount, instanceActivationQueueSizeThreshold,
+			instanceActivationPendingTokensThreshold, instanceAccelerationPendingTokensThreshold,
+			maxConnectionsPerInstance, additionalReservedDisk, defaultContextSize, contextSafetyMargin, backupExecutor,
+			recorder, installScriptPath, remotePort, maxGpuUtil, setupTimeout, reuseSetupTimeout, recoveryTimeout,
+			noResponseTimeout, idleShutdownThreshold, partialUseShutdownThreshold, label, logDir, startsLazily,
+			keepStoppedInstances)(chooseImage)(thinks)
 }
 
 /**
@@ -158,9 +182,17 @@ object VastAiVllmChatExecutor
  * @param selectOffer Logic for selecting Vast AI offers to take
  * @param modelSize Size of the used model, including how much VRAM should be reserved for requests.
  *                  If multiple models are used, the size of the largest model should be returned.
- * @param coreInstanceCount Number of Vast AI instance to reserve immediately (or when the first request is received).
+ * @param assumedVram VRAM amount assumed before any instances have been reserved.
+ *                    Used for calculating the default maximum context size.
+ * @param instanceReuseLogic Logic for reusing already rented Vast AI instances.
+ *                           Default = never reuse instances.
+ * @param coreInstanceCount Number of Vast AI instances to reserve immediately (or when the first request is received).
  *                          Default = 1.
  * @param maxInstanceCount Maximum number of instances that may be run at once. Default = 4.
+ * @param stopInstanceCount Number of instances to keep in stopped state instead of destroying them.
+ *                          Stopped instances incur continual costs, but are faster (and cheaper) to set up than
+ *                          renting completely new instances.
+ *                          Default = 0 = all instances are destroyed when they're not used.
  * @param instanceActivationQueueSizeThreshold Number of queued requests,
  *                                             at which an additional instance should be acquired.
  *                                             Default = 24.
@@ -172,7 +204,7 @@ object VastAiVllmChatExecutor
  *                                                   instance being prepared.
  *                                                   Default = 48K.
  * @param maxConnectionsPerInstance Maximum number of HTTP connections allowed to a single instance.
- *                                  May limit parallelism in case of smaller requests. Default = 28.
+ *                                  May limit parallelism in the case of smaller requests. Default = 28.
  * @param additionalReservedDisk Disk space reserved in addition to the model size. Default = 5 GB.
  * @param defaultContextSize Context size to assume when no context size is specified in the request.
  *                           Default = None = no context size is assumed,
@@ -188,7 +220,7 @@ object VastAiVllmChatExecutor
  *                       and for those which don't have a context size specified (if 'defaultContextSize' is None).
  *
  *                       If left empty (default), such requests will be immediately failed.
- * @param recorder An interface which receives records of completed Vast AI processes.
+ * @param recorder An interface that receives records of completed Vast AI processes.
  *                 None (default) if no recording should be performed.
  * @param installScriptPath Path to a script for installing vLLM on the rented device.
  *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
@@ -199,17 +231,25 @@ object VastAiVllmChatExecutor
  * @param setupTimeout Timeout for the setup process.
  *                     If the API doesn't become usable before this timeout, the instance is destroyed.
  *                     Default = infinite (not recommended).
+ * @param reuseSetupTimeout Timeout for the setup process, after which instances are destroyed instead of stopped,
+ *                          if terminated during loading. Used for filtering out unresponsive instances.
+ *                          Has no effect if maxStopInstances <= 0.
+ *                          Default = 5 minutes.
  * @param recoveryTimeout Timeout for recovering from SSH and/or vLLM failures. Default = 60 seconds.
  * @param noResponseTimeout Timeout for started API requests.
  *                          If this timeout is reached, the request queue is closed
  *                          and the underlying Vast AI instance is destroyed.
  *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
  * @param idleShutdownThreshold A time threshold, at which completely idle processes are stopped.
- *                              Default = 15 min.
+ *                              Default = 15 minutes.
+ * @param partialUseShutdownThreshold A time threshold, at which partially used processes are stopped.
+ *                                    Default = 25 minutes.
  * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
  * @param logDir Directory where debug log entries will be placed (optional)
  * @param startsLazily Whether this executor should only start when the first request is received.
  *                     Default = false = instances are acquired immediately.
+ * @param keepStoppedInstances Whether stopped instances should be preserved when this executor is stopped.
+ *                             Default = false = stopped instances are destroyed.
  * @param chooseImage A function for choosing the image or Vast AI template to use.
  *                    Accepts the selected offer and the applied maximum context size, yields:
  *                          1. Instance-creation settings
@@ -224,7 +264,8 @@ object VastAiVllmChatExecutor
  * @since 03.03.2026, v1.5
  */
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
-                             coreInstanceCount: Int = 1, maxInstanceCount: Int = 4,
+                             instanceReuseLogic: InstanceReuseLogic = NeverReuse,
+                             coreInstanceCount: Int = 1, maxInstanceCount: Int = 4, stopInstanceCount: Int = 0,
                              instanceActivationQueueSizeThreshold: Int = 24,
                              instanceActivationPendingTokensThreshold: TokenCount = 24000,
                              instanceAccelerationPendingTokensThreshold: TokenCount = 48000,
@@ -233,10 +274,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
                              backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
                              recorder: Option[VastAiVllmProcessRecorder], installScriptPath: Option[Path] = None,
                              remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
-                             recoveryTimeout: Duration = 60.seconds, noResponseTimeout: Duration = 10.minutes,
-                             idleShutdownThreshold: Duration = 15.minutes,
+                             reuseSetupTimeout: Duration = 5.minutes, recoveryTimeout: Duration = 60.seconds,
+                             noResponseTimeout: Duration = 10.minutes, idleShutdownThreshold: Duration = 15.minutes,
                              partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
-                             logDir: Option[Path] = None, startsLazily: Boolean = false)
+                             logDir: Option[Path] = None, startsLazily: Boolean = false,
+                             keepStoppedInstances: Boolean = false)
                             (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
                             (thinks: String => Boolean)
                             (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
@@ -301,6 +343,23 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		maxConnectionsTotal = maxConnectionsPerInstance * maxInstanceCount, disableTrustStoreVerification = true)
 	
 	/**
+	 * A pointer that contains IDs of instances that were only stopped instead of destroyed.
+	 * These are reused with priority and may be destroyed when this process completes.
+	 */
+	private val stoppedInstanceIdsP = Volatile.emptySeq[Int]
+	/**
+	 * Logic applied for instance-reuse.
+	 * If instances are sometimes stopped instead of destroyed, reuses those stopped instances.
+	 * Uses the user-defined reuse logic when no instances have been stopped.
+	 */
+	private val appliedReuseLogic = {
+		if (stopInstanceCount > 0)
+			ReuseStoppedInstances.onlyReusable || instanceReuseLogic
+		else
+			instanceReuseLogic
+	}
+	
+	/**
 	 * Used for limiting instance-creation to one instance at a time
 	 */
 	private val createInstanceAccess = new AccessQueue(())
@@ -311,7 +370,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	private val processorsP = Volatile.eventful.emptySeq[Processor]
 	/**
 	 * A pointer that lists the processors that are/were usable.
-	 * Updated (manually) whenever API-hosting starts or ends.
+	 * Updated (manually) whenever API hosting starts or ends.
 	 */
 	private val usableProcessorsP = CopyOnDemand { processors.filter { _.usable } }
 	
@@ -560,6 +619,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * @return Whether there's at least one Vast AI instance ready to process incoming requests
 	 */
 	def usable = usableProcessorsP.value.exists { _.usable }
+	/**
+	 * @return Number of currently usable Vast AI instances / vLLM APIs
+	 */
+	def usableProcessorsCount = usableProcessorsP.value.count { _.usable }
 	
 	private def processors = processorsP.value
 	
@@ -594,10 +657,37 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		debugLog("Stop called")
 		val regeneratorStopFuture = regenerator.stop()
 		if (stopFlag.set()) {
+			// Stops all active processors
 			val processorStopFutures = processors.map { _.stop() }
+			// Fails every queued request
 			_queue.popAll().foreach { _.fail() }
-			(processorStopFutures :+ regeneratorStopFuture).future
+			// Destroys all stopped instances, unless required to keep them
+			val destroyFutures = {
+				if (keepStoppedInstances) {
+					val preservedInstanceIds = stoppedInstanceIdsP.value
+					if (preservedInstanceIds.nonEmpty)
+						debugLog(s"Preserving ${ preservedInstanceIds.size } previously stopped instances")
+					Empty
+				}
+				else {
+					val instanceIdsToDestroy = stoppedInstanceIdsP.popAll()
+					if (instanceIdsToDestroy.nonEmpty)
+						debugLog(s"Destroying ${ instanceIdsToDestroy.size } previously stopped instances")
+					instanceIdsToDestroy.map { instanceId =>
+						vastAiClient.send(DestroyInstance(instanceId)).map {
+							case failure: RequestFailure =>
+								debugLog(s"Failed to destroy instance $instanceId: ${failure.cause.getMessage}")
+								log(failure.cause, "Failed to destroy a Vast AI instance",
+									Model.from("instanceId" -> instanceId))
+								
+							case _ => ()
+						}
+					}
+				}
+			}
+			scala.collection.View.concat(Single(regeneratorStopFuture), processorStopFutures, destroyFutures).future
 		}
+		// Case: Already requested to stop => Just yields the regenerator process stop future
 		else
 			regeneratorStopFuture
 	}
@@ -878,21 +968,49 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	private def startNewInstance() = createInstanceAccess { _ =>
 		debugLog("Starting a new instance")
 		// Creates and starts the process of setting up vLLM on Vast AI
-		val process = VastAiVllmProcess(selectOffer, modelSize.modelSize, additionalReservedDisk, gateway,
-			installScriptPath, localPort = portCounter.next(), remotePort = remotePort, maxGpuUtil = maxGpuUtil,
-			setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout, noResponseTimeout = noResponseTimeout,
-			statusCheckInterval = (30 max (maxInstanceCount * 2)).seconds, instanceLabel = label,
-			debugLogger = debugLogger) {
+		val startTime = Now.toInstant
+		val process = VastAiVllmProcess(selectOffer, modelSize.modelSize, additionalReservedDisk, appliedReuseLogic,
+			gateway, installScriptPath, localPort = portCounter.next(), remotePort = remotePort,
+			maxGpuUtil = maxGpuUtil, setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout,
+			noResponseTimeout = noResponseTimeout, statusCheckInterval = (30 max (maxInstanceCount * 2)).seconds,
+			instanceLabel = label, debugLogger = debugLogger) {
+			// Choose image
 			offer =>
+				// Delegates image-choosing to the custom 'chooseImage' function
 				val maxContextSize = contextSizeOn(offer.gpu.ram)
 				val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
 				(image, initialVllmState, maxContextSize, model)
+		} {
+			// Should destroy -logic
+			(instance, apiHosted) =>
+				// Case: Stopping is not enabled or already requested to stop without keeping stopped instances
+				//       => Destroys all instances
+				if (stopInstanceCount <= 0 || (stopFlag.isSet && !keepStoppedInstances))
+					true
+				else {
+					// Stops instances if running low on usable clients, unless the instance status/state is not promising
+					val maxUsableCount = if (apiHosted) stopInstanceCount + 1 else stopInstanceCount
+					if (usableProcessorsCount < maxUsableCount) {
+						val stops = instance.status.actual.value match {
+							case Loading | Active => apiHosted || Now - startTime < reuseSetupTimeout
+							case _: Unknown => apiHosted
+							case _ => false
+						}
+						// Case: Stops the instance instead of destroying it => Remembers the instance ID
+						if (stops)
+							stoppedInstanceIdsP :+= instance.id
+						!stops
+					}
+					// Case: Enough processors as is => Destroys this instance
+					else
+						true
+				}
 		}
 		processorsP :+= new Processor(process)
 		debugLog(s"Now at ${ processors.size } instance processes")
 		process.runAsync()
 		
-		// Updates the usableClients when API-hosting starts or ends
+		// Updates the usableClients when API hosting starts or ends
 		process.detailedStatePointer.addListenerAndSimulateEvent(NotStarted) { e =>
 			// Checks whether the instance became available => Updates max context, if so
 			if (e.values.isAsymmetricBy { _.isInstanceAvailable })
@@ -927,7 +1045,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 						recorder.onApiSetup(instance, process.startTime, process.loadCompletionTime.getOrElse(Now))
 						Detach
 					case state if state.phase > ApiHosting => Detach
-					case state => Continue
+					case _ => Continue
 				}
 			}
 			process.recordFuture.foreach(recorder.onProcessCompleted)
@@ -991,6 +1109,19 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	
 	// NESTED   ---------------------------
+	
+	private object ReuseStoppedInstances extends InstanceReuseLogic
+	{
+		override def reuses: Boolean = stoppedInstanceIdsP.nonEmpty
+		
+		override def findReusableFrom(instances: Seq[VastAiInstance]): Option[VastAiInstance] = {
+			// Finds a previously stopped instance
+			val instanceToReuse = stoppedInstanceIdsP.value.findMap { id => instances.find { _.id == id } }
+			// If found, reuses it and removes it from the list of stopped instances
+			instanceToReuse.foreach { instance => stoppedInstanceIdsP.filterNotCurrent { _ == instance.id } }
+			instanceToReuse
+		}
+	}
 	
 	/**
 	 * Manages / utilizes an individual Vast AI process for request-handling

@@ -44,7 +44,6 @@ object SelectOffer
  * @author Mikko Hilpinen
  * @since 27.02.2026, v1.5
  */
-// TODO: Refactor to also select from existing instances
 trait SelectOffer
 {
 	/**

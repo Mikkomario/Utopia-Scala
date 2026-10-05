@@ -31,28 +31,32 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
 	
 	override def apply(model: HasProperties): Try[VastAiInstance] = schema.validate(model).flatMap { model =>
 		BasicInstanceInfo(model).flatMap { info =>
-			InstanceStatus(model).map { status =>
-				val template = model("template_id").int.map { templateId =>
-					TemplateIdentifier(templateId, model("template_hash_id"), model("template_name"))
-				}
-				val directPortRange = model("direct_port_start").int.filter { _ > 0 }.flatMap { start =>
-					model("direct_port_end").int.filter { _ >= start }.map { NumericSpan(start, _) }
-				}
-				val ssh = model("ssh_host").string.flatMap { host =>
-					model("ssh_port").int.map { port =>
-						SshConnection(host, port, model("machine_dir_ssh_port").intOr(-1), model("ssh_idx"))
+			InstanceStatus(model).flatMap { status =>
+				ImageDetails(model).map { image =>
+					val template = model("template_id").int.map { templateId =>
+						TemplateIdentifier(templateId, model("template_hash_id"), model("template_name"))
 					}
+					val directPortRange = model("direct_port_start").int.filter { _ > 0 }.flatMap { start =>
+						model("direct_port_end").int.filter { _ >= start }.map { NumericSpan(start, _) }
+					}
+					val ssh = model("ssh_host").string.flatMap { host =>
+						model("ssh_port").int.map { port =>
+							SshConnection(host, port, model("machine_dir_ssh_port").intOr(-1), model("ssh_idx"))
+						}
+					}
+					
+					apply(model("id"), info, status, model("client_run_time").getDouble.hours,
+						model("host_run_time").getDouble.hours, image, template, model("label"),
+						model("credit_balance"), model("uptime_mins").double.map { _.minutes }, model("cpu_util"),
+						model("mem_limit").int.map { _.mb }, model("mem_usage").int.map { _.mb }, model("gpu_util"),
+						model("vmem_usage").int.map { _.mb }, model("gpu_temp"),
+						model("disk_usage").double.map { _ / 100 },
+						model("local_ipaddrs").getString
+							.splitIterator(Regex.comma).map { _.stripControlCharacters.trim }
+							.filter { _.nonEmpty }.toOptimizedSeq,
+						model("public_ipaddr"), directPortRange, model("ports").getVector.map { _.getInt }, ssh,
+						model("jupyter_token"))
 				}
-				
-				apply(model("id"), info, status, model("client_run_time").getDouble.hours,
-					model("host_run_time").getDouble.hours, model("credit_balance"),
-					model("uptime_mins").double.map { _.minutes }, model("label"), template, model("cpu_util"),
-					model("mem_limit").int.map { _.mb }, model("mem_usage").int.map { _.mb }, model("gpu_util"),
-					model("vmem_usage").int.map { _.mb }, model("gpu_temp"), model("disk_usage").double.map { _ / 100 },
-					model("local_ipaddrs").getString.splitIterator(Regex.comma).map { _.stripControlCharacters.trim }
-						.filter { _.nonEmpty }.toOptimizedSeq,
-					model("public_ipaddr"), directPortRange, model("ports").getVector.map { _.getInt }, ssh,
-					model("jupyter_token"))
 			}
 		}
 	}
@@ -65,10 +69,11 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
  * @param status Information about this instance's current status
  * @param clientRunTime How long this client has been on
  * @param hostRunTime How long this host has been active
+ * @param image Details about the applied docker image
+ * @param template Information about the template used to create this instance. None if not applicable.
+ * @param label Custom label/name given to this instance
  * @param creditBalance User's credit balance in $, if available
  * @param uptime Uptime for this instance
- * @param label Custom label/name given to this instance
- * @param template Information about the template used to create this instance
  * @param cpuUtilization Ratio of CPU resources currently utilized (0,1)
  * @param ramLimit RAM usage limit, if known & applicable
  * @param ramUsage Currently used RAM, if known
@@ -89,9 +94,9 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
 // TODO: Add disk & disk usage info
 // TODO: We also have "inet_down_billed": null & "inet_up_billed": null & "inet_up_cost": 0.0000013020833333333333
 case class VastAiInstance(id: Int, details: BasicInstanceInfo, status: InstanceStatus,
-                          clientRunTime: Duration, hostRunTime: Duration, creditBalance: Option[Double] = None,
-                          uptime: Option[Duration] = None, label: String = "",
-                          template: Option[TemplateIdentifier] = None,
+                          clientRunTime: Duration, hostRunTime: Duration, image: ImageDetails,
+                          template: Option[TemplateIdentifier] = None, label: String = "",
+                          creditBalance: Option[Double] = None, uptime: Option[Duration] = None,
                           cpuUtilization: Double = 0.0, ramLimit: Option[ByteCount] = None,
                           ramUsage: Option[ByteCount] = None, gpuUtilization: Option[Double] = None,
                           vramUsage: Option[ByteCount] = None, gpuTempCelsius: Option[Double] = None,
