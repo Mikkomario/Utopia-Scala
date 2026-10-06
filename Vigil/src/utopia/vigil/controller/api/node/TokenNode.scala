@@ -16,10 +16,12 @@ import scala.annotation.tailrec
 
 /**
  * An API node used for interacting with (i.e. revoking) individual tokens
+ * @param targetId ID of the targeted token. None if the current token is targeted
+ *                 (i.e. the token present in the bearer auth header).
  * @author Mikko Hilpinen
  * @since 05.05.2026, v0.1
  */
-class TokenNode(targetId: Option[Int]) extends NodeWithChildren[AuthContext[Any]]
+class TokenNode(targetId: Option[Int] = None) extends NodeWithChildren[AuthContext[Any]]
 {
 	// ATTRIBUTES   -----------------
 	
