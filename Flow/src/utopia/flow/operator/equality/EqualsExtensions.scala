@@ -7,8 +7,13 @@ package utopia.flow.operator.equality
   */
 object EqualsExtensions
 {
+	// IMPLICIT -----------------------
+	
 	implicit def doubleEquals: EqualsFunction[Double] = EqualsFunction.approxDouble
 	implicit def stringEquals: EqualsFunction[String] = EqualsFunction.stringCaseInsensitive
+	
+	
+	// EXTENSIONS ---------------------
 	
 	implicit class ImplicitApproxEquals[+A](val a: A) extends AnyVal
 	{

@@ -1,6 +1,6 @@
 package utopia.flow.generic.factory
 
-import utopia.flow.generic.factory.FromModelFactory.{MappedFactory, PreprocessingFactory, TryMappedFactory}
+import utopia.flow.generic.factory.FromModelFactory.{IncludingFactory, MappedFactory, PreprocessingFactory, TryMappedFactory}
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.util.Mutate
@@ -36,6 +36,13 @@ object FromModelFactory
 	private class MappedFactory[O, R](delegate: FromModelFactory[O], f: O => R) extends FromModelFactory[R]
 	{
 		override def apply(model: HasProperties): Try[R] = delegate(model).map(f)
+	}
+	
+	private class IncludingFactory[+A, +B](primary: FromModelFactory[A], secondary: FromModelFactory[B])
+		extends FromModelFactory[(A, B)]
+	{
+		override def apply(model: HasProperties): Try[(A, B)] =
+			primary(model).flatMap { primary => secondary(model).map { primary -> _ } }
 	}
 	
 	private class _FromModelFactory[+A](f: HasProperties => Try[A]) extends FromModelFactory[A]
@@ -100,6 +107,13 @@ trait FromModelFactory[+A]
 	def mapParseResult[B](f: A => B) = mapResult(f)
 	@deprecated("Renamed to .tryMapResult(...)", "v2.9")
 	def flatMapParseResult[B](f: A => Try[B]) = tryMapResult(f)
+	
+	/**
+	 * @param other An additional parser to apply
+	 * @tparam B Type of additional parsing results
+	 * @return A parser that includes results from both of these parsers
+	 */
+	def &&[B](other: FromModelFactory[B]): FromModelFactory[(A, B)] = new IncludingFactory[A, B](this, other)
 	
 	/**
 	 * @param f A function that prepares / mutates models that are to be parsed by this factory

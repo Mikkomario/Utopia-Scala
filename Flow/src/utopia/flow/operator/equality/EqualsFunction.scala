@@ -1,7 +1,11 @@
 package utopia.flow.operator.equality
 
 import utopia.flow.operator.equality.EqualsFunction.NotEqualsWrapper
+import utopia.flow.time.{Duration, TimeUnit}
+import utopia.flow.time.TimeExtensions._
+import utopia.flow.time.TimeUnit.MilliSecond
 
+import java.time.Instant
 import scala.language.implicitConversions
 
 object EqualsFunction
@@ -36,6 +40,10 @@ object EqualsFunction
 	  * A double equality function that rounds to 7th decimal place
 	  */
 	lazy val approxDouble = apply[Double] { (a, b) => a == b || (a - b).abs < doubleMinDiff }
+	/**
+	 * An equality function for instants that considers the values identical if the difference is less than 1 ms.
+	 */
+	lazy val approxInstant = MaxInstantDifference(MilliSecond)
 	
 	
 	// OTHER    ---------------------------
@@ -61,6 +69,36 @@ object EqualsFunction
 	
 	
 	// NESTED   ---------------------------
+	
+	object MaxInstantDifference
+	{
+		/**
+		 * @param unit Minimum compared time unit
+		 * @return An equality function that ignores differences smaller than the specified unit
+		 */
+		def apply(unit: TimeUnit): MaxInstantDifference = apply(unit.unit)
+	}
+	/**
+	 * An equality function that allows some difference between the compared timestamps
+	 * @param maxDifference Maximum difference to allow (exclusive)
+	 */
+	case class MaxInstantDifference(maxDifference: Duration) extends EqualsFunction[Instant]
+	{
+		// ATTRIBUTES   -------------------
+		
+		private val allowDifference = maxDifference.isPositive
+		private val everythingEquals = maxDifference.isNotNegative && maxDifference.isInfinite
+		
+		
+		// IMPLEMENTED  -------------------
+		
+		override def apply(a: Instant, b: Instant): Boolean = {
+			if (everythingEquals || a == b)
+				true
+			else
+				allowDifference && ((a - b).abs < maxDifference)
+		}
+	}
 	
 	private class EqualsFunctionWrapper[-A](f: (A, A) => Boolean) extends EqualsFunction[A]
 	{

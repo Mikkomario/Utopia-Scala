@@ -77,6 +77,7 @@
   - Also added **OpenInputWrapper**
 - Added NDJSON parsing support to **JsonParser**
 - Parallel mapping now supports custom builders
+- Added approximate equality functions for **Instant**s
 - Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
 ### New methods
 - **ActionQueue**
@@ -86,6 +87,7 @@
 - **CachingSeq**
   - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
 - **FromModelFactory**
+  - Added `&&(FromModelFactory)`
   - Added `.preparingWith(...)`
 - **HasInclusiveOrderedEnds**
   - Added `.smallest` and `.largest` aliases for `.min` and `.max` 
