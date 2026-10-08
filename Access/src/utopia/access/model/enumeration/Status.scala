@@ -10,7 +10,7 @@ object Status extends OpenEnumeration[Status, Int]
 	
 	introduce(OK, Created, Accepted,
 		NoContent, MovedPermanently, Found, SeeOther, NotModified, TemporaryRedirect, PermanentRedirect,
-		BadRequest, Unauthorized, Forbidden, NotFound,
+		BadRequest, Unauthorized, PaymentRequired, Forbidden, NotFound,
 		MethodNotAllowed, NotAcceptable, Teapot, Locked, TooEarly, TooManyRequests, NoResponse,
 		InternalServerError, NotImplemented, ServiceUnavailable)
 	
@@ -177,6 +177,16 @@ object Status extends OpenEnumeration[Status, Int]
 	 * HTTP access authentication is explained in "HTTP Authentication: Basic and Digest Access Authentication"
 	 */
 	case object Unauthorized extends Status("Unauthorized", 401, isTemporary = false, doNotRepeat = true)
+	
+	/**
+	 * The HTTP 402 Payment Required client error response status code
+	 * is a nonstandard response status code reserved for future use.
+	 *
+	 * This status code was created to enable digital cash or (micro) payment systems and would indicate
+	 * that requested content is not available until the client makes a payment.
+	 * No standard use convention exists and different systems use it in different contexts.
+	 */
+	case object PaymentRequired extends Status("PaymentRequired", 402)
 	
 	/**
 	 * The server understood the request, but is refusing to fulfill it. Authorization will not help
