@@ -67,7 +67,7 @@ class Scopes private(override val wrapped: Seq[ScopeTarget])
 	
 	/**
 	 * @param scopeIds A set of scope IDs
-	 * @return A subset of these scopes, that are not covered by scopes with those IDs
+	 * @return A subset of these scopes, containing the ones that are not covered by scopes with those IDs
 	 */
 	def notContainedWithin(scopeIds: Set[Int]) = {
 		if (isEmpty || scopeIds.isEmpty)

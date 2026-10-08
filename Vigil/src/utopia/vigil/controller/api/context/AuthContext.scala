@@ -101,23 +101,9 @@ trait AuthContext[+A] extends RequestContext[A]
 						AccessToken.idRefs.active.withKey(bearerToken).pull match {
 							// Case: Valid token => Checks the scope (if needed)
 							case Some(token) =>
-								// Case: No scope is required => Calls the specified function
-								if (requiredScopes.isEmpty)
-									f(token, connection)
-								// Case: Certain scopes are required => Makes sure the auth token has those
-								else {
-									val accessibleScopeIds = AccessTokenScopes.ofToken(token.id).usable.scopeIds.toSet
-									requiredScopes.notContainedWithin(accessibleScopeIds).notEmpty match {
-										// Case: Some required scopes are missing => 401
-										case Some(missingScopes) =>
-											RequestResult(ResponseContent(Model.from(
-												"missingScopes" -> missingScopes.toValue),
-												"Your authentication token lacks the sufficient authorization scopes"))
-										
-										// Case: All required scopes are accessible => Calls the specified function
-										case None => f(token, connection)
-									}
-								}
+								implicit val _token: TokenIdRefs = token
+								requireScopes(requiredScopes) { f(token, connection) }
+								
 							// Case: Invalid or expired auth token => 401
 							case None => Unauthorized -> "Invalid or expired authorization token"
 						}
@@ -132,4 +118,58 @@ trait AuthContext[+A] extends RequestContext[A]
 			// Case: No auth token specified => 401
 			case None => Unauthorized -> "Please specify the `Authorization:Bearer ...` header"
 		}
+	
+	/**
+	 * Makes sure the request has access to a specific scope
+	 * @param scope Scope that the client must have access to
+	 * @param result Result to yield on sufficient authorization (call-by-name)
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token used
+	 * @return 'result', or a 401 request failure if the authorization was lacking
+	 */
+	def requireScope(scope: ScopeTarget)(result: => RequestResult)
+	                (implicit connection: Connection, token: TokenIdRefs): RequestResult =
+		requireScopes(Scopes(scope))(result)
+	/**
+	 * Makes sure the request has access to a specific set of scopes
+	 * @param scope1 First required scope
+	 * @param scope2 Second required scope
+	 * @param moreScopes Other required scopes
+	 * @param result Result to yield on sufficient authorization (call-by-name)
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token used
+	 * @return 'result', or a 401 request failure if the authorization was lacking
+	 */
+	def requireScopes(scope1: ScopeTarget, scope2: ScopeTarget, moreScopes: ScopeTarget*)(result: => RequestResult)
+	                 (implicit connection: Connection, token: TokenIdRefs): RequestResult =
+		requireScopes(Pair(scope1, scope2) ++ moreScopes)(result)
+	/**
+	 * Makes sure the request has access to a specific set of scopes
+	 * @param scopes Scopes that the client must have access to
+	 * @param result Result to yield on sufficient authorization (call-by-name)
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token used
+	 * @return 'result', or a 401 request failure if the authorization was lacking
+	 */
+	def requireScopes(scopes: Scopes)(result: => RequestResult)
+	                 (implicit connection: Connection, token: TokenIdRefs): RequestResult =
+	{
+		// Case: No scope is required => Calls the specified function
+		if (scopes.isEmpty)
+			result
+		// Case: Certain scopes are required => Makes sure the auth token has those
+		else {
+			val accessibleScopeIds = AccessTokenScopes.ofToken(token.id).usable.scopeIds.toSet
+			scopes.notContainedWithin(accessibleScopeIds).notEmpty match {
+				// Case: Some required scopes are missing => 401
+				case Some(missingScopes) =>
+					RequestResult(ResponseContent(Model.from(
+						"missingScopes" -> missingScopes.toValue),
+						"Your authentication token lacks the sufficient authorization scopes"))
+					
+				// Case: All required scopes are accessible => Calls the specified function
+				case None => result
+			}
+		}
+	}
 }
