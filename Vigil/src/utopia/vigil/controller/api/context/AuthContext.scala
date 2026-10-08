@@ -4,7 +4,6 @@ import utopia.access.model.enumeration.Status.{InternalServerError, Unauthorized
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
-import utopia.flow.parse.Sha256Hasher
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.result.TryExtensions._
 import utopia.nexus.model.request.RequestContext
@@ -153,22 +152,50 @@ trait AuthContext[+A] extends RequestContext[A]
 	 */
 	def requireScopes(scopes: Scopes)(result: => RequestResult)
 	                 (implicit connection: Connection, token: TokenIdRefs): RequestResult =
+		testScopes(scopes).getOrElse(result)
+	
+	/**
+	 * Checks whether the request has access to a specific auth scope
+	 * @param scope Scope to test
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token used
+	 * @return If the authorization token didn't have proper access scope, yields a failure result.
+	 *         If authorization was successful, yields None.
+	 */
+	def testScope(scope: ScopeTarget)(implicit connection: Connection, token: TokenIdRefs): Option[RequestResult] =
+		testScopes(Scopes(scope))
+	/**
+	 * Checks whether the request has access to a specific set of scopes
+	 * @param scope1 The first tested scope
+	 * @param scope2 The second tested scope
+	 * @param moreScopes Other scopes to test
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token used
+	 * @return If the authorization token didn't have proper access scope, yields a failure result.
+	 *         If authorization was successful, yields None.
+	 */
+	def testScopes(scope1: ScopeTarget, scope2: ScopeTarget, moreScopes: ScopeTarget*)
+	              (implicit connection: Connection, token: TokenIdRefs): Option[RequestResult] =
+		testScopes(Pair(scope1, scope2) ++ moreScopes)
+	/**
+	 * Checks whether the request has access to a specific set of scopes
+	 * @param scopes Scopes to test
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token used
+	 * @return If the authorization token didn't have proper access scope, yields a failure result.
+	 *         If authorization was successful, yields None.
+	 */
+	def testScopes(scopes: Scopes)(implicit connection: Connection, token: TokenIdRefs) =
 	{
 		// Case: No scope is required => Calls the specified function
 		if (scopes.isEmpty)
-			result
+			None
 		// Case: Certain scopes are required => Makes sure the auth token has those
 		else {
 			val accessibleScopeIds = AccessTokenScopes.ofToken(token.id).usable.scopeIds.toSet
-			scopes.notContainedWithin(accessibleScopeIds).notEmpty match {
-				// Case: Some required scopes are missing => 401
-				case Some(missingScopes) =>
-					RequestResult(ResponseContent(Model.from(
-						"missingScopes" -> missingScopes.toValue),
-						"Your authentication token lacks the sufficient authorization scopes"))
-					
-				// Case: All required scopes are accessible => Calls the specified function
-				case None => result
+			scopes.notContainedWithin(accessibleScopeIds).notEmpty.map { missingScopes =>
+				RequestResult(ResponseContent(Model.from("missingScopes" -> missingScopes.toValue),
+					"Your authentication token lacks the sufficient authorization scopes"))
 			}
 		}
 	}

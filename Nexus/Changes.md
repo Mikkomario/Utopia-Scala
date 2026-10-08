@@ -14,6 +14,8 @@ Built with Scala v2.13.18
 ### New methods
 - **StreamOrReader**
   - Added `.bufferAsNdJson` and `.bufferUsing(ReadInput)`
+- **RequestResult**
+  - Added `.orElse(RequestResult)`
 - **WriteResponseBody** (object)
   - Added `.ndJson(...)`
 ### Other changes

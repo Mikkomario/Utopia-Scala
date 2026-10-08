@@ -222,8 +222,27 @@ trait RequestResult extends Headered[RequestResult]
 	
 	// OTHER    --------------------------
 	
-	def withStatus(newStatus: Status): RequestResult = new _RequestResult(newStatus, output, headers)
+	/**
+	 * @param newStatus New status to assign this result
+	 * @return A copy of this result with the specified status
+	 */
+	def withStatus(newStatus: Status): RequestResult =
+		if (status == newStatus) this else new _RequestResult(newStatus, output, headers)
+	/**
+	 * @param f A mapping function to apply to this result's status
+	 * @return A copy of this result with a mapped status
+	 */
 	def mapStatus(f: Mutate[Status]): RequestResult = withStatus(f(status))
 	
+	/**
+	 * @param newContent New content to assign this result
+	 * @return A copy of this result containing the specified content
+	 */
 	def withContent(newContent: ResponseContent): ContentResult = _ContentResult(status, newContent, headers)
+	
+	/**
+	 * @param other An alternative request result (call-by-name)
+	 * @return If this is a success result, yields this. If this is a failure result, yields 'other'.
+	 */
+	def orElse(other: => RequestResult) = if (isFailure) other else this
 }
