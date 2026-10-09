@@ -123,7 +123,7 @@ class ClearOldData(rules: Iterable[DataDeletionRule])
 			}
 		}
 		
-		// Performs the next iteration, if necessary
+		// Performs the next iteration, if necessary.
 		// Will not continue if there exist only looping references
 		if (nextIterationTargets.nonEmpty && thisIterationTargets.nonEmpty)
 			deleteIteration(deletionTime, nextIterationTargets, handledTables ++ thisIterationTargets.map { _.table })

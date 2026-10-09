@@ -47,8 +47,8 @@ object Delete
      * @param table Table being targeted by this delete statement
      * @return A delete statement targeting that table
      */
-    def apply(table: Table) = SqlSegment("DELETE FROM", events =
-        Some(_ => Single(DataDeleted(table)))) + table.toSqlSegment
+    def apply(table: Table) =
+        SqlSegment("DELETE FROM", events = Some(_ => Single(DataDeleted(table)))) + table.toSqlSegment
     
     /**
      * Performs one or more delete queries on a table in a way that deletes only a certain number of items per query.
