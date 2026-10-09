@@ -15,6 +15,8 @@ import utopia.nexus.controller.write.WriteResponseBody.NoBody
 import utopia.nexus.model.request.RequestContext
 import utopia.nexus.model.response.ResponseContent
 
+import scala.concurrent.ExecutionContext
+
 object JsonContentWriter
 {
 	// ATTRIBUTES   ------------------------
@@ -50,7 +52,7 @@ object JsonContentWriter
 	def apply(envelopHeaderNames: Iterable[String] = defaultEnvelopHeaderNames,
 	          envelopParamNames: Iterable[String] = defaultEnvelopParamNames, envelopsByDefault: Boolean = false,
 	          mayWriteDescriptionAsPlainText: Boolean = false)
-	         (implicit naming: JsonEnvelopeNames = JsonEnvelopeNames.default) =
+	         (implicit exc: ExecutionContext, naming: JsonEnvelopeNames = JsonEnvelopeNames.default) =
 		new JsonContentWriter(envelopHeaderNames, envelopParamNames, envelopsByDefault,
 			mayWriteDescriptionAsPlainText)
 	
@@ -62,7 +64,8 @@ object JsonContentWriter
 	 * @return A new content writer that always uses JSON
 	 */
 	def plain(descriptionPropName: String = defaultDescriptionPropName,
-	          writeDescriptionAsPlainText: Boolean = false) =
+	          writeDescriptionAsPlainText: Boolean = false)
+	         (implicit exc: ExecutionContext) =
 		new PlainJsonContentWriter(descriptionPropName, writeDescriptionAsPlainText)
 	
 	
@@ -122,6 +125,7 @@ object JsonContentWriter
 	 */
 	class PlainJsonContentWriter(descriptionPropName: String = defaultDescriptionPropName,
 	                             writeDescriptionAsPlainText: Boolean = false)
+	                            (implicit exc: ExecutionContext)
 		extends ContentWriter[HasHeaders]
 	{
 		// ATTRIBUTES   --------------------
@@ -149,8 +153,12 @@ object JsonContentWriter
 			}
 			else {
 				val body = {
+					// Case: ND-JSON preferred or required => Writes ND-JSON
+					if (headers.prefersType(Application.ndJson, Application.json).isCertainlyTrue &&
+						(content.description.isEmpty || !headers.accepts(Application.json)))
+						WriteResponseBody.ndJson(content.value.getVector)
 					// Case: No description needs or may be written => Only writes the value
-					if (descriptionPropName.isEmpty || content.description.isEmpty ||
+					else if (descriptionPropName.isEmpty || content.description.isEmpty ||
 						content.value.dataType != ModelType)
 						WriteResponseBody.json(content.value)
 					// Case: Value is a model and a description is included => Adds it as a separate property
@@ -201,6 +209,7 @@ object JsonContentWriter
  * @param mayWriteDescriptionAsPlainText Whether to write description only -results as plain text in
  *                                       non-enveloped responses.
  *                                       Default = false = descriptions will always be presented in JSON objects.
+ * @param exc Implicit execution context used
  * @param naming Implicit property names to use
  * @author Mikko Hilpinen
  * @since 04.11.2025, v2.0
@@ -209,7 +218,7 @@ class JsonContentWriter(override protected val envelopHeaderNames: Iterable[Stri
                         override protected val envelopParamNames: Iterable[String] = defaultEnvelopParamNames,
                         override protected val envelopsByDefault: Boolean = false,
                         mayWriteDescriptionAsPlainText: Boolean = false)
-                       (implicit naming: JsonEnvelopeNames = JsonEnvelopeNames.default)
+                       (implicit exc: ExecutionContext, naming: JsonEnvelopeNames = JsonEnvelopeNames.default)
 	extends PossiblyEnvelopingContentWriter[RequestContext[_]]
 {
 	override protected lazy val envelopingDelegate: ContentWriter[RequestContext[_]] = new JsonEnveloper()

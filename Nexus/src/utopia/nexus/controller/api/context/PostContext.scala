@@ -89,7 +89,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	 *               yields the final response.
 	 * @return Failure result if parsing failed. Otherwise, the result of the 'handle' function.
 	 */
-	@deprecated("Deprecated for removal. Please use .parseBody(...) using parser.preparingWith(...), or use .interceptAndParseBody(...)", "v2.0.1")
+	@deprecated("Deprecated for removal. Please use .parseBody(...) using parser.preparingWith(...), or use .interceptAndParseBody(...)", "v2.1")
 	def handleInterceptedPost[A](preProcess: Model => Model)(parser: FromModelFactory[A])
 	                            (handle: (A, Model) => RequestResult) =
 		interceptAndParseBody[Model, A] { v => preProcess(v.getModel) }(parser.apply)(handle)
@@ -117,7 +117,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 				case Failure(error) => BadRequest -> error.getMessage
 			}
 		}
-	@deprecated("Renamed to .withParsedInterceptedBody(...)", "v2.0.1")
+	@deprecated("Renamed to .withParsedInterceptedBody(...)", "v2.1")
 	def handleInterceptedValuePost[P, R](preProcess: Value => P)(parse: P => Try[R])
 	                                    (handle: (R, P) => RequestResult): RequestResult =
 		interceptAndParseBody(preProcess)(parse)(handle)
@@ -144,7 +144,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 						BadRequest)
 			}
 		}
-	@deprecated("Renamed to .parseBody(...)", "v2.0.1")
+	@deprecated("Renamed to .parseBody(...)", "v2.1")
 	def handlePost[A](parser: FromModelFactory[A])(f: A => RequestResult): RequestResult = parseBody(parser)(f)
 	/**
 	 * Accesses the request body. Yields a failure if no request body was specified.
@@ -159,7 +159,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 		else
 			f(value)
 	}
-	@deprecated("Renamed to .withBody(...)", "v2.0.1")
+	@deprecated("Renamed to .withBody(...)", "v2.1")
 	def handleValuePost(f: Value => RequestResult) = withBody(f)
 	
 	/**
@@ -177,7 +177,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 				case Failure(error) => BadRequest -> error.getMessage
 			}
 		}
-	@deprecated("Renamed to .parseArrayBody(...)", "v2.0.1")
+	@deprecated("Renamed to .parseArrayBody(...)", "v2.1")
 	def handleModelArrayPost[A](parser: FromModelFactory[A])(f: Seq[A] => RequestResult) =
 		parseArrayBody(parser)(f)
 	/**
@@ -190,7 +190,7 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	 */
 	def withArrayBody(f: Seq[Value] => RequestResult) =
 		withPossiblyEmptyBody { v: Value => f(v.getVector) }
-	@deprecated("Renamed to .withArrayBody(...)", "v2.0.1")
+	@deprecated("Renamed to .withArrayBody(...)", "v2.1")
 	def handleArrayPost(f: Seq[Value] => RequestResult) = withArrayBody(f)
 	
 	/**
@@ -200,6 +200,6 @@ class PostContext(override val request: StreamedRequest)(implicit log: Logger, j
 	 * @return Result of 'f', or a failure if body-parsing failed.
 	 */
 	def withPossiblyEmptyBody(f: Value => RequestResult) = lazyParsedRequestBody.value.leftOrMap(f)
-	@deprecated("Renamed to .withBodyIfDefined(...)", "v2.0.1")
+	@deprecated("Renamed to .withBodyIfDefined(...)", "v2.1")
 	def handlePossibleValuePost(f: Value => RequestResult) = withPossiblyEmptyBody(f)
 }

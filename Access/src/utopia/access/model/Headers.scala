@@ -15,7 +15,7 @@ import utopia.flow.parse.string.Regex
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
-import utopia.flow.util.{Mutate, NotEmpty}
+import utopia.flow.util.{Mutate, NotEmpty, UncertainBoolean}
 
 import java.nio.charset.{Charset, StandardCharsets}
 import java.time.format.DateTimeFormatter
@@ -463,6 +463,20 @@ case class Headers private(fields: Map[String, String]) extends ModelConvertible
 	 */
 	@throws[NoSuchElementException]("If options is empty")
 	def selectType(options: Iterable[ContentType]) = findAcceptedType(options).getOrElse(options.head)
+	
+	/**
+	 * Checks the Accept header to see whether the client prefers a specific content type over an alternative
+	 * @param tested The tested content type
+	 * @param over Competing content type
+	 * @param otherAlternatives Other competing content types, if applicable
+	 * @return Whether 'tested' was the preferred content type.
+	 *         Uncertain if none of the specified content types were accepted.
+	 */
+	def prefersType(tested: ContentType, over: ContentType, otherAlternatives: ContentType*): UncertainBoolean =
+		findAcceptedType(tested, over, otherAlternatives: _*) match {
+			case Some(preferred) => preferred == tested
+			case None => UncertainBoolean
+		}
 	
 	/**
 	 * @param primary The primarily targeted content type

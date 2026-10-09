@@ -1,7 +1,11 @@
 # Utopia Nexus - List of Changes
 
-## v2.0.1 (in development)
-Built with Scala v2.13.18
+## v2.1 (in development)
+### Breaking changes
+- JSON-based response-writers now require access to an implicit **ExecutionContext**
+- **UseRawJson** (that's already deprecated) is now a class instead of an object 
+  and requires access to an implicit **ExecutionContext**
+- **UseRawXmlOrJson** (deprecated) now requires access to an implicit **ExecutionContext**
 ### Deprecations
 - Multiple deprecations in **PostContext**
   - deprecated `.handleInterceptedPost(...)`
@@ -11,16 +15,23 @@ Built with Scala v2.13.18
   - Renamed `.handleModelArrayPost(...)` to `.parseArrayBody(...)`
   - Renamed `.handleArrayPost(...)` to `.withArrayBody(...)`
   - Renamed `.handlePossibleValuePost(...)` to `.withPossiblyEmptyBody(...)`
+### New features
+- JSON-based response-writers can now also write NDJSON, except when enveloped mode is used
 ### New methods
 - **StreamOrReader**
   - Added `.bufferAsNdJson` and `.bufferUsing(ReadInput)`
 - **RequestResult**
-  - Added `.orElse(RequestResult)`
+  - Object
+    - Added `.emptyArray`
+  - Instance
+    - Added `.orElse(RequestResult)`
 - **WriteResponseBody** (object)
   - Added `.ndJson(...)`
 ### Other changes
-- WriteResponseBody.jsonArray(...) now starts streaming the content only if its long enough.
+- Built with Scala v2.13.18
+- `WriteResponseBody.jsonArray(...)` now starts streaming the content only if it's long enough.
   - This behavior is configurable via the new `minBufferSize: Int` and `minBufferLength: Int` parameters.
+- Removed **BaseContext** that was deprecated in v2.0
 
 ## v2.0 - 15.03.2026
 This update rewrote every class in this project. The main ideas are the same, but brought up-to-date. 

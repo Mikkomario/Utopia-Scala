@@ -3,7 +3,9 @@ package utopia.nexus.model.response
 import utopia.access.model.enumeration.Status
 import utopia.access.model.enumeration.Status.{Found, MovedPermanently, NoContent, OK}
 import utopia.access.model.{Headered, Headers}
+import utopia.flow.collection.immutable
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.operator.equality.EqualsBy
 import utopia.flow.util.Mutate
@@ -15,6 +17,14 @@ import scala.language.implicitConversions
 
 object RequestResult
 {
+	// ATTRIBUTES   ---------------------
+	
+	/**
+	 * A request result only containing an empty array / vector value
+	 */
+	lazy val emptyArray = apply(immutable.Empty: Seq[Value])
+	
+	
 	// IMPLICIT -------------------------
 	
 	/**

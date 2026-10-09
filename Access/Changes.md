@@ -6,6 +6,7 @@
   - Added `.ndJson`
 - **Headers**
   - Added `.retryAfter`
+  - Added `.prefersType(ContentType, ContentType)`
 ### Other changes
 - Built with Scala v2.13.18
 - Added multiple new **Status** values

@@ -7,6 +7,8 @@ import utopia.nexus.controller.write.JsonOrXmlContentWriter.PlainJsonOrXmlConten
 import utopia.nexus.controller.write.XmlContentWriter.XmlElementNames
 import utopia.nexus.http.Request
 
+import scala.concurrent.ExecutionContext
+
 /**
 * This raw result parser uses json or xml, depending on the request headers
 * @author Mikko Hilpinen
@@ -14,24 +16,26 @@ import utopia.nexus.http.Request
 **/
 @deprecated("Replaced with PlainJsonOrXmlContentWriter", "v2.0")
 case class UseRawXmlOrJson(rootElementName: String = "Response", preferJson: Boolean = true)
+                          (implicit exc: ExecutionContext)
 	extends PlainJsonOrXmlContentWriter("", descriptionMayBePlainText = true)(
-		XmlElementNames(root = rootElementName, listItem = "element"))
+		exc, XmlElementNames(root = rootElementName, listItem = "element"))
 		with RawResultParser
 {
+	private val jsonParser = new UseRawJson()
     private val xmlParser = UseRawXml(rootElementName)
     
 	def parseDataResponse(data: Value, status: Status, request: Request) =
 	{
 		val jsonAccepted = request.headers.accepts(Application.json)
 		if (jsonAccepted && preferJson)
-				UseRawJson.parseDataResponse(data, status, request)
+			jsonParser.parseDataResponse(data, status, request)
 		else
 		{
 			val xmlAccepted = request.headers.accepts(Application.xml)
 			if (xmlAccepted || !preferJson)
-					xmlParser.parseDataResponse(data, status, request)
+				xmlParser.parseDataResponse(data, status, request)
 			else
-					UseRawJson.parseDataResponse(data, status, request)
+				jsonParser.parseDataResponse(data, status, request)
 		}
 	}
 }

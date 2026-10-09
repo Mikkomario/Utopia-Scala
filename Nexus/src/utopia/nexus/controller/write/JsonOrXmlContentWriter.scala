@@ -10,6 +10,8 @@ import utopia.nexus.controller.write.XmlContentWriter.XmlEnveloper.XmlEnvelopeNa
 import utopia.nexus.controller.write.XmlContentWriter.{PlainXmlContentWriter, XmlElementNames, XmlEnveloper}
 import utopia.nexus.model.request.RequestContext
 
+import scala.concurrent.ExecutionContext
+
 object JsonOrXmlContentWriter
 {
 	// OTHER    ---------------------------
@@ -34,7 +36,7 @@ object JsonOrXmlContentWriter
 	          envelopParamNames: Iterable[String] = defaultEnvelopParamNames, preferXml: Boolean = false,
 	          envelopsByDefault: Boolean = false, noEmptyElementsInXmlEnvelope: Boolean = false,
 	          descriptionMayBePlainText: Boolean = false)
-	         (implicit jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
+	         (implicit exc: ExecutionContext, jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
 	          xmlNaming: XmlEnvelopeNames = XmlEnvelopeNames.default) =
 		new JsonOrXmlContentWriter(envelopHeaderNames, envelopParamNames, preferXml,
 			envelopsByDefault, noEmptyElementsInXmlEnvelope, descriptionMayBePlainText)
@@ -61,12 +63,13 @@ object JsonOrXmlContentWriter
 	 *                  (default = false = defaults to JSON)
 	 * @param descriptionMayBePlainText Whether to write description only -results as plain text in JSON responses.
 	 *                                  Default = false = descriptions will always be presented in JSON objects.
+	 * @param exc Implicit execution context used
 	 * @param xmlNaming Element names used in XML
 	 * @return A new content writer
 	 */
 	def plain(descriptionPropName: String = JsonContentWriter.defaultDescriptionPropName, preferXml: Boolean = false,
 	          descriptionMayBePlainText: Boolean = false)
-	         (implicit xmlNaming: XmlElementNames = XmlElementNames.default) =
+	         (implicit exc: ExecutionContext, xmlNaming: XmlElementNames = XmlElementNames.default) =
 		new PlainJsonOrXmlContentWriter(descriptionPropName, preferXml, descriptionMayBePlainText)
 	
 	
@@ -100,11 +103,13 @@ object JsonOrXmlContentWriter
 	 *                  (default = false = defaults to JSON)
 	 * @param descriptionMayBePlainText Whether to write description only -results as plain text in JSON responses.
 	 *                                  Default = false = descriptions will always be presented in JSON objects.
+	 * @param exc Implicit execution context used
 	 * @param xmlNaming Element names used in XML
 	 */
 	class PlainJsonOrXmlContentWriter(descriptionPropName: String = JsonContentWriter.defaultDescriptionPropName,
 	                                  preferXml: Boolean = false, descriptionMayBePlainText: Boolean = false)
-	                                 (implicit xmlNaming: XmlElementNames = XmlElementNames.default)
+	                                 (implicit exc: ExecutionContext,
+	                                  xmlNaming: XmlElementNames = XmlElementNames.default)
 		extends DelegatingMultiTypeContentWriter[HasHeaders]
 	{
 		// ATTRIBUTES   --------------------
@@ -112,10 +117,11 @@ object JsonOrXmlContentWriter
 		override protected val delegates: Iterable[(ContentType, ContentWriter[HasHeaders])] = {
 			val jsonWriter = new PlainJsonContentWriter(descriptionPropName, descriptionMayBePlainText)
 			val json = Application.json -> jsonWriter
+			val ndJson = Application.ndJson -> jsonWriter
 			val xml = Application.xml -> new PlainXmlContentWriter()
 			val text = Text.plain -> jsonWriter
 			
-			if (preferXml) Vector(xml, json, text) else Vector(json, xml, text)
+			if (preferXml) Vector(xml, json, ndJson, text) else Vector(json, ndJson, xml, text)
 		}
 	}
 }
@@ -140,7 +146,7 @@ class JsonOrXmlContentWriter(override protected val envelopHeaderNames: Iterable
                              preferXml: Boolean = false, override protected val envelopsByDefault: Boolean = false,
                              noEmptyElementsInXmlEnvelope: Boolean = false,
                              descriptionMayBePlainText: Boolean = false)
-                            (implicit jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
+                            (implicit exc: ExecutionContext, jsonNaming: JsonEnvelopeNames = JsonEnvelopeNames.default,
                              xmlNaming: XmlEnvelopeNames = XmlEnvelopeNames.default)
 	extends PossiblyEnvelopingContentWriter[RequestContext[_]]
 {
