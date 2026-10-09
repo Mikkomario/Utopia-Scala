@@ -7,7 +7,7 @@ import utopia.vault.model.template.Joinable
 import utopia.vault.nosql.targeting.columns.AccessColumns
 import utopia.vault.nosql.view.FilterableView
 import utopia.vault.sql.JoinType.Inner
-import utopia.vault.sql.{Condition, JoinType, OrderBy}
+import utopia.vault.sql.{Condition, Join, JoinType, OrderBy}
 
 /**
   * Common trait for access points that may be filtered and/or extended
@@ -53,15 +53,21 @@ trait TargetingLike[+A, +V, +VV, +Repr] extends AccessColumns[V, VV] with Filter
 	// OTHER    ---------------------------
 	
 	/**
+	 * @param join A join to apply
+	 * @return A copy of this access that applies the specified join
+	 */
+	def +(join: Join) = this.join(join)
+	
+	/**
 	  * @param join First join to apply
 	  * @param more More joins to apply
-	  * @return A copy of this access which applies the specified joins
+	  * @return A copy of this access that applies the specified joins
 	  */
 	def join(join: Joinable, more: Joinable*): Repr = this.join(Single(join) ++ more)
 	/**
 	 * @param join First join to apply
 	 * @param more More joins to apply
-	 * @return A copy of this access which applies the specified joins as left joins
+	 * @return A copy of this access that applies the specified joins as left joins
 	 */
 	def leftJoin(join: Joinable, more: Joinable*): Repr = this.join(Single(join) ++ more, JoinType.Left)
 	

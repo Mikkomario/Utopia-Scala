@@ -25,6 +25,8 @@
   - Added `.contains(Column)`
 - **SqlSegment**
   - Added `.readsMultipleTables`
+- **TargetingLike**
+  - Added `+(Join)`
 ### Other changes
 - Built with Scala v2.13.18
 - Added automatic joining logic to cases where the two tables/columns reference the same external column
