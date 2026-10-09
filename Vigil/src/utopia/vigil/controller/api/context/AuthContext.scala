@@ -152,17 +152,22 @@ trait AuthContext[+A] extends RequestContext[A]
 	 */
 	def requireScopes(scopes: Scopes)(result: => RequestResult)
 	                 (implicit connection: Connection, token: TokenIdRefs): RequestResult =
-		testScopes(scopes).getOrElse(result)
+		testScopes(scopes) match {
+			case Some(missingScopes) =>
+				RequestResult(ResponseContent(Model.from("missingScopes" -> missingScopes.toValue),
+					"Your authentication token lacks the sufficient authorization scopes"))
+			case None => result
+		}
 	
 	/**
 	 * Checks whether the request has access to a specific auth scope
 	 * @param scope Scope to test
 	 * @param connection Implicit DB connection
 	 * @param token Implicit auth token used
-	 * @return If the authorization token didn't have proper access scope, yields a failure result.
-	 *         If authorization was successful, yields None.
+	 * @return Scopes not accessible using the current authorization token.
+	 *         None if all scopes were accessible.
 	 */
-	def testScope(scope: ScopeTarget)(implicit connection: Connection, token: TokenIdRefs): Option[RequestResult] =
+	def testScope(scope: ScopeTarget)(implicit connection: Connection, token: TokenIdRefs): Option[Scopes] =
 		testScopes(Scopes(scope))
 	/**
 	 * Checks whether the request has access to a specific set of scopes
@@ -171,32 +176,28 @@ trait AuthContext[+A] extends RequestContext[A]
 	 * @param moreScopes Other scopes to test
 	 * @param connection Implicit DB connection
 	 * @param token Implicit auth token used
-	 * @return If the authorization token didn't have proper access scope, yields a failure result.
-	 *         If authorization was successful, yields None.
+	 * @return Scopes not accessible using the current authorization token.
+	 *         None if all scopes were accessible.
 	 */
 	def testScopes(scope1: ScopeTarget, scope2: ScopeTarget, moreScopes: ScopeTarget*)
-	              (implicit connection: Connection, token: TokenIdRefs): Option[RequestResult] =
+	              (implicit connection: Connection, token: TokenIdRefs): Option[Scopes] =
 		testScopes(Pair(scope1, scope2) ++ moreScopes)
 	/**
 	 * Checks whether the request has access to a specific set of scopes
 	 * @param scopes Scopes to test
 	 * @param connection Implicit DB connection
 	 * @param token Implicit auth token used
-	 * @return If the authorization token didn't have proper access scope, yields a failure result.
-	 *         If authorization was successful, yields None.
+	 * @return Scopes not accessible using the current authorization token.
+	 *         None if all scopes were accessible.
 	 */
-	def testScopes(scopes: Scopes)(implicit connection: Connection, token: TokenIdRefs) =
-	{
+	def testScopes(scopes: Scopes)(implicit connection: Connection, token: TokenIdRefs) = {
 		// Case: No scope is required => Calls the specified function
 		if (scopes.isEmpty)
 			None
 		// Case: Certain scopes are required => Makes sure the auth token has those
 		else {
 			val accessibleScopeIds = AccessTokenScopes.ofToken(token.id).usable.scopeIds.toSet
-			scopes.notContainedWithin(accessibleScopeIds).notEmpty.map { missingScopes =>
-				RequestResult(ResponseContent(Model.from("missingScopes" -> missingScopes.toValue),
-					"Your authentication token lacks the sufficient authorization scopes"))
-			}
+			scopes.notContainedWithin(accessibleScopeIds).notEmpty
 		}
 	}
 }
