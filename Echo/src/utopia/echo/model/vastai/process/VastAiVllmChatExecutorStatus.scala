@@ -1,6 +1,6 @@
 package utopia.echo.model.vastai.process
 
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted}
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.{Serving, NotStarted}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelConvertible
@@ -36,10 +36,10 @@ case class VastAiVllmChatExecutorStatus(processorStates: Seq[VastAiVllmProcessor
 				NotStarted
 			else {
 				val phases = processorStates.map { _.phase }
-				if (phases.contains(ApiHosting))
-					ApiHosting
+				if (phases.contains(Serving))
+					Serving
 				else
-					phases.iterator.filter { _ < ApiHosting }.maxOption.getOrElse { phases.min }
+					phases.iterator.filter { _ < Serving }.maxOption.getOrElse { phases.min }
 			}
 		}
 		Model.from(

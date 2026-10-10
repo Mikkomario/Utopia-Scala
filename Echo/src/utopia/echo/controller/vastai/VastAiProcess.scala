@@ -99,6 +99,11 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 	 * A pointer that contains the [[VastAiProcessState]] of this process
 	 */
 	val detailedStatePointer = _stateP.readOnly
+	/**
+	 * A pointer that contains the current (actual) state of the rented instance.
+	 * Contains None while no instance is available.
+	 */
+	lazy val instanceStatePointer = _stateP.map { _.instanceStatus.map { _.actual.value } }
 	
 	private val instanceIdFutureP = AssignableOnce[Future[Try[Int]]]()
 	private val instancePointerP = AssignableOnce[Try[Changing[VastAiInstance]]]()

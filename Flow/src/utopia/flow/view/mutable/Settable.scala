@@ -18,7 +18,6 @@ object Settable
 	  * @return A new Settable instance in false state. May be set once.
 	  */
 	def apply(): Settable = new _Settable
-	
 	/**
 	  * Creates a new Settable instance with a predefined state
 	  * @param initialState Whether this instance has already been set

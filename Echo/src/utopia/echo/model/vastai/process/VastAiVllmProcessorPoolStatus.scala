@@ -1,8 +1,8 @@
 package utopia.echo.model.vastai.process
 
 import utopia.echo.model.vastai.instance.InstanceStatus
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.ApiHosting
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.Serving
 
 import java.time.Instant
 
@@ -21,7 +21,7 @@ import java.time.Instant
  */
 @deprecated("Deprecated for removal. Replaced with VastAiVllmChatExecutorStatus.", "v1.6")
 case class VastAiVllmProcessorPoolStatus(maxContextSize: Int, maxParallelRequestsPerClient: Int,
-                                         instanceStates: Seq[(VastAiVllmProcessPhase, Option[InstanceStatus], Int, Instant)],
+                                         instanceStates: Seq[(VastAiServicePhase, Option[InstanceStatus], Int, Instant)],
                                          requestsQueued: Int)
 {
 	// ATTRIBUTES   --------------------
@@ -29,7 +29,7 @@ case class VastAiVllmProcessorPoolStatus(maxContextSize: Int, maxParallelRequest
 	/**
 	 * The current parallel processing capacity (i.e. the current maximum number of parallel requests)
 	 */
-	lazy val parallelCapacity = instanceStates.count { _._1 == ApiHosting } * maxParallelRequestsPerClient
+	lazy val parallelCapacity = instanceStates.count { _._1 == Serving } * maxParallelRequestsPerClient
 	/**
 	 * The current number of pending / queued requests, including those currently being processed
 	 */

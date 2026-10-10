@@ -2,8 +2,8 @@ package utopia.echo.model.vastai.process
 
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.vastai.instance.InstanceStatus
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.ApiHosting
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.Serving
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelConvertible
@@ -21,7 +21,7 @@ import java.time.Instant
  * @author Mikko Hilpinen
  * @since 19.03.2026, v1.6
  */
-case class VastAiVllmProcessorStatus(phase: VastAiVllmProcessPhase, instanceStatus: Option[InstanceStatus],
+case class VastAiVllmProcessorStatus(phase: VastAiServicePhase, instanceStatus: Option[InstanceStatus],
                                      activeTokens: TokenCount, pendingTokens: TokenCount, maxContextSize: TokenCount,
                                      started: Instant, lastRequestTime: Instant, lastPendingStarted: Instant,
                                      lastPendingEnded: Instant)
@@ -32,14 +32,14 @@ case class VastAiVllmProcessorStatus(phase: VastAiVllmProcessPhase, instanceStat
 	/**
 	 * @return Whether this processor is usable in this state
 	 */
-	def usable = phase == ApiHosting && instanceStatus.exists { _.instanceIsUsable }
+	def usable = phase == Serving && instanceStatus.exists { _.instanceIsUsable }
 	
 	
 	// IMPLEMENTED  -----------------------
 	
 	override def toModel: Model = Model.from("max_context" -> maxContextSize.value,
 		"phase" -> Model.from("name" -> phase.name, "index" -> phase.index), "instance_status" -> instanceStatus,
-		"usable" -> (phase == ApiHosting && instanceStatus.exists { _.instanceIsUsable }),
+		"usable" -> (phase == Serving && instanceStatus.exists { _.instanceIsUsable }),
 		"token_usage" -> Model.from("active" -> activeTokens.value, "pending" -> pendingTokens.value),
 		"started" -> started, "last_request_time" -> lastRequestTime, "last_pending_started" -> lastPendingStarted,
 		"last_pending_ended" -> lastPendingEnded)

@@ -9,6 +9,7 @@ import utopia.echo.controller.chat.BufferingChatRequestExecutor
 import utopia.echo.controller.client.VastAiApiClient
 import utopia.echo.controller.vastai.InstanceReuseLogic.NeverReuse
 import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.maxRetries
+import utopia.echo.controller.vastai.vllm.VastAiVllmProcess.VastAiVllmSettings
 import utopia.echo.controller.vastai.{InstanceReuseLogic, SelectOffer}
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
 import utopia.echo.model.enumeration.ServiceState
@@ -23,8 +24,8 @@ import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading, Unknown}
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.vastai.instance.{NewInstanceFoundation, VastAiInstance}
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.HostingApi
-import utopia.echo.model.vastai.process.VastAiVllmProcessState.VastAiVllmProcessPhase.{ApiHosting, NotStarted, Stopping}
+import utopia.echo.model.vastai.process.VastAiServiceState.Hosting
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.{NotStarted, Serving, Stopping}
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessRecorder, VastAiVllmProcessorStatus}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.async.context.{AccessQueue, MappingFunnel, Scheduler}
@@ -45,6 +46,7 @@ import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now, Today}
 import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
+import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.async.Volatile
 import utopia.flow.view.mutable.eventful.CopyOnDemand
 import utopia.flow.view.mutable.{Pointer, Settable}
@@ -263,20 +265,21 @@ object VastAiVllmChatExecutor
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
+// TODO: Refactor constructor to use a settings + factory -based approach
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
-                             instanceReuseLogic: InstanceReuseLogic = NeverReuse,
+                             baseSettings: VastAiVllmSettings = VastAiVllmSettings.default,
                              coreInstanceCount: Int = 1, maxInstanceCount: Int = 4, stopInstanceCount: Int = 0,
                              instanceActivationQueueSizeThreshold: Int = 24,
                              instanceActivationPendingTokensThreshold: TokenCount = 24000,
                              instanceAccelerationPendingTokensThreshold: TokenCount = 48000,
-                             maxConnectionsPerInstance: Int = 28, additionalReservedDisk: ByteCount = 5.gb,
+                             maxConnectionsPerInstance: Int = 28,
                              defaultContextSize: Option[TokenCount] = None, contextSafetyMargin: TokenCount = 64,
                              backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
-                             recorder: Option[VastAiVllmProcessRecorder], installScriptPath: Option[Path] = None,
-                             remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
-                             reuseSetupTimeout: Duration = 5.minutes, recoveryTimeout: Duration = 60.seconds,
-                             noResponseTimeout: Duration = 10.minutes, idleShutdownThreshold: Duration = 15.minutes,
-                             partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
+                             recorder: Option[VastAiVllmProcessRecorder],
+                             reuseSetupTimeout: Duration = 5.minutes,
+                             idleShutdownThreshold: Duration = 15.minutes,
+                             partialUseShutdownThreshold: Duration = 25.minutes,
+                             // label: String = "chat-executor",
                              logDir: Option[Path] = None, startsLazily: Boolean = false,
                              keepStoppedInstances: Boolean = false)
                             (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
@@ -286,6 +289,67 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	extends BufferingChatRequestExecutor[BufferedOpenAiReply] with Breakable
 {
 	// ATTRIBUTES   -----------------------
+	
+	private val gateway = Gateway(maxConnectionsPerRoute = maxConnectionsPerInstance,
+		maxConnectionsTotal = maxConnectionsPerInstance * maxInstanceCount, disableTrustStoreVerification = true)
+	/**
+	 * A pointer for acquiring unique port numbers
+	 */
+	private val portCounter = {
+		// Continuously generates new port numbers
+		val p = Volatile(18001)
+		Iterator.continually { p.getAndUpdate { _ + 1 } }
+			// Makes sure only to yield available ports
+			.filter { port => Try { new ServerSocket(port).close() }.isSuccess }
+	}
+	
+	private val debugLogger = logDir
+		.map { dir => KeptOpenWriter(30.seconds).to((dir/s"$Today-Vast-AI-log.txt").unique) }
+		.orElse { baseSettings.debugLogger }
+	
+	private val vllmSettings = baseSettings.debugLoggingWith(debugLogger).usingGateway(gateway)
+		.reusingInstancesWith({
+			// FIXME: Should specifically target the recorded stopped instances (e.g. using a label)
+			if (stopInstanceCount > 0)
+				ReuseStoppedInstances.onlyReusable || baseSettings.instanceReuseLogic
+			else
+				baseSettings.instanceReuseLogic
+		})
+		// Rotates the used local ports
+		.withPortForwarding(View {
+			val remotePort = baseSettings.forwardedPorts match {
+				case Some(ports) => ports.value.second
+				case None => 8000
+			}
+			Pair(portCounter.next(), remotePort)
+		})
+		// Limits the applied status check frequency
+		.updatingStatusEvery(baseSettings.statusCheckInterval max (maxInstanceCount * 2).seconds)
+		// TODO: Also take the baseSettings destruction logic into account
+		.withDestructionLogic { (instance, runTime, apiHosted) =>
+			// Case: Stopping is not enabled or already requested to stop without keeping stopped instances
+			//       => Destroys all instances
+			if (stopInstanceCount <= 0 || (stopFlag.isSet && !keepStoppedInstances))
+				true
+			else {
+				// Stops instances if running low on usable clients, unless the instance status/state is not promising
+				val maxUsableCount = if (apiHosted) stopInstanceCount + 1 else stopInstanceCount
+				if (usableProcessorsCount < maxUsableCount) {
+					val stops = instance.status.actual.value match {
+						case Loading | Active => apiHosted || runTime < reuseSetupTimeout
+						case _: Unknown => apiHosted
+						case _ => false
+					}
+					// Case: Stops the instance instead of destroying it => Remembers the instance ID
+					if (stops)
+						stoppedInstanceIdsP :+= instance.id
+					!stops
+				}
+				// Case: Enough processors as is => Destroys this instance
+				else
+					true
+			}
+		}
 	
 	/**
 	 * Maximum context size applied by default / before there are any instances reserved.
@@ -301,16 +365,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * Set to true once this executor should terminate
 	 */
 	private val stopFlag = Settable()
-	/**
-	 * A pointer for acquiring unique port numbers
-	 */
-	private val portCounter = {
-		// Continuously generates new port numbers
-		val p = Volatile(18001)
-		Iterator.continually { p.getAndUpdate { _ + 1 } }
-			// Makes sure only to yield available ports
-			.filter { port => Try { new ServerSocket(port).close() }.isSuccess }
-	}
 	
 	/**
 	 * Counts the number of consecutive failures to acquire a Vast AI instance.
@@ -339,25 +393,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 */
 	private val queueSizeCheckThresholdP = Volatile(0)
 	
-	private val gateway = Gateway(maxConnectionsPerRoute = maxConnectionsPerInstance,
-		maxConnectionsTotal = maxConnectionsPerInstance * maxInstanceCount, disableTrustStoreVerification = true)
-	
 	/**
 	 * A pointer that contains IDs of instances that were only stopped instead of destroyed.
 	 * These are reused with priority and may be destroyed when this process completes.
 	 */
 	private val stoppedInstanceIdsP = Volatile.emptySeq[Int]
-	/**
-	 * Logic applied for instance-reuse.
-	 * If instances are sometimes stopped instead of destroyed, reuses those stopped instances.
-	 * Uses the user-defined reuse logic when no instances have been stopped.
-	 */
-	private val appliedReuseLogic = {
-		if (stopInstanceCount > 0)
-			ReuseStoppedInstances.onlyReusable || instanceReuseLogic
-		else
-			instanceReuseLogic
-	}
 	
 	/**
 	 * Used for limiting instance-creation to one instance at a time
@@ -391,8 +431,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	// A public-facing version of maxContextSizeP. Omits the safety margin, which is added to the incoming requests.
 	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin * 2 - 1 }
 	
-	private val debugLogger = logDir.map { dir => KeptOpenWriter(30.seconds).to((dir/s"$Today-Vast-AI-log.txt").unique) }
-	
 	/**
 	 * A process that shuts down idle and partially used processors.
 	 * None if no such process is needed.
@@ -404,7 +442,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				// Checks whether any processes are currently idle or only partially used
 				val now = Now.toInstant
 				val idleThreshold = now - idleShutdownThreshold
-				val (loading, active) = processors.divideBy { p => p.phase == ApiHosting && !p.wasRequestedToStop }
+				val (loading, active) = processors.divideBy { p => p.phase == Serving && !p.wasRequestedToStop }
 					.toTuple
 				val (remaining, idle) = active.divideBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
 				
@@ -740,7 +778,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 								}
 							}) {
 							currentTarget =>
-								if (processors.size < currentTarget || processors.exists { _.phase < ApiHosting })
+								if (processors.size < currentTarget || processors.exists { _.phase < Serving })
 									currentTarget * instanceAccelerationPendingTokensThreshold.value
 								else
 									currentTarget * instanceActivationPendingTokensThreshold.value
@@ -969,63 +1007,31 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		debugLog("Starting a new instance")
 		// Creates and starts the process of setting up vLLM on Vast AI
 		val startTime = Now.toInstant
-		val process = VastAiVllmProcess(selectOffer, modelSize.modelSize, additionalReservedDisk, appliedReuseLogic,
-			gateway, installScriptPath, localPort = portCounter.next(), remotePort = remotePort,
-			maxGpuUtil = maxGpuUtil, setupTimeout = setupTimeout, recoveryTimeout = recoveryTimeout,
-			noResponseTimeout = noResponseTimeout, statusCheckInterval = (30 max (maxInstanceCount * 2)).seconds,
-			instanceLabel = label, debugLogger = debugLogger) {
+		val process = VastAiVllmProcess.withSettings(vllmSettings).apply(selectOffer, modelSize.modelSize) {
 			// Choose image
 			offer =>
 				// Delegates image-choosing to the custom 'chooseImage' function
 				val maxContextSize = contextSizeOn(offer.gpu.ram)
 				val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
 				(image, initialVllmState, maxContextSize, model)
-		} {
-			// Should destroy -logic
-			(instance, apiHosted) =>
-				// Case: Stopping is not enabled or already requested to stop without keeping stopped instances
-				//       => Destroys all instances
-				if (stopInstanceCount <= 0 || (stopFlag.isSet && !keepStoppedInstances))
-					true
-				else {
-					// Stops instances if running low on usable clients, unless the instance status/state is not promising
-					val maxUsableCount = if (apiHosted) stopInstanceCount + 1 else stopInstanceCount
-					if (usableProcessorsCount < maxUsableCount) {
-						val stops = instance.status.actual.value match {
-							case Loading | Active => apiHosted || Now - startTime < reuseSetupTimeout
-							case _: Unknown => apiHosted
-							case _ => false
-						}
-						// Case: Stops the instance instead of destroying it => Remembers the instance ID
-						if (stops)
-							stoppedInstanceIdsP :+= instance.id
-						!stops
-					}
-					// Case: Enough processors as is => Destroys this instance
-					else
-						true
-				}
 		}
 		processorsP :+= new Processor(process)
 		debugLog(s"Now at ${ processors.size } instance processes")
 		process.runAsync()
 		
 		// Updates the usableClients when API hosting starts or ends
+		process.usableClientPointer.addListener { e =>
+			// Checks for client-usability
+			val clientStates = e.values.map { _.map { case (client, model, _) => client -> model } }
+			if (clientStates.isAsymmetric) {
+				debugLog("Updating client count")
+				usableProcessorsP.update()
+			}
+		}
 		process.detailedStatePointer.addListenerAndSimulateEvent(NotStarted) { e =>
 			// Checks whether the instance became available => Updates max context, if so
 			if (e.values.isAsymmetricBy { _.isInstanceAvailable })
 				maxContextSizeP.update()
-			
-			// Checks for client-usability
-			val clientStates = e.values.map {
-				case HostingApi(instance, client, model, _) if instance.status.instanceShouldBeUsed =>
-					Some(client -> model)
-				case _ => None
-			}
-			if (clientStates.isAsymmetric) {
-				debugLog(s"Updating client count (${ e.newValue.phase })")
-				usableProcessorsP.update()
-			}
 			
 			// Case: Stop process initiated => Updates max context size & stops listening
 			if (e.newValue.phase >= Stopping) {
@@ -1041,10 +1047,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		recorder.foreach { recorder =>
 			process.detailedStatePointer.addListenerAndSimulateEvent(NotStarted) { e =>
 				e.newValue match {
-					case HostingApi(instance, _, _, _) =>
+					case Hosting(instance) =>
 						recorder.onApiSetup(instance, process.startTime, process.loadCompletionTime.getOrElse(Now))
 						Detach
-					case state if state.phase > ApiHosting => Detach
+					case state if state.phase > Serving => Detach
 					case _ => Continue
 				}
 			}
@@ -1101,7 +1107,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * @return Maximum context size to apply
 	 */
 	private def contextSizeOn(vram: ByteCount) =
-		modelSize.maxContextSizeOn(vram * maxGpuUtil) - contextSafetyMargin
+		modelSize.maxContextSizeOn(vram * vllmSettings.maxGpuUtil) - contextSafetyMargin
 		
 	private def debugLog(entry: => String) = debugLogger.foreach { debugLogUsing(_, entry) }
 	private def debugLogUsing(logger: KeptOpenWriter, entry: String) =
@@ -1244,7 +1250,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			stopped = true
 			val state = process.detailedState
 			// Case: Not currently hosting an API => Requests the Vast AI process to stop
-			if (state.phase != ApiHosting)
+			if (state.phase != Serving)
 				process.stop()
 			// Case: Hosting an API
 			//       => Makes sure the queued requests get resolved first, before requesting the instance to stop
