@@ -24,6 +24,7 @@
 - **ChatLike** no longer contains any attributes; 
   The definitions were kept, but the implementations were moved to **AbstractChat** instead.
 - Vast AI process classes now require implicit **Scheduler** access
+- Returned Vast AI process status models are now named using camel case
 ### Deprecations
 - Renamed various traits and models to be more general:
   - **ApiHostingResult** is now **HostingResult**
