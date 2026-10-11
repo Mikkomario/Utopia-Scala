@@ -8,6 +8,10 @@
 - **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
 - Rewrote **VastAiProcess**, **VastAiVllmProcess** and **VastAiChatExecutor** constructors to use settings 
   and factories.
+- Refactored **VastAiVllmProcess** to extend the new **VastAiServiceProcess** class
+  - Also refactored the associated enumeration / state models.
+    - Removed **StartingApi** state altogether.
+    - The hosting state (now **Hosting**) no longer contains client, model, and max context information
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances but manages 
   the number of processed tokens more carefully.
   - The return value of `.status` is also different
@@ -20,9 +24,19 @@
 - **ChatLike** no longer contains any attributes; 
   The definitions were kept, but the implementations were moved to **AbstractChat** instead.
 - Vast AI process classes now require implicit **Scheduler** access
+### Deprecations
+- Renamed various traits and models to be more general:
+  - **ApiHostingResult** is now **HostingResult**
+  - **VastAiVllmProcessState** is now **VastAiServiceState**
+  - **VastAiVllmProcessPhase** is now **VastAiServicePhase**
+    - **ApiSetup** is now **Setup**
+    - **ApiHosting** is now **Serving**
+    - **HostingApi** is now **Hosting**
+    - **StoppingApi** is now **StoppingService**
 ### New features
 - Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**
 - Vast AI instances can now be stopped instead of destroyed and may be reused automatically
+- Added **VastAiServiceProcess**, an abstract base class for implementing services similar to **VastAiVllmProcess**
 ### New methods
 - **StatelessBufferedReplyGeneratorLike**
   - Added `.mapExpectedReplySize(...)` and `.mapExpectedThinkSize(...)`

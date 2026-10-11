@@ -54,6 +54,20 @@ sealed trait VastAiServiceState
 
 object VastAiServiceState
 {
+	// TYPES    --------------------------
+	
+	@deprecated("Renamed to VastAiServicePhase", "v1.6")
+	type VastAiVllmProcessPhase = VastAiServicePhase
+	
+	
+	// COMPUTED --------------------------
+	
+	@deprecated("Renamed to SettingUp", "v1.6")
+	def SettingUpApi = SettingUp
+	@deprecated("Renamed to Hosting", "v1.6")
+	def HostingApi = Hosting
+	
+	
 	// NESTED   --------------------------
 	
 	sealed trait VastAiServicePhase extends SelfComparable[VastAiServicePhase]
@@ -87,6 +101,16 @@ object VastAiServiceState
 	
 	object VastAiServicePhase
 	{
+		// COMPUTED    -------------------
+		
+		@deprecated("Renamed to Setup", "v1.6")
+		def ApiSetup = Setup
+		@deprecated("Renamed to Serving", "v1.6")
+		def ApiHosting = Serving
+		@deprecated("Renamed to StoppingService", "v1.6")
+		def StoppingApi = StoppingService
+		
+		
 		// VALUES   ----------------------
 		
 		/**
