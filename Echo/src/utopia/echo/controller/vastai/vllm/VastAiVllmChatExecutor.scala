@@ -200,9 +200,10 @@ object VastAiVllmChatExecutor
 		 * @param backupExecutor A request processing logic to use for requests that are too large
 		 *                       for this executor to process. I.e. for requests that require a context size larger
 		 *                       than any of the rented Vast AI instances can process.
+		 *                       None if no backup executor should be used.
 		 * @return A copy of this instance using the specified backup processing logic.
 		 */
-		def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): Repr
+		def usingBackupExecutor(backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]]): Repr
 		
 		/**
 		 * @param recorder An interface for recording each rented Vast AI instance.
@@ -309,6 +310,15 @@ object VastAiVllmChatExecutor
 		 *         enter "thinking" / "reflection" mode.
 		 */
 		def assumingCertainModelsThink(thinkingModels: Set[String]): Repr = detectingThinkUsing(thinkingModels.contains)
+		
+		/**
+		 * @param backupExecutor A request processing logic to use for requests that are too large
+		 *                       for this executor to process. I.e. for requests that require a context size larger
+		 *                       than any of the rented Vast AI instances can process.
+		 * @return A copy of this instance using the specified backup processing logic.
+		 */
+		def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): Repr =
+			usingBackupExecutor(Some(backupExecutor))
 		
 		/**
 		 * @param logDirectory Directory where debug log entries will be placed.
@@ -451,8 +461,8 @@ object VastAiVllmChatExecutor
 		override def withContextSafetyMargin(safetyMargin: TokenCount): VastAiVllmChatExecutorSettings =
 			copy(contextSafetyMargin = safetyMargin)
 		
-		override def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): VastAiVllmChatExecutorSettings =
-			copy(backupExecutor = Some(backupExecutor))
+		override def usingBackupExecutor(backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]]): VastAiVllmChatExecutorSettings =
+			copy(backupExecutor = backupExecutor)
 		
 		override def recordingUsing(recorder: VastAiVllmProcessRecorder): VastAiVllmChatExecutorSettings =
 			copy(recorder = Some(recorder))
@@ -520,7 +530,7 @@ object VastAiVllmChatExecutor
 			mapExecutorSettings { _.withDefaultContextSize(contextSize) }
 		override def withContextSafetyMargin(safetyMargin: TokenCount): Repr =
 			mapExecutorSettings { _.withContextSafetyMargin(safetyMargin) }
-		override def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): Repr =
+		override def usingBackupExecutor(backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]]): Repr =
 			mapExecutorSettings { _.usingBackupExecutor(backupExecutor) }
 		override def recordingUsing(recorder: VastAiVllmProcessRecorder): Repr =
 			mapExecutorSettings { _.recordingUsing(recorder) }

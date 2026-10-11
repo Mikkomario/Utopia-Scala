@@ -63,4 +63,6 @@ case class VastAiVllmProcessRecord(hostingResult: HostingResult, started: Instan
 	 * @return Whether the service was hosted for some time
 	 */
 	def hosted = hostingResult.wasHosted
+	@deprecated("Renamed to .hosted", "v1.6")
+	def hostedApi = hosted
 }
