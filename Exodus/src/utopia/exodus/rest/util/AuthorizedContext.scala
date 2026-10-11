@@ -60,7 +60,7 @@ object AuthorizedContext
 	  * @param jsonParser Json parser used for interpreting request json content (implicit)
 	  * @return A new request context
 	  */
-	def apply(request: Request, resultParser: ResultParser = UseRawJson)
+	def apply(request: Request, resultParser: ResultParser = new UseRawJson())
 	         (implicit serverSettings: ServerSettings, jsonParser: JsonParser): AuthorizedContext =
 		new AuthorizedContextImplementation(request, resultParser)
 	
@@ -68,7 +68,7 @@ object AuthorizedContext
 	// NESTED   ---------------------------
 	
 	private class AuthorizedContextImplementation(override val request: Request,
-	                                              override val resultParser: ResultParser = UseRawJson)
+	                                              override val resultParser: ResultParser = new UseRawJson())
 	                                             (implicit override val settings: ServerSettings,
 	                                              override val jsonParser: JsonParser)
 		extends AuthorizedContext

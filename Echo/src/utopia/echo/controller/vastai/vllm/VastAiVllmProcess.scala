@@ -100,12 +100,12 @@ object VastAiVllmProcess
 		 * @param gateway A Gateway instance to use (call-by-name)
 		 * @return A copy of this instance using the specified Gateway interface
 		 */
-		def usingLazyGateway(gateway: => Gateway) = usingLazyGateway(Lazy(gateway))
+		def usingLazyGateway(gateway: => Gateway): Repr = usingLazyGateway(Lazy(gateway))
 		/**
 		 * @param gateway A Gateway instance to use
 		 * @return A copy of this instance using the specified Gateway interface
 		 */
-		def usingGateway(gateway: Gateway) = usingLazyGateway(View.fixed(gateway))
+		def usingGateway(gateway: Gateway): Repr = usingLazyGateway(View.fixed(gateway))
 	}
 	
 	object VastAiVllmSettings

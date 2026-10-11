@@ -7,9 +7,9 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
 import utopia.echo.controller.client.VastAiApiClient
-import utopia.echo.controller.vastai.InstanceReuseLogic.NeverReuse
-import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.maxRetries
-import utopia.echo.controller.vastai.vllm.VastAiVllmProcess.VastAiVllmSettings
+import utopia.echo.controller.vastai.VastAiServiceProcess.VastAiServiceSettings
+import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.{VastAiVllmChatExecutorSettings, maxRetries}
+import utopia.echo.controller.vastai.vllm.VastAiVllmProcess.{VastAiVllmSettings, VastAiVllmSettingsFactory, VastAiVllmSettingsWrapper}
 import utopia.echo.controller.vastai.{InstanceReuseLogic, SelectOffer}
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
 import utopia.echo.model.enumeration.ServiceState
@@ -20,7 +20,6 @@ import utopia.echo.model.request.vastai.DestroyInstance
 import utopia.echo.model.response.openai.BufferedOpenAiReply
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.unit.ByteCount
-import utopia.echo.model.unit.ByteCountExtensions._
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading, Unknown}
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.vastai.instance.{NewInstanceFoundation, VastAiInstance}
@@ -44,7 +43,9 @@ import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.time.{Duration, Now, Today}
-import utopia.flow.util.logging.Logger
+import utopia.flow.util.Mutate
+import utopia.flow.util.StringExtensions._
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.async.Volatile
@@ -55,6 +56,7 @@ import java.net.ServerSocket
 import java.nio.file.Path
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object VastAiVllmChatExecutor
@@ -63,120 +65,521 @@ object VastAiVllmChatExecutor
 	
 	private val maxRetries = 8
 	
+	val factory = new VastAiVllmChatExecutorFactory(VastAiVllmChatExecutorSettings.default)
 	
-	// OTHER    ------------------------
 	
+	// IMPLICIT    ------------------------
+	
+	// Implicitly treats this object as a factory
+	implicit def objectAsFactory(o: VastAiVllmChatExecutor.type): VastAiVllmChatExecutorFactory = o.factory
+			
+	
+	// NESTED   -------------------------------
+	
+	trait VastAiVllmChatExecutorSettingsFactory[+Repr] extends VastAiVllmSettingsFactory[Repr]
+	{
+		// ABSTRACT    ------------------------
+		
+		/**
+		 * @param coreInstanceCount Number of Vast AI instances to reserve immediately
+		 *                          (or when the first request is received, depending on whether startup is lazy or not).
+		 * @return Copy of this instance reserving the specified number of instances immediately.
+		 */
+		def startingWithInstances(coreInstanceCount: Int): Repr
+		/**
+		 * @param maxInstanceCount Maximum number of Vast AI instances to reserve
+		 * @return A copy of this instance reserving at most the specified number of instances
+		 */
+		def usingAtMostInstances(maxInstanceCount: Int): Repr
+		/**
+		 * @param stopInstanceCount Maximum number of stopped instances kept in reserve for speeding up startup.
+		 * @return Copy of this instance keeping the specified number of instances in reserve (in stopped state)
+		 */
+		def reservingInstances(stopInstanceCount: Int): Repr
+		/**
+		 * Specifies the number of Vast AI instances to acquire
+		 * @param core Number of instances to activate immediately
+		 * @param max Maximum number of instances that can be activated at any time
+		 * @param reserve Number of instances to keep in reserve in stopped state.
+		 * @return Copy of this instance applying the specified instance thresholds.
+		 */
+		def withInstanceCounts(core: Int, max: Int, reserve: Int): Repr
+		
+		/**
+		 * @param queueSizeThreshold Number of queued requests at which an additional Vast AI
+		 *                           instance should be acquired.
+		 *
+		 *                           Requests are queued while no instances are able to process requests,
+		 *                           and also while all running instances are clearly too full.
+		 *
+		 *                           This threshold may stack / be applied multiple times;
+		 *                           I.e. If this threshold is 20 requests and 40 requests are queued,
+		 *                           activates 2 instances at once.
+		 *
+		 * @return Copy of this instance with the specified request queue-size threshold
+		 * @see [[activatingInstancesAtPendingTokens]]
+		 * @see [[acceleratingActivationAtPendingTokens]]
+		 */
+		def activatingInstancesAtQueueSize(queueSizeThreshold: Int): Repr
+		/**
+		 * @param pendingTokensThreshold Number of combined tokens (input + expected output) of ALL pending
+		 *                               requests PER a single Vast AI instance, on average,
+		 *                               at which an additional instance will be acquired.
+		 *
+		 *                               E.g. If we have 3 active instances with 5 K, 10 K, and 15 K pending tokens,
+		 *                               this threshold would have to be 10 K in order for a 4th instance to be
+		 *                               acquired.
+		 *
+		 *                               Note: This value doesn't stack. For reserving more than one instance at
+		 *                               a time, the acceleration threshold must be reached instead.
+		 *
+		 * @return A copy of this instance with the specified activation (token) threshold.
+		 * @see [[acceleratingActivationAtPendingTokens]]
+		 * @see [[activatingInstancesAtQueueSize]]
+		 */
+		def activatingInstancesAtPendingTokens(pendingTokensThreshold: TokenCount): Repr
+		/**
+		 * @param pendingTokensThreshold Number of combined tokens (input + expected output) of ALL pending
+		 *                               requests PER a single Vast AI instance, on average,
+		 *                               at which additional instances will be acquired.
+		 *
+		 *                               E.g. If we have 3 active instances with 15 K, 20 K, and 25 K pending tokens,
+		 *                               and one instance being activated (with 0 pending tokens),
+		 *                               this threshold would have to be 15 K for a 5th instance to be activated.
+		 *
+		 *                               This value stacks, possibly triggering
+		 *                               more than 2 instances being activated at once.
+		 *                               On the other hand, the first activation is based on
+		 *                               the activation threshold instead.
+		 *
+		 * @return A copy of this instance with the specified acceleration (token) threshold.
+		 * @see [[activatingInstancesAtPendingTokens]]
+		 */
+		def acceleratingActivationAtPendingTokens(pendingTokensThreshold: TokenCount): Repr
+		/**
+		 * Specifies queue size and pending token thresholds, at which additional Vast AI instances will be acquired.
+		 * @param queueSizeThreshold Number of queued requests, after which a new instance is acquired. May stack.
+		 * @param pendingTokensThreshold Number of pending tokens (total input + expected output) on average per
+		 *                               active instance, after which an additional instance will be acquired.
+		 *                               Only applied while no new instances are being acquired / loaded.
+		 * @param accelerationThreshold Number of pending tokens on average per instance (whether active or loading),
+		 *                              at which an additional instance will be acquired.
+		 *                              Applied while new instances are being loaded. May stack.
+		 * @return A copy of this instance applying the specified instance activation thresholds.
+		 */
+		def withActivationThresholds(queueSizeThreshold: Int, pendingTokensThreshold: TokenCount,
+		                             accelerationThreshold: TokenCount): Repr
+		
+		/**
+		 * Limits the number of active HTTP connections per a single Vast AI instance.
+		 * @param connectionsPerInstance Maximum number of HTTP connections to allow to any single rented instance.
+		 *                               A larger number allows for wider parallelism, but may use more resources.
+		 * @return A copy of this instance using the specified connection limit.
+		 */
+		def withMaxHttpConnectionsPerInstance(connectionsPerInstance: Int): Repr
+		
+		/**
+		 * Specifies the default context size to assume.
+		 * Note: If not specified, incoming requests may fail or may be assigned to the backup executor, if applicable.
+		 * @param contextSize Request context size to assume when no instances have been acquired or even loading.
+		 *                    None if no context size should be assumed (not recommended).
+		 * @return Copy of this instance assuming the specified context size before other information is available.
+		 */
+		def withDefaultContextSize(contextSize: Option[TokenCount]): Repr
+		/**
+		 * @param safetyMargin Safety margin added to context size calculations.
+		 *
+		 *                     If the request is at the edge of a processor's context size limit,
+		 *                     may transfer it to another processor with a larger maximum context size.
+		 *
+		 * @return A copy of this instance using the specified safety margin.
+		 */
+		def withContextSafetyMargin(safetyMargin: TokenCount): Repr
+		
+		/**
+		 * @param backupExecutor A request processing logic to use for requests that are too large
+		 *                       for this executor to process. I.e. for requests that require a context size larger
+		 *                       than any of the rented Vast AI instances can process.
+		 * @return A copy of this instance using the specified backup processing logic.
+		 */
+		def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): Repr
+		
+		/**
+		 * @param recorder An interface for recording each rented Vast AI instance.
+		 * @return A copy of this instance informing the specified recorder about each acquired and closed instance.
+		 */
+		def recordingUsing(recorder: VastAiVllmProcessRecorder): Repr
+		
+		/**
+		 * @param setupTimeout Timeout for the setup / instance loading process, applying to instance reuse.
+		 *                     If this timeout is reached, the instance
+		 *                     won't be considered viable for reservation / reuse.
+		 *
+		 *                     Use this to filter out unresponsive or slow instances from the reuse pool.
+		 *
+		 * @return A copy of this instance applying the specified timeout value for instance reuse.
+		 */
+		def onlyReusingInstancesUntil(setupTimeout: Duration): Repr
+		/**
+		 * @param idleShutdownThreshold A time threshold at which completely idle processes are stopped,
+		 *                              destroying or stopping the underlying Vast AI instance(s).
+		 *
+		 *                              Lower values mean lower costs during low-demand periods,
+		 *                              but may slow down the process and incur larger download & setup costs
+		 *                              if the demand rises sharply afterwards.
+		 *
+		 * @return A copy of this instance closing idle processors after the specified time threshold.
+		 */
+		def closingIdleProcessorsAfter(idleShutdownThreshold: Duration): Repr
+		/**
+		 * @param partiallyUsedShutdownThreshold A time threshold at which partially used processors are stopped,
+		 *                                       destroying or stopping the underlying Vast AI instance(s).
+		 *
+		 *                                       Lower values mean lower costs during low-demand periods,
+		 *                                       but may slow down the process and incur larger download & setup costs
+		 *                                       if the demand rises sharply afterwards.
+		 *
+		 * @return A copy of this instance closing partially used processors after the specified time threshold.
+		 * @see [[closingIdleProcessorsAfter]]
+		 */
+		def closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold: Duration): Repr
+		
+		/**
+		 * @param thinks A function that receives name of the hosted LLM and yields whether that model uses
+		 *               "thinking" / "reflection".
+		 * @return A copy of this instance using the specified logic to detect thinking models.
+		 */
+		def detectingThinkUsing(thinks: String => Boolean): Repr
+		
+		/**
+		 * @param startupLazily Whether this executor should only start acquiring Vast AI instances
+		 *                      when the first request is received.
+		 *                      False if the first instances should be acquired immediately when
+		 *                      this executor is constructed.
+		 * @return A copy of this instance applying the specified startup style
+		 */
+		def withStartupIsLazy(startupLazily: Boolean): Repr
+		/**
+		 * @param preserveStopped Whether stopped instances should be preserved when this executor is stopped.
+		 *                        False if all stopped instances should be destroyed at that point.
+		 * @return A copy of this instance applying the specified preservation logic.
+		 */
+		def withStoppedInstancePreservation(preserveStopped: Boolean): Repr
+		
+		
+		// COMPUTED ------------------------
+		
+		/**
+		 * @return A copy of this instance that assumes that all used LLMs use the "thinking" / "reflection" mode.
+		 */
+		def assumingAllModelsThink = detectingThinkUsing { _ => true }
+		/**
+		 * @return A copy of this instance that assumes that
+		 *         none of the used LLMs use the "thinking" / "reflection" mode.
+		 */
+		def assumingNoModelsThink = detectingThinkUsing { _ => false }
+		
+		/**
+		 * @return A copy of this instance that starts acquiring Vast AI instances only at the point where the
+		 *         first request is received.
+		 * @see [[withDefaultContextSize]]
+		 */
+		def startingLazily = withStartupIsLazy(true)
+		/**
+		 * @return A copy of this instance that preserves all stopped instances upon shutdown.
+		 *         Note: The instances may need to be destroyed later manually,
+		 *         or by a consequent process utilizing those same instances.
+		 */
+		def preservingStoppedInstances = withStoppedInstancePreservation(true)
+		
+		
+		// OTHER    ------------------------
+		
+		/**
+		 * Specifies the default context size to assume.
+		 * Note: If not specified, incoming requests may fail or may be assigned to the backup executor, if applicable.
+		 * @param contextSize Request context size to assume when no instances have been acquired or even loading.
+		 * @return Copy of this instance assuming the specified context size before other information is available.
+		 */
+		def withDefaultContextSize(contextSize: TokenCount): Repr = withDefaultContextSize(Some(contextSize))
+		
+		/**
+		 * @param thinkingModels Names of the LLMs that use "thinking" / "reflection" mode.
+		 * @return A copy of this instance that assumes only the specified set of LLMs
+		 *         enter "thinking" / "reflection" mode.
+		 */
+		def assumingCertainModelsThink(thinkingModels: Set[String]): Repr = detectingThinkUsing(thinkingModels.contains)
+		
+		/**
+		 * @param logDirectory Directory where debug log entries will be placed.
+		 * @param exc Implicit execution context
+		 * @param scheduler Implicit scheduler
+		 * @param log Implicit logging implementation for logging errors (default = System.err).
+		 * @return A copy of this instance debug-logging to a file in the specified directory.
+		 */
+		def withDebugLogDirectory(logDirectory: Path)
+		                         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger = SysErrLogger): Repr =
+			debugLoggingWith(KeptOpenWriter(30.seconds).to((logDirectory/s"$Today-Vast-AI-log.txt").unique))
+	}
+	
+	object VastAiVllmChatExecutorSettings
+	{
+		// ATTRIBUTES   --------------------------
+		
+		lazy val default = VastAiVllmChatExecutorSettings()
+		
+		
+		// IMPLICIT ------------------------------
+		
+		implicit def asVllmSettings(settings: VastAiVllmChatExecutorSettings): VastAiVllmSettings =
+			settings.vllmSettings
+		implicit def asServiceSettings(settings: VastAiVllmChatExecutorSettings): VastAiServiceSettings =
+			settings.vllmSettings.serviceSettings
+	}
 	/**
-	 * Creates a new chat executor that utilizes multiple parallel Vast AI instances when executing requests
-	 * @param selectOffer Logic for selecting Vast AI offers to take
-	 * @param modelSize Size of the used model, including how much VRAM should be reserved for requests.
-	 *                  If multiple models are used, the size of the largest model should be returned.
-	 * @param assumedVram VRAM amount assumed before any instances have been reserved.
-	 *                    Used for calculating the default maximum context size.
-	 * @param instanceReuseLogic Logic for reusing already rented Vast AI instances.
-	 *                           Default = never reuse instances.
-	 * @param coreInstanceCount Number of Vast AI instances to reserve immediately (or when the first request is received).
+	 * Specifies settings accepted by Vast AI vLLM chat executors
+	 * @param vllmSettings Settings to apply to vLLM hosting and Vast AI renting logic.
+	 *                     Default = use default settings, applying label "chat-executor" to all acquired instances.
+	 * @param coreInstanceCount Number of Vast AI instances to reserve immediately
+	 *                          (or when the first request is received, depending on whether startup is lazy or not).
 	 *                          Default = 1.
-	 * @param maxInstanceCount Maximum number of instances that may be run at once. Default = 4.
-	 * @param stopInstanceCount Number of instances to keep in stopped state instead of destroying them.
-	 *                          Stopped instances incur continual costs, but are faster (and cheaper) to set up than
-	 *                          renting completely new instances.
-	 *                          Default = 0 = all instances are destroyed when they're not used.
+	 * @param maxInstanceCount Maximum number of Vast AI instances to reserve. Default = 4.
+	 * @param stopInstanceCount Maximum number of stopped instances kept in reserve for speeding up startup.
+	 *                          Default = 0.
 	 * @param instanceActivationQueueSizeThreshold Number of queued requests,
-	 *                                             at which an additional instance should be acquired.
+	 *                                             after which a new instance is acquired. May stack.
 	 *                                             Default = 24.
-	 * @param instanceActivationPendingTokensThreshold Number of pending request tokens, at which point an additional
-	 *                                                 instance should be acquired.
-	 *                                                 Default = 24K.
-	 * @param instanceAccelerationPendingTokensThreshold Number of pending request tokens, at which point an additional
-	 *                                                   instance should be acquired, even while there's already an
-	 *                                                   instance being prepared.
-	 *                                                   Default = 48K.
-	 * @param maxConnectionsPerInstance Maximum number of HTTP connections allowed to a single instance.
-	 *                                  May limit parallelism in case of smaller requests. Default = 28.
-	 * @param additionalReservedDisk Disk space reserved in addition to the model size. Default = 5 GB.
-	 * @param defaultContextSize Context size to assume when no context size is specified in the request.
-	 *                           Default = None = no context size is assumed,
-	 *                           but the backup solution is used instead (if applicable)
+	 * @param instanceActivationPendingTokensThreshold Number of pending tokens (total input + expected output)
+	 *                                                 on average per active instance,
+	 *                                                 after which an additional instance will be acquired.
+	 *                                                 Only applied while no new instances are being acquired / loaded.
+	 * @param instanceAccelerationPendingTokensThreshold Number of pending tokens on average per instance
+	 *                                                   (whether active or loading),
+	 *                                                   at which an additional instance will be acquired.
+	 *                                                   Applied while new instances are being loaded. May stack.
+	 * @param maxConnectionsPerInstance Maximum number of HTTP connections to allow to any single rented instance.
+	 *                                  A larger number allows for wider parallelism, but may use more resources.
+	 *                                  Default = 28.
+	 * @param defaultContextSize Request context size to assume when no instances have been acquired or even loading.
+	 *                           None if no context size should be assumed (default, but not recommended).
+	 * @param contextSafetyMargin Safety margin added to context size calculations.
 	 *
-	 *                           NB: It is always recommended to specify the context size for the requests.
-	 *                               This can be done, for example, by utilizing a StatelessBufferedReplyGenerator.
-	 * @param contextSafetyMargin Safety margin added to context calculations.
-	 *                            If the request is at the edge a pool's threshold,
-	 *                            may transfer it to a larger pool instead.
-	 *                            Default = 64 tokens.
-	 * @param backupExecutor Request executor used for requests that exceed the largest allowed context size,
-	 *                       and for those which don't have a context size specified (if 'defaultContextSize' is None).
+	 *                            If the request is at the edge of a processor's context size limit,
+	 *                            may transfer it to another processor with a larger maximum context size.
+	 * @param backupExecutor A request processing logic to use for requests that are too large
+	 *                       for this executor to process. I.e. for requests that require a context size larger
+	 *                       than any of the rented Vast AI instances can process.
+	 *                       None if no backup-executor should be used (default).
+	 * @param recorder An interface for recording each rented Vast AI instance. None if not used (default).
+	 * @param reuseSetupTimeout Timeout for the setup / instance loading process, applying to instance reuse.
+	 *                          If this timeout is reached, the instance
+	 *                          won't be considered viable for reservation / reuse.
 	 *
-	 *                       If left empty (default), such requests will be immediately failed.
-	 * @param recorder An interface which receives records of completed Vast AI processes.
-	 *                 None (default) if no recording should be performed.
-	 * @param installScriptPath Path to a script for installing vLLM on the rented device.
-	 *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
-	 *                          Default = None.
-	 * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
-	 *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
-	 * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM. Default = 0.9.
-	 * @param setupTimeout Timeout for the setup process.
-	 *                     If the API doesn't become usable before this timeout, the instance is destroyed.
-	 *                     Default = infinite (not recommended).
-	 * @param reuseSetupTimeout Timeout for the setup process, after which instances are destroyed instead of stopped,
-	 *                          if terminated during loading. Used for filtering out unresponsive instances.
-	 *                          Has no effect if maxStopInstances <= 0.
+	 *                          Use this to filter out unresponsive or slow instances from the reuse pool.
+	 *
 	 *                          Default = 5 minutes.
-	 * @param recoveryTimeout Timeout for recovering from SSH and/or vLLM failures. Default = 60 seconds.
-	 * @param noResponseTimeout Timeout for started API requests.
-	 *                          If this timeout is reached, the request queue is closed
-	 *                          and the underlying Vast AI instance is destroyed.
-	 *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
-	 * @param idleShutdownThreshold A time threshold, at which completely idle processes are stopped.
-	 *                              Default = 15 min.
-	 * @param partialUseShutdownThreshold A time threshold, at which partially used processes are stopped.
+	 * @param idleShutdownThreshold A time threshold at which completely idle processes are stopped,
+	 *                            destroying or stopping the underlying Vast AI instance(s).
+	 *
+	 *                            Lower values mean lower costs during low-demand periods,
+	 *                            but may slow down the process and incur larger download & setup costs
+	 *                            if the demand rises sharply afterwards.
+	 *
+	 *                            Default = 15 minutes.
+	 * @param partialUseShutdownThreshold A time threshold at which partially used processors are stopped,
+	 *                                    destroying or stopping the underlying Vast AI instance(s).
 	 *                                    Default = 25 minutes.
-	 * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
-	 * @param logDir Directory where debug log entries will be placed (optional)
-	 * @param startsLazily Whether this executor should only start when the first request is received.
-	 *                     Default = false = instances are acquired immediately.
-	 * @param keepStoppedInstances Whether stopped instances should be preserved when this executor is stopped.
-	 *                             Default = false = stopped instances are destroyed.
-	 * @param chooseImage A function for choosing the image or Vast AI template to use.
-	 *                    Accepts the selected offer and the applied maximum context size, yields:
-	 *                          1. Instance-creation settings
-	 *                          1. Expected initial vLLM service state at the remote instance
-	 *                          1. Name of the model to start vLLM with.
-	 *                             Optional if vLLM is started automatically by the image / template.
-	 * @param thinks A function used for determining, which of the used models should be marked as "thinking"
-	 * @param exc Implicit execution context
-	 * @param scheduler Implicit scheduler for timed events
-	 * @param vastAiClient Implicit Vast AI -interfacing client
-	 * @param log Implicit logging implementation
-	 * @return a new executor interface
+	 * @param thinks A function that receives name of the hosted LLM and yields whether that model uses
+	 *               "thinking" / "reflection".
+	 *               Default = always yield false.
+	 * @param startsLazily Whether this executor should only start acquiring Vast AI instances
+	 *                     when the first request is received.
+	 *                     False if the first instances should be acquired immediately when
+	 *                     this executor is constructed.
+	 *                     Default = false.
+	 * @param preservesStoppedInstances Whether stopped instances should be preserved when this executor is stopped.
+	 *                                  False if all stopped instances should be destroyed at that point.
+	 *                                  Default = false.
 	 */
-	def apply(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
-	          instanceReuseLogic: InstanceReuseLogic = NeverReuse, coreInstanceCount: Int = 1,
-	          maxInstanceCount: Int = 4, stopInstanceCount: Int = 0,
-	          instanceActivationQueueSizeThreshold: Int = 24,
-	          instanceActivationPendingTokensThreshold: TokenCount = 24000,
-	          instanceAccelerationPendingTokensThreshold: TokenCount = 48000, maxConnectionsPerInstance: Int = 28,
-	          additionalReservedDisk: ByteCount = 5.gb, defaultContextSize: Option[TokenCount] = None,
-	          contextSafetyMargin: TokenCount = 64,
-	          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
-	          recorder: Option[VastAiVllmProcessRecorder], installScriptPath: Option[Path] = None,
-	          remotePort: Int = 8000, maxGpuUtil: Double = 0.9, setupTimeout: Duration = 15.minutes,
-	          reuseSetupTimeout: Duration = 5.minutes, recoveryTimeout: Duration = 60.seconds,
-	          noResponseTimeout: Duration = 10.minutes, idleShutdownThreshold: Duration = 15.minutes,
-	          partialUseShutdownThreshold: Duration = 25.minutes, label: String = "chat-executor",
-	          logDir: Option[Path] = None, startsLazily: Boolean = false, keepStoppedInstances: Boolean = false)
-	         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
-	         (thinks: String => Boolean)
-	         (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient, log: Logger) =
-		new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, instanceReuseLogic, coreInstanceCount,
-			stopInstanceCount, maxInstanceCount, instanceActivationQueueSizeThreshold,
-			instanceActivationPendingTokensThreshold, instanceAccelerationPendingTokensThreshold,
-			maxConnectionsPerInstance, additionalReservedDisk, defaultContextSize, contextSafetyMargin, backupExecutor,
-			recorder, installScriptPath, remotePort, maxGpuUtil, setupTimeout, reuseSetupTimeout, recoveryTimeout,
-			noResponseTimeout, idleShutdownThreshold, partialUseShutdownThreshold, label, logDir, startsLazily,
-			keepStoppedInstances)(chooseImage)(thinks)
+	case class VastAiVllmChatExecutorSettings(vllmSettings: VastAiVllmSettings = VastAiVllmSettings.default.withLabel("chat-executor"),
+	                                          coreInstanceCount: Int = 1, maxInstanceCount: Int = 4,
+	                                          stopInstanceCount: Int = 0,
+	                                          instanceActivationQueueSizeThreshold: Int = 24,
+	                                          instanceActivationPendingTokensThreshold: TokenCount = 24000,
+	                                          instanceAccelerationPendingTokensThreshold: TokenCount = 48000,
+	                                          maxConnectionsPerInstance: Int = 28,
+	                                          defaultContextSize: Option[TokenCount] = None,
+	                                          contextSafetyMargin: TokenCount = 64,
+	                                          backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
+	                                          recorder: Option[VastAiVllmProcessRecorder] = None,
+	                                          reuseSetupTimeout: Duration = 5.minutes,
+	                                          idleShutdownThreshold: Duration = 15.minutes,
+	                                          partialUseShutdownThreshold: Duration = 25.minutes,
+	                                          thinks: String => Boolean = { _ => false },
+	                                          startsLazily: Boolean = false, preservesStoppedInstances: Boolean = false)
+		extends VastAiVllmChatExecutorSettingsFactory[VastAiVllmChatExecutorSettings]
+			with VastAiVllmSettingsWrapper[VastAiVllmChatExecutorSettings]
+	{
+		// IMPLEMENTED  ----------------------------
+		
+		override def startingWithInstances(coreInstanceCount: Int): VastAiVllmChatExecutorSettings =
+			copy(coreInstanceCount = coreInstanceCount)
+		override def usingAtMostInstances(maxInstanceCount: Int): VastAiVllmChatExecutorSettings =
+			copy(maxInstanceCount = maxInstanceCount)
+		override def reservingInstances(stopInstanceCount: Int): VastAiVllmChatExecutorSettings =
+			copy(stopInstanceCount = stopInstanceCount)
+		override def withInstanceCounts(core: Int, max: Int, reserve: Int): VastAiVllmChatExecutorSettings =
+			copy(coreInstanceCount = core, maxInstanceCount = max, stopInstanceCount = reserve)
+		
+		override def activatingInstancesAtQueueSize(queueSizeThreshold: Int): VastAiVllmChatExecutorSettings =
+			copy(instanceActivationQueueSizeThreshold = queueSizeThreshold)
+		override def activatingInstancesAtPendingTokens(pendingTokensThreshold: TokenCount): VastAiVllmChatExecutorSettings =
+			copy(instanceActivationPendingTokensThreshold = pendingTokensThreshold)
+		override def acceleratingActivationAtPendingTokens(pendingTokensThreshold: TokenCount): VastAiVllmChatExecutorSettings =
+			copy(instanceAccelerationPendingTokensThreshold = pendingTokensThreshold)
+		override def withActivationThresholds(queueSizeThreshold: Int, pendingTokensThreshold: TokenCount,
+		                                      accelerationThreshold: TokenCount): VastAiVllmChatExecutorSettings =
+			copy(instanceActivationQueueSizeThreshold = queueSizeThreshold,
+				instanceActivationPendingTokensThreshold = pendingTokensThreshold,
+				instanceAccelerationPendingTokensThreshold = accelerationThreshold)
+		
+		override def withMaxHttpConnectionsPerInstance(connectionsPerInstance: Int): VastAiVllmChatExecutorSettings =
+			copy(maxConnectionsPerInstance = connectionsPerInstance)
+		
+		override def withDefaultContextSize(contextSize: Option[TokenCount]): VastAiVllmChatExecutorSettings =
+			copy(defaultContextSize = contextSize)
+		override def withContextSafetyMargin(safetyMargin: TokenCount): VastAiVllmChatExecutorSettings =
+			copy(contextSafetyMargin = safetyMargin)
+		
+		override def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): VastAiVllmChatExecutorSettings =
+			copy(backupExecutor = Some(backupExecutor))
+		
+		override def recordingUsing(recorder: VastAiVllmProcessRecorder): VastAiVllmChatExecutorSettings =
+			copy(recorder = Some(recorder))
+		
+		override def onlyReusingInstancesUntil(setupTimeout: Duration): VastAiVllmChatExecutorSettings =
+			copy(reuseSetupTimeout = setupTimeout)
+		override def closingIdleProcessorsAfter(idleShutdownThreshold: Duration): VastAiVllmChatExecutorSettings =
+			copy(idleShutdownThreshold = idleShutdownThreshold)
+		override def closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold: Duration): VastAiVllmChatExecutorSettings =
+			copy(partialUseShutdownThreshold = partiallyUsedShutdownThreshold)
+		
+		override def detectingThinkUsing(thinks: String => Boolean): VastAiVllmChatExecutorSettings =
+			copy(thinks = thinks)
+		
+		override def withStartupIsLazy(startupLazily: Boolean): VastAiVllmChatExecutorSettings =
+			copy(startsLazily = startupLazily)
+		override def withStoppedInstancePreservation(preserveStopped: Boolean): VastAiVllmChatExecutorSettings =
+			copy(preservesStoppedInstances = preserveStopped)
+		
+		override def withSettings(settings: VastAiVllmSettings): VastAiVllmChatExecutorSettings =
+			copy(vllmSettings = settings)
+	}
+	
+	trait VastAiVllmChatExecutorSettingsWrapper[+Repr] extends VastAiVllmChatExecutorSettingsFactory[Repr]
+		with VastAiVllmSettingsWrapper[Repr]
+	{
+		// ABSTRACT ------------------------------
+		
+		/**
+		 * @return Applied chat-executor settings
+		 */
+		def executorSettings: VastAiVllmChatExecutorSettings
+		/**
+		 * @param settings New chat-executor settings to apply
+		 * @return Copy of this instance applying the specified settings
+		 */
+		def withSettings(settings: VastAiVllmChatExecutorSettings): Repr
+		
+		
+		// IMPLEMENTED  --------------------------
+		
+		override def vllmSettings: VastAiVllmSettings = executorSettings.vllmSettings
+		
+		override def startingWithInstances(coreInstanceCount: Int): Repr =
+			mapExecutorSettings { _.startingWithInstances(coreInstanceCount) }
+		override def usingAtMostInstances(maxInstanceCount: Int): Repr =
+			mapExecutorSettings { _.usingAtMostInstances(maxInstanceCount) }
+		override def reservingInstances(stopInstanceCount: Int): Repr =
+			mapExecutorSettings { _.reservingInstances(stopInstanceCount) }
+		override def withInstanceCounts(core: Int, max: Int, reserve: Int): Repr =
+			mapExecutorSettings { _.withInstanceCounts(core, max, reserve) }
+		override def activatingInstancesAtQueueSize(queueSizeThreshold: Int): Repr =
+			mapExecutorSettings { _.activatingInstancesAtQueueSize(queueSizeThreshold) }
+		override def activatingInstancesAtPendingTokens(pendingTokensThreshold: TokenCount): Repr =
+			mapExecutorSettings { _.activatingInstancesAtPendingTokens(pendingTokensThreshold) }
+		override def acceleratingActivationAtPendingTokens(pendingTokensThreshold: TokenCount): Repr =
+			mapExecutorSettings { _.acceleratingActivationAtPendingTokens(pendingTokensThreshold) }
+		override def withActivationThresholds(queueSizeThreshold: Int, pendingTokensThreshold: TokenCount,
+		                                      accelerationThreshold: TokenCount): Repr =
+			mapExecutorSettings {
+				_.withActivationThresholds(queueSizeThreshold, pendingTokensThreshold, accelerationThreshold) }
+		override def withMaxHttpConnectionsPerInstance(connectionsPerInstance: Int): Repr =
+			mapExecutorSettings { _.withMaxHttpConnectionsPerInstance(connectionsPerInstance) }
+		override def withDefaultContextSize(contextSize: Option[TokenCount]): Repr =
+			mapExecutorSettings { _.withDefaultContextSize(contextSize) }
+		override def withContextSafetyMargin(safetyMargin: TokenCount): Repr =
+			mapExecutorSettings { _.withContextSafetyMargin(safetyMargin) }
+		override def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): Repr =
+			mapExecutorSettings { _.usingBackupExecutor(backupExecutor) }
+		override def recordingUsing(recorder: VastAiVllmProcessRecorder): Repr =
+			mapExecutorSettings { _.recordingUsing(recorder) }
+		override def onlyReusingInstancesUntil(setupTimeout: Duration): Repr =
+			mapExecutorSettings { _.onlyReusingInstancesUntil(setupTimeout) }
+		override def closingIdleProcessorsAfter(idleShutdownThreshold: Duration): Repr =
+			mapExecutorSettings { _.closingIdleProcessorsAfter(idleShutdownThreshold) }
+		override def closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold: Duration): Repr =
+			mapExecutorSettings { _.closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold) }
+		override def detectingThinkUsing(thinks: String => Boolean): Repr =
+			mapExecutorSettings { _.detectingThinkUsing(thinks) }
+		override def withStartupIsLazy(startupLazily: Boolean): Repr =
+			mapExecutorSettings { _.withStartupIsLazy(startupLazily) }
+		override def withStoppedInstancePreservation(preserveStopped: Boolean): Repr =
+			mapExecutorSettings { _.withStoppedInstancePreservation(preserveStopped) }
+		
+		override def withSettings(settings: VastAiVllmSettings): Repr = mapExecutorSettings { _.withSettings(settings) }
+		
+		
+		// OTHER    ----------------------------
+		
+		def mapExecutorSettings(f: Mutate[VastAiVllmChatExecutorSettings]): Repr = withSettings(f(executorSettings))
+	}
+	
+	class VastAiVllmChatExecutorFactory(override val executorSettings: VastAiVllmChatExecutorSettings)
+		extends VastAiVllmChatExecutorSettingsWrapper[VastAiVllmChatExecutorFactory]
+	{
+		// IMPLEMENTED  -----------------------
+		
+		override def withSettings(settings: VastAiVllmChatExecutorSettings): VastAiVllmChatExecutorFactory =
+			new VastAiVllmChatExecutorFactory(settings)
+			
+		
+		// OTHER    ---------------------------
+		
+		/**
+		 * @param selectOffer Logic for selecting Vast AI offers to take
+		 * @param modelSize Size of the used model, including how much VRAM should be reserved for requests.
+		 *                  If multiple models are used, the size of the largest model should be returned.
+		 * @param assumedVram VRAM amount assumed before any instances have been reserved.
+		 *                    Used for calculating the default maximum context size.
+		 * @param chooseImage A function for choosing the image or Vast AI template to use.
+		 *                    Accepts the selected offer and the applied maximum context size, yields:
+		 *                          1. Instance-creation settings
+		 *                          1. Expected initial vLLM service state at the remote instance
+		 *                          1. Name of the model to start vLLM with.
+		 *                             Optional if vLLM is started automatically by the image / template.
+		 * @param exc Implicit execution context
+		 * @param scheduler Implicit Scheduler
+		 * @param vastAiClient Implicit Vast AI -interfacing client
+		 * @param log Implicit logging implementation
+		 * @return A new chat-executor
+		 */
+		def apply(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount)
+		         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
+		         (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
+		          log: Logger) =
+			new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram)(chooseImage)
+	}
 }
 
 /**
@@ -186,112 +589,31 @@ object VastAiVllmChatExecutor
  *                  If multiple models are used, the size of the largest model should be returned.
  * @param assumedVram VRAM amount assumed before any instances have been reserved.
  *                    Used for calculating the default maximum context size.
- * @param instanceReuseLogic Logic for reusing already rented Vast AI instances.
- *                           Default = never reuse instances.
- * @param coreInstanceCount Number of Vast AI instances to reserve immediately (or when the first request is received).
- *                          Default = 1.
- * @param maxInstanceCount Maximum number of instances that may be run at once. Default = 4.
- * @param stopInstanceCount Number of instances to keep in stopped state instead of destroying them.
- *                          Stopped instances incur continual costs, but are faster (and cheaper) to set up than
- *                          renting completely new instances.
- *                          Default = 0 = all instances are destroyed when they're not used.
- * @param instanceActivationQueueSizeThreshold Number of queued requests,
- *                                             at which an additional instance should be acquired.
- *                                             Default = 24.
- * @param instanceActivationPendingTokensThreshold Number of pending request tokens, at which point an additional
- *                                                 instance should be acquired.
- *                                                 Default = 24K.
- * @param instanceAccelerationPendingTokensThreshold Number of pending request tokens, at which point an additional
- *                                                   instance should be acquired, even while there's already an
- *                                                   instance being prepared.
- *                                                   Default = 48K.
- * @param maxConnectionsPerInstance Maximum number of HTTP connections allowed to a single instance.
- *                                  May limit parallelism in the case of smaller requests. Default = 28.
- * @param additionalReservedDisk Disk space reserved in addition to the model size. Default = 5 GB.
- * @param defaultContextSize Context size to assume when no context size is specified in the request.
- *                           Default = None = no context size is assumed,
- *                           but the backup solution is used instead (if applicable)
- *
- *                           NB: It is always recommended to specify the context size for the requests.
- *                               This can be done, for example, by utilizing a StatelessBufferedReplyGenerator.
- * @param contextSafetyMargin Safety margin added to context calculations.
- *                            If the request is at the edge a pool's threshold,
- *                            may transfer it to a larger pool instead.
- *                            Default = 64 tokens.
- * @param backupExecutor Request executor used for requests that exceed the largest allowed context size,
- *                       and for those which don't have a context size specified (if 'defaultContextSize' is None).
- *
- *                       If left empty (default), such requests will be immediately failed.
- * @param recorder An interface that receives records of completed Vast AI processes.
- *                 None (default) if no recording should be performed.
- * @param installScriptPath Path to a script for installing vLLM on the rented device.
- *                          Used (and required), only if 'chooseImage' indicates that vLLM should be installed.
- *                          Default = None.
- * @param remotePort Port at which the vLLM API is served at the remote instance. Default = 8000.
- *                   Note: If vLLM is auto-hosted by the image / template, make sure to specify the correct port.
- * @param maxGpuUtil Maximum GPU utilization, as a fraction between 0 and 1. Used when/if starting vLLM. Default = 0.9.
- * @param setupTimeout Timeout for the setup process.
- *                     If the API doesn't become usable before this timeout, the instance is destroyed.
- *                     Default = infinite (not recommended).
- * @param reuseSetupTimeout Timeout for the setup process, after which instances are destroyed instead of stopped,
- *                          if terminated during loading. Used for filtering out unresponsive instances.
- *                          Has no effect if maxStopInstances <= 0.
- *                          Default = 5 minutes.
- * @param recoveryTimeout Timeout for recovering from SSH and/or vLLM failures. Default = 60 seconds.
- * @param noResponseTimeout Timeout for started API requests.
- *                          If this timeout is reached, the request queue is closed
- *                          and the underlying Vast AI instance is destroyed.
- *                          Default = infinite (not recommended, unless you have your own monitoring process in place).
- * @param idleShutdownThreshold A time threshold, at which completely idle processes are stopped.
- *                              Default = 15 minutes.
- * @param partialUseShutdownThreshold A time threshold, at which partially used processes are stopped.
- *                                    Default = 25 minutes.
- * @param label Custom label given to the rented Vast AI instance. Default = "chat-executor".
- * @param logDir Directory where debug log entries will be placed (optional)
- * @param startsLazily Whether this executor should only start when the first request is received.
- *                     Default = false = instances are acquired immediately.
- * @param keepStoppedInstances Whether stopped instances should be preserved when this executor is stopped.
- *                             Default = false = stopped instances are destroyed.
+ * @param settings Applied settings. Default = use default settings.
  * @param chooseImage A function for choosing the image or Vast AI template to use.
  *                    Accepts the selected offer and the applied maximum context size, yields:
  *                          1. Instance-creation settings
  *                          1. Expected initial vLLM service state at the remote instance
  *                          1. Name of the model to start vLLM with.
  *                             Optional if vLLM is started automatically by the image / template.
- * @param thinks A function used for determining, which of the used models should be marked as "thinking"
  * @param exc Implicit execution context
  * @param vastAiClient Implicit Vast AI -interfacing client
  * @param log Implicit logging implementation
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
-// TODO: Refactor constructor to use a settings + factory -based approach
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
-                             baseSettings: VastAiVllmSettings = VastAiVllmSettings.default,
-                             coreInstanceCount: Int = 1, maxInstanceCount: Int = 4, stopInstanceCount: Int = 0,
-                             instanceActivationQueueSizeThreshold: Int = 24,
-                             instanceActivationPendingTokensThreshold: TokenCount = 24000,
-                             instanceAccelerationPendingTokensThreshold: TokenCount = 48000,
-                             maxConnectionsPerInstance: Int = 28,
-                             defaultContextSize: Option[TokenCount] = None, contextSafetyMargin: TokenCount = 64,
-                             backupExecutor: Option[BufferingChatRequestExecutor[BufferedOpenAiReply]] = None,
-                             recorder: Option[VastAiVllmProcessRecorder],
-                             reuseSetupTimeout: Duration = 5.minutes,
-                             idleShutdownThreshold: Duration = 15.minutes,
-                             partialUseShutdownThreshold: Duration = 25.minutes,
-                             // label: String = "chat-executor",
-                             logDir: Option[Path] = None, startsLazily: Boolean = false,
-                             keepStoppedInstances: Boolean = false)
+                             settings: VastAiVllmChatExecutorSettings = VastAiVllmChatExecutorSettings.default)
                             (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
-                            (thinks: String => Boolean)
                             (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
                              log: Logger)
 	extends BufferingChatRequestExecutor[BufferedOpenAiReply] with Breakable
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val gateway = Gateway(maxConnectionsPerRoute = maxConnectionsPerInstance,
-		maxConnectionsTotal = maxConnectionsPerInstance * maxInstanceCount, disableTrustStoreVerification = true)
+	private val gateway = Gateway(maxConnectionsPerRoute = settings.maxConnectionsPerInstance,
+		maxConnectionsTotal = settings.maxConnectionsPerInstance * settings.maxInstanceCount,
+		disableTrustStoreVerification = true)
 	/**
 	 * A pointer for acquiring unique port numbers
 	 */
@@ -303,40 +625,60 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			.filter { port => Try { new ServerSocket(port).close() }.isSuccess }
 	}
 	
-	private val debugLogger = logDir
-		.map { dir => KeptOpenWriter(30.seconds).to((dir/s"$Today-Vast-AI-log.txt").unique) }
-		.orElse { baseSettings.debugLogger }
+	/**
+	 * A pointer that contains IDs of instances that were only stopped instead of destroyed.
+	 * These are reused with priority and may be destroyed when this process completes.
+	 */
+	private val stoppedInstanceIdsP = Volatile.emptySeq[Int]
 	
-	private val vllmSettings = baseSettings.debugLoggingWith(debugLogger).usingGateway(gateway)
+	private val vllmSettings = settings.vllmSettings.usingGateway(gateway)
 		.reusingInstancesWith({
-			// FIXME: Should specifically target the recorded stopped instances (e.g. using a label)
-			if (stopInstanceCount > 0)
-				ReuseStoppedInstances.onlyReusable || baseSettings.instanceReuseLogic
+			// Case: Preserves some instances instead of destroying them
+			//       => Applies reuse logic that uses those stopped instances
+			if (settings.stopInstanceCount > 0) {
+				val reuseStopped = ReuseStoppedInstances.onlyReusable.filter { instances =>
+					if (instances.isEmpty)
+						instances
+					else {
+						val stoppedIds = stoppedInstanceIdsP.value
+						// Case: Using a custom label => Also reuses instances with that label
+						settings.instanceLabel.ifNotEmpty match {
+							case Some(label) =>
+								instances.filter { instance =>
+									instance.label == label || stoppedIds.contains(instance.id)
+								}
+							case None => instances.filter { instance => stoppedIds.contains(instance.id) }
+						}
+					}
+				}
+				reuseStopped || settings.instanceReuseLogic
+			}
+			// Case: Destroys all instances by default => Applies reuse logic from the received settings, only
 			else
-				baseSettings.instanceReuseLogic
+				settings.instanceReuseLogic
 		})
 		// Rotates the used local ports
 		.withPortForwarding(View {
-			val remotePort = baseSettings.forwardedPorts match {
+			val remotePort = settings.forwardedPorts match {
 				case Some(ports) => ports.value.second
 				case None => 8000
 			}
 			Pair(portCounter.next(), remotePort)
 		})
 		// Limits the applied status check frequency
-		.updatingStatusEvery(baseSettings.statusCheckInterval max (maxInstanceCount * 2).seconds)
-		// TODO: Also take the baseSettings destruction logic into account
+		.updatingStatusEvery(settings.statusCheckInterval max (settings.maxInstanceCount * 2).seconds)
 		.withDestructionLogic { (instance, runTime, apiHosted) =>
-			// Case: Stopping is not enabled or already requested to stop without keeping stopped instances
-			//       => Destroys all instances
-			if (stopInstanceCount <= 0 || (stopFlag.isSet && !keepStoppedInstances))
-				true
-			else {
-				// Stops instances if running low on usable clients, unless the instance status/state is not promising
-				val maxUsableCount = if (apiHosted) stopInstanceCount + 1 else stopInstanceCount
-				if (usableProcessorsCount < maxUsableCount) {
+			// Checks the custom logic first
+			if (settings.shouldDestroy(instance, runTime, apiHosted)) {
+				// Case: Stopping is not enabled or already requested to stop without keeping stopped instances
+				//       => Destroys all instances
+				if (settings.stopInstanceCount <= 0 || (stopFlag.isSet && !settings.preservesStoppedInstances))
+					true
+				// Case: There's still space in reserved / stopped instances
+				//       => Stops the instance unless the instance status/state is not promising
+				else if (stoppedInstanceIdsP.value.size < settings.stopInstanceCount) {
 					val stops = instance.status.actual.value match {
-						case Loading | Active => apiHosted || runTime < reuseSetupTimeout
+						case Loading | Active => apiHosted || runTime < settings.reuseSetupTimeout
 						case _: Unknown => apiHosted
 						case _ => false
 					}
@@ -345,10 +687,14 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 						stoppedInstanceIdsP :+= instance.id
 					!stops
 				}
-				// Case: Enough processors as is => Destroys this instance
+				// Case: Enough reserved instances as is => Destroys this instance
 				else
 					true
 			}
+			// Case: Custom logic override => Stops the instance instead of destroying it.
+			//                                Also, these don't count towards the reserved instances.
+			else
+				false
 		}
 	
 	/**
@@ -360,7 +706,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	/**
 	 * Caches the generated LLM designators
 	 */
-	private val llmCache = Cache { model: String => LlmDesignator(model, thinks = thinks(model)) }
+	private val llmCache = Cache { model: String => LlmDesignator(model, thinks = settings.thinks(model)) }
 	/**
 	 * Set to true once this executor should terminate
 	 */
@@ -383,7 +729,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * Contains the number of instances that should be started at any time.
 	 * This is increased based on demand, and decreased when instances become idle.
 	 */
-	private val targetInstanceCountP = Volatile.eventful(if (startsLazily) 0 else coreInstanceCount)
+	private val targetInstanceCountP = Volatile.eventful(if (settings.startsLazily) 0 else settings.coreInstanceCount)
 	/**
 	 * A decreasing counter for request tokens that triggers a target instance count update when it reaches 0.
 	 */
@@ -392,12 +738,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * A decreasing counter for queued requests that triggers a target instance count update when it reaches 0.
 	 */
 	private val queueSizeCheckThresholdP = Volatile(0)
-	
-	/**
-	 * A pointer that contains IDs of instances that were only stopped instead of destroyed.
-	 * These are reused with priority and may be destroyed when this process completes.
-	 */
-	private val stoppedInstanceIdsP = Volatile.emptySeq[Int]
 	
 	/**
 	 * Used for limiting instance-creation to one instance at a time
@@ -429,7 +769,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * or the default context size.
 	 */
 	// A public-facing version of maxContextSizeP. Omits the safety margin, which is added to the incoming requests.
-	val maxContextSizePointer = maxContextSizeP.lightMap { _ - contextSafetyMargin * 2 - 1 }
+	val maxContextSizePointer = maxContextSizeP.lightMap { _ - settings.contextSafetyMargin * 2 - 1 }
 	
 	/**
 	 * A process that shuts down idle and partially used processors.
@@ -437,11 +777,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * Must be restarted at times.
 	 */
 	private val idleShutdownProcess = {
-		if (idleShutdownThreshold.isFinite || partialUseShutdownThreshold.isFinite)
-			Some(LoopingProcess.restartable.after(idleShutdownThreshold) { _ =>
+		if (settings.idleShutdownThreshold.isFinite || settings.partialUseShutdownThreshold.isFinite)
+			Some(LoopingProcess.restartable.after(settings.idleShutdownThreshold) { _ =>
 				// Checks whether any processes are currently idle or only partially used
 				val now = Now.toInstant
-				val idleThreshold = now - idleShutdownThreshold
+				val idleThreshold = now - settings.idleShutdownThreshold
 				val (loading, active) = processors.divideBy { p => p.phase == Serving && !p.wasRequestedToStop }
 					.toTuple
 				val (remaining, idle) = active.divideBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
@@ -456,10 +796,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					pendingTokensCheckThresholdP.value = 0
 				}
 				// Case: No idle processes => Checks whether some have not been fully utilized for some time
-				else if (remaining.size > coreInstanceCount ||
-					(loading.nonEmpty && remaining.size == coreInstanceCount))
+				else if (remaining.size > settings.coreInstanceCount ||
+					(loading.nonEmpty && remaining.size == settings.coreInstanceCount))
 				{
-					lazy val partialUseThreshold = now - partialUseShutdownThreshold
+					lazy val partialUseThreshold = now - settings.partialUseShutdownThreshold
 					remaining.find { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
 						// Case: A partially used processor found
 						.foreach { partiallyUsedProcessor =>
@@ -475,7 +815,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 							// Makes sure we're really above the core processor count
 							// before shutting down active processes
 							val shouldTerminateActive = targetInstanceCountP.mutate { target =>
-								if (target > coreInstanceCount)
+								if (target > settings.coreInstanceCount)
 									true -> (target - 1)
 								else
 									false -> target
@@ -493,10 +833,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				
 				// Schedules the next check
 				val nextCheck = Pair[Option[Instant]](
-					remaining.iterator.map { _.lastRequestTime }.minOption.map { _ + idleShutdownThreshold },
+					remaining.iterator.map { _.lastRequestTime }.minOption.map { _ + settings.idleShutdownThreshold },
 					remaining.iterator.filter { _.notFullyUtilized }.map { _.lastPendingEndTime }.minOption
-						.map { _ + partialUseShutdownThreshold })
-					.iterator.flatten.minOption.getOrElse { now + idleShutdownThreshold }
+						.map { _ + settings.partialUseShutdownThreshold })
+					.iterator.flatten.minOption.getOrElse { now + settings.idleShutdownThreshold }
 				Some(nextCheck)
 			})
 		// Case: Idle shutdown is disabled => No process needed
@@ -647,7 +987,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	/**
 	 * Maximum request (context) size that is possible to handle without using backup executors
 	 */
-	def maxContextSize = safeMaxContextSize - contextSafetyMargin * 2 - 1
+	def maxContextSize = safeMaxContextSize - settings.contextSafetyMargin * 2 - 1
 	/**
 	 * @return Maximum context size used internally
 	 */
@@ -664,6 +1004,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	private def processors = processorsP.value
 	
+	private def debugLogger = settings.debugLogger
+	
 	
 	// IMPLEMENTED  -----------------------
 	
@@ -671,8 +1013,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		// Checks the required context size
 		// Also adds a safety margin
 		val requiredContext = params(ContextTokens).int match {
-			case Some(context) => Some(context + contextSafetyMargin)
-			case None => defaultContextSize
+			case Some(context) => Some(context + settings.contextSafetyMargin)
+			case None => settings.defaultContextSize
 		}
 		requiredContext match {
 			case Some(tokens) =>
@@ -701,7 +1043,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			_queue.popAll().foreach { _.fail() }
 			// Destroys all stopped instances, unless required to keep them
 			val destroyFutures = {
-				if (keepStoppedInstances) {
+				if (settings.preservesStoppedInstances) {
 					val preservedInstanceIds = stoppedInstanceIdsP.value
 					if (preservedInstanceIds.nonEmpty)
 						debugLog(s"Preserving ${ preservedInstanceIds.size } previously stopped instances")
@@ -734,7 +1076,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	// OTHER    ---------------------------
 	
 	private def delegateToBackup(request: ChatParams, failure: => RequestFailure) =
-		backupExecutor match {
+		settings.backupExecutor match {
 			case Some(backup) => backup(request)
 			case None => Future.successful(failure)
 		}
@@ -759,7 +1101,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				if (usableProcessors.isEmpty || usableProcessors.hasSize > unusableProcessors)
 					usableProcessors
 				else
-					usableProcessors.filter { _.pendingTokens <= instanceAccelerationPendingTokensThreshold.value }
+					usableProcessors.filter {
+						_.pendingTokens <= settings.instanceAccelerationPendingTokensThreshold.value
+					}
 			}
 			
 			// Attempts to give the request to one of the processors, preferring those least used
@@ -768,7 +1112,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					processor.tryPush(request).map { resultFuture =>
 						// Activates more instances, if appropriate
 						adjustInstanceTargetIfAppropriate(pendingTokensCheckThresholdP, request.tokens.value,
-							instanceActivationPendingTokensThreshold.value, 5000,
+							settings.instanceActivationPendingTokensThreshold.value, 5000,
 							current = {
 								// Counts the threshold based on the lowest used processor
 								val usableProcessors = processors.filter { _.usable }
@@ -779,9 +1123,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 							}) {
 							currentTarget =>
 								if (processors.size < currentTarget || processors.exists { _.phase < Serving })
-									currentTarget * instanceAccelerationPendingTokensThreshold.value
+									currentTarget * settings.instanceAccelerationPendingTokensThreshold.value
 								else
-									currentTarget * instanceActivationPendingTokensThreshold.value
+									currentTarget * settings.instanceActivationPendingTokensThreshold.value
 						}
 						
 						// Checks whether it's possible to handle cases where the context window couldn't
@@ -859,8 +1203,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		val queueSize = _queue.updateAndGet { _ :+ task }.size
 		
 		// Activates more instances, if appropriate
-		adjustInstanceTargetIfAppropriate(queueSizeCheckThresholdP, 1,
-			instanceActivationQueueSizeThreshold, 5, queueSize) { _ * instanceActivationQueueSizeThreshold }
+		adjustInstanceTargetIfAppropriate(queueSizeCheckThresholdP, 1, settings.instanceActivationQueueSizeThreshold,
+			5, queueSize) { _ * settings.instanceActivationQueueSizeThreshold }
 		
 		task.future
 	}
@@ -885,11 +1229,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			// Checks whether new instances should be generated
 			checkThresholdP.value = targetInstanceCountP.mutate { currentTarget =>
 				// Case: Already at max instances => Keeps the current target
-				if (currentTarget >= maxInstanceCount)
+				if (currentTarget >= settings.maxInstanceCount)
 					thresholdAtMaxInstances -> currentTarget
 				// Case: Below the core instance level => Activates the core instances
-				else if (currentTarget < coreInstanceCount)
-					thresholdIncrement -> coreInstanceCount
+				else if (currentTarget < settings.coreInstanceCount)
+					thresholdIncrement -> settings.coreInstanceCount
 				else {
 					// If there are instances which are getting ready, uses a different activation threshold
 					val threshold = thresholdFrom(currentTarget)
@@ -1044,7 +1388,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		}
 		
 		// Informs the recorder once this process finishes, and when/if an API is successfully hosted
-		recorder.foreach { recorder =>
+		settings.recorder.foreach { recorder =>
 			process.detailedStatePointer.addListenerAndSimulateEvent(NotStarted) { e =>
 				e.newValue match {
 					case Hosting(instance) =>
@@ -1107,7 +1451,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * @return Maximum context size to apply
 	 */
 	private def contextSizeOn(vram: ByteCount) =
-		modelSize.maxContextSizeOn(vram * vllmSettings.maxGpuUtil) - contextSafetyMargin
+		modelSize.maxContextSizeOn(vram * vllmSettings.maxGpuUtil) - settings.contextSafetyMargin
 		
 	private def debugLog(entry: => String) = debugLogger.foreach { debugLogUsing(_, entry) }
 	private def debugLogUsing(logger: KeptOpenWriter, entry: String) =
@@ -1153,7 +1497,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			idleShutdownProcess.foreach { _.runAsync() }
 			
 			// Prepares a funnel for the incoming requests
-			val safeMaxContextSize = maxContextSize - contextSafetyMargin
+			val safeMaxContextSize = maxContextSize - settings.contextSafetyMargin
 			debugLog(s"Starting a funnel of $safeMaxContextSize tokens")
 			val funnel = MappingFunnel(safeMaxContextSize.value) {
 				request: Request => request.tokens.value } {

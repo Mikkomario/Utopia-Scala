@@ -6,9 +6,10 @@
 - Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
 - **TokenUsage** now extends **ModelConvertible**
 - **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
+- Rewrote **VastAiProcess**, **VastAiVllmProcess** and **VastAiChatExecutor** constructors to use settings 
+  and factories.
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances but manages 
   the number of processed tokens more carefully.
-  - The constructor is now different, because of this
   - The return value of `.status` is also different
   - Accepted process recorder is also different
 - **LlmServiceClient**'s `maxParallelRequests` parameter is now **Option** instead of **Int**, 
