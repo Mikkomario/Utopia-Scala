@@ -52,6 +52,7 @@
 - Built with Scala v2.13.18
 - **StatelessBufferedReplyGeneratorLike** now supports request-deprecation
 - Added multiple new `.toModel` implementations and model parsing functions
+- Model-parsing now supports camel-case
 - Modified **TokenUsage**'s `.toString` implementation
 
 ## v1.5 - 15.03.2026

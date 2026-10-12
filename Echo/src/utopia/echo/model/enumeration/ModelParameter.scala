@@ -1,6 +1,6 @@
 package utopia.echo.model.enumeration
 
-import utopia.flow.collection.immutable.{Empty, Single}
+import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.mutable.DataType
@@ -109,7 +109,7 @@ object ModelParameter
 	case object ContextTokens extends ModelParameter
 	{
 		override val key: String = "num_ctx"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("numCtx")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 2048
@@ -128,7 +128,7 @@ object ModelParameter
 	case object PredictTokens extends ModelParameter
 	{
 		override val key: String = "num_predict"
-		override val altKeys: Seq[String] = Single("max_tokens")
+		override val altKeys: Seq[String] = Vector("max_tokens", "numPredict", "maxTokens")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 128
@@ -143,7 +143,7 @@ object ModelParameter
 	case object KeepTokens extends ModelParameter
 	{
 		override val key: String = "num_keep"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("numKeep")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 24
@@ -159,7 +159,7 @@ object ModelParameter
 	case object RepeatLastTokens extends ModelParameter
 	{
 		override val key: String = "repeat_last_n"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("repeatLastN")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 64
@@ -179,7 +179,7 @@ object ModelParameter
 	case object RepeatPenalty extends ModelParameter
 	{
 		override val key: String = "repeat_penalty"
-		override val altKeys: Seq[String] = Single("repetition_penalty")
+		override val altKeys: Seq[String] = Vector("repetition_penalty", "repeatPenalty", "repetitionPenalty")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 1.1
@@ -194,7 +194,7 @@ object ModelParameter
 	case object PresencePenalty extends ModelParameter
 	{
 		override val key: String = "presence_penalty"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("presencePenalty")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 1.1
@@ -209,7 +209,7 @@ object ModelParameter
 	case object FrequencyPenalty extends ModelParameter
 	{
 		override val key: String = "frequency_penalty"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("frequencyPenalty")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 1.1
@@ -223,7 +223,7 @@ object ModelParameter
 	case object PenalizeNewLine extends ModelParameter
 	{
 		override val key: String = "penalize_newline"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("penalizeNewline")
 		override val dataType: DataType = BooleanType
 		
 		override val defaultValue: Value = true
@@ -277,7 +277,7 @@ object ModelParameter
 	case object MiroStatTau extends ModelParameter
 	{
 		override val key: String = "mirostat_tau"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("mirostatTau")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 5.0
@@ -298,7 +298,7 @@ object ModelParameter
 	case object MiroStatEta extends ModelParameter
 	{
 		override val key: String = "mirostat_eta"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("mirostatEta")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 0.1
@@ -316,7 +316,7 @@ object ModelParameter
 	case object TopK extends ModelParameter
 	{
 		override val key: String = "top_k"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("topK")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 40
@@ -337,7 +337,7 @@ object ModelParameter
 	case object TopP extends ModelParameter
 	{
 		override val key: String = "top_p"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("topP")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 0.9
@@ -358,7 +358,7 @@ object ModelParameter
 	case object MinP extends ModelParameter
 	{
 		override val key: String = "min_p"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("minP")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 0.0
@@ -373,7 +373,7 @@ object ModelParameter
 	case object TypicalP extends ModelParameter
 	{
 		override val key: String = "typical_p"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("typicalP")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 0.5
@@ -394,7 +394,7 @@ object ModelParameter
 	case object TailFreeSampling extends ModelParameter
 	{
 		override val key: String = "tfs_z"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("tfsZ")
 		override val dataType: DataType = DoubleType
 		
 		override val defaultValue: Value = 1
@@ -426,7 +426,7 @@ object ModelParameter
 	case object NumberOfBatches extends ModelParameter
 	{
 		override val key: String = "num_batch"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("numBatch")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 256
@@ -444,7 +444,7 @@ object ModelParameter
 	case object NumberOfGpus extends ModelParameter
 	{
 		override val key: String = "num_gpu"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("numGpu")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 8
@@ -462,7 +462,7 @@ object ModelParameter
 	case object MainGpuIndex extends ModelParameter
 	{
 		override val key: String = "main_gpu"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("mainGpu")
 		override val dataType: DataType = IntType
 		
 		override val defaultValue: Value = 0
@@ -492,7 +492,7 @@ object ModelParameter
 	case object LowVRam extends ModelParameter
 	{
 		override val key: String = "low_vram"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("lowVram")
 		override val dataType: DataType = BooleanType
 		
 		override val defaultValue: Value = true
@@ -507,7 +507,7 @@ object ModelParameter
 	object Fp16 extends ModelParameter
 	{
 		override val key: String = "fp16_kv"
-		override val altKeys: Seq[String] = Empty
+		override val altKeys: Seq[String] = Single("fp16Kv")
 		override val dataType: DataType = BooleanType
 		
 		override val defaultValue: Value = false

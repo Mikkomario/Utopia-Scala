@@ -255,7 +255,7 @@ class TokensNode[-C <: AuthContext[Any]](override val name: String = "tokens", c
 						}
 						Unauthorized -> message
 						
-						// Case: Token(s) were generated => Returns the generated tokens
+					// Case: Token(s) were generated => Returns the generated tokens
 					case Some(tokenOrTokens) =>
 						def tokenToModel(token: String, stored: ScopedToken, template: TokenTemplate) =
 							Model.from(

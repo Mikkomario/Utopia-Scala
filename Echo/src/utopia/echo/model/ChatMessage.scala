@@ -40,10 +40,11 @@ object ChatMessage
 	// OTHER    -----------------------
 	
 	private def parse(model: HasProperties)(textAndThoughts: => (String, String)) =
-		model("tool_calls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
+		model("tool_calls", "toolCalls").tryVectorWith { _.tryModel.flatMap(ToolCall.apply) }.map { toolCalls =>
 			val (text, thoughts) = textAndThoughts
 			ChatMessage(text, thoughts, model("role").string.flatMap(ChatRole.findForName).getOrElse(Assistant),
-				model("images").getVector.flatMap { _.string }, toolCalls, model("tool_call_id").getString)
+				model("images").getVector.flatMap { _.string }, toolCalls,
+				model("tool_call_id", "toolCallId").getString)
 		}
 	
 	
@@ -63,7 +64,7 @@ object ChatMessage
 				// NB: Open AI doesn't provide reasoning_content, but DeepSeek does.
 				// We're also preparing for the possible <think> element, in case of QWEN models
 				val (text, thoughtsFromContent) = ReplyParseUtils.separateThinkFrom(model("content").getString)
-				text -> (model("reasoning_content").getString + thoughtsFromContent)
+				text -> (model("reasoning_content", "reasoningContent").getString + thoughtsFromContent)
 			}
 		}
 	}
