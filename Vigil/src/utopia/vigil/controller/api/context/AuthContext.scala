@@ -154,8 +154,10 @@ trait AuthContext[+A] extends RequestContext[A]
 	                 (implicit connection: Connection, token: TokenIdRefs): RequestResult =
 		testScopes(scopes) match {
 			case Some(missingScopes) =>
-				RequestResult(ResponseContent(Model.from("missingScopes" -> missingScopes.toValue),
-					"Your authentication token lacks the sufficient authorization scopes"))
+				RequestResult(
+					content = ResponseContent(Model.from("missingScopes" -> missingScopes.toValue),
+						"Your authentication token lacks the sufficient authorization scopes"),
+					status = Unauthorized)
 			case None => result
 		}
 	
