@@ -6,6 +6,7 @@ import utopia.flow.generic.model.mutable.DataType
 /**
  * An instance of this class is able to process values using possibly multiple different converters.
  * The instance is mutable since converters may be introduced as necessary.
+ * @tparam Result Type of conversion results
  * @author Mikko Hilpinen
  * @since 25.4.2017
  */
@@ -13,7 +14,7 @@ class ValueConverterManager[Result](initialConverters: Iterable[ValueConverter[R
 {
     // PROPERTIES    -----------
     
-    private var converters = Map[DataType, ValueConverter[Result]]()
+    private var converters: Map[DataType, ValueConverter[Result]] = Map()
     
     
     // INITIAL CODE    ---------

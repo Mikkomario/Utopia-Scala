@@ -10,12 +10,12 @@ import utopia.flow.generic.model.mutable.DataType.StringType
   * @author Mikko Hilpinen
   * @since 13.12.2016
   */
-object JsonValueConverter extends ValueConverterManager(Single(BasicJsonValueConverter))
+object JsonValueConverter extends ValueConverterManager[JsonAppendix](Single(BasicJsonValueConverter))
 {
 	// Empty strings are not converted to null
 	override def apply(value: Value) = {
 		if (value.isEmpty && value.dataType == StringType)
-			Some("\"\"")
+			Some(JsonAppendix { (builder, _) => builder ++= "\"\"" })
 		else
 			super.apply(value)
 	}

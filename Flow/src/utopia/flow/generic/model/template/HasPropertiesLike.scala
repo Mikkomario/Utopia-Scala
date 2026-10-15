@@ -2,6 +2,7 @@ package utopia.flow.generic.model.template
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.error.CyclicIterationException
 import utopia.flow.generic.model.immutable.{Constant, Value}
 import utopia.flow.generic.model.mutable.Variable
 import utopia.flow.generic.model.template.HasPropertiesLike.haveSimilarProperties
@@ -148,19 +149,24 @@ trait HasPropertiesLike[+P <: Property]
 	
 	override def ~==(other: HasPropertiesLike[Property]): Boolean = haveSimilarProperties(this, other)
 	
-	override def appendToJson(jsonBuilder: mutable.StringBuilder) = {
-		if (isEmpty)
-			jsonBuilder ++= "{}"
-		else {
-			jsonBuilder += '{'
-			val propsIter = propertiesIterator
-			propsIter.nextOption().foreach { _.appendToJson(jsonBuilder) }
-			propsIter.foreach { prop =>
-				jsonBuilder ++= ", "
-				prop.appendToJson(jsonBuilder)
+	override def appendToJson(jsonBuilder: mutable.Growable[Char], depth: Int): Unit = {
+		jsonBuilder += '{'
+		val propsIter = propertiesIterator
+		if (propsIter.hasNext) {
+			val nextDepth = depth + 1
+			// Case: Cyclic loop detected => Throws
+			if (nextDepth > JsonConvertible.maxRecursiveCalls)
+				throw new CyclicIterationException(s"Cyclic JSON-conversion involving properties: [${
+					propsIter.map { _.name }.mkString(", ") }]")
+			else {
+				propsIter.nextOption().foreach { _.appendToJson(jsonBuilder, nextDepth) }
+				propsIter.foreach { prop =>
+					jsonBuilder ++= ", "
+					prop.appendToJson(jsonBuilder, nextDepth)
+				}
 			}
-			jsonBuilder += '}'
 		}
+		jsonBuilder += '}'
 	}
 	
 	

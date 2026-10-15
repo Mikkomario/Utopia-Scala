@@ -107,20 +107,18 @@ case class Value(content: Option[Any], dataType: DataType)
       */
     override def isEmpty = content.isEmpty
     
-	// All other empty values are represented with null, but an empty string value is represented as ""
-    override def toJson = JsonValueConverter(this).getOrElse { if (dataType == StringType) "\"\"" else "null" }
-    
     /**
      * The contents of this value cast to a string
      */
     override def toString = string.getOrElse("")
     
     override implicit def approxEqualsFunction: EqualsFunction[Value] = Value.convertToEqual
-    
-    override def appendToJson(jsonBuilder: mutable.StringBuilder) = JsonValueConverter(this) match {
-        case Some(json) => jsonBuilder ++= json
-        case None => jsonBuilder ++= "null"
-    }
+	
+	override def appendToJson(jsonBuilder: mutable.Growable[Char], depth: Int): Unit =
+		JsonValueConverter(this) match {
+			case Some(jsonConversion) => jsonConversion.appendToJson(jsonBuilder, depth)
+			case None => jsonBuilder ++= "null"
+		}
     
     
     // OPERATORS    -------------

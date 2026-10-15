@@ -4,6 +4,8 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Model, Value}
 import utopia.flow.parse.json.JsonConvertible
 
+import scala.collection.mutable
+
 /**
   * ModelConvertible instances can be represented as model data when necessary
   * @author Mikko Hilpinen
@@ -24,8 +26,8 @@ trait ModelConvertible extends JsonConvertible with ValueConvertible
 	override implicit def toValue: Value = toModel
 	
 	override def toJson = toModel.toJson
-	
 	override def toString = toModel.toString
 	
-	override def appendToJson(jsonBuilder: StringBuilder) = toModel.appendToJson(jsonBuilder)
+	override def appendToJson(jsonBuilder: mutable.Growable[Char], depth: Int): Unit =
+		toModel.appendToJson(jsonBuilder, depth)
 }

@@ -167,6 +167,8 @@
 - Added `knownSize` implementations to various custom **Iterator**s
 - Changed how namespaced **Console** commands are printed/listed
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
+- JSON conversions are now more efficient
+  - Also, if a cyclic reference is detected, the JSON conversion will now throw a **CyclicalIterationException**.
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 - Rewrote **StringFrom** to no longer depend on **Source** (except for the `.take(Int)` implementation)
