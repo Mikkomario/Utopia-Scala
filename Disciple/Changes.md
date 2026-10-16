@@ -17,6 +17,9 @@
 - **RequestRateLimiter** now extends **ScopeUsable**
 - Rewrote **StringBody** and **FileBody** implementations
 - Improved **Gateway**'s connection management
+- Optimized **String**-yielding **ResponseParser** implementation 
+  and cases where a non-JSON input is given to the **Value**-yielding **ResponseParser** implementation.
+- **Gateway's** makeRequest functions now yield **RequestFailedException**s on failure, which include request details.
 
 ## v1.9.2 - 15.03.2026
 A minor update adding some quality-of-life changes, and support for some **Echo**-specific use-cases.

@@ -45,6 +45,8 @@
 - **NumericSpan**'s `.length` can no longer yield negative values
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Bugfixes
+- Bugfix to **Single**'s and **LazySingle**'s `.padTo(...)` function, 
+  which previously added one too many elements when padding to 3+ elements.
 - Fixed an issue in **WeakList**'s `:+` function, which always discarded live items (opposite of the desired effect)
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.

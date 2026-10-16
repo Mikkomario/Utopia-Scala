@@ -5,6 +5,7 @@ import utopia.disciple.controller.Gateway
 import utopia.disciple.controller.interceptor.AccessLogger
 import utopia.disciple.model.request.Request
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.collection.immutable.Single
 import utopia.flow.parse.json.{JsonParser, JsonReader}
 import utopia.flow.test.TestContext._
 import utopia.flow.util.logging.SysErrLogger
@@ -19,9 +20,8 @@ import scala.io.StdIn
 object RequestTest extends App
 {
 	implicit val jsonParser: JsonParser = JsonReader
-	
 	val acc = AccessLogger.using(SysErrLogger)
-	val gateway = new Gateway(/*Vector(JsonBunny), */requestInterceptors = Vector(acc), responseInterceptors = Vector(acc))
+	val gateway = new Gateway(requestInterceptors = Single(acc), responseInterceptors = Single(acc))
 	
 	println("Sending request...")
 	println("Please type in the API-key to use")

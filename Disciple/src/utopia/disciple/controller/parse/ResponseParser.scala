@@ -5,21 +5,21 @@ import utopia.access.model.enumeration.StatusGroup.{ClientError, Redirect, Serve
 import utopia.access.model.enumeration.{ContentCategory, Status, StatusGroup}
 import utopia.access.model.{ContentType, Headers}
 import utopia.disciple.controller.parse.ResponseParser.{DelegateEmptyResponseParser, EnhancingResponseParser, MappingResponseParser}
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.{Model, Value}
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.equality.EqualsExtensions._
-import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.json.{JsonParser, JsonReader}
+import utopia.flow.parse.string.StringFrom
 import utopia.flow.parse.xml.{XmlElement, XmlReader}
 import utopia.flow.util.EitherExtensions._
-import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
+import utopia.flow.util.result.TryExtensions._
 
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 import scala.concurrent.ExecutionContext
-import scala.io.{Codec, Source}
+import scala.io.Codec
 import scala.util.{Failure, Success, Try}
 
 object ResponseParser
@@ -202,13 +202,10 @@ object ResponseParser
 	/**
 	  * @param primaryParser Primary json parser to utilize
 	  * @param moreParsers Additional json parsers to use for different encodings
-	  * @param defaultEncoding Implicit encoding to assume when no encoding information
-	  *                        has been specified in the response
 	  * @return A response parser which parses response bodies into [[Value]]s.
 	  *         Expects json content, but also functions with xml and text-based content.
 	  */
-	def jsonUsing(primaryParser: JsonParser, moreParsers: JsonParser*)
-	             (implicit defaultEncoding: Codec): ResponseParser[Try[Value]] =
+	def jsonUsing(primaryParser: JsonParser, moreParsers: JsonParser*): ResponseParser[Try[Value]] =
 		new ParseValue(primaryParser +: moreParsers)
 	
 	/**
@@ -302,7 +299,7 @@ object ResponseParser
 		  * Handles possible parse failures using a logger
 		  * @param default Default value to return in case of a parse failure
 		  * @param log Implicit logging implementation to use
-		  * @return Copy of this parser which logs and substitutes the default value in case of a parse failure
+		  * @return Copy of this parser that logs and substitutes the default value in case of a parse failure
 		  */
 		def getOrElseLog(default: => A)(implicit log: Logger) = p.map { result =>
 			result.getOrMap { error =>
@@ -441,8 +438,8 @@ object ResponseParser
 		{
 			val res = stream match {
 				case Some(stream) =>
-					val encoding = headers.codec.getOrElse(defaultEncoding)
-					Try { Source.fromInputStream(stream)(encoding).consume { _.mkString } }
+					implicit val encoding: Codec = headers.codec.getOrElse(defaultEncoding)
+					StringFrom.stream(stream)
 				case None => Success("")
 			}
 			ResponseParseResult.buffered(res)
@@ -452,30 +449,34 @@ object ResponseParser
 	private class ParseValue(jsonParsers: Iterable[JsonParser])
 		extends ResponseParser[Try[Value]]
 	{
+		// ATTRIBUTES   --------------------------
+		
 		private lazy val defaultEncoding = jsonParsers.headOption match {
 			case Some(parser) => parser.defaultEncoding
 			case None => Codec.UTF8
 		}
+		
+		
+		// IMPLEMENTED   -------------------------
 		
 		override def apply(status: Status, headers: Headers, stream: Option[InputStream]) =
 		{
 			val value: Try[Value] = stream match {
 				// Case: Non-empty response => Uses different parsing methods based on the response content type
 				case Some(stream) =>
-					val encoding = headers.codec.getOrElse(defaultEncoding)
-					// Case: Json => Uses the json parser which matches the content's encoding
-					if (headers.contentType.forall { _.subType ~== "json" }) {
+					implicit val encoding: Codec = headers.codec.getOrElse(defaultEncoding)
+					// Case: JSON => Uses the json parser which matches the content's encoding
+					if (headers.contentType.forall { _.subType ~== "json" })
 						jsonParsers.find { _.defaultEncoding == encoding } match {
 							case Some(parser) => parser(stream)
 							case None => JsonReader(stream, encoding)
 						}
-					}
-					// Case: Xml => Uses XmlReader to process the xml and then converts it into a model
+					// Case: XML => Uses XmlReader to process the XML and then converts it into a model
 					else if (headers.contentType.exists { _.subType ~== "xml" })
 						XmlReader.parseStream(stream, encoding.charSet).map[Value] { _.toModel }
 					// Case: Other => Converts the response body into a string
 					else
-						Try[Value] { Source.fromInputStream(stream)(encoding).consume { _.mkString } }
+						StringFrom.stream(stream).map { s => s: Value }
 					
 				// Case: Empty response => Returns an empty value
 				case None => Success(Value.empty)

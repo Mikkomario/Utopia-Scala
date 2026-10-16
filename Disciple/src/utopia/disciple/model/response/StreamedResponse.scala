@@ -18,7 +18,7 @@ object StreamedResponse
 	  * @param headers Response headers
 	  * @param openStream A function for opening the response body as a stream.
 	  *                   Returns None in case this response is empty (no content).
-	  * @param close A function for closing are resources that are kept open for this response.
+	  * @param close A function for closing the resources that are kept open for this response.
 	  *              Called if this response is closed or once the streamed content has been fully processed.
 	  * @return A new response
 	  */
@@ -34,7 +34,7 @@ object StreamedResponse
   * @param headers Response headers
   * @param openStream Function for opening response stream.
   *                   Returns None if no stream was available (which is treated as an empty response)
-  * @param closeDependencies A function which closes any resources that were used in this response, if applicable
+  * @param closeDependencies A function that closes any resources that were used in this response, if applicable
   */
 class StreamedResponse(override val status: Status, override val headers: Headers)
                       (openStream: => Option[InputStream])(closeDependencies: () => Unit)
@@ -63,7 +63,7 @@ class StreamedResponse(override val status: Status, override val headers: Header
 	 * Closes this response automatically, once parsing completes.
 	  * @param parser A parser used for processing the response body stream
 	  * @param exc Implicit execution context (used for closing the stream if the parsing is completed asynchronously)
-	  * @throws IllegalStateException If this response has already been consumed before
+	  * @throws java.lang.IllegalStateException If this response has already been consumed before
 	  * @tparam A Type of parse results
 	  * @return Parse result
 	  */
@@ -106,7 +106,7 @@ class StreamedResponse(override val status: Status, override val headers: Header
 	  * @param parser Parser used for parsing the response body
 	  * @param exc Implicit execution used to close the response body stream after asynchronous parsing has completed,
 	  *            if applicable
-	  * @throws IllegalStateException If this response has already been consumed before
+	  * @throws java.lang.IllegalStateException If this response has already been consumed before
 	  * @tparam A Type of response parse results
 	  * @return Buffered copy of this response, containing the parse result in place of a response body
 	  */

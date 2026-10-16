@@ -86,9 +86,10 @@ object ResponseParseExtensions
 		/**
 		  * Converts this parser to an Annex-compatible response parser.
 		  * Converts response body parse failures to failed responses.
-		  * @param extractErrorMessage A function which extracts an error message from the response body value.
-		  *                            Only called for failure responses (4XX-5XX) which contain a successful value.
-		  * @return Copy of this parser which converts the result into a success or a failure response based on
+		  * @param extractErrorMessage A function that extracts an error message from the response body value.
+		  *                            Only called for failure responses (4XX-5XX)
+		 *                            that contain a successfully parsed value.
+		  * @return Copy of this parser that converts the result into a success or a failure response based on
 		  *         the response status and the response body parsing success or failure.
 		  */
 		def unwrapToResponse(extractErrorMessage: A => String) =

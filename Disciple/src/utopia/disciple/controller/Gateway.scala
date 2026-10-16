@@ -18,6 +18,7 @@ import utopia.access.model.enumeration.{Method, Status}
 import utopia.disciple.controller.Gateway.insecureTlsStrategy
 import utopia.disciple.controller.interceptor.{RequestInterceptor, ResponseInterceptor}
 import utopia.disciple.controller.parse.ResponseParser
+import utopia.disciple.model.error.RequestFailedException
 import utopia.disciple.model.request.TimeoutType.{ManagerTimeout, ReadTimeout}
 import utopia.disciple.model.request.{Request, Timeout}
 import utopia.disciple.model.response.StreamedResponse
@@ -260,46 +261,57 @@ class Gateway(val maxConnectionsPerRoute: Int = 2, maxConnectionsTotal: Int = 10
 	def makeBlockingRequest[R](request: Request)(consumeResponse: StreamedResponse => R)(implicit log: Logger) = {
 		// Intercepts the request, if appropriate
 		val req = requestInterceptors.foldLeft(request) { (r, i) => i.intercept(r) }
-		val response = Try {
-			// Makes the base request (uri + params + body)
-			val base = makeRequestBase(req.method, req.requestUri, req.params, req.body.map { _.toHttpEntity })
-			// Adds the headers
-			req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
-			// Sets the timeout
-			val requestConfig = {
-				val builder = RequestConfig.custom()
-				(req.timeout min maximumTimeout).thresholds
-					.foreach { case (timeoutType, threshold) =>
-						val millis = threshold.toMillis
-						timeoutType match {
-							case ReadTimeout => builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
-							case ManagerTimeout =>
-								builder.setConnectionRequestTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
-							case _ => ()
+		val response = Try
+			.apply{
+				// Makes the base request (uri + params + body)
+				val base = makeRequestBase(req.method, req.requestUri, req.params, req.body.map { _.toHttpEntity })
+				// Adds the headers
+				req.headers.fields.foreach { case (key, value) => base.addHeader(key, value) }
+				// Sets the timeout
+				val requestConfig = {
+					val builder = RequestConfig.custom()
+					(req.timeout min maximumTimeout).thresholds
+						.foreach { case (timeoutType, threshold) =>
+							val millis = threshold.toMillis
+							timeoutType match {
+								case ReadTimeout => builder.setResponseTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
+								case ManagerTimeout =>
+									builder.setConnectionRequestTimeout(millis, concurrent.TimeUnit.MILLISECONDS)
+								case _ => ()
+							}
 						}
-					}
-				builder.build()
-			}
-			base.setConfig(requestConfig)
-			
-			// Performs the request and acquires a response, if possible
-			// TODO: Could specify host here
-			val rawResponse = client.executeOpen(null, base, null)
-			StreamedResponse(
-				status = Status(rawResponse.getCode),
-				headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
-			) {
-				// Acquires the response body as a stream, if possible
-				Try { Option(rawResponse.getEntity).map { _.getContent } }
-					// Logs possible encountered errors
-					.logWithMessage("Failed to open the response body").flatten
-					// Makes sure the received stream is not empty
-					.flatMap { _.notEmpty }
+					builder.build()
+				}
+				base.setConfig(requestConfig)
 				
-			} {
-				rawResponse.closeQuietly().logWithMessage("Failed to close the response body")
+				// Performs the request and acquires a response, if possible
+				// TODO: Could specify host here
+				val rawResponse = client.executeOpen(null, base, null)
+				StreamedResponse(
+					status = Status(rawResponse.getCode),
+					headers = Headers(rawResponse.getHeaders.view.map { h => (h.getName, h.getValue) }.toMap)
+				) {
+					// Acquires the response body as a stream, if possible
+					Try { Option(rawResponse.getEntity).map { _.getContent } }
+						// Logs possible encountered errors
+						.logWithMessage("Failed to open the response body").flatten
+						// Makes sure the received stream is not empty
+						.flatMap { _.notEmpty }
+					
+				} {
+					rawResponse.closeQuietly().logWithMessage("Failed to close the response body")
+				}
 			}
-		}
+			// On failure, includes a more detailed error message
+			.mapFailure { error =>
+				val paramsStr = if (request.params.isEmpty) "" else s" with params ${ request.params }"
+				val bodyStr = request.body match {
+					case Some(body) => s" with body $body"
+					case None => ""
+				}
+				new RequestFailedException(
+					s"Failed to execute ${ request.method } ${ request.requestUri }$paramsStr$bodyStr", error)
+			}
 		
 		// Intercepts the response before passing it to the parser
 		val interceptedResponse = responseInterceptors.foldLeft(response) { (r, i) => i.intercept(r, req) }

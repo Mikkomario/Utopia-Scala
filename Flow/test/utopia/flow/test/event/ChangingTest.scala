@@ -104,9 +104,14 @@ object ChangingTest extends App
 	assert(lm2.value == 2)
 	
 	// Tests merging
+	// 1 + 2 = 3
 	val o2 = EventfulPointer(1)
 	val o3 = EventfulPointer(2)
-	val merged = o2.mergeWith(o3) { _ + _ }
+	val merged = o2.mergeWith(o3) { (a, b) =>
+		val result = a + b
+		println(s"$a + $b = $result")
+		result
+	}
 	val lightMerged = o2.lightMergeWith(o3) { _ + _ }
 	
 	assert(o2.value == 1)
@@ -114,8 +119,10 @@ object ChangingTest extends App
 	assert(merged.value == 3)
 	assert(lightMerged.value == 3)
 	
+	// 5 + 2 = 7
 	o2.value = 5
 	
+	// -7
 	val mergeMapped = merged.strongMap { -_ }
 	val lightMergeMapped = lightMerged.map { -_ }
 	
@@ -124,9 +131,10 @@ object ChangingTest extends App
 	assert(mergeMapped.value == -7)
 	assert(lightMergeMapped.value == -7)
 	
+	// 5 - 3 = 2
 	o3.value = -3
 	
-	assert(merged.value == 2)
+	assert(merged.value == 2, merged.value)
 	assert(lightMerged.value == 2)
 	assert(mergeMapped.value == -2)
 	assert(o2.mayChange)

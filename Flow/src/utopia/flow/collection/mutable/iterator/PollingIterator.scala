@@ -1,5 +1,6 @@
 package utopia.flow.collection.mutable.iterator
 
+import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.view.mutable.caching.ResettableLazy
 
 import scala.collection.immutable.VectorBuilder
@@ -71,6 +72,7 @@ object PollingIterator
  * @author Mikko Hilpinen
  * @since 5.4.2021, v1.9
  */
+// TODO: Could optimize this
 trait PollingIterator[+A] extends Iterator[A]
 {
 	// ABSTRACT -----------------------------
@@ -148,10 +150,10 @@ trait PollingIterator[+A] extends Iterator[A]
 	 * Takes items as long as they fulfill the specified condition. After this method call, the next item will
 	 * <b>not</b> fulfill the specified condition, or there won't be any items left.
 	 * @param condition Condition that must be fulfilled for an item to be included
-	 * @return All of the consecutive items which fulfilled the specified condition
+	 * @return All consecutive items that fulfilled the specified condition
 	 */
 	def collectWhile(condition: A => Boolean) = {
-		val resultsBuilder = new VectorBuilder[A]()
+		val resultsBuilder = OptimizedIndexedSeq.newBuilder[A]
 		foreachWhile(condition) { resultsBuilder += _ }
 		resultsBuilder.result()
 	}
@@ -159,7 +161,7 @@ trait PollingIterator[+A] extends Iterator[A]
 	 * Takes items as long as they don't fulfill the specified condition. After this method call, the next item will
 	 * fulfill the specified condition, or there won't be any items left.
 	 * @param terminator Condition that returns true for the first excluded item
-	 * @return All of the consecutive items which didn't fulfill the specified condition
+	 * @return All consecutive items that didn't fulfill the specified condition
 	 */
 	def collectUntil(terminator: A => Boolean) = collectWhile { !terminator(_) }
 }

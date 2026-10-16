@@ -308,7 +308,6 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	
 	override def padTo[B >: A](len: Int, elem: B) = withDimensions(super.padTo(len, elem))
 	
-	// TODO: Implement
 	override def canEqual(that: Any) = that.isInstanceOf[Dimensions[_]] || that.isInstanceOf[HasDimensions[_]]
 	override def sameElements[B >: A](o: IterableOnce[B]) = {
 		val myIter = iterator
@@ -483,17 +482,31 @@ class Dimensions[+A](val lazyZeroValue: Lazy[A], val values: IndexedSeq[A])
 	  * @tparam B Type of new dimensions
 	  * @return A copy of these dimensions with those assignments applied
 	  */
-	def withDimensions[B >: A](dimensions: Map[Axis, B]): Dimensions[B] = {
+	def withDimensions[B >: A](dimensions: Map[Axis, B]): Dimensions[B] =
 		dimensions.keysIterator.maxByOption { _.index } match {
 			case Some(maxAxis) =>
-				val overlap = zipWithAxis.map { case (v, axis) => dimensions.getOrElse(axis, v) }
+				// Computes the overlapping part between the input and these dimensions
+				val overlapView = {
+					val mappedValuesView = values.view.zipWithIndex
+						.map { case (original, i) => dimensions.getOrElse(Axis(i), original) }
+					val axisCount = Axis.values.size
+					if (values.size > axisCount)
+						mappedValuesView ++ values.view.drop(axisCount)
+					else
+						mappedValuesView
+				}
+				// Case: Only mapping existing dimensions => Yields the overlapping / modified part
 				if (maxAxis.index < length)
-					withDimensions(overlap)
+					withDimensions(overlapView.toOptimizedSeq)
+				// Case: Adding new dimensions => Adds input dimensions and pads with zero values where necessary
 				else
-					withDimensions(overlap ++ Axis.values.drop(length).map { a => dimensions.getOrElse(a, zeroValue) })
+					withDimensions((overlapView ++
+						Axis.values.view.slice(length, maxAxis.index + 1).map { a => dimensions.getOrElse(a, zeroValue) })
+						.toOptimizedSeq)
+				
+			// Case: Empty input => No changes needed
 			case None => this
 		}
-	}
 	
 	/**
 	  * @param newZero New zero value to use

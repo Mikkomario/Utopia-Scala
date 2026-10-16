@@ -69,7 +69,7 @@ object StreamExtensions
 			Iterator
 				.continually { stream.read(buffer, 0, bufferSize) }
 				.takeWhile { _ != -1 }
-				.foreach { _ => output.write(buffer, 0, bufferSize) }
+				.foreach { read => output.write(buffer, 0, read) }
 		}
 	}
 	

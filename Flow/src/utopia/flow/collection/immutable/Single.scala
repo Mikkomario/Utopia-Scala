@@ -52,7 +52,7 @@ case class Single[+A](value: A)
 	override def padTo[B >: A](len: Int, elem: B) = len match {
 		case 2 => Pair(value, elem)
 		case x if x <= 1 => this
-		case _ => Vector.from(iterator ++ Iterator.fill(len)(elem))
+		case _ => Vector.from(iterator ++ Iterator.fill(len - 1)(elem))
 	}
 	
 	
