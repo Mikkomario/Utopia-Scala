@@ -102,8 +102,8 @@
 - **IterableOnce** (via **CollectionExtensions**)
   - Added `.isDistinct`
   - Added `.popHead` and `.popIndex(Int)`
-  - Added `.divideByIterator(...)`, `.divideWithIterator(...)`, `.flatDivideWithIterator(...)`, `.lazyDivideBy(...)`, 
-    `.lazyDivideWith(...)` and `.lazyFlatDivideWith(...)`
+  - Added `.divideZipWith(...)`, `.divideByIterator(...)`, `.divideWithIterator(...)`, `.flatDivideWithIterator(...)`, 
+    `.lazyDivideBy(...)`, `.lazyDivideWith(...)` and `.lazyFlatDivideWith(...)`
   - Added `.groupMapMap(...)`
   - Added `.dropCommonPrefixWith(IterableOnce)`
   - Added `.insertedBeforeFirstWhere(...)` and `.insertedAllBeforeFirstWhere(...)`
@@ -145,7 +145,7 @@
 - **String** (via **StringExtensions**)
   - Added `.inserted(String, Int)`
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
-  - Added `.notSurroundedWith(String, Boolean)`
+  - Added `.notSurroundedWith(...)`
   - Added `.toCharsIterator` to **IterableOnce** instances of type **String**
 - **TryCatch**
   - Object
@@ -168,6 +168,7 @@
 - `.logWithMessage(...)` in **Try** now receives an optional second parameter `details: Model`
 - Added `knownSize` implementations to various custom **Iterator**s
 - Changed how namespaced **Console** commands are printed/listed
+- `PollingIterator.from` now supports **IterableOnce** instead of just **Iterator**
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 - JSON conversions are now more efficient
   - Also, if a cyclic reference is detected, the JSON conversion will now throw a **CyclicalIterationException**.

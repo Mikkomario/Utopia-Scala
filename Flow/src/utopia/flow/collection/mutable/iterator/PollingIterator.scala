@@ -3,7 +3,7 @@ package utopia.flow.collection.mutable.iterator
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
 import utopia.flow.view.mutable.caching.ResettableLazy
 
-import scala.collection.immutable.VectorBuilder
+import scala.annotation.tailrec
 
 object PollingIterator
 {
@@ -18,14 +18,16 @@ object PollingIterator
 	def apply[A](source: Iterator[A]): PollingIterator[A] = new _PollingIterator[A](source)
 	
 	/**
-	  * @param iterator An iterator to convert into a polling iterator
-	  * @tparam A Type of values returned by the specified iterator
-	  * @return A polling iterator based on the specified iterator.
-	  *         Returns the specified iterator in case it supports polling already.
-	  */
-	def from[A](iterator: Iterator[A]) = iterator match {
+	 * @param iterator An iterator to convert into a polling iterator
+	 * @tparam A Type of values returned by the specified iterator
+	 * @return A polling iterator based on the specified iterator.
+	 *         Returns the specified iterator in case it supports polling already.
+	 */
+	@tailrec
+	def from[A](iterator: IterableOnce[A]): PollingIterator[A] = iterator match {
 		case p: PollingIterator[A] => p
-		case i => apply(i)
+		case i: Iterator[A] => apply(i)
+		case i => from(i.iterator)
 	}
 	
 	
@@ -72,7 +74,6 @@ object PollingIterator
  * @author Mikko Hilpinen
  * @since 5.4.2021, v1.9
  */
-// TODO: Could optimize this
 trait PollingIterator[+A] extends Iterator[A]
 {
 	// ABSTRACT -----------------------------

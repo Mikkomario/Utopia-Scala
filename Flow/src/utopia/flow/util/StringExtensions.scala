@@ -5,8 +5,8 @@ import utopia.flow.collection.immutable.range.{HasEnds, HasOrderedEnds, NumericS
 import utopia.flow.collection.immutable.{Empty, Pair, Single}
 import utopia.flow.collection.mutable.iterator.OptionsIterator
 import utopia.flow.operator.Identity
-import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.equality.EqualsExtensions._
+import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.parse.string.Regex
 import utopia.flow.view.mutable.caching.ResettableLazy
 
@@ -568,11 +568,26 @@ object StringExtensions
 		 * @return If this string is surrounded by the specified edge string, returns this string without said edge.
 		 *         Otherwise returns this string.
 		 */
-		def notSurroundedWith(edge: String, ignoreCase: Boolean = false) = {
-			if (startsWith(edge, ignoreCase = ignoreCase) && endsWith(edge, ignoreCase = ignoreCase)) {
-				val removeLen = edge.length
-				s.slice(removeLen, s.length - removeLen)
-			}
+		def notSurroundedWith(edge: String, ignoreCase: Boolean = false): String =
+			notSurroundedWith(edge, edge, ignoreCase)
+		/**
+		 * @param start The starting sequence not allowed with the specified end
+		 * @param end The ending sequence not allowed with the specified start
+		 * @return If this string is surrounded by the specified edge strings, returns this string without those edges.
+		 *         Otherwise returns this string.
+		 */
+		def notSurroundedWith(start: String, end: String): String =
+			notSurroundedWith(start, end, ignoreCase = false)
+		/**
+		 * @param start The starting sequence not allowed with the specified end
+		 * @param end The ending sequence not allowed with the specified start
+		 * @param ignoreCase Whether to ignore case differences (default = false)
+		 * @return If this string is surrounded by the specified edge strings, returns this string without those edges.
+		 *         Otherwise returns this string.
+		 */
+		def notSurroundedWith(start: String, end: String, ignoreCase: Boolean) = {
+			if (startsWith(start, ignoreCase = ignoreCase) && endsWith(end, ignoreCase = ignoreCase))
+				s.slice(start.length, s.length - end.length)
 			else
 				s
 		}

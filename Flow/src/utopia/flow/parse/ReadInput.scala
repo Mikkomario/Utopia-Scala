@@ -70,6 +70,13 @@ trait ReadInput[+A]
 	def apply(stream: InputStream)(implicit codec: Codec): Try[A] = this.stream(stream)
 	/**
 	 * Reads file contents
+	 * @param path Path to the file to read
+	 * @param codec Character encoding used (implicit)
+	 * @return Processed result. Failure if file-reading failed.
+	 */
+	def apply(path: Path)(implicit codec: Codec): Try[A] = this.path(path)
+	/**
+	 * Reads file contents
 	 * @param file  An input file
 	 * @param codec Character encoding used (implicit)
 	 * @return Processed result. Failure if file-reading failed.

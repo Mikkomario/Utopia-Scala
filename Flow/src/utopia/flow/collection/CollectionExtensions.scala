@@ -813,6 +813,20 @@ object CollectionExtensions
 		}
 		
 		/**
+		 * @param f A function that may yield a result for an item
+		 * @tparam B Type of 'f' results, when specified
+		 * @return Returns 2 collections:
+		 *         1. Instances for which 'f' found no result
+		 *         1. Instances for which 'f' found a result, with the matching result included.
+		 */
+		def divideZipWith[B](f: A => Option[B]) = divideWith { a =>
+			f(a) match {
+				case Some(b) => Right(a -> b)
+				case None => Left(a)
+			}
+		}
+		
+		/**
 		 * Divides / maps the items in this collection to two groups
 		 * @param f A function for separating / mapping the items
 		 * @tparam L Type of left group items

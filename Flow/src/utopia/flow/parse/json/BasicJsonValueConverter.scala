@@ -24,6 +24,7 @@ object BasicJsonValueConverter extends ValueConverter[JsonAppendix]
 	// IMPLEMENTED	----------------------
 	
 	override def apply(value: Value, dataType: DataType) = dataType match {
+		// Case: String type => Wraps the content within double quotes and escapes special characters
 		case StringType =>
 			JsonAppendix { (builder, _) =>
 				builder += '\"'
@@ -33,12 +34,13 @@ object BasicJsonValueConverter extends ValueConverter[JsonAppendix]
 					.replace("\n", "\\n")
 				builder += '\"'
 			}
+		// Case: Vector type => Wraps the content within square brackets and separates the values with commas
 		case VectorType =>
 			JsonAppendix { (builder, depth) =>
 				builder += '['
 				value.getVector.nonEmptyIterator.foreach { valuesIter =>
 					valuesIter.next().appendToJson(builder, depth)
-					value.getVector.foreach { v =>
+					valuesIter.foreach { v =>
 						builder += ','
 						builder += ' '
 						v.appendToJson(builder, depth)
@@ -46,9 +48,9 @@ object BasicJsonValueConverter extends ValueConverter[JsonAppendix]
 				}
 				builder += ']'
 			}
+		// Case: Model type => Uses the model's own JSON conversion
 		case ModelType => JsonAppendix.wrap(value.getModel)
-		// Handles instant type separately to format it correctly
-		// Same treatment is given to dates
+		// Case: Timestamp => Converts it to a string
 		case InstantType | LocalDateType =>
 			JsonAppendix { (builder, _) =>
 				builder += '\"'

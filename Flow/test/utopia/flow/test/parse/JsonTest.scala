@@ -2,21 +2,18 @@ package utopia.flow.test.parse
 
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
-import utopia.flow.generic.model.mutable.DataType
-import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType, StringType}
+import utopia.flow.generic.model.mutable.DataType.{IntType, ModelType}
 import utopia.flow.parse.json.JsonReader
 
 import java.time.Instant
 
 /**
- *
  * @author Mikko Hilpinen
- * @since 5.4.2021, v
+ * @since 5.4.2021
  */
-object JSONTest extends App
+object JsonTest extends App
 {
-	def assertJSON(value: Value, json: String) =
-	{
+	def assertJson(value: Value, json: String) = {
 		val result = value.toJson
 		println(s"${value.description} => $result")
 		assert(result == json)
@@ -28,19 +25,19 @@ object JSONTest extends App
 	val s = "Hello World!".toValue
 	val time = Instant.now().toValue
 	val b = true.toValue
-	val empty = Value.emptyWithType(StringType)
+	val empty = Value.empty
 	val v = Vector(empty, b, i).toValue
 	
-	assertJSON(empty, "null")
+	assertJson(empty, "null")
 	
-	assertJSON(i, "123")
-	assertJSON(d, "222.222")
-	assertJSON(s, "\"Hello World!\"")
-	assertJSON(time, "\"" + time + "\"")
-	assertJSON(b, "true")
-	assertJSON(v, "[null, true, 123]")
-	assertJSON(Vector[Value](), "[]")
-	assertJSON(Model.empty, "{}")
+	assertJson(i, "123")
+	assertJson(d, "222.222")
+	assertJson(s, "\"Hello World!\"")
+	assertJson(time, s"\"$time\"")
+	assertJson(b, "true")
+	assertJson(v, "[null, true, 123]")
+	assertJson(Vector[Value](), "[]")
+	assertJson(Model.empty, "{}")
 	
 	// Tests Property writing next
 	val prop1 = Constant("test1", i)
