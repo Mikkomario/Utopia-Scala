@@ -77,7 +77,7 @@ trait CanUseReplaceHandler[+In, E, +S, +Repr]
 	 *                      1. Database connection to use
 	 * @return Copy of this interface, which deprecates older item versions by using the specified replace function
 	 */
-	def replacing(shouldReplace: (In, E) => Boolean)(replace: (IndexedSeq[(S, E)], Connection) => Unit) =
+	def replacing(shouldReplace: (In, E) => Boolean)(replace: (IndexedSeq[(S, E)], Connection) => Unit): Repr =
 		using(ReplaceHandler(shouldReplace)(replace))
 	
 	/**

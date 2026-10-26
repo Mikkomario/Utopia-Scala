@@ -19,6 +19,8 @@
   - Added new variants of `.isBetween(...)` and `.notBetween(...)` that support **HasInclusiveEnds**
 - **DbMap**
   - Added a new index-based constructor
+- **Deprecates**
+  - Added `.toActiveJoin` to instances which also extend **HasTable**
 - **Join**
   - Added `.columns`
 - **Row**

@@ -59,6 +59,17 @@ object Deprecates
 	}
 	
 	
+	// EXTENSIONS   ---------------------
+	
+	implicit class JoinableDeprecates(val d: Deprecates with HasTable) extends AnyVal
+	{
+		/**
+		 * @return A conditional join to this item's table. Only active rows are joined.
+		 */
+		def toActiveJoin = d.table.onlyJoinIf(d.activeCondition)
+	}
+	
+	
 	// NESTED   -------------------------
 	
 	private class _Deprecates(activeConditionView: View[Condition], deprecatedConditionView: View[Condition])

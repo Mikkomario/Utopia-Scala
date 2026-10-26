@@ -189,7 +189,7 @@ object Pair
 		  * @param equals A function that determines whether the two items form a "match",
 		  *               and should therefore be placed together in group 3.
 		  *
-		  * @return Groups 1 and 2 as a Pair of Sets + group 3 as a Vector of Pairs.
+		  * @return Groups 1 and 2 as a Pair of Sets + group 3 as a collection of Pairs.
 		  *         The ordering of group 3 is dictated by the ordering in the second source collection.
 		  *         The ordering in groups 1 and 2 is lost (obviously).
 		  */
@@ -208,14 +208,14 @@ object Pair
 		  * @param f A function that determines whether the two items form a "match",
 		  *          and should therefore be placed together in group 3.
 		  *
-		  * @return Groups 1 and 2 as a Pair of Sets + group 3 as a Vector of Pairs.
+		  * @return Groups 1 and 2 as a Pair of Sets + group 3 as a collection of Pairs.
 		  *         The ordering of group 3 is dictated by the ordering in the second source collection.
 		  *         The ordering in groups 1 and 2 is lost (obviously).
 		  */
 		def separateMatchingWith(f: (A, A) => Boolean) = {
 			val firstUniquePool = mutable.Set.from[A](p.first)
 			val secondUniqueBuilder = mutable.Set[A]()
-			val matchesBuilder = new VectorBuilder[Pair[A]]()
+			val matchesBuilder = OptimizedIndexedSeq.newBuilder[Pair[A]]
 			
 			p.second.foreach { b =>
 				firstUniquePool.find { a => f(a, b) } match {
