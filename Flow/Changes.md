@@ -151,6 +151,7 @@
   - Object
     - Added `.unit`
   - Instance
+    - Added `.isFullSuccess`
     - Added `.mapFailure(...)`
 - **Value**
   - Added `.getModelOrString`

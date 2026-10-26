@@ -17,6 +17,8 @@
   - Added `.isNull(ConditionElement)` and `.isNotNull(ConditionElement)`
 - **ConditionElement**
   - Added new variants of `.isBetween(...)` and `.notBetween(...)` that support **HasInclusiveEnds**
+- **Connection**
+  - Added `.test()`
 - **DbMap**
   - Added a new index-based constructor
 - **Deprecates**
@@ -27,6 +29,8 @@
   - Added `.contains(Column)`
 - **SqlSegment**
   - Added `.readsMultipleTables`
+- **StoreResult** (object)
+  - Added `.existingOrInsert(...)`
 - **TargetingLike**
   - Added `+(Join)`
 ### Other changes

@@ -22,6 +22,17 @@ object StoreResult
 	// OTHER    ----------------------
 	
 	/**
+	 * @param existing An existing entry. None if there is no existing entry.
+	 * @param insert A function that inserts a new entry. Call-by-name; Only called if 'existing' is not defined.
+	 * @tparam A Type of the stored item.
+	 * @return The existing entry or a newly inserted entry.
+	 */
+	def existingOrInsert[A <: HasId[Int]](existing: Option[A])(insert: => A) = existing match {
+		case Some(existing) => existed(existing)
+		case None => inserted(insert)
+	}
+	
+	/**
 	 * @param item A newly inserted item to wrap
 	 * @tparam A Type of the wrapped item
 	 * @return A store result wrapping that item

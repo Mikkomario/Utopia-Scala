@@ -719,6 +719,12 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger)
 	def tryExec(statement: SqlSegment) = Try(apply(statement))
 	
 	/**
+	 * Tests database connection
+	 * @return Success if the database is reachable; Failure otherwise.
+	 */
+	def test() = Try { execute("SELECT 1") }
+	
+	/**
 	  * Executes a simple sql string. Does not retrieve any values from the query.
 	  * @param requireTargetedDb Whether a database target should be required at this point (default = false)
 	  */

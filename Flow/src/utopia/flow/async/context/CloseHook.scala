@@ -87,7 +87,8 @@ object CloseHook
 	def registerAsyncAction(onCloseAction: => Future[Any]) = hooks :+= { () => onCloseAction }
 	
 	/**
-	  * Stops all registered breakable items
+	  * Stops all registered breakable items.
+	 * Blocks until shutdown is complete.
 	  */
 	def shutdown() = {
 		// Updates the pointer

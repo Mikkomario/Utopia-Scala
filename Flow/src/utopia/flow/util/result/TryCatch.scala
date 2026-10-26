@@ -19,6 +19,10 @@ sealed trait TryCatch[+A] extends MayHaveFailed[A] with MayHaveFailedLike[A, Try
 	// ABSTRACT -------------------------
 	
 	/**
+	 * @return Whether this is a complete success with no failures at all
+	 */
+	def isFullSuccess: Boolean
+	/**
 	 * @return Whether this is a partial success and a partial failure, both
 	 */
 	def isPartialFailure: Boolean
@@ -207,6 +211,7 @@ object TryCatch
 		// IMPLEMENTED  ------------------------
 		
 		override def isSuccess: Boolean = true
+		override def isFullSuccess: Boolean = failures.isEmpty
 		override def isFailure: Boolean = false
 		override def isPartialFailure: Boolean = failures.nonEmpty
 		
@@ -275,6 +280,7 @@ object TryCatch
 	{
 		override def self: Failure = this
 		
+		override def isFullSuccess: Boolean = false
 		override def isPartialFailure: Boolean = false
 		
 		override def anyFailure = Some(cause)
