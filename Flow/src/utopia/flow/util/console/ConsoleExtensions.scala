@@ -125,8 +125,8 @@ object ConsoleExtensions
 			readNonEmptyLine(s"$question $yesNo") match {
 				case Some(answer) =>
 					answer.head.toLower match {
-						case 'y' => true
-						case 'n' => false
+						case 'y' | 't' => true
+						case 'n' | 'f' => false
 						case _ => default
 					}
 				case None => default
