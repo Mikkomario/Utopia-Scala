@@ -86,11 +86,13 @@ case class Value(content: Option[Any], dataType: DataType)
     
     
     // COMP. PROPERTIES    -----
-    
-    /**
-     * The description of this value, describing both content and data type
-     */
-    def description = s"'$getString' ($dataType)"
+	
+	/**
+	 * The description of this value, describing both content and data type
+	 */
+	def valueDescription = s"`$getString` ($dataType)"
+    @deprecated("Renamed to .valueDescription", "v2.9")
+    def description = valueDescription
     
     /**
      * Whether this value has a real object value associated with it
@@ -416,8 +418,8 @@ case class Value(content: Option[Any], dataType: DataType)
 	}
 	
     private def getTry[A](targetType: DataType)(extract: Value => A) =
-        castTo(targetType).toTry { new DataTypeException(s"Can't cast $description to $targetType") }.map(extract)
+        castTo(targetType).toTry { new DataTypeException(s"Can't cast $valueDescription to $targetType") }.map(extract)
     
     private def tryGetNonEmpty[A](value: Option[A])(dataType: => String) =
-        value.toTry { new DataTypeException(s"Can't cast $description to $dataType") }
+        value.toTry { new DataTypeException(s"Can't cast $valueDescription to $dataType") }
 }

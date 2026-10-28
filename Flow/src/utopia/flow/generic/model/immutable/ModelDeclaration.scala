@@ -292,7 +292,7 @@ case class ModelDeclaration private(declarations: Seq[PropertyDeclaration],
                     value.castTo(d.dataType)
                         .toTry {
                             new DataTypeException(
-                                s"Cannot cast ${ value.description } to the required type ${
+                                s"Cannot cast ${ value.valueDescription } to the required type ${
 	                                d.dataType } in property ${ d.name }")
                         }
                         .map { d -> Constant(d.name, _) }
@@ -313,8 +313,8 @@ case class ModelDeclaration private(declarations: Seq[PropertyDeclaration],
                                 val value = model(propName)
                                 value.model
                                     .toTry {
-                                        new IllegalArgumentException(
-                                            s"Value (${value.description}) for a child model $propName was missing or could not be cast.")
+                                        new IllegalArgumentException(s"Value (${
+	                                        value.valueDescription}) for a child model $propName was missing or could not be cast.")
                                     }
                                     .map { (propName, declaration, _) }
                             }

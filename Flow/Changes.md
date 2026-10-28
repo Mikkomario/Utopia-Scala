@@ -63,6 +63,8 @@
   - Renamed `.mapParseResult(...)` to `.mapResult(...)` and `.flatMapParseResult(...)` to `.tryMapResult(...)`
 - `Regex.whiteSpace` is now named `Regex.whitespace`
 - Renamed `.onceNotEmpty(...)` to `.onceDefined(...)` for **Changing** containing **Option**
+- Renamed **Value**'s `.description` to `.valueDescription` since `.description` often causes confusion when combined 
+  with implicit conversions.
 ### Bugfixes
 - `Regex.whitespace` would previously match to newline characters, also. 
   The new version uses `\h`, matching only horizontal whitespaces.

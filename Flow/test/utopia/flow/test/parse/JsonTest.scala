@@ -15,7 +15,7 @@ object JsonTest extends App
 {
 	def assertJson(value: Value, json: String) = {
 		val result = value.toJson
-		println(s"${value.description} => $result")
+		println(s"${value.valueDescription} => $result")
 		assert(result == json)
 	}
 	
@@ -53,7 +53,7 @@ object JsonTest extends App
 	
 	// Tests value reading
 	assert(JsonReader("1").get.intOr() == 1)
-	println(JsonReader("[1, 2, 3]").get.description)
+	println(JsonReader("[1, 2, 3]").get.valueDescription)
 	assert(JsonReader("[1, 2, 3]").get.vectorOr() == Vector[Value](1, 2, 3))
 	
 	// Tests model reading

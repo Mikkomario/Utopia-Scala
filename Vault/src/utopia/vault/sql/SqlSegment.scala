@@ -113,7 +113,7 @@ case class SqlSegment(sql: String, values: Seq[Value] = Empty, databaseName: Opt
 	 */
 	def description = {
 		val valuesPart = NotEmpty(values) match {
-			case Some(values) => s"\nValues: ${ values.view.map { _.description }.mkString(", ") }"
+			case Some(values) => s"\nValues: ${ values.view.map { _.valueDescription }.mkString(", ") }"
 			case None => ""
 		}
 		s"Sql: $toString$valuesPart"

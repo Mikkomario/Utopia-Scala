@@ -41,7 +41,7 @@ trait Property extends JsonConvertible with View[Value]
 	
 	// IMPLEMENTED    -----
 	
-	override def toString = s"$name: ${ value.description }"
+	override def toString = s"$name: ${ value.valueDescription }"
 	
 	override def appendToJson(jsonBuilder: mutable.Growable[Char], depth: Int): Unit = {
 		jsonBuilder ++= name.quoted

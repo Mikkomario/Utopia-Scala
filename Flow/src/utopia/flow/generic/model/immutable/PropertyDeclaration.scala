@@ -135,7 +135,7 @@ trait PropertyDeclaration extends Equals
     // IMPLEMENTED  ------------------
     
     override def toString = s"$name ($dataType)${
-        defaultValue.notEmpty.map { v => s" (default: ${v.description})" }.getOrElse("")}"
+        defaultValue.notEmpty.map { v => s" (default: ${v.valueDescription})" }.getOrElse("")}"
     
     
     // COMPUTED ----------------------

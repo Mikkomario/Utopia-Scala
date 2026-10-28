@@ -114,7 +114,7 @@ object DataTypeTest extends App
 	
 	// Tests string to array conversion
 	assert("[1, 2, 3]".getVector.map { _.getInt } == Vector(1, 2, 3))
-	println("(1, 2, 3)".getVector.map { _.description }.mkString(", "))
+	println("(1, 2, 3)".getVector.map { _.valueDescription }.mkString(", "))
 	assert("(1, 2, 3)".getVector.map { _.getInt } == Vector(1, 2, 3))
 	assert("1, 2, 3".getVector.map { _.getInt } == Vector(1, 2, 3))
 	assert("1;2;3".getVector.map { _.getInt } == Vector(1, 2, 3))

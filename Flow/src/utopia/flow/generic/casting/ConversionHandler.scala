@@ -204,7 +204,7 @@ object ConversionHandler
 		def apply(value: Value) =
 		{
 			if (!(value isOfType conversion.source))
-				throw new DataTypeException(s"Input of ${ value.description } in conversion $conversion")
+				throw new DataTypeException(s"Input of ${ value.valueDescription } in conversion $conversion")
 			caster.cast(value, conversion.target)
 		}
 	}

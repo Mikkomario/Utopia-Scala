@@ -242,7 +242,7 @@ class AccessColumnValues[+A, -In](override protected val access: AccessManyColum
 		fromValue match {
 			case Left(flatMap) =>
 				flatMap(value).iterator.nextOption().getOrElse { throw new NoSuchElementException(
-					s"No $extreme value could be extracted from ${ value.description }") }
+					s"No $extreme value could be extracted from ${ value.valueDescription }") }
 			case Right(map) => map(value)
 		}
 	}
