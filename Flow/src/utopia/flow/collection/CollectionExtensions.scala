@@ -15,10 +15,10 @@ import utopia.flow.operator.enumeration.Extreme.{Max, Min}
 import utopia.flow.operator.enumeration.{End, Extreme}
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.operator.ordering.CombinedOrdering
+import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.HasSize
 import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.util.result.TryExtensions._
-import utopia.flow.util.EitherExtensions._
 import utopia.flow.util.result.{MayHaveFailed, PossiblyFailingFutures, TryCatch}
 import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.async.Volatile
@@ -1173,14 +1173,14 @@ object CollectionExtensions
 		  * @param f A reduce function
 		  * @return An iterator that reduces the items in this collection and returns every iteration result
 		  */
-		def reduceLeftIterator(f: (A, A) => A) = FoldingIterator.reduce(i.iterator)(f)
+		def reduceLeftIterator(f: (A, A) => A) = ReducingIterator(i)(f)
 		
 		/**
 		 * Maps the contents of this collection using a mapping function which performs the mapping asynchronously.
 		 *
 		 * Note: The mapping is NOT performed in parallel, but consecutively.
 		 *
-		 * @param f A mapping function which completes asynchronously
+		 * @param f A mapping function that completes asynchronously
 		 * @param exc Implicit execution context
 		 * @tparam B Type of mapping results
 		 * @return A future that resolves once all items in this collection have been mapped.

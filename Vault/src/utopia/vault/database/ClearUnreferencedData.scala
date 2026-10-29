@@ -1,6 +1,7 @@
 package utopia.vault.database
 
 import utopia.flow.async.process.LoopingProcess
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.Empty
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.logging.Logger
@@ -54,7 +55,7 @@ class ClearUnreferencedData(targets: Set[(Table, Set[Table])])
 	// Orders the deletions so that the possibly referencing tables are cleared first
 	private lazy val deletionTargets = orderTargets(targets.toVector.map { case (table, ignored) =>
 		// Searches for the references towards that table, but ignores specified tables
-		DeletionTarget(table, References.to(table).filterNot { ref => ignored.contains(ref.from.table) })
+		DeletionTarget(table, References.to(table).filterNot { ref => ignored.contains(ref.from.table) }.toOptimizedSeq)
 	})
 	
 	

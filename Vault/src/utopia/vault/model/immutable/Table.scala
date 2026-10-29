@@ -35,14 +35,14 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	// ATTRIBUTES    ---------------------------
 	
 	/**
-	  * @return The name of this table in sql format (same as original name but surrounded with `backticks`).
+	  * @return The name of this table in SQL format (same as original name but surrounded with `backticks`).
 	  */
-	lazy val sqlName = s"`$name`"
+	val sqlName = s"`$name`"
 	
 	/**
 	  * Columns in this table. Each includes a reference to this table, also.
 	  */
-	lazy val columns = _columns.map { TableColumn(this, _) }
+	val columns = _columns.map { TableColumn(this, _) }
 	/**
 	  * The primary column for this table. Not all tables do have primary columns though.
 	  */
@@ -73,6 +73,12 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  * Whether the table has an index (primary key) that uses auto-increment
 	  */
 	def usesAutoIncrement = primaryColumn.exists { _.usesAutoIncrement }
+	
+	/**
+	 * @return All column names in this table.
+	 *         Note: Returns the names as they appear in SQL, not as property names.
+	 */
+	def columnNames = columnsByColName.keySet
 	
 	/**
 	  * @return A factory for storable instances from this table
@@ -206,6 +212,11 @@ case class Table private(name: String, databaseName: String, _columns: Seq[Colum
 	  * checks whether this table contains a column matching the provided database model property name
 	  */
 	def contains(propertyName: String) = columnsByPropName.contains(propertyName.toLowerCase)
+	/**
+	 * @param colName A column name (case-sensitive)
+	 * @return Whether this table contains a column with that name
+	 */
+	def containsColumnName(colName: String) = columnsByColName.contains(colName)
 	
 	/**
 	  * Joins a new table, creating a new sql target.

@@ -3,11 +3,15 @@
 ## v2.2 (in development)
 ### Breaking changes
 - **LazyDbValue** now extends **Resettable**
+- Multiple functions in **References** now yield an **Iterator** where they previously 
+  yielded **Iterable** or **CachingSeq**
 - The default connection target is now `:mariadb` instead of `:mysql`
 ### Deprecations
 - Deprecated **DatabaseCache** (class); Added new constructors that yield **DbValue** **Cache**s
 ### Bugfixes
 - **Store** now ensures that input is distinct
+- Added more detailed handling for situations where a table references another table from multiple columns; 
+  In these instances, NOT NULL columns are now preferred.
 - Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items
 - **AccessGrouped** now extends **TargetingGrouped**, as intended
 ### New features
@@ -31,6 +35,8 @@
   - Added `.readsMultipleTables`
 - **StoreResult** (object)
   - Added `.existingOrInsert(...)`
+- **Table**
+  - Added `.columnNames` and `.containsColumnName(String)`
 - **TargetingLike**
   - Added `+(Join)`
 ### Other changes
@@ -45,6 +51,7 @@
   for situations where the parameter is of type **HasInclusiveEnds** (e.g. a **NumericSpan**)
 - Optimized `.toMultiMap(...)` in **AccessManyColumns**
   - The new implementation also contains an optional `includeDefault: Boolean `-parameter
+- **Select** now only includes table names as column-prefixes in cases where column names are ambiguous
 - Removed some deprecated functions from **References**
 
 ## v2.1 - 15.03.2026

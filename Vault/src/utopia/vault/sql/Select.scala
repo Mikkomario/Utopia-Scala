@@ -136,14 +136,21 @@ object Select
         else {
             val tables = target.tables
             // Case: Targeting all columns in the target => Uses * instead of listing all the columns
-            if (columns.hasSize(tables.view.map { _.columns.size }.sum))
+            if (columns.hasSize(tables.iterator.map { _.columns.size }.sum))
                 "*"
             // Case: Only targeting a single table => Doesn't use table prefixes
             else if (tables.hasSize(1))
-                columns.view.map { _.shortSqlName }.mkString(", ")
-            // Case: Targets multiple tables => Uses table prefixes
+                columns.iterator.map { _.shortSqlName }.mkString(", ")
+            // Case: Targets multiple tables => Uses table prefixes on ambiguous columns
             else
-                columns.view.map { _.sqlName }.mkString(", ")
+                columns.iterator
+                    .map { c =>
+                        if (tables.existsCount(2) { _.containsColumnName(c.columnName) })
+                            c.sqlName
+                        else
+                            c.shortSqlName
+                    }
+                    .mkString(", ")
         }
     }
     private def singleColumnTargetFrom(target: SqlTarget, column: Column) =

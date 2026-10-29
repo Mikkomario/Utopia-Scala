@@ -83,6 +83,7 @@
 - Parallel mapping now supports custom builders
 - Added approximate equality functions for **Instant**s
 - Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**
+- Added **ReducingIterator**
 ### New methods
 - **ActionQueue**
   - Added `.currentSize`
@@ -178,6 +179,7 @@
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 - Rewrote **StringFrom** to no longer depend on **Source** (except for the `.take(Int)` implementation)
+- `.reduceLeftIterator` in **IterableOnce** now uses **ReducingIterator** internally
 - Internal refactoring within **ConversionHandler**
 
 ## v2.8 - 15.03.2026

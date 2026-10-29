@@ -2,17 +2,17 @@ package utopia.vault.database
 
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.caching.cache.Cache
-import utopia.flow.collection.immutable.caching.iterable.CachingSeq
 import utopia.flow.collection.immutable.graph.GraphNode
-import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq, Pair}
+import utopia.flow.collection.immutable.{Empty, Pair, PairView}
 import utopia.flow.collection.mutable.iterator.LazyInitIterator
 import utopia.flow.error.EnvironmentNotSetupException
 import utopia.flow.generic.model.immutable.Value
+import utopia.flow.operator.Identity
 import utopia.flow.view.immutable.View
 import utopia.flow.view.mutable.Pointer
 import utopia.vault.context.VaultContext.log
 import utopia.vault.model.error.NoReferenceFoundException
-import utopia.vault.model.immutable.{Column, Reference, Table, TableColumn}
+import utopia.vault.model.immutable.{Reference, Table, TableColumn}
 import utopia.vault.sql.{Update, Where}
 
 /**
@@ -41,8 +41,14 @@ object References
 	private val fromIndex = Cache.clearable { dbName: String =>
 		referencesP.value.get(dbName) match {
 			case Some(references) =>
-				references.groupToSeqsBy { _.from.tableName }
-					.view.mapValues { _.iterator.map { ref => ref.from.name -> ref }.toMap }.toMap
+				references.groupToSeqsBy { _.from.tableName }.view
+					.mapValues { refs =>
+						// If there are multiple references between the two tables, prefers NOT NULL columns
+						refs.groupReduce { _.from.name } { (a, b) =>
+							Pair(a, b).minBy { _.ends.count { _.allowsNull } }
+						}
+					}
+					.toMap
 			
 			// FIXME: Somehow we arrive here sometimes at program startup
 			//  (although we shouldn't have any Table instances before the setup function is called)
@@ -61,8 +67,9 @@ object References
 	private val toIndex = Cache.clearable { dbName: String =>
 		referencesP.value.get(dbName) match {
 			case Some(references) =>
-				references.groupToSeqsBy { _.to.tableName }
-					.view.mapValues { _.groupBy { _.to.name }.withDefaultValue(Empty) }.toMap
+				references
+					.groupMapMap { _.to.tableName }(Identity) {
+						_.iterator.groupToSeqsBy { _.to.name }.withDefaultValue(Empty) }
 					.withDefaultValue(Map[String, Seq[Reference]]().withDefaultValue(Empty))
 				
 			case None =>
@@ -84,7 +91,7 @@ object References
 	 * @return A function that accepts a table and yields a reference graph node representing the specified table
 	 *         (lazily initialized)
 	 */
-	lazy val  reverseLinkGraph =
+	lazy val reverseLinkGraph =
 		GraphNode.generator { table: Table => to(table).iterator.map { ref => ref -> View.fixed(ref.from.table) } }
 	/**
 	 * Creates a new reference graph that contains each reference twice:
@@ -95,7 +102,7 @@ object References
 	 *         Edges containing true as the second value are pointing in the same direction as the reference,
 	 *         and those with false to the opposite.
 	 */
-	lazy val  biDirectionalLinkGraph = GraphNode.generator { table: Table =>
+	lazy val biDirectionalLinkGraph = GraphNode.generator { table: Table =>
 		LazyInitIterator {  from(table).iterator.map { ref => (ref, true) -> View.fixed(ref.to.table) } } ++
 			LazyInitIterator { to(table).map { ref => (ref, false) -> View.fixed(ref.from.table) } }
 	}
@@ -147,10 +154,9 @@ object References
 	  * @return Reference from the specified column.
 	  */
 	@throws[NoReferenceFoundException]("If the specified column didn't refer to another column")
-	def from(column: TableColumn) =
-		findFrom(column).getOrElse {
-			throw new NoReferenceFoundException(s"${ column.sqlName } doesn't refer to any other column")
-		}
+	def from(column: TableColumn) = findFrom(column).getOrElse {
+		throw new NoReferenceFoundException(s"${ column.sqlName } doesn't refer to any other column")
+	}
 	/**
 	  * @param table Table from which references are made
 	  * @return All references originating from the specified table
@@ -177,11 +183,11 @@ object References
 	  * @param table A table
 	  * @return All columns referenced from the specified table
 	  */
-	def referencedFrom(table: Table) = from(table).map { _.to }
+	def referencedFrom(table: Table) = from(table).view.map { _.to }
 	/**
 	  * Finds all tables referenced from a certain table
 	  */
-	def tablesReferencedFrom(table: Table) = from(table).map { _.to.table }
+	def tablesReferencedFrom(table: Table) = from(table).view.map { _.to.table }
 	/**
 	  * @param column A column that possibly references another column
 	  * @return The column referred from the specified column.
@@ -195,36 +201,18 @@ object References
 	  */
 	def to(column: TableColumn) = toIndex(column.table.databaseName)(column.table.name)(column.name)
 	/**
-	  * Finds all places where the provided reference point is referenced
-	  * @param table the table that contains the column
-	  * @param column the referenced column
-	  * @return All reference points that target the specified reference point
+	  * @param table Targeted table
+	 * @return An iterator that yields all references that point to the specified table
 	  */
-	@deprecated("Deprecated for removal", "v1.22")
-	def to(table: Table, column: Column): Seq[Reference] = to(TableColumn(table, column))
-	/**
-	  * Finds all places where the provided reference point is referenced
-	  * @param table the table that contains the column
-	  * @param columnName the name of the referenced column
-	  * @return All reference points that target the specified reference point
-	  */
-	@deprecated("Deprecated for removal", "v1.22")
-	def to(table: Table, columnName: String): Seq[Reference] =
-		table.find(columnName) match {
-			case Some(point) => to(point)
-			case None => Empty
-		}
-	/**
-	  * Finds all references made into a specific table
-	  */
-	def to(table: Table) = toIndex(table.databaseName)(table.name).valuesIterator.flatten.caching
+	def to(table: Table) = toIndex(table.databaseName)(table.name).valuesIterator.flatten
 	/**
 	  * @param column A column
-	  * @return Columns which refer to the specified column
+	  * @return Columns that refer to the specified column
 	  */
-	def referencing(column: TableColumn) = to(column).map { _.from }
+	def referencing(column: TableColumn) = to(column).view.map { _.from }
 	/**
-	  * Finds all tables that contain references to the specified table
+	  * @param table Targeted table
+	 * @return An iterator that yields all tables that refer to the specified table
 	  */
 	def tablesReferencing(table: Table) = to(table).map { _.from.table }
 	
@@ -232,14 +220,13 @@ object References
 	  * Finds all references between the two tables. The results contain pairings of left side
 	  * columns matched with right side columns. The references may go either way
 	  */
-	def columnsBetween(left: Table, right: Table): CachingSeq[Pair[TableColumn]] =
-		collection.View.concat(fromTo(left, right), fromTo(right, left).view.map { _.reverse })
-			.iterator.map { ref => ref.ends }.caching
+	def columnsBetween(left: Table, right: Table): Iterator[Pair[TableColumn]] =
+		PairView(fromTo(left, right), fromTo(right, left).iterator.map { _.reverse }).iterator.flatten.map { _.ends }
 	/**
 	  * Finds all references between the two tables. The results contain pairings of left side
 	  * columns matched with right side columns. The references may go either way
 	  */
-	def columnsBetween(tables: Pair[Table]): CachingSeq[Pair[TableColumn]] =
+	def columnsBetween(tables: Pair[Table]): Iterator[Pair[TableColumn]] =
 		columnsBetween(tables.first, tables.second)
 	/**
 	  * Finds a single connection between the two tables
@@ -254,27 +241,31 @@ object References
 	  * @param right Right side table
 	  * @return Left side column -> right side column. None if there wasn't a connection between the two tables
 	  */
-	def connectionBetween(left: Table, right: Table): Option[Pair[TableColumn]] = columnsBetween(left, right).headOption
+	def connectionBetween(left: Table, right: Table): Option[Pair[TableColumn]] =
+		columnsBetween(left, right).nextOption()
 	
 	/**
 	  * Finds all references from the left table to the right table. Only one-sided references are included.
 	  */
-	def fromTo(left: Table, right: Table) = from(left).filter { _.to.table == right }
+	def fromTo(left: Table, right: Table) = from(left).view.filter { _.to.table == right }
 	/**
 	  * Finds all references between the two tables. The reference(s) may point to either direction
 	  */
-	def between(a: Table, b: Table) = OptimizedIndexedSeq.concat(fromTo(a, b), fromTo(b, a))
+	def between(a: Table, b: Table) = PairView(fromTo(a, b), fromTo(b, a)).flatten
 	/**
 	  * Finds all references between the two tables. The reference(s) may point to either direction
 	  */
-	def between(tables: Pair[Table]): IndexedSeq[Reference] = between(tables.first, tables.second)
+	def between(tables: Pair[Table]): scala.collection.View[Reference] = between(tables.first, tables.second)
 	/**
 	  * Finds one reference between two tables
 	  * @param a First table
 	  * @param b Second table
 	  * @return A reference between these two tables. This reference may go either way.
 	  */
-	def findBetween(a: Table, b: Table) = fromTo(a, b).headOption.orElse { fromTo(b, a).headOption }
+	def findBetween(a: Table, b: Table) =
+		fromTo(a, b).minByOption { _.ends.count { _.allowsNull } }.orElse {
+			fromTo(b, a).minByOption { _.ends.count { _.allowsNull } }
+		}
 	
 	/**
 	  * Lists all tables that either directly or indirectly refer to the specified table.
@@ -282,8 +273,8 @@ object References
 	  * @param table Targeted table
 	  * @return All tables directly or indirectly referencing the specified table
 	  */
-	def tablesAffectedBy(table: Table): CachingSeq[Table] =
-		toReverseLinkGraphFrom(table).allNodesIterator.drop(1).map { _.value }.caching
+	def tablesAffectedBy(table: Table): Iterator[Table] =
+		toReverseLinkGraphFrom(table).allNodesIterator.drop(1).map { _.value }
 	
 	/**
 	  * Creates a new reference graph that only contains direct links from the origin table to the target table.
