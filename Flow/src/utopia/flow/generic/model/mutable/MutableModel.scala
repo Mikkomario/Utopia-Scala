@@ -134,7 +134,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
      * @param propName The name of the updated property
      * @param value The new value assigned to the property
      */
-    def update(propName: String, value: Value) = {
+    def update(propName: String, value: Value): Unit = {
         // Replaces value & generates events, may generate a new attribute
         existingProperty(propName) match {
             // Case: Existing property => updates its value

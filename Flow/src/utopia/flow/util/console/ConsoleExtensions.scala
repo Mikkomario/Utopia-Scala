@@ -71,11 +71,17 @@ object ConsoleExtensions
 	{
 		/**
 		 * Reads a line of text from this input. May display a prompt before requesting input.
-		 * @param prompt Prompt to display before requesting for input. If empty, no prompt is displayed (default)
+		 * @param prompt Prompt to display before requesting for input. If empty, no prompt is displayed (default).
+		 *               If the prompt ends with ":", requests input on the same line.
 		 * @return Read line as a string
 		 */
 		def printAndReadLine(prompt: String) = {
-			NotEmpty(prompt).foreach(println)
+			if (prompt.nonEmpty) {
+				if (prompt.endsWith(":"))
+					print(prompt)
+				else
+					println(prompt)
+			}
 			in.readLine()
 		}
 		/**

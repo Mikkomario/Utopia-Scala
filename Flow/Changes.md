@@ -176,6 +176,8 @@
 - Added overrides for some **PossiblyFailingFuture** functions in regular futures
 - JSON conversions are now more efficient
   - Also, if a cyclic reference is detected, the JSON conversion will now throw a **CyclicalIterationException**.
+- When using **ConsoleExtensions** and prompting the user, if the prompt ends with `:`, 
+  won't include a newline between the prompt and the user input
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 - Rewrote **StringFrom** to no longer depend on **Source** (except for the `.take(Int)` implementation)
