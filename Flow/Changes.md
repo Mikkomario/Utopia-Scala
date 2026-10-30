@@ -98,6 +98,7 @@
   - Added `.smallest` and `.largest` aliases for `.min` and `.max` 
     (since sometimes there are build issues with the latter)
 - **HasValues**
+  - Added `.nested(...)`
   - Added `.tryGetCatching(...)`
 - **InputStream** (via **StreamExtensions**)
   - Added `.bufferedWithSize(Int)`
@@ -122,6 +123,8 @@
   - Added `.setAndLock(...)`, `.trySetAndLock(...)`, `.updateAndLock(...)` and `.tryUpdateAndLock(...)`
 - **MayBeSet** (object)
   - Added `.view(MayBeSet)`
+- **ModelLike**
+  - Added `.withNestedValue(IterableOnce, Value)` and `.mapNestedValue(...)`
 - **OutputStream** (via **StreamExtensions**)
   - Added `.buffered`
   - Added `.openWriter(...)`

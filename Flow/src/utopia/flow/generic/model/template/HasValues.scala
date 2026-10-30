@@ -8,6 +8,7 @@ import utopia.flow.util.Mutate
 import utopia.flow.util.result.TryCatch
 import utopia.flow.util.result.TryExtensions._
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Try}
 
 /**
@@ -45,7 +46,7 @@ trait HasValues extends MapAccess[String, Value]
 	 * potentially searching from alternative (non-empty) properties.
 	 * May generate a new property for the first targeted key.
 	 * @param propNames Names of the targeted properties (ordered by priority)
-	 * @return The first property value which was non-empty.
+	 * @return The first property value that was non-empty.
 	 *         If all searches resulted in empty values, a new property is generated and its value returned.
 	 */
 	def apply(propNames: IterableOnce[String]): Value
@@ -105,7 +106,7 @@ trait HasValues extends MapAccess[String, Value]
 	  * In case of a failure, provides an error message which indicates, which property was being accessed.
 	  * @param propName Name of the accessed property
 	  * @param altPropNames Alternative names for the accessed property
-	  * @param f A function which converts the value to the desired type,
+	  * @param f A function that converts the value to the desired type,
 	  *          yielding a failure if the value could not be parsed.
 	  * @tparam A type of expected parse results
 	  * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
@@ -116,7 +117,7 @@ trait HasValues extends MapAccess[String, Value]
 	 * Attempts to retrieve a value from this model.
 	 * In case of a failure, provides an error message which indicates, which property was being accessed.
 	 * @param propNames Names of the targeted properties, in order of descending priority
-	 * @param f A function which converts the value to the desired type,
+	 * @param f A function that converts the value to the desired type,
 	 *          yielding a failure if the value could not be parsed.
 	 * @tparam A type of expected parse results
 	 * @return Failure if 'f' yielded a failure. Otherwise, returns the parsed value.
@@ -135,7 +136,7 @@ trait HasValues extends MapAccess[String, Value]
 	 * In case of a failure, provides an error message which indicates, which property was being accessed.
 	 * @param propName Primary name of the targeted property
 	 * @param altPropNames Alternative names of the targeted property, in order of descending priority
-	 * @param f A function which converts the value to the desired type,
+	 * @param f A function that converts the value to the desired type,
 	 *          yielding a failure if the value could not be parsed.
 	 *          May also yield partial failures; These are not modified.
 	 * @tparam A type of expected parse results
@@ -147,7 +148,7 @@ trait HasValues extends MapAccess[String, Value]
 	 * Attempts to retrieve a value from this model.
 	 * In case of a failure, provides an error message which indicates, which property was being accessed.
 	 * @param propNames Names of the targeted properties, in order of descending priority
-	 * @param f A function which converts the value to the desired type,
+	 * @param f A function that converts the value to the desired type,
 	 *          yielding a failure if the value could not be parsed.
 	 *          May also yield partial failures; These are not modified.
 	 * @tparam A type of expected parse results
@@ -155,12 +156,54 @@ trait HasValues extends MapAccess[String, Value]
 	 */
 	def tryGetCatching[A](propNames: Iterable[String])(f: Value => TryCatch[A]) = {
 		if (propNames.isEmpty)
-			TryCatch.Failure(new IllegalArgumentException("No perpery was targeted"))
+			TryCatch.Failure(new IllegalArgumentException("No property was targeted"))
 		else
 			_tryGetCatching(apply(propNames), propNames.head)(f)
 	}
-	def _tryGetCatching[A](value: Value, propName: => String)(f: Value => TryCatch[A]) =
+	private def _tryGetCatching[A](value: Value, propName: => String)(f: Value => TryCatch[A]) =
 		_tryGetWith(value, propName)(f) { _.mapFailure(_) }
+	
+	/**
+	 * @param firstStep Name of the directly targeted property
+	 * @param secondStep Name of the (first) nested property
+	 * @param moreSteps Names of the following nested properties
+	 * @return Value at the end of the specified path. Empty if not found.
+	 */
+	def nested(firstStep: String, secondStep: String, moreSteps: String*): Value =
+		_nested(apply(firstStep), Iterator.single(secondStep) ++ moreSteps.iterator)
+	/**
+	 * @param path Targeted property path where the first element matches a property within this model
+	 *             and the following elements target nested properties or vector indices.
+	 * @return Value at the end of the targeted path. Empty if not found.
+	 */
+	def nested(path: IterableOnce[String]) = {
+		val pathIter = path.iterator
+		if (pathIter.hasNext)
+			_nested(apply(pathIter.next()), pathIter)
+		// Case: No path specified => Yields an empty value
+		else
+			Value.empty
+	}
+	@tailrec
+	private def _nested(from: Value, pathIter: Iterator[String]): Value = {
+		// Case: Targeting a nested property or a non-empty value => Attempts to resolve it
+		if (from.nonEmpty && pathIter.hasNext) {
+			val nextStep = pathIter.next()
+			// Checks whether targeting an index of a Vector type value
+			nextStep.toIntOption.flatMap { index => from.vector.flatMap { _.lift(index) } }
+				// Checks for a named property of a Model type value
+				.orElse { from.model.map { _(nextStep) } } match
+			{
+				// Case: Result found => Continues deeper
+				case Some(value) => _nested(value, pathIter)
+				// Case: No result found => Yields an empty value
+				case None => Value.empty
+			}
+		}
+		// Case: Empty 'from' or targeting the 'from' value => Yields 'from'
+		else
+			from
+	}
 	
 	private def _tryGetWith[R](value: Value, propName: => String)(f: Value => R)
 	                          (mapFailure: (R, Mutate[Throwable]) => R) =

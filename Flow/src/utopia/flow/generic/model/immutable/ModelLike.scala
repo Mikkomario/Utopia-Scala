@@ -3,6 +3,7 @@ package utopia.flow.generic.model.immutable
 import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Pair, Single}
 import utopia.flow.generic.factory.PropertyFactory
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.mutable
 import utopia.flow.generic.model.mutable.DataType.ModelType
 import utopia.flow.generic.model.mutable.{MutableModel, Variable}
@@ -344,6 +345,49 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 *         Note: If this model didn't contain the specified property, no changes are made.
 	 */
 	def mapExistingValue(propName: String)(f: Mutate[Value]) = mapValue(propName, requireExisting = true)(f)
+	
+	/**
+	 * Assigns a value deep inside this model
+	 * @param path Path to the targeted property.
+	 *             The first element on this path matches a direct property of this model,
+	 *             while the following elements match nested keys.
+	 *
+	 *             Note: Int keys on this path may be interpreted as Vector indices.
+	 *
+	 * @param value Value to assign to the end of the targeted path
+	 * @return Copy of this model with the specified value assigned.
+	 *         If 'path' was empty, no value is assigned and this model is returned instead.
+	 */
+	def withNestedValue(path: IterableOnce[String], value: Value) = mapNestedValue(path) { _ => value }
+	/**
+	 * Maps a value deep inside this model
+	 * @param path Path to the targeted property.
+	 *             The first element on this path matches a direct property of this model,
+	 *             while the following elements match nested keys.
+	 *
+	 *             Note: Int keys on this path may be interpreted as Vector indices.
+	 *
+	 * @param requireExisting Whether the targeted property must already exist in order for mapping to be executed.
+	 *                        If set to true and if no such property exists, no mapping will occur.
+	 *                        If left as false (default), 'f' will receive an empty value as input
+	 *                        when generating a new nested property.
+	 * @param f A mapping function to apply to the targeted nested property.
+	 * @return A copy of this model with the targeted property mapped.
+	 *         If 'path' was empty, yields this model.
+	 */
+	def mapNestedValue(path: IterableOnce[String], requireExisting: Boolean = false)(f: Mutate[Value]) = {
+		val keysIter = path.iterator
+		keysIter.nextOption() match {
+			case Some(primaryKey) =>
+				if (keysIter.hasNext)
+					mapValue(primaryKey, requireExisting) { _mapNestedValue(_, keysIter, requireExisting)(f) }
+				else
+					mapValue(primaryKey, requireExisting)(f)
+			// Case: No keys were targeted => No changes
+			case None => self
+		}
+	}
+	
 	/**
 	 * Adds a "computed property" to this model
 	 * @param propName Name of the property from which a new value is computed
@@ -390,4 +434,94 @@ trait ModelLike[+Repr] extends HasPropertiesLike[Constant] with EqualsBy with Va
 	 */
 	def mutableCopyUsing[P <: Variable](factory: PropertyFactory[P]) =
 		mutable.MutableModel.withVariables(properties.map { prop => factory(prop.name, prop.value) }, factory)
+	
+	/**
+	 * Alters a (possibly) nested value/property
+	 * @param value Value to modify
+	 * @param keysIter An iterator that yields keys to nested properties (or Vector indices)
+	 * @param requireExisting Whether this function is only allowed to map existing properties (or indices)
+	 * @param f A mapping function to apply to the bottom value
+	 * @return A mapped copy of 'value'
+	 */
+	private def _mapNestedValue(value: Value, keysIter: Iterator[String], requireExisting: Boolean)
+	                           (f: Mutate[Value]): Value =
+		keysIter.nextOption() match {
+			// Case: Mapping a nested value => Checks whether named properties are supported
+			case Some(nextKey) =>
+				value.model match {
+					// Case: Model type value => Maps its nested value
+					case Some(nextModel) =>
+						nextModel.mapValue(nextKey, requireExisting) {
+							_mapNestedValue(_, keysIter, requireExisting)(f)
+						}
+					// Case: There's no nested model => Checks whether an array index was targeted instead
+					case None =>
+						nextKey.toIntOption.flatMap { index => value.vector.map { _ -> index } } match {
+							// Case: Targeting an index of a Vector type value => Maps the specified index
+							case Some((values, targetIndex)) =>
+								_mapNestedIndex(values, targetIndex, keysIter, requireExisting)(f)
+							// Case: Targeting a non-existent property
+							//       => Creates a new model with the specified (nested) value (if allowed)
+							case None =>
+								if (requireExisting)
+									value
+								else
+									_createNestedValue(Iterator.single(nextKey) ++ keysIter, f(Value.empty))
+						}
+				}
+			// Case: Mapping this value directly => Applies the specified mapping function
+			case None => f(value)
+		}
+	/**
+	 * Maps a single nested value at a specific index of a Vector value
+	 * @param vector Vector value to map
+	 * @param nextIndex Index to map (or create)
+	 * @param keysIter An iterator that yields further targeted keys
+	 * @param requireExisting Whether this function is only allowed to map existing indices (or properties)
+	 * @param f A function that maps the final targeted value
+	 * @return Mapped copy of 'vector'
+	 */
+	private def _mapNestedIndex(vector: Vector[Value], nextIndex: Int, keysIter: Iterator[String],
+	                            requireExisting: Boolean)
+	                           (f: Mutate[Value]): Vector[Value] =
+	{
+		// Case: Index out of bounds => Extends the vector to the required size (if allowed)
+		if (vector.size <= nextIndex) {
+			// Case: Not allowed to extend the vector => Returns the original vector without changes
+			if (requireExisting)
+				vector
+			else {
+				// Creates the value to allocate to the new index
+				val value = _createNestedValue(keysIter, f(Value.empty))
+				// Pads the in-between space with empty values
+				Vector.concat(vector, scala.collection.View.fill(nextIndex - vector.size)(Value.empty), Single(value))
+			}
+		}
+		// Case: Index in bounds => Maps the value at the specified index
+		else
+			vector.mapIndex(nextIndex) { _mapNestedValue(_, keysIter, requireExisting)(f) }
+	}
+	/**
+	 * Creates a chain of models (or vectors) with a specific value at the end
+	 * @param keysIter An iterator that yields a chain of nested property names (or indices) to generate. May be empty.
+	 * @param value Value to assign to the last property (or index).
+	 * @return A deep model with the specified chain of properties.
+	 *         If 'keysIter' was empty, yields 'value' directly.
+	 */
+	private def _createNestedValue(keysIter: Iterator[String], value: Value): Value = keysIter.nextOption() match {
+		// Case: Targeting a nested property => Checks whether targeting a Vector index
+		case Some(nextKey) =>
+			nextKey.toIntOption match {
+				// Case: Targeting a Vector index => Creates a new Vector
+				case Some(nextIndex) =>
+					Vector.concat(
+						scala.collection.View.fill(nextIndex)(Value.empty),
+						Single(_createNestedValue(keysIter, value))
+					)
+				// Case: Targeting a named property => Creates a new model with a single property
+				case None => Model.from(nextKey -> _createNestedValue(keysIter, value))
+			}
+		// Case: No more nesting => Returns the final value
+		case None => value
+	}
 }

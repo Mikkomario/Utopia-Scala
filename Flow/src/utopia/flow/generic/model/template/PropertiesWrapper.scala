@@ -12,7 +12,7 @@ trait PropertiesWrapper[+P <: Property] extends HasPropertiesLike[P]
 	// ABSTRACT ----------------------------
 	
 	/**
-	 * @return The wrapped instance which contains the exposed properties
+	 * @return The wrapped instance that contains the exposed properties
 	 */
 	protected def wrapped: HasPropertiesLike[P]
 	
