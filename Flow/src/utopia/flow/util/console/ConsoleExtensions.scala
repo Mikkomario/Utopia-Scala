@@ -76,13 +76,14 @@ object ConsoleExtensions
 		 * @return Read line as a string
 		 */
 		def printAndReadLine(prompt: String) = {
-			if (prompt.nonEmpty) {
-				if (prompt.endsWith(":"))
-					print(prompt)
-				else
-					println(prompt)
+			if (prompt.isEmpty)
+				in.readLine()
+			else if (prompt.endsWith(":"))
+				in.readLine(s"$prompt ")
+			else {
+				println(prompt)
+				in.readLine()
 			}
-			in.readLine()
 		}
 		/**
 		 * Reads a line of text from this input
@@ -128,7 +129,8 @@ object ConsoleExtensions
 		 */
 		def ask(question: String, default: Boolean = false) = {
 			val yesNo = if (default) "Y/n" else "y/N"
-			readNonEmptyLine(s"$question $yesNo") match {
+			val suffix = if (question.contains('\n') || question.length > 80) "" else ":"
+			readNonEmptyLine(s"$question $yesNo$suffix") match {
 				case Some(answer) =>
 					answer.head.toLower match {
 						case 'y' | 't' => true
