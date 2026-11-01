@@ -16,6 +16,7 @@
 - **AccessGrouped** now extends **TargetingGrouped**, as intended
 ### New features
 - Added **DbValue** trait
+- Added **CanCopyData** trait that's used in **Vault Coder** -generated classes
 ### New methods
 - **Condition** (object)
   - Added `.isNull(ConditionElement)` and `.isNotNull(ConditionElement)`
