@@ -41,7 +41,7 @@ case class IssueVariant(id: Int, data: IssueVariantData)
 	
 	override def withId(id: Int) = copy(id = id)
 	
-	override protected def wrap(data: IssueVariantData) = copy(data = data)
+	override def wrap(data: IssueVariantData) = copy(data = data)
 	
 	
 	// OTHER	--------------------

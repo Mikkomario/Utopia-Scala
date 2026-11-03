@@ -126,6 +126,6 @@ object ParadigmValue
         def tryColor = getTry(color)("Color")
         
         private def getTry[A](a: Option[A])(dataTypeName: => String) =
-            a.toTry { new DataTypeException(s"${v.description} can't be cast to $dataTypeName") }
+            a.toTry { new DataTypeException(s"${v.valueDescription} can't be cast to $dataTypeName") }
     }
 }

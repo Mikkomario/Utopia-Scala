@@ -84,7 +84,7 @@ object ChatRole
 		case Left(idVal) =>
 			idVal.int
 				.toTry { new IllegalArgumentException(
-					s"${ roleValue.description } could not be cast to either role id or role name") }
+					s"${ roleValue.valueDescription } could not be cast to either role id or role name") }
 				.flatMap(forId)
 			
 		case Right(strVal) => forName(strVal.getString)
