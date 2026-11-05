@@ -2,7 +2,7 @@ package utopia.annex.util
 
 import utopia.access.model.Headers
 import utopia.access.model.enumeration.Status
-import utopia.annex.model.response.RequestNotSent.RequestSendingFailed
+import utopia.annex.model.response.RequestNotSent.{RequestSendingFailed, RequestWasDeprecated}
 import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.collection.CollectionExtensions._
@@ -102,6 +102,27 @@ object RequestResultExtensions
 			case Success(Response.Success(value, status, headers)) => f(value, status, headers)
 			case _ => ()
 		}
+		
+		/**
+		 * Replaces a deprecation result with a placeholder success result
+		 * @param placeholderValue Value to yield if the request is deprecated. Call-by-name.
+		 * @param exc Implicit execution context.
+		 * @tparam B Type of the specified value.
+		 * @return A copy of this future yielding a success on request-deprecation.
+		 */
+		def succeedingOnDeprecation[B >: A](placeholderValue: => B)(implicit exc: ExecutionContext) =
+			replaceDeprecationWith(Response.Success(placeholderValue))
+		/**
+		 * @param result A result to yield on request-deprecations. Call-by-name.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of the yielded result
+		 * @return A copy of this future yielding the specified result instead of a request deprecation result
+		 */
+		def replaceDeprecationWith[B >: A](result: => RequestResult[B])(implicit exc: ExecutionContext) =
+			wrapped.map {
+				case RequestWasDeprecated => result
+				case other => other
+			}
 		
 		/**
 		 * Asynchronously maps the response body value, if successful, once it resolves.

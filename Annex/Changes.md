@@ -9,7 +9,8 @@
 - **ApiClient**s using **RequestRateLimiter** now support automated retries for 429 (too many requests) -responses
 ### New methods
 - **RequestResult**
-  - Added `.forSuccess(...)` for **Future**'s containing **RequestResult**
+  - Added `.forSuccess(...)`, `.replaceDeprecationWith(RequestResult)` and `.succeedingOnDeprecation(...)` 
+    for **Future**'s containing **RequestResult**
 ### Other changes
 - Built with Scala v2.13.18
 
