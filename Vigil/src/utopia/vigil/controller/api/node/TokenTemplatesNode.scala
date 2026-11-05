@@ -18,13 +18,16 @@ import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.combined.token.DetailedTokenTemplate
 import utopia.vigil.model.post.NewTokenTemplate
 
+import scala.concurrent.ExecutionContext
+
 /**
  * An API node for creating new token templates.
  * Intended for developer access only. Intended to appear as /tokens/templates.
  * @author Mikko Hilpinen
  * @since 22.05.2026, v0.1
  */
-class TokenTemplatesNode(requiredScope: ScopeTarget) extends LeafNode[AuthContext[Any] with PostContext]
+class TokenTemplatesNode(requiredScope: ScopeTarget)(implicit exc: ExecutionContext)
+	extends LeafNode[AuthContext[Any] with PostContext]
 {
 	// ATTRIBUTES   -------------------------
 	

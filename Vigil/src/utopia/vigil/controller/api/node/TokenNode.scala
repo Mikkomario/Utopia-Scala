@@ -13,6 +13,7 @@ import utopia.vigil.database.access.token.template.{AccessTokenTemplate, AccessT
 import utopia.vigil.database.access.token.{AccessToken, AccessTokens}
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext
 
 /**
  * An API node used for interacting with (i.e. revoking) individual tokens
@@ -21,7 +22,7 @@ import scala.annotation.tailrec
  * @author Mikko Hilpinen
  * @since 05.05.2026, v0.1
  */
-class TokenNode(targetId: Option[Int] = None) extends NodeWithChildren[AuthContext[Any]]
+class TokenNode(targetId: Option[Int] = None)(implicit exc: ExecutionContext) extends NodeWithChildren[AuthContext[Any]]
 {
 	// ATTRIBUTES   -----------------
 	
