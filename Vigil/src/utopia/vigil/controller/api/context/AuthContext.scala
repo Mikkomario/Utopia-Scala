@@ -1,9 +1,12 @@
 package utopia.vigil.controller.api.context
 
 import utopia.access.model.enumeration.Status.{InternalServerError, Unauthorized}
+import utopia.flow.async.process.Wait
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
+import utopia.flow.time.Now
+import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
 import utopia.flow.util.result.TryExtensions._
 import utopia.nexus.model.request.RequestContext
@@ -14,6 +17,8 @@ import utopia.vigil.database.access.token.AccessToken
 import utopia.vigil.database.access.token.scope.AccessTokenScopes
 import utopia.vigil.model.cached.scope.{ScopeTarget, Scopes}
 import utopia.vigil.model.cached.token.TokenIdRefs
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Common trait for request contexts that implement Vigil-based authentication
@@ -32,12 +37,14 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
+	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorized(f: (TokenIdRefs, Connection) => RequestResult): RequestResult = authorizedFor(Scopes.empty)(f)
+	def authorized(f: (TokenIdRefs, Connection) => RequestResult)(implicit exc: ExecutionContext): RequestResult =
+		authorizedFor(Scopes.empty)(f)
 	
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
@@ -49,12 +56,14 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
+	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorizedFor(scope: ScopeTarget)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
+	def authorizedFor(scope: ScopeTarget)(f: (TokenIdRefs, Connection) => RequestResult)
+	                 (implicit exc: ExecutionContext): RequestResult =
 		authorizedFor(Scopes(scope))(f)
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
@@ -68,13 +77,15 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
+	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
 	def authorizedFor(firstScope: ScopeTarget, secondScope: ScopeTarget, moreScopes: ScopeTarget*)
-	                 (f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
+	                 (f: (TokenIdRefs, Connection) => RequestResult)
+	                 (implicit exc: ExecutionContext): RequestResult =
 		authorizedFor(Pair(firstScope, secondScope) ++ moreScopes)(f)
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
@@ -86,15 +97,18 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
+	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorizedFor(requiredScopes: Scopes)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
+	def authorizedFor(requiredScopes: Scopes)(f: (TokenIdRefs, Connection) => RequestResult)
+	                 (implicit exc: ExecutionContext): RequestResult =
 		// Checks the authorization token
 		headers.bearerAuthorization.ifNotEmpty match {
 			case Some(bearerToken) =>
+				val testStarted = Now.toInstant
 				VigilContext.connectionPool
 					.tryWith[RequestResult] { implicit connection =>
 						AccessToken.idRefs.active.withKey(bearerToken).pull match {
@@ -103,8 +117,10 @@ trait AuthContext[+A] extends RequestContext[A]
 								implicit val _token: TokenIdRefs = token
 								requireScopes(requiredScopes) { f(token, connection) }
 								
-							// Case: Invalid or expired auth token => 401
-							case None => Unauthorized -> "Invalid or expired authorization token"
+							// Case: Invalid or expired auth token => Returns 401 after a delay
+							case None =>
+								Wait(testStarted + 1.seconds)
+								Unauthorized -> "Invalid or expired authorization token"
 						}
 					}
 					// Catches all exceptions and returns 500 if one is encountered
