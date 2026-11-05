@@ -350,6 +350,11 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	def vastAiStatePointer = vastAiProcess.detailedStatePointer
 	
 	/**
+	 * @return The offer that was accepted for this service. None if no offer has been accepted yet.
+	 */
+	def acceptedOffer = offerP.value
+	
+	/**
 	 * @return ID of the managed instance. None if no instance was acquired yet.
 	 *         Note: This instance might already have been destroyed. Use this value only for logging, etc.
 	 */

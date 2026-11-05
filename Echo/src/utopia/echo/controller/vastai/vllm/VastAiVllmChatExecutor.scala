@@ -16,7 +16,7 @@ import utopia.echo.model.request.ChatParams
 import utopia.echo.model.request.openai.BufferedOpenAiChatCompletionRequest
 import utopia.echo.model.request.vastai.DestroyInstance
 import utopia.echo.model.response.openai.BufferedOpenAiReply
-import utopia.echo.model.tokenization.TokenCount
+import utopia.echo.model.tokenization.{RequestCount, TokenCount}
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading, Unknown}
 import utopia.echo.model.vastai.instance.offer.Offer
@@ -113,8 +113,8 @@ object VastAiVllmChatExecutor
 /**
  * Executes buffered chat requests using multiple Vast AI instances + vLLM servers.
  * @param selectOffer Logic for selecting Vast AI offers to take
- * @param modelSize Size of the used model, including how much VRAM should be reserved for requests.
- *                  If multiple models are used, the size of the largest model should be returned.
+ * @param modelVramRequirements Information about how much VRAM the used LLM requires.
+ *                              If multiple models are used, the size of the largest model should be returned.
  * @param assumedVram VRAM amount assumed before any instances have been reserved.
  *                    Used for calculating the default maximum context size.
  * @param settings Applied settings. Default = use default settings.
@@ -130,7 +130,7 @@ object VastAiVllmChatExecutor
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
-class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount,
+class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: LlmVramUse, assumedVram: ByteCount,
                              settings: VastAiVllmChatExecutorSettings = VastAiVllmChatExecutorSettings.default)
                             (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
                             (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
@@ -227,7 +227,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	
 	/**
 	 * Maximum context size applied by default / before there are any instances reserved.
-	 * The actual maximum context size is based on [[modelSize]] and available VRAM.
+	 * The actual maximum context size is based on [[modelVramRequirements]] and available VRAM.
 	 */
 	private val defaultMaxContextSize = contextSizeOn(assumedVram)
 	
@@ -493,8 +493,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			debug { writer =>
 				writer.println(s"${ Now.toLocalTime }: Status:")
 				status.processorStates.foreach { status =>
-					writer.println(s"\t- ${ status.phase.name }: ${ status.activeTokens } active + ${
-						status.pendingTokens } pending")
+					writer.println(s"\t- ${ status.phase.name }: ${ status.active } active + ${
+						status.pending } pending")
 				}
 			}
 			if (stopFlag.isSet && processors.isEmpty)
@@ -630,7 +630,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					usableProcessors
 				else
 					usableProcessors.filter {
-						_.pendingTokens <= settings.instanceAccelerationPendingTokensThreshold.value
+						_.pending.tokens <= settings.instanceAccelerationPendingTokensThreshold.value
 					}
 			}
 			
@@ -644,8 +644,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 							current = {
 								// Counts the threshold based on the lowest used processor
 								val usableProcessors = processors.filter { _.usable }
-								usableProcessors.iterator.map { _.pendingTokens }.minOption match {
-									case Some(lowestUse) => lowestUse.toInt * usableProcessors.size
+								usableProcessors.iterator.map { _.pending.tokens }.minOption match {
+									case Some(lowestUse) => lowestUse.value * usableProcessors.size
 									case None => 0
 								}
 							}) {
@@ -802,9 +802,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					usable
 				else {
 					val targetProcessors = (usableCount - 1) min 3
-					val sorted = usable.sortBy { _.pendingTokens }
+					val sorted = usable.sortBy { _.pending.tokens }
 					// Selects all processors that have no pending tasks
-					val free = sorted.takeWhile { _.pendingTokens <= 0 }
+					val free = sorted.takeWhile { _.pending.isNotPositive }
 					val freeCount = free.size
 					// Always selects at least X processors
 					if (freeCount >= targetProcessors)
@@ -856,7 +856,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 					// After a short delay, continues to unqueue more tasks
 					// Applies a longer delay, if all processors are busy
 					val delay = {
-						if (processors.exists { p => p.maxContextSize.exists { p.pendingTokens < _.value } })
+						if (processors.exists { p => p.maxContextSize.exists { p.pending.tokens < _.value } })
 							1.seconds
 						else
 							10.seconds
@@ -878,8 +878,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	private def startNewInstance() = createInstanceAccess { _ =>
 		debugLog("Starting a new instance")
 		// Creates and starts the process of setting up vLLM on Vast AI
-		val startTime = Now.toInstant
-		val process = VastAiVllmProcess.withSettings(vllmSettings).apply(selectOffer, modelSize.modelSize) {
+		val process = VastAiVllmProcess.withSettings(vllmSettings).apply(selectOffer, modelVramRequirements.modelSize) {
 			// Choose image
 			offer =>
 				// Delegates image-choosing to the custom 'chooseImage' function
@@ -979,7 +978,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	 * @return Maximum context size to apply
 	 */
 	private def contextSizeOn(vram: ByteCount) =
-		modelSize.maxContextSizeOn(vram * vllmSettings.maxGpuUtil) - settings.contextSafetyMargin
+		modelVramRequirements.maxContextSizeOn(vram * vllmSettings.maxGpuUtil) - settings.contextSafetyMargin
 		
 	private def debugLog(entry: => String) = debugLogger.foreach { debugLogUsing(_, entry) }
 	private def debugLogUsing(logger: KeptOpenWriter, entry: String) =
@@ -1015,6 +1014,22 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		private var _lastPendingStartTime = started
 		private var _lastPendingEndTime = started
 		
+		/**
+		 * A mutable pointer that contains statistical information about:
+		 *      1. Pending requests
+		 *      1. Requests being actively processed
+		 */
+		private val counter = Volatile(RequestCount.zero -> RequestCount.zero)
+		
+		/**
+		 * A pointer that contains a mapping funnel for request-processing.
+		 * Contains None while no funnel is available yet.
+		 * May also contain a failure, if no vLLM API could be hosted.
+		 * While available, contains 3 values:
+		 *      1. The mapping funnel
+		 *      1. Maximum context size
+		 *      1. Maximum VRAM for request-use
+		 */
 		// Once / if a vLLM server becomes available, creates a funnel to wrap it
 		private val funnelP = process.clientPointer.map { _.map { _.map { case (queue, model, maxContextSize) =>
 			// Updates the last request -time now that the API is available.
@@ -1026,21 +1041,48 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			
 			// Prepares a funnel for the incoming requests
 			val safeMaxContextSize = maxContextSize - settings.contextSafetyMargin
-			debugLog(s"Starting a funnel of $safeMaxContextSize tokens")
-			val funnel = MappingFunnel(safeMaxContextSize.value) {
-				request: Request => request.tokens.value } {
+			val availableVram = {
+				val total = process.acceptedOffer match {
+					case Some(offer) => offer.gpu.ram
+					case None =>
+						log("WARNING: No offer accepted when creating a request funnel.")
+						assumedVram
+				}
+				// Adds a safety marging to max VRAM usage
+				total - modelVramRequirements.modelSize -
+					modelVramRequirements.kiloTokenCost * (settings.contextSafetyMargin / 1000).value
+			}
+			debugLog(s"Starting a funnel of $safeMaxContextSize tokens / $availableVram VRAM")
+			val funnel = MappingFunnel(availableVram.megas) {
+				request: Request => request.vramConsumption.megas } {
 				request =>
-					if (process.detailedState.isUsable) {
-						_lastRequestTime = Now
-						push(request, queue, model.name, safeMaxContextSize)
-					}
-					else
-						request.asRetryWith(
-							new IllegalStateException(s"Unusable process state: ${ process.detailedState }")) match
-						{
-							case Success(retry) => push(retry)
-							case Failure(error) => Future.successful(RequestSendingFailed(error))
+					// Marks the request as no longer pending
+					val counterAdjust = RequestCount.unit(request.tokens)
+					counter.update { case (pending, active) => (pending - counterAdjust) -> (active + counterAdjust) }
+					
+					// Executes the request, if possible
+					val resultFuture = {
+						if (process.detailedState.isUsable) {
+							_lastRequestTime = Now
+							push(request, queue, model.name, safeMaxContextSize)
 						}
+						// Case: The used Vast AI instance is not usable at this time
+						//       => Attempts to forward the request to another processor
+						else
+							request.asRetryWith(
+								new IllegalStateException(s"Unusable process state: ${ process.detailedState }")) match
+							{
+								case Success(retry) => push(retry)
+								case Failure(error) => Future.successful(RequestSendingFailed(error))
+							}
+					}
+					
+					// Once the request completes, marks it as no longer active
+					resultFuture.onComplete { _ =>
+						counter.update { case (pending, active) => pending -> (active - counterAdjust) }
+					}
+					
+					resultFuture
 			}
 			
 			// Takes notice when the funnel becomes full or only partially filled
@@ -1053,7 +1095,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				if (stopped) Detach else Continue
 			}
 			
-			funnel -> safeMaxContextSize
+			(funnel, safeMaxContextSize, availableVram)
 		} } }
 		
 		
@@ -1079,12 +1121,9 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 				funnel.map { _._2 }
 		}
 		
-		def pendingTokens = funnel match {
-			case Some((funnel, _)) => funnel.queuedCapacity
-			case None => 0.0
-		}
+		def pending = counter.value._1
 		def pendingToActiveRatio = funnel match {
-			case Some((funnel, maxContextSize)) => funnel.queuedCapacity / maxContextSize.value
+			case Some((funnel, _, maxVram)) => funnel.queuedCapacity / maxVram.megas
 			case None => 1000000
 		}
 		
@@ -1095,10 +1134,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		def lastPendingEndTime = _lastPendingEndTime
 		
 		def status = {
-			val (active, pending) = funnel match {
-				case Some((funnel, _)) => funnel.activeUtilization.toInt -> funnel.queuedCapacity.toInt
-				case None => 0 -> 0
-			}
+			val (active, pending) = counter.value
 			VastAiVllmProcessorStatus(phase, instanceStatus, active, pending,
 				maxContextSize.getOrElse(defaultMaxContextSize), started, _lastRequestTime, _lastPendingStartTime,
 				_lastPendingEndTime)
@@ -1107,8 +1143,13 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		/**
 		 * @return The currently available funnel, if applicable.
 		 *         None if no funnel is available at this time.
+		 *
+		 *         When defined, contains 3 values:
+		 *         1. The usable mapping funnnel
+		 *         1. Maximum context size
+		 *         1. Maximum VRAM for request use
 		 */
-		private def funnel: Option[(MappingFunnel[Request, RequestResult[BufferedOpenAiReply]], TokenCount)] =
+		private def funnel: Option[(MappingFunnel[Request, RequestResult[BufferedOpenAiReply]], TokenCount, ByteCount)] =
 			funnelP.value.flatMap { _.toOption }
 		
 		
@@ -1128,7 +1169,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 			//       => Makes sure the queued requests get resolved first, before requesting the instance to stop
 			else
 				funnel match {
-					case Some((funnel, _)) => funnel.emptyFuture.flatMap { _ => process.stop() }
+					case Some((funnel, _, _)) => funnel.emptyFuture.flatMap { _ => process.stop() }
 					case None => process.stop()
 				}
 		}
@@ -1144,7 +1185,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 		def tryPush(request: Request) =
 			funnel
 				// Makes sure the funnel can handle this request
-				.filter { case (_, maxContextSize) =>
+				.filter { case (_, maxContextSize, _) =>
 					!stopped && request.tokens <= maxContextSize && process.detailedState.isUsable }
 				.map { _._1.push(request) }
 	}
@@ -1202,6 +1243,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelSize: LlmVramUse, as
 	                           firstError: Option[Throwable] = None)
 	{
 		// COMPUTED ----------------------
+		
+		/**
+		 * @return Amount of VRAM required to execute this request
+		 */
+		def vramConsumption = modelVramRequirements.inOneRequest(tokens)
 		
 		/**
 		 * @return Whether this request may still be retried

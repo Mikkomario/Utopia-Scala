@@ -5,6 +5,7 @@
 - Token counts are now represented using **TokenCount** instead of **Int**
 - Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
 - **TokenUsage** now extends **ModelConvertible**
+- **LlmRequestCount** is now named **LlmRequestCounts**
 - **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
 - Rewrote **VastAiProcess**, **VastAiVllmProcess** and **VastAiChatExecutor** constructors to use settings 
   and factories.
@@ -34,6 +35,7 @@
     - **ApiHosting** is now **Serving**
     - **HostingApi** is now **Hosting**
     - **StoppingApi** is now **StoppingService**
+- Renamed **LlmRequestCounts**'s `.tokens` to `.confirmedTokens`
 ### New features
 - Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**
 - Vast AI instances can now be stopped instead of destroyed and may be reused automatically

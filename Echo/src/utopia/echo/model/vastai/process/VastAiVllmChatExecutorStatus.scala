@@ -1,6 +1,7 @@
 package utopia.echo.model.vastai.process
 
-import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.{Serving, NotStarted}
+import utopia.echo.model.tokenization.RequestCount
+import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.{NotStarted, Serving}
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelConvertible
@@ -18,14 +19,14 @@ case class VastAiVllmChatExecutorStatus(processorStates: Seq[VastAiVllmProcessor
 	// ATTRIBUTES   --------------------
 	
 	/**
-	 * The combined amount of pending request tokens (input + max output).
+	 * The combined number of pending requests and tokens (input + max output).
 	 * Note: Doesn't include [[requestsQueued]], as those are not measured in tokens.
 	 */
-	lazy val pending = processorStates.iterator.map { _.pendingTokens }.sum
+	lazy val pending = sumRequests { _.pending }
 	/**
-	 * The combined amount of tokens (input + max output) being actively processed
+	 * The combined number of requests and tokens (input + max output) being actively processed
 	 */
-	lazy val processing = processorStates.iterator.map { _.activeTokens }.sum
+	lazy val processing = sumRequests { _.active }
 	
 	
 	// IMPLEMENTED  -------------------
@@ -45,6 +46,12 @@ case class VastAiVllmChatExecutorStatus(processorStates: Seq[VastAiVllmProcessor
 		Model.from(
 			"phase" -> Model.from("name" -> phase.name, "index" -> phase.index),
 			"processors" -> processorStates, "queued" -> requestsQueued,
-			"pendingTokensTotal" -> pending.value, "activeTokensTotal" -> processing.value)
+			"pendingTokensTotal" -> pending, "activeTokensTotal" -> processing)
 	}
+	
+	
+	// OTHER    -----------------------
+	
+	private def sumRequests(getRequests: VastAiVllmProcessorStatus => RequestCount) =
+		processorStates.iterator.map(getRequests).reduceOption { _ + _ }.getOrElse { RequestCount.zero }
 }

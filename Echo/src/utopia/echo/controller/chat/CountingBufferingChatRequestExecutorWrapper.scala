@@ -4,7 +4,7 @@ import utopia.annex.util.RequestResultExtensions._
 import utopia.annex.model.response.{RequestResult, Response}
 import utopia.echo.model.request.ChatParams
 import utopia.echo.model.response.{BufferedReply, TokenUsage}
-import utopia.echo.model.tokenization.LlmRequestCount
+import utopia.echo.model.tokenization.LlmRequestCounts
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.view.mutable.async.Volatile
 
@@ -35,7 +35,7 @@ class CountingBufferingChatRequestExecutorWrapper[+R <: BufferedReply](wrapped: 
 	/**
 	 * @return The current request counts
 	 */
-	def count = LlmRequestCount(requests, completedRequests, failures, tokens)
+	def count = LlmRequestCounts(requests, completedRequests, failures, tokens)
 	
 	/**
 	 * @return Number of requests performed (including those currently being executed)

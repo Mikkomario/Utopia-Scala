@@ -6,6 +6,14 @@ import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
 
+object ByteCount
+{
+	/**
+	 * A byte count representing zero, using megabytes as the unit.
+	 */
+	lazy val zero = apply(0, MegaBytes)
+}
+
 /**
  * Used for measuring volume or traffic in bytes
  * @param amount Amount on bytes in 'unit'

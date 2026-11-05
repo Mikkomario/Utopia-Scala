@@ -7,7 +7,7 @@ import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.{MayBeZero, Reversible}
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 
-object LlmRequestCount
+object LlmRequestCounts
 {
 	/**
 	 * A count where everything is 0
@@ -20,12 +20,12 @@ object LlmRequestCount
  * @param requests Number of requests performed (including those currently being executed)
  * @param completed Number of requests completed (including failures)
  * @param failures Number of currently pending requests
- * @param tokens Number of tokens in the completed requests
+ * @param confirmedTokens Number of tokens in the completed requests
  * @author Mikko Hilpinen
  * @since 04.03.2026, v1.5
  */
-case class LlmRequestCount(requests: Int, completed: Int, failures: Int, tokens: TokenUsage)
-	extends MayBeZero[LlmRequestCount] with SelfCombinable[LlmRequestCount] with Reversible[LlmRequestCount]
+case class LlmRequestCounts(requests: Int, completed: Int, failures: Int, confirmedTokens: TokenUsage)
+	extends MayBeZero[LlmRequestCounts] with SelfCombinable[LlmRequestCounts] with Reversible[LlmRequestCounts]
 		with ModelConvertible
 {
 	// COMPUTED -----------------------
@@ -40,19 +40,22 @@ case class LlmRequestCount(requests: Int, completed: Int, failures: Int, tokens:
 	 */
 	def failureRatio = if (completed == 0) 0.0 else failures.toDouble / completed
 	
+	@deprecated("Deprecated for removal. Renamed to .confirmedTokens", "v1.6")
+	def tokens = confirmedTokens
+	
 	
 	// IMPLEMENTED  -------------------
 	
-	override def self: LlmRequestCount = this
-	override def zero: LlmRequestCount = LlmRequestCount.zero
+	override def self: LlmRequestCounts = this
+	override def zero: LlmRequestCounts = LlmRequestCounts.zero
 	override def isZero: Boolean = requests == 0
 	
-	override def unary_- : LlmRequestCount = LlmRequestCount(-requests, -completed, -failures, -tokens)
+	override def unary_- : LlmRequestCounts = LlmRequestCounts(-requests, -completed, -failures, -confirmedTokens)
 	
 	override def toModel: Model = Model.from("requests" -> requests, "completed" -> completed,
-		"failures" -> failures, "tokens" -> tokens)
+		"failures" -> failures, "tokens" -> confirmedTokens)
 	
-	override def +(other: LlmRequestCount): LlmRequestCount =
-		LlmRequestCount(requests + other.requests, completed + other.completed, failures + other.failures,
-			tokens + other.tokens)
+	override def +(other: LlmRequestCounts): LlmRequestCounts =
+		LlmRequestCounts(requests + other.requests, completed + other.completed, failures + other.failures,
+			confirmedTokens + other.confirmedTokens)
 }
