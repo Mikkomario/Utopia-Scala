@@ -182,6 +182,8 @@
 - When using **ConsoleExtensions** and prompting the user, if the prompt ends with `:`, 
   won't include a newline between the prompt and the user input
 - Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
+- **BasicValueCaster**'s to **Duration** conversion now supports model property `"amount"` 
+  as an alternative for `"value"`
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 - Rewrote **StringFrom** to no longer depend on **Source** (except for the `.take(Int)` implementation)
 - `.reduceLeftIterator` in **IterableOnce** now uses **ReducingIterator** internally

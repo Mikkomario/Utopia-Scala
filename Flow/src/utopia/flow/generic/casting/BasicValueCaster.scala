@@ -159,8 +159,7 @@ object BasicValueCaster extends ValueCaster
 	
 	// IMPLEMENTED METHODS    ----
 	
-	override def cast(value: Value, toType: DataType) =
-	{
+	override def cast(value: Value, toType: DataType) = {
 		val castResult: Option[Any] = toType match {
 			// Any object can be cast into a string
 			case StringType => stringOf(value)
@@ -183,7 +182,6 @@ object BasicValueCaster extends ValueCaster
 			case ModelType => modelOf(value)
 			case _ => None
 		}
-		
 		castResult.map { objValue => new Value(Some(objValue), toType) }
 	}
 	
@@ -347,7 +345,7 @@ object BasicValueCaster extends ValueCaster
 		case InstantType => Some(value.getInstant - Instant.EPOCH)
 		case ModelType =>
 			val model = value.getModel
-			model("value").long.flatMap { v =>
+			model("value", "amount").long.flatMap { v =>
 				model("unit").string.flatMap(timeUnitFrom).map { Duration(v, _) }
 			}
 		case StringType =>
