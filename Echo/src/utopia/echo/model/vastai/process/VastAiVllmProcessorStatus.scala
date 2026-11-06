@@ -37,10 +37,11 @@ case class VastAiVllmProcessorStatus(phase: VastAiServicePhase, instanceStatus: 
 	
 	// IMPLEMENTED  -----------------------
 	
-	override def toModel: Model = Model.from("maxContext" -> maxContextSize.value,
-		"phase" -> Model.from("name" -> phase.name, "index" -> phase.index), "instanceStatus" -> instanceStatus,
+	override def toModel: Model = Model.from(
+		"maxContext" -> maxContextSize.value, "phase" -> Model.from("name" -> phase.name, "index" -> phase.index),
+		"instanceStatus" -> instanceStatus,
 		"usable" -> (phase == Serving && instanceStatus.exists { _.instanceIsUsable }),
-		"tokenUsage" -> Model.from("active" -> active, "pending" -> pending),
+		"requestCounts" -> Model.from("active" -> active, "pending" -> pending),
 		"started" -> started, "lastRequestTime" -> lastRequestTime, "lastPendingStarted" -> lastPendingStarted,
 		"lastPendingEnded" -> lastPendingEnded)
 }

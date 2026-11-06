@@ -46,7 +46,7 @@ case class VastAiVllmChatExecutorStatus(processorStates: Seq[VastAiVllmProcessor
 		Model.from(
 			"phase" -> Model.from("name" -> phase.name, "index" -> phase.index),
 			"processors" -> processorStates, "queued" -> requestsQueued,
-			"pendingTokensTotal" -> pending, "activeTokensTotal" -> processing)
+			"pendingTotal" -> pending, "activeTotal" -> processing)
 	}
 	
 	
