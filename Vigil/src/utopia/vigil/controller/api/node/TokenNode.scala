@@ -22,7 +22,7 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 05.05.2026, v0.1
  */
-class TokenNode(targetId: Option[Int] = None)(implicit exc: ExecutionContext) extends NodeWithChildren[AuthContext[Any]]
+class TokenNode(targetId: Option[Int] = None) extends NodeWithChildren[AuthContext[Any]]
 {
 	// ATTRIBUTES   -----------------
 	

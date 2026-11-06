@@ -1187,7 +1187,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 				// Makes sure the funnel can handle this request
 				.filter { case (_, maxContextSize, _) =>
 					!stopped && request.tokens <= maxContextSize && process.detailedState.isUsable }
-				.map { _._1.push(request) }
+				.map { case (funnel, _, _) =>
+					// Marks the request as pending
+					counter.update { case (pending, active) => (pending + RequestCount.unit(request.tokens), active) }
+					// Pushes it to the funnel
+					funnel.push(request)
+				}
 	}
 	
 	private class QueuedTask(request: Request)

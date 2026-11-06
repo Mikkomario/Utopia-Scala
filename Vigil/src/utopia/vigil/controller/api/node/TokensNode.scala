@@ -25,7 +25,6 @@ import utopia.vigil.model.cached.token.TokenIdRefs
 import utopia.vigil.model.combined.token.ScopedToken
 import utopia.vigil.model.stored.token.TokenTemplate
 
-import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
 
 object TokensNode
@@ -43,9 +42,7 @@ object TokensNode
 	
 	// Implicitly treats this object as a node factory
 	implicit def objectAsFactory(o: TokensNode.type): TokensNodeFactory[AuthContext[Any]] = o.factory
-	implicit def factoryAsInstance[C <: AuthContext[Any]](f: TokensNodeFactory[C])
-	                                                     (implicit exc: ExecutionContext): TokensNode[C] =
-		f()
+	implicit def factoryAsInstance[C <: AuthContext[Any]](f: TokensNodeFactory[C]): TokensNode[C] = f()
 	
 	
 	// OTHER    ----------------------------
@@ -56,8 +53,7 @@ object TokensNode
 	 * @tparam C Type of the accepted context
 	 * @return A new tokens API node
 	 */
-	def includingTemplates[C <: AuthContext[Any] with PostContext](templateCreationScope: ScopeTarget)
-	                                                              (implicit exc: ExecutionContext) =
+	def includingTemplates[C <: AuthContext[Any] with PostContext](templateCreationScope: ScopeTarget) =
 		TokensNodeFactory[C](children = Single(new TokenTemplatesNode(templateCreationScope)))
 		
 	
@@ -103,7 +99,7 @@ object TokensNode
 		/**
 		 * @return A new tokens node, based on this factory's settings
 		 */
-		def apply()(implicit exc: ExecutionContext) = new TokensNode[C](name, children, grantLogic)
+		def apply() = new TokensNode[C](name, children, grantLogic)
 	}
 	
 	object GrantLogic
@@ -192,7 +188,6 @@ object TokensNode
  */
 class TokensNode[-C <: AuthContext[Any]](override val name: String = "tokens", children: Seq[ApiNode[C]] = Empty,
                                          grantLogic: GrantLogic[C] = GrantNormally)
-                                        (implicit exc: ExecutionContext)
 	extends ApiNode[C]
 {
 	// ATTRIBUTES   -------------------

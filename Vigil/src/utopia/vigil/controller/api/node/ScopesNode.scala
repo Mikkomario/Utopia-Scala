@@ -20,8 +20,6 @@ import utopia.vigil.database.store.ScopeDb
 import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.post.NewScope
 
-import scala.concurrent.ExecutionContext
-
 /**
  * An API node for interacting with authentication scopes
  * @param readScope Scope required for accessing the GET (all) function
@@ -29,8 +27,7 @@ import scala.concurrent.ExecutionContext
  * @author Mikko Hilpinen
  * @since 24.05.2026, v0.1
  */
-class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget)(implicit exc: ExecutionContext)
-	extends ApiNode[AuthContext[Any] with PostContext]
+class ScopesNode(readScope: ScopeTarget, editScope: ScopeTarget) extends ApiNode[AuthContext[Any] with PostContext]
 {
 	// ATTRIBUTES   -----------------------
 	

@@ -18,14 +18,12 @@ import utopia.vigil.model.cached.scope.ScopeTarget
 import utopia.vigil.model.partial.scope.ScopeData
 import utopia.vigil.model.stored.scope.Scope
 
-import scala.concurrent.ExecutionContext
-
 /**
  * An API node that represents a single scope
  * @author Mikko Hilpinen
  * @since 24.05.2026, v0.1
  */
-class ScopeNode(readScope: ScopeTarget, editScope: ScopeTarget, target: ScopeTarget)(implicit exc: ExecutionContext)
+class ScopeNode(readScope: ScopeTarget, editScope: ScopeTarget, target: ScopeTarget)
 	extends NodeWithChildren[AuthContext[Any] with PostContext]
 {
 	// IMPLEMENTED  ---------------------

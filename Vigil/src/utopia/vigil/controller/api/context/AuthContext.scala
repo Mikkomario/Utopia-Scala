@@ -28,6 +28,16 @@ import scala.concurrent.ExecutionContext
  */
 trait AuthContext[+A] extends RequestContext[A]
 {
+	// ABSTRACT -----------------------
+	
+	/**
+	 * @return Execution context used for handling authorization delays and other asynchronous actions.
+	 */
+	implicit def exc: ExecutionContext
+	
+	
+	// OTHER    -----------------------
+	
 	/**
 	 * Verifies that the request is authorized
 	 * @param f A function called if the request is properly authorized.
@@ -37,13 +47,12 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
-	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorized(f: (TokenIdRefs, Connection) => RequestResult)(implicit exc: ExecutionContext): RequestResult =
+	def authorized(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
 		authorizedFor(Scopes.empty)(f)
 	
 	/**
@@ -56,14 +65,12 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
-	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorizedFor(scope: ScopeTarget)(f: (TokenIdRefs, Connection) => RequestResult)
-	                 (implicit exc: ExecutionContext): RequestResult =
+	def authorizedFor(scope: ScopeTarget)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
 		authorizedFor(Scopes(scope))(f)
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
@@ -77,15 +84,13 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
-	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
 	def authorizedFor(firstScope: ScopeTarget, secondScope: ScopeTarget, moreScopes: ScopeTarget*)
-	                 (f: (TokenIdRefs, Connection) => RequestResult)
-	                 (implicit exc: ExecutionContext): RequestResult =
+	                 (f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
 		authorizedFor(Pair(firstScope, secondScope) ++ moreScopes)(f)
 	/**
 	 * Verifies that the request is authorized in a specific auth scope
@@ -97,14 +102,12 @@ trait AuthContext[+A] extends RequestContext[A]
 	 *
 	 *          Returns the result to send back to the client
 	 *
-	 * @param exc Implicit execution context used for delaying certain 401 responses for security reasons
 	 * @return One of the following results:
 	 *         - If the request was authorized, the result of 'f'
 	 *         - If 'f' threw, 500
 	 *         - If the request was not authorized, 401
 	 */
-	def authorizedFor(requiredScopes: Scopes)(f: (TokenIdRefs, Connection) => RequestResult)
-	                 (implicit exc: ExecutionContext): RequestResult =
+	def authorizedFor(requiredScopes: Scopes)(f: (TokenIdRefs, Connection) => RequestResult): RequestResult =
 		// Checks the authorization token
 		headers.bearerAuthorization.ifNotEmpty match {
 			case Some(bearerToken) =>
