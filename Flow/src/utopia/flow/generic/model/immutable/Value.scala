@@ -224,6 +224,33 @@ case class Value(content: Option[Any], dataType: DataType)
                 }
         }
     }
+	/**
+	 * Casts this value to any of n target types.
+	 * The resulting data type is based on comparing type conversions,
+	 * attempting to minimize unnecessary conversions and data loss.
+	 * @param targetTypes Accepted output types
+	 * @return This value converted to one of the specified types.
+	 *         None if this value couldn't be converted to any of the specified types.
+	 */
+	def castTo(targetTypes: Iterable[DataType]): Option[Value] = {
+		// Case: Already one of the targeted types => No conversion required
+		if (targetTypes.exists(isOfType))
+			Some(this)
+		// Case: Empty value => Returns empty value of first target type
+		else if (isEmpty)
+			targetTypes.headOption.map(Value.emptyWithType)
+		// Case: Conversion required => Attempts conversions in order of least cost
+		else
+			targetTypes.iterator
+				.map { targetType =>
+					val cost = ConversionHandler.conversionRouteBetween(dataType, targetType)
+						.map { route => route.foldLeft(0) { _ + _.cost } }
+					targetType -> cost
+				}
+				.toOptimizedSeq.sortBy { _._2 }
+				// Takes the first successful result
+				.findMap { case (targetType, _) => castTo(targetType) }
+	}
     
     /**
      * Casts this value to a new data type

@@ -161,6 +161,7 @@
     - Added `.mapFailure(...)`
 - **Value**
   - Added `.getModelOrString`
+  - Added a new `.castTo(Iterable)` variant
 ### Other changes
 - Built with Scala v2.13.18
 - **KeptOpenWriter** now accepts 2 new constructor parameters:
