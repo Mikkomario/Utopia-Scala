@@ -80,6 +80,8 @@
   which are more rich and more general interfaces for the existing **OpenSource** and **FromSource**
   - Also added **OpenInputWrapper**
 - Added NDJSON parsing support to **JsonParser**
+- Added `+`, `-` and negation support to **Value**
+  - Additional support may be added by registering new implementations to **ValueOperator**
 - Parallel mapping now supports custom builders
 - Added approximate equality functions for **Instant**s
 - Added **DividingIterator**, **WithoutIndexIterator**, **AppendIfDistinctIterator** and **DropCommonPrefixIterator**

@@ -5,11 +5,14 @@ import utopia.flow.collection.immutable.Pair
 import utopia.flow.error.DataTypeException
 import utopia.flow.generic.casting.ConversionHandler
 import utopia.flow.generic.factory.FromModelFactory
+import utopia.flow.generic.model.enumeration.ValueOperation1.Negate
+import utopia.flow.generic.model.enumeration.ValueOperation2.{Minus, Plus}
 import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType._
-import utopia.flow.operator.MaybeEmpty
+import utopia.flow.generic.operation.ValueOperator
 import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsFunction}
+import utopia.flow.operator.{MaybeEmpty, Reversible}
 import utopia.flow.parse.json.{JsonConvertible, JsonValueConverter}
 import utopia.flow.time._
 
@@ -77,30 +80,121 @@ object Value
  * to different data types. They are immutable.
  */
 case class Value(content: Option[Any], dataType: DataType)
-    extends JsonConvertible with MaybeEmpty[Value] with ApproxSelfEquals[Value]
+    extends JsonConvertible with MaybeEmpty[Value] with ApproxSelfEquals[Value] with Reversible[Value]
 {
-    // INITIAL CODE    ---------
+    // INITIAL CODE    -----------
     
     // The content must be of correct type, if defined
     require(content.forall(dataType.isInstance), s"$content is not of type $dataType")
     
     
-    // COMP. PROPERTIES    -----
+    // COMPUTED    ---------------
+	
+	/**
+	 * Whether this value has a real object value associated with it
+	 */
+	def isDefined = nonEmpty
 	
 	/**
 	 * The description of this value, describing both content and data type
 	 */
 	def valueDescription = s"`$getString` ($dataType)"
-    @deprecated("Renamed to .valueDescription", "v2.9")
-    def description = valueDescription
+	@deprecated("Renamed to .valueDescription", "v2.9")
+	def description = valueDescription
+	
+	def string: Option[String] = objectValue(StringType).map { _.asInstanceOf[String]}
+	def int: Option[Int] = objectValue(IntType).map { _.asInstanceOf[Int] }
+	def double: Option[Double] = objectValue(DoubleType).map { _.asInstanceOf[Double]}
+	def float = objectValue(FloatType).map { _.asInstanceOf[Float]}
+	def long = objectValue(LongType).map { _.asInstanceOf[Long]}
+	def boolean = objectValue(BooleanType).map { _.asInstanceOf[Boolean]}
+	def instant = objectValue(InstantType).map { _.asInstanceOf[Instant]}
+	def localDate = objectValue(LocalDateType).map { _.asInstanceOf[LocalDate]}
+	def localTime = objectValue(LocalTimeType).map { _.asInstanceOf[LocalTime]}
+	def localDateTime = objectValue(LocalDateTimeType).map { _.asInstanceOf[LocalDateTime]}
+	def duration = objectValue(DurationType).map { _.asInstanceOf[Duration] }
+	def days = objectValue(DaysType).map { _.asInstanceOf[Days] }
+	def year = objectValue(YearType).map { _.asInstanceOf[Year] }
+	def month = objectValue(MonthType).map { _.asInstanceOf[Month] }
+	def yearMonth = objectValue(YearMonthType).map { _.asInstanceOf[YearMonth] }
+	def vector = objectValue(VectorType).map { _.asInstanceOf[Vector[Value]]}
+	def pair = objectValue(PairType).map { _.asInstanceOf[Pair[Value]] }
+	def model = objectValue(ModelType).map { _.asInstanceOf[Model]}
+	
+	def getString = stringOr()
+	def getInt = intOr()
+	def getDouble = doubleOr()
+	def getFloat = floatOr()
+	def getLong = longOr()
+	def getBoolean = booleanOr()
+	def getInstant = instantOr()
+	def getLocalDate = localDateOr()
+	def getLocalTime = localTimeOr()
+	def getLocalDateTime = localDateTimeOr()
+	def getDuration = durationOr()
+	def getDays = daysOr()
+	def getYear = yearOr()
+	def getMonth = monthOr()
+	def getYearMonth = yearMonthOr()
+	def getVector = vectorOr()
+	def getPair = pairOr()
+	def getModel = modelOr()
+	
+	def tryString = getTry(StringType) { _.getString }
+	def tryInt = tryGetNonEmpty(int)("Int")
+	def tryDouble = tryGetNonEmpty(double)("Double")
+	def tryFloat = tryGetNonEmpty(float)("Float")
+	def tryLong = tryGetNonEmpty(long)("Long")
+	def tryBoolean = tryGetNonEmpty(boolean)("Boolean")
+	def tryInstant = tryGetNonEmpty(instant)("Instant")
+	def tryLocalDate = tryGetNonEmpty(localDate)("LocalDate")
+	def tryLocalTime = tryGetNonEmpty(localTime)("LocalTime")
+	def tryLocalDateTime = tryGetNonEmpty(localDateTime)("LocalDateTime")
+	def tryDuration = tryGetNonEmpty(duration)("Duration")
+	def tryDays = tryGetNonEmpty(days)("Days")
+	def tryYear = tryGetNonEmpty(year)("Year")
+	def tryMonth = tryGetNonEmpty(month)("Month")
+	def tryYearMonth = tryGetNonEmpty(yearMonth)("YearMonth")
+	def tryVector = getTry(VectorType) { _.getVector }
+	def tryPair = tryGetNonEmpty(pair)("Pair")
+	def tryModel = getTry(ModelType) { _.getModel }
+	
+	/**
+	 * @return Either:
+	 *              1. Some(Left): This value as an Int, if possible
+	 *              1. Some(Right): This value as a non-empty String
+	 *              1. None: If this value was empty
+	 */
+	def intOrString = leftOrRight { _.int } { _.string }
+	/**
+	 * @return Either:
+	 *              1. Left: This value as an Int, if possible
+	 *              1. Right: This value as a String
+	 */
+	def getIntOrString = getLeftOrRight { _.int } { _.getString }
+	/**
+	 * @return Either:
+	 *              1. Success(Left): This value as an Int, if possible
+	 *              1. Success(Right): This value as a non-empty String
+	 *              1. Failure: If this value was empty
+	 */
+	def tryIntOrString = tryLeftOrRight { _.tryInt } { _.string }
+	
+	/**
+	 * @return Either:
+	 *              - Left: This value as a Model, if possible to convert
+	 *              - Right This value as a Vector
+	 */
+	def getModelOrVector = getLeftOrRight { _.model } { _.getVector }
+	/**
+	 * @return Either:
+	 *              - Left: This value as a Model, if possible to convert
+	 *              - Right: This value as a String
+	 */
+	def getModelOrString = getLeftOrRight { _.model } { _.getString }
     
-    /**
-     * Whether this value has a real object value associated with it
-     */
-    def isDefined = nonEmpty
     
-    
-    // IMPLEMENTED METHODS    ---
+    // IMPLEMENTED    ------------
     
     override def self = this
     
@@ -108,8 +202,15 @@ case class Value(content: Option[Any], dataType: DataType)
       * Whether this value doesn't have a real object value associated with it
       */
     override def isEmpty = content.isEmpty
-    
-    /**
+	
+	/**
+	 * Reverses this value. The actual effect depends on the type of this value.
+	 * @return A reversed copy of this value
+	 */
+	@throws[UnsupportedOperationException]("If this value is not reversible")
+	override def unary_- : Value = ValueOperator(this, Negate)
+	
+	/**
      * The contents of this value cast to a string
      */
     override def toString = string.getOrElse("")
@@ -123,8 +224,122 @@ case class Value(content: Option[Any], dataType: DataType)
 		}
     
     
-    // OPERATORS    -------------
-    
+    // OTHER    ---------------
+	
+	/**
+	 * Checks whether this value is of the specified data type
+	 */
+	def isOfType(dataType: DataType) = this.dataType.isOfType(dataType)
+	
+	/**
+	 * Casts this value to a certain data type. Returns None if the casting failed
+	 */
+	def castTo(dataType: DataType) = ConversionHandler.cast(this, dataType)
+	/**
+	 * Casts this value to either of two data types. The resulting data type is based on comparing type conversions,
+	 * attempting to minimize unnecessary conversions and data loss.
+	 * @param leftType The primary (left) cast target type
+	 * @param rightType The secondary (right) cast target type
+	 * @return Either: Left: This value converted to primary target type or
+	 *         Right: This value converted to the secondary target type
+	 */
+	def castTo(leftType: DataType, rightType: DataType): Either[Value, Value] = {
+		// Checks which type would be more appropriate in this context
+		// Case: Already of primary type => No conversion needed
+		if (isOfType(leftType))
+			Left(this)
+		// Case: Already of secondary type => No conversion needed
+		else if (isOfType(rightType))
+			Right(this)
+		// Case: Conversion required
+		else {
+			// Converts first to the type that is more close to this value's original data type
+			val targetTypes = Pair(leftType, rightType)
+			val conversions = targetTypes.map { ConversionHandler.conversionRouteBetween(dataType, _)
+				.map { route => route.foldLeft(0) { _ + _.cost } } }
+			val rightIsFirst = conversions.second.exists { cost => conversions.first.forall { _ > cost } }
+			
+			// If the first conversion fails, attempts with the other data type
+			if (rightIsFirst)
+				castTo(rightType) match {
+					case Some(v) => Right(v)
+					case None =>
+						castTo(leftType) match {
+							case Some(v) => Left(v)
+							case None => Right(Value.emptyWithType(rightType))
+						}
+				}
+			else
+				castTo(leftType) match {
+					case Some(v) => Left(v)
+					case None =>
+						castTo(rightType) match {
+							case Some(v) => Right(v)
+							case None => Left(Value.emptyWithType(leftType))
+						}
+				}
+		}
+	}
+	/**
+	 * Casts this value to any of n target types.
+	 * The resulting data type is based on comparing type conversions,
+	 * attempting to minimize unnecessary conversions and data loss.
+	 * @param targetTypes Accepted output types
+	 * @return This value converted to one of the specified types.
+	 *         None if this value couldn't be converted to any of the specified types.
+	 */
+	def castTo(targetTypes: Iterable[DataType]): Option[Value] = {
+		// Case: Already one of the targeted types => No conversion required
+		if (targetTypes.exists(isOfType))
+			Some(this)
+		// Case: Empty value => Returns empty value of first target type
+		else if (isEmpty)
+			targetTypes.headOption.map(Value.emptyWithType)
+		// Case: Conversion required => Attempts conversions in order of least cost
+		else
+			targetTypes.iterator
+				.map { targetType =>
+					val cost = ConversionHandler.conversionRouteBetween(dataType, targetType)
+						.map { route => route.foldLeft(0) { _ + _.cost } }
+					targetType -> cost
+				}
+				.toOptimizedSeq.sortBy { _._2 }
+				// Takes the first successful result
+				.findMap { case (targetType, _) => castTo(targetType) }
+	}
+	
+	/**
+	 * Casts this value to a new data type
+	 * @param dataType The target data type for the new value
+	 * @return This value casted to a new data type. If the value couldn't be casted, an empty
+	 * value is returned instead
+	 */
+	def withType(dataType: DataType) = castTo(dataType).getOrElse(Value.emptyWithType(dataType))
+	
+	/**
+	 * If this value is empty, returns the default value. If this value is defined, returns this value.
+	 */
+	def orElse(default: => Value) = if (isDefined) this else default
+	
+	/**
+	 * Combines two values together.
+	 * The implementation depends on the underlying types.
+	 * @param other A value to add to this value
+	 * @throws java.lang.UnsupportedOperationException If this operation is not supported
+	 * @return A combination of these values
+	 */
+	@throws[UnsupportedOperationException]("If this operation is not supported")
+	def +(other: Value) = ValueOperator(this, Plus, other)
+	/**
+	 * Subtracts a value from this one.
+	 * The implementation depends on the underlying types.
+	 * @param other A value to subtract from this value.
+	 * @throws java.lang.UnsupportedOperationException If this operation is not supported
+	 * @return A difference between these values
+	 */
+	@throws[UnsupportedOperationException]("If this operation is not supported")
+	def -(other: Value) = ValueOperator(this, Minus, other)
+	
     /**
      * Finds a value from this value as if this value was a model
      * @param propertyName The name of the requested property
@@ -162,130 +377,6 @@ case class Value(content: Option[Any], dataType: DataType)
             }
     }
     
-    
-    // OTHER METHODS    ---------
-    
-    /**
-     * If this value is empty, returns the default value. If this value is defined, returns this value.
-     */
-    def orElse(default: => Value) = if (isDefined) this else default
-    
-    /**
-     * Checks whether this value is of the specified data type
-     */
-    def isOfType(dataType: DataType) = this.dataType.isOfType(dataType)
-    
-    /**
-     * Casts this value to a certain data type. Returns None if the casting failed
-     */
-    def castTo(dataType: DataType) = ConversionHandler.cast(this, dataType)
-    /**
-      * Casts this value to either of two data types. The resulting data type is based on comparing type conversions,
-      * attempting to minimize unnecessary conversions and data loss.
-      * @param leftType The primary (left) cast target type
-      * @param rightType The secondary (right) cast target type
-      * @return Either: Left: This value converted to primary target type or
-      *         Right: This value converted to the secondary target type
-      */
-    def castTo(leftType: DataType, rightType: DataType): Either[Value, Value] = {
-        // Checks which type would be more appropriate in this context
-        // Case: Already of primary type => No conversion needed
-        if (isOfType(leftType))
-            Left(this)
-        // Case: Already of secondary type => No conversion needed
-        else if (isOfType(rightType))
-            Right(this)
-        // Case: Conversion required
-        else {
-            // Converts first to the type that is more close to this value's original data type
-            val targetTypes = Pair(leftType, rightType)
-            val conversions = targetTypes.map { ConversionHandler.conversionRouteBetween(dataType, _)
-                .map { route => route.foldLeft(0) { _ + _.cost } } }
-            val rightIsFirst = conversions.second.exists { cost => conversions.first.forall { _ > cost } }
-    
-            // If the first conversion fails, attempts with the other data type
-            if (rightIsFirst)
-                castTo(rightType) match {
-                    case Some(v) => Right(v)
-                    case None =>
-                        castTo(leftType) match {
-                            case Some(v) => Left(v)
-                            case None => Right(Value.emptyWithType(rightType))
-                        }
-                }
-            else
-                castTo(leftType) match {
-                    case Some(v) => Left(v)
-                    case None =>
-                        castTo(rightType) match {
-                            case Some(v) => Right(v)
-                            case None => Left(Value.emptyWithType(leftType))
-                        }
-                }
-        }
-    }
-	/**
-	 * Casts this value to any of n target types.
-	 * The resulting data type is based on comparing type conversions,
-	 * attempting to minimize unnecessary conversions and data loss.
-	 * @param targetTypes Accepted output types
-	 * @return This value converted to one of the specified types.
-	 *         None if this value couldn't be converted to any of the specified types.
-	 */
-	def castTo(targetTypes: Iterable[DataType]): Option[Value] = {
-		// Case: Already one of the targeted types => No conversion required
-		if (targetTypes.exists(isOfType))
-			Some(this)
-		// Case: Empty value => Returns empty value of first target type
-		else if (isEmpty)
-			targetTypes.headOption.map(Value.emptyWithType)
-		// Case: Conversion required => Attempts conversions in order of least cost
-		else
-			targetTypes.iterator
-				.map { targetType =>
-					val cost = ConversionHandler.conversionRouteBetween(dataType, targetType)
-						.map { route => route.foldLeft(0) { _ + _.cost } }
-					targetType -> cost
-				}
-				.toOptimizedSeq.sortBy { _._2 }
-				// Takes the first successful result
-				.findMap { case (targetType, _) => castTo(targetType) }
-	}
-    
-    /**
-     * Casts this value to a new data type
-     * @param dataType The target data type for the new value
-     * @return This value casted to a new data type. If the value couldn't be casted, an empty 
-     * value is returned instead
-     */
-    def withType(dataType: DataType) = castTo(dataType).getOrElse(Value.emptyWithType(dataType))
-    
-    /**
-     * Returns the contents of this value, casted to the desired type range
-     * @param ofType The targeted data type
-     * @return The value's contents as an instance of the provided type
-     */
-    def objectValue(ofType: DataType): Option[Any] = withType(ofType).content
-    
-    def string: Option[String] = objectValue(StringType).map { _.asInstanceOf[String]}
-    def int: Option[Int] = objectValue(IntType).map { _.asInstanceOf[Int] }
-    def double: Option[Double] = objectValue(DoubleType).map { _.asInstanceOf[Double]}
-    def float = objectValue(FloatType).map { _.asInstanceOf[Float]}
-    def long = objectValue(LongType).map { _.asInstanceOf[Long]}
-    def boolean = objectValue(BooleanType).map { _.asInstanceOf[Boolean]}
-    def instant = objectValue(InstantType).map { _.asInstanceOf[Instant]}
-    def localDate = objectValue(LocalDateType).map { _.asInstanceOf[LocalDate]}
-    def localTime = objectValue(LocalTimeType).map { _.asInstanceOf[LocalTime]}
-    def localDateTime = objectValue(LocalDateTimeType).map { _.asInstanceOf[LocalDateTime]}
-    def duration = objectValue(DurationType).map { _.asInstanceOf[Duration] }
-    def days = objectValue(DaysType).map { _.asInstanceOf[Days] }
-    def year = objectValue(YearType).map { _.asInstanceOf[Year] }
-    def month = objectValue(MonthType).map { _.asInstanceOf[Month] }
-    def yearMonth = objectValue(YearMonthType).map { _.asInstanceOf[YearMonth] }
-    def vector = objectValue(VectorType).map { _.asInstanceOf[Vector[Value]]}
-    def pair = objectValue(PairType).map { _.asInstanceOf[Pair[Value]] }
-    def model = objectValue(ModelType).map { _.asInstanceOf[Model]}
-    
     def stringOr(default: => String = "") = string.getOrElse(default)
     def intOr(default: => Int = 0) = int.getOrElse(default)
     def doubleOr(default: => Double = 0) = double.getOrElse(default)
@@ -305,44 +396,6 @@ case class Value(content: Option[Any], dataType: DataType)
     def pairOr(default: => Pair[Value] = Pair.twice(Value.empty)) = pair.getOrElse(default)
     def modelOr(default: => Model = Model.empty) = model.getOrElse(default)
     
-    def getString = stringOr()
-    def getInt = intOr()
-    def getDouble = doubleOr()
-    def getFloat = floatOr()
-    def getLong = longOr()
-    def getBoolean = booleanOr()
-    def getInstant = instantOr()
-    def getLocalDate = localDateOr()
-    def getLocalTime = localTimeOr()
-    def getLocalDateTime = localDateTimeOr()
-    def getDuration = durationOr()
-    def getDays = daysOr()
-    def getYear = yearOr()
-    def getMonth = monthOr()
-    def getYearMonth = yearMonthOr()
-    def getVector = vectorOr()
-    def getPair = pairOr()
-    def getModel = modelOr()
-    
-    def tryString = getTry(StringType) { _.getString }
-    def tryInt = tryGetNonEmpty(int)("Int")
-    def tryDouble = tryGetNonEmpty(double)("Double")
-    def tryFloat = tryGetNonEmpty(float)("Float")
-    def tryLong = tryGetNonEmpty(long)("Long")
-    def tryBoolean = tryGetNonEmpty(boolean)("Boolean")
-    def tryInstant = tryGetNonEmpty(instant)("Instant")
-    def tryLocalDate = tryGetNonEmpty(localDate)("LocalDate")
-    def tryLocalTime = tryGetNonEmpty(localTime)("LocalTime")
-    def tryLocalDateTime = tryGetNonEmpty(localDateTime)("LocalDateTime")
-    def tryDuration = tryGetNonEmpty(duration)("Duration")
-    def tryDays = tryGetNonEmpty(days)("Days")
-    def tryYear = tryGetNonEmpty(year)("Year")
-    def tryMonth = tryGetNonEmpty(month)("Month")
-    def tryYearMonth = tryGetNonEmpty(yearMonth)("YearMonth")
-    def tryVector = getTry(VectorType) { _.getVector }
-    def tryPair = tryGetNonEmpty(pair)("Pair")
-    def tryModel = getTry(ModelType) { _.getModel }
-    
     def tryVectorWith[A](f: Value => Try[A]) = tryVector.flatMap { _.tryMapAll(f) }
 	/**
 	 * @param f A factory for parsing models
@@ -359,40 +412,6 @@ case class Value(content: Option[Any], dataType: DataType)
         tryPair.flatMap { p => f(p.first).flatMap { first => f(p.second).map { Pair(first, _) } } }
     def tryTupleWith[F, S](first: Value => Try[F])(second: Value => Try[S]): Try[(F, S)] =
         tryPair.flatMap { p => first(p.first).flatMap { f => second(p.second).map { f -> _ } } }
-	
-	/**
-	 * @return Either:
-	 *              1. Some(Left): This value as an Int, if possible
-	 *              1. Some(Right): This value as a non-empty String
-	 *              1. None: If this value was empty
-	 */
-	def intOrString = leftOrRight { _.int } { _.string }
-	/**
-	 * @return Either:
-	 *              1. Left: This value as an Int, if possible
-	 *              1. Right: This value as a String
-	 */
-	def getIntOrString = getLeftOrRight { _.int } { _.getString }
-	/**
-	 * @return Either:
-	 *              1. Success(Left): This value as an Int, if possible
-	 *              1. Success(Right): This value as a non-empty String
-	 *              1. Failure: If this value was empty
-	 */
-	def tryIntOrString = tryLeftOrRight { _.tryInt } { _.string }
-	
-	/**
-	 * @return Either:
-	 *              - Left: This value as a Model, if possible to convert
-	 *              - Right This value as a Vector
-	 */
-	def getModelOrVector = getLeftOrRight { _.model } { _.getVector }
-	/**
-	 * @return Either:
-	 *              - Left: This value as a Model, if possible to convert
-	 *              - Right: This value as a String
-	 */
-	def getModelOrString = getLeftOrRight { _.model } { _.getString }
 	
 	/**
 	 * Attempts to cast this value to a left value. And if that doesn't work, tries to cast this to a right value.
@@ -443,6 +462,13 @@ case class Value(content: Option[Any], dataType: DataType)
 				case None => Failure(error)
 			}
 	}
+	
+	/**
+	 * Returns the contents of this value, casted to the desired type range
+	 * @param ofType The targeted data type
+	 * @return The value's contents as an instance of the provided type
+	 */
+	def objectValue(ofType: DataType): Option[Any] = withType(ofType).content
 	
     private def getTry[A](targetType: DataType)(extract: Value => A) =
         castTo(targetType).toTry { new DataTypeException(s"Can't cast $valueDescription to $targetType") }.map(extract)
