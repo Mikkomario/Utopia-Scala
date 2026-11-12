@@ -12,18 +12,20 @@ import utopia.flow.generic.model.mutable.DataType.{DoubleType, IntType, LongType
   */
 object ValueFacade extends SimpleFacade[Value]
 {
-	override def jarray(vs: List[Value]) = vs.toVector
+	// ATTRIBUTES   -------------------
 	
+	override val jnull = Value.empty
+	
+	override val jfalse = false
+	override val jtrue = true
+	
+	
+	// IMPLEMENTED  -------------------
+	
+	override def jarray(vs: List[Value]) = vs.toVector
 	override def jobject(vs: Map[String, Value]) = Model.withConstants(vs.map { case (k, v) => Constant(k, v) })
 	
-	override def jnull = Value.empty
-	
-	override def jfalse = false
-	
-	override def jtrue = true
-	
-	override def jnum(s: CharSequence, decIndex: Int, expIndex: Int) =
-	{
+	override def jnum(s: CharSequence, decIndex: Int, expIndex: Int) = {
 		if (decIndex >= 0)
 			s.toString withType DoubleType
 		else if (expIndex > 0 || s.length() >= 10)
@@ -32,5 +34,33 @@ object ValueFacade extends SimpleFacade[Value]
 			s.toString withType IntType
 	}
 	
-	override def jstring(s: CharSequence) = s.toString
+	override def jstring(s: CharSequence) = unescape(s)
+	
+	
+	// OTHER    -----------------------
+	
+	private def unescape(chars: CharSequence): String = {
+		val len = chars.length()
+		val resultBuilder = new StringBuilder()
+		var nextIndex = 0
+		while (nextIndex < len) {
+			val c = chars.charAt(nextIndex)
+			nextIndex += 1
+			
+			if (nextIndex < len && c == '\\') {
+				val c2 = chars.charAt(nextIndex)
+				nextIndex += 1
+				c2 match {
+					case 'n' | 'r' => resultBuilder += '\n'
+					case 't' => resultBuilder += '\t'
+					case other =>
+						resultBuilder += c
+						resultBuilder += other
+				}
+			}
+			else
+				resultBuilder += c
+		}
+		resultBuilder.result()
+	}
 }
