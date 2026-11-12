@@ -34,8 +34,8 @@ object BasicValueOperator1 extends ValueOperator1
 		case DurationType => -value.getDuration
 		case DaysType => -value.getDays
 		case YearType => -value.getYear
-		case PairType => value.getPair.reverse
-		case VectorType => value.getVector.reverse
+		case PairType => value.getPair.map { -_ }
+		case VectorType => value.getVector.map { -_ }
 		case other => throw new UnsupportedOperationException(s"Cannot negate a value of type $other")
 	}
 }

@@ -35,6 +35,25 @@ object ValueOperation2
 	val values = Pair[ValueOperation2](Plus, Minus)
 	
 	
+	// OTHER    ----------------------------
+	
+	/**
+	 * @param code An operation code. E.g. "+".
+	 * @return An operation that matches the specified code.
+	 *         None if no (currently supported) operation matched that code.
+	 */
+	def findFor(code: String) = values.find { _.code == code }
+	
+	/**
+	 * @param sign A sign as an operator (+ or -)
+	 * @return An operator that matches the specified sign
+	 */
+	def apply(sign: Sign): CombineValuesOperation = sign match {
+		case Positive => Plus
+		case Negative => Minus
+	}
+	
+	
 	// NESTED   ----------------------------
 	
 	sealed trait CombineValuesOperation extends ValueOperation2 with Binary[CombineValuesOperation]

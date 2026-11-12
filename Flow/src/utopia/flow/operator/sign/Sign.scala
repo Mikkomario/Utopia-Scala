@@ -252,6 +252,15 @@ object Sign
 			Negative
 	}
 	/**
+	 * @param symbol A symbol (presumably '+' or '-')
+	 * @return Sign that matches the specified symbol. None if the symbol didn't match either sign.
+	 */
+	def of(symbol: Char): Option[Sign] = symbol match {
+		case '+' => Some(Positive)
+		case '-' => Some(Negative)
+		case _ => None
+	}
+	/**
 	  * @param duration A time duration
 	  * @return Sign of that duration
 	  */

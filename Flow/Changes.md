@@ -150,6 +150,8 @@
   - Class
     - Added `.countMatchesIn(String)`
     - Added `.mapMatchesIn(String)(...)`
+- **Sign** (object)
+  - Added `.of(Char)`
 - **String** (via **StringExtensions**)
   - Added `.inserted(String, Int)`
   - Added `.mostSimilarValuesFrom(...)` and `.mostSimilarValuesBy(...)`
