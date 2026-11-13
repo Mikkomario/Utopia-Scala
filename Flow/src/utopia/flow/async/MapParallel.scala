@@ -123,9 +123,8 @@ object MapCollectionParallel
 		override def using(accessQueue: AccessQueue[ActionQueue], bufferSize: Int) =
 			map(coll, accessQueue, bufferSize)
 		
-		override def toCustom[To2](newBuilder: => mutable.Builder[O, To2])
-		                          (isEmpty: To2 => Boolean): MapCollectionParallel[O, To2] =
-			new _MapCollectionParallel[I, O, To2](coll, map.toCustom(newBuilder)(isEmpty))
+		override def to[To2](newBuilder: => mutable.Builder[O, To2]): MapCollectionParallel[O, To2] =
+			new _MapCollectionParallel[I, O, To2](coll, map.to(newBuilder))
 	}
 }
 
@@ -173,12 +172,10 @@ trait MapCollectionParallel[A, +To]
 	/**
 	 * Changes the built output collection-type
 	 * @param newBuilder A builder used for building the resulting collection
-	 * @param isEmpty A function for testing whether the built collection is empty.
-	 *                Used for identifying partial success cases.
 	 * @tparam To2 Type of the built collection
 	 * @return A copy of this interface using the specified builder
 	 */
-	def toCustom[To2](newBuilder: => mutable.Builder[A, To2])(isEmpty: To2 => Boolean): MapCollectionParallel[A, To2]
+	def to[To2](newBuilder: => mutable.Builder[A, To2]): MapCollectionParallel[A, To2]
 	
 	
 	// COMPUTED ------------------------
@@ -188,7 +185,7 @@ trait MapCollectionParallel[A, +To]
 	 * @return A copy of this interface which only checks whether the successful output was empty or not.
 	 *         Yields true if non-empty.
 	 */
-	def completion = toCustom(BuildNothing.nonEmptyFlag) { !_ }
+	def completion = to(BuildNothing.nonEmptyFlag)
 	
 	/**
 	 * Changes the built output collection-type to [[Vector]]
@@ -211,15 +208,6 @@ trait MapCollectionParallel[A, +To]
 	 * @return A future that resolves once all items in this collection have been mapped
 	 */
 	def apply(maxWidth: Int)(implicit log: Logger): Future[TryCatch[To]] = apply(maxWidth, maxWidth max 8)
-	
-	/**
-	 * Changes the built output collection-type
-	 * @param newBuilder A builder used for building the resulting collection
-	 * @tparam To2 Type of the built collection
-	 * @return A copy of this interface using the specified builder
-	 */
-	def to[To2 <: Iterable[_]](newBuilder: => mutable.Builder[A, To2]): MapCollectionParallel[A, To2] =
-		toCustom[To2](newBuilder) { _.isEmpty }
 }
 
 object MapParallel
@@ -279,9 +267,8 @@ object MapParallel
 		{
 			override protected def map(item: I): R = f(item)
 			
-			override def toCustom[To2](newBuilder: => mutable.Builder[O, To2])
-			                          (isEmpty: To2 => Boolean): MapParallel[I, O, R, To2] =
-				new _MapParallelSync[I, O, R, To2](f, flatten.usingCustom(newBuilder)(isEmpty))
+			override def to[To2](newBuilder: => mutable.Builder[O, To2]): MapParallel[I, O, R, To2] =
+				new _MapParallelSync[I, O, R, To2](f, flatten.using(newBuilder))
 		}
 	}
 	private trait MapParallelSync[-I, +O, R, +To] extends MapParallel[I, O, R, To]
@@ -353,9 +340,8 @@ object MapParallel
 		{
 			override protected def map(item: I): Future[R] = f(item)
 			
-			override def toCustom[To2](newBuilder: => mutable.Builder[O, To2])
-			                          (isEmpty: To2 => Boolean): MapParallel[I, O, R, To2] =
-				new _MapParallelAsync[I, O, R, To2](f, flatten.usingCustom(newBuilder)(isEmpty))
+			override def to[To2](newBuilder: => mutable.Builder[O, To2]): MapParallel[I, O, R, To2] =
+				new _MapParallelAsync[I, O, R, To2](f, flatten.using(newBuilder))
 		}
 	}
 	private trait MapParallelAsync[-I, +O, R, +To] extends MapParallel[I, O, R, To]
@@ -439,11 +425,9 @@ trait MapParallel[-I, +O, R, +To]
 	/**
 	 * @param newBuilder A function for constructing new collection-builders
 	 * @tparam To2 Type of the built collections
-	 * @param isEmpty A function for testing whether the built collection is empty.
-	 *                Determines how partial success cases are identified.
 	 * @return A copy of this mapping logic, which builds the resulting collections using the specified builder.
 	 */
-	def toCustom[To2](newBuilder: => mutable.Builder[O, To2])(isEmpty: To2 => Boolean): MapParallel[I, O, R, To2]
+	def to[To2](newBuilder: => mutable.Builder[O, To2]): MapParallel[I, O, R, To2]
 	
 	/**
 	 * Maps n items back-to-back (i.e. not utilizing parallel mapping)
@@ -491,14 +475,6 @@ trait MapParallel[-I, +O, R, +To]
 	 */
 	def toBuilderUsing(accessQueue: AccessQueue[ActionQueue], bufferSize: Int)(implicit exc: ExecutionContext) =
 		_toBuilderUsing(accessQueue, bufferSize)
-	
-	/**
-	 * @param newBuilder A function for constructing new collection-builders
-	 * @tparam To2 Type of the built collections
-	 * @return A copy of this mapping logic, which builds the resulting collections using the specified builder.
-	 */
-	def to[To2 <: Iterable[_]](newBuilder: => mutable.Builder[O, To2]): MapParallel[I, O, R, To2] =
-		toCustom(newBuilder) { _.isEmpty }
 	
 	/**
 	 * Maps a collection using multiple parallel mapping-threads
@@ -585,7 +561,7 @@ trait FlattenWithBuilderFactory[+F[_, _]]
 	 * @tparam To Type of the collections built
 	 * @return A new flattening implementation
 	 */
-	def toCustom[A, To](newBuilder: => mutable.Builder[A, To])(isEmpty: To => Boolean): F[A, To]
+	def to[A, To](newBuilder: => mutable.Builder[A, To]): F[A, To]
 	
 	
 	// COMPUTED --------------------------
@@ -596,18 +572,6 @@ trait FlattenWithBuilderFactory[+F[_, _]]
 	 * @return A new flattening implementation
 	 */
 	def toSeq[A] = to[A, IndexedSeq[A]](OptimizedIndexedSeq.newBuilder[A])
-	
-	
-	// OTHER    --------------------------
-	
-	/**
-	 * Prepares a new flattening implementation
-	 * @param newBuilder A function that generates the builders used for generating the resulting collections
-	 * @tparam A Type of the collected items (i.e. successful mapping results)
-	 * @tparam To Type of the collections built
-	 * @return A new flattening implementation
-	 */
-	def to[A, To <: Iterable[_]](newBuilder: => mutable.Builder[A, To]): F[A, To] = toCustom(newBuilder) { _.isEmpty }
 }
 
 object FlattenParallelResults extends FlattenWithBuilderFactory[FlattenParallelResultsUsing]
@@ -627,25 +591,22 @@ object FlattenParallelResults extends FlattenWithBuilderFactory[FlattenParallelR
 	
 	// IMPLEMENTED  ----------------------
 	
-	override def toCustom[A, To](newBuilder: => mutable.Builder[A, To])
-	                            (isEmpty: To => Boolean): FlattenParallelResultsUsing[A, To] =
-		new FlattenParallelResultsUsing[A, To](newBuilder)(isEmpty)
+	override def to[A, To](newBuilder: => mutable.Builder[A, To]): FlattenParallelResultsUsing[A, To] =
+		new FlattenParallelResultsUsing[A, To](newBuilder)
 	
 	
 	// NESTED   --------------------------
 	
 	object FlattenParallelTries extends FlattenWithBuilderFactory[FlattenParallelTriesUsing]
 	{
-		override def toCustom[A, To](newBuilder: => mutable.Builder[A, To])
-		                            (isEmpty: To => Boolean): FlattenParallelTriesUsing[A, To] =
-			new FlattenParallelTriesUsing(newBuilder)(isEmpty)
+		override def to[A, To](newBuilder: => mutable.Builder[A, To]): FlattenParallelTriesUsing[A, To] =
+			new FlattenParallelTriesUsing(newBuilder)
 	}
 	
 	object FlattenParallelTryCatches extends FlattenWithBuilderFactory[FlattenParallelTryCatchesUsing]
 	{
-		override def toCustom[A, To](newBuilder: => mutable.Builder[A, To])
-		                            (isEmpty: To => Boolean): FlattenParallelTryCatchesUsing[A, To] =
-			new FlattenParallelTryCatchesUsing(newBuilder)(isEmpty)
+		override def to[A, To](newBuilder: => mutable.Builder[A, To]): FlattenParallelTryCatchesUsing[A, To] =
+			new FlattenParallelTryCatchesUsing(newBuilder)
 	}
 }
 
@@ -674,24 +635,10 @@ trait FlattenParallelResults[+A, -R, +To]
 	
 	/**
 	 * @param newBuilder A builder to use for combining successful results
-	 * @param isEmpty A function for determining whether the built entries are empty
-	 *                (affects whether they may be considered partial successes)
 	 * @tparam To2 Type of the collections built using that builder
 	 * @return A copy of this logic which uses the specified builder
 	 */
-	def usingCustom[To2](newBuilder: => mutable.Builder[A, To2])
-	                    (isEmpty: To2 => Boolean): FlattenParallelResults[A, R, To2]
-	
-	
-	// OTHER    --------------------------
-	
-	/**
-	 * @param newBuilder A builder to use for combining successful results
-	 * @tparam To2 Type of the collections built using that builder
-	 * @return A copy of this logic which uses the specified builder
-	 */
-	def using[To2 <: Iterable[_]](newBuilder: => mutable.Builder[A, To2]): FlattenParallelResults[A, R, To2] =
-		usingCustom[To2](newBuilder) { _.isEmpty }
+	def using[To2](newBuilder: => mutable.Builder[A, To2]): FlattenParallelResults[A, R, To2]
 }
 
 object FlattenParallelResultsUsing
@@ -702,46 +649,38 @@ object FlattenParallelResultsUsing
 	 * Used for building collections from parallel mapping results.
 	 * Used in mapping operations that may fail (by yielding a Failure).
 	 * @param _newBuilder A function for generating new collection-builders
-	 * @param isEmpty A function for testing whether a built collection is empty.
-	 *                Determines how partial success cases are determined.
 	 * @tparam A Type of the *successful* mapping results / collected items
 	 * @tparam To Type of the collections built
 	 */
-	class FlattenParallelTriesUsing[A, +To](_newBuilder: => mutable.Builder[A, To])(isEmpty: To => Boolean)
+	class FlattenParallelTriesUsing[A, +To](_newBuilder: => mutable.Builder[A, To])
 		extends FlattenParallelResults[A, Try[A], To]
 	{
-		override def newBuilder = TryCatchBuilder.wrapCustom(_newBuilder)(isEmpty)
+		override def newBuilder = TryCatchBuilder.wrap(_newBuilder)
 		
-		override def usingCustom[To2](newBuilder: => mutable.Builder[A, To2])
-		                             (isEmpty: To2 => Boolean): FlattenParallelResults[A, Try[A], To2] =
-			new FlattenParallelTriesUsing[A, To2](newBuilder)(isEmpty)
+		override def using[To2](newBuilder: => mutable.Builder[A, To2]): FlattenParallelResults[A, Try[A], To2] =
+			new FlattenParallelTriesUsing[A, To2](newBuilder)
 		
-		override def apply(futures: IterableOnce[Future[Try[A]]])
-		                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-			futures.customFutureUsing(_newBuilder)(isEmpty)
+		override def apply(futures: IterableOnce[Future[Try[A]]])(implicit exc: ExecutionContext): Future[TryCatch[To]] =
+			futures.futureUsing(_newBuilder)
 	}
 	/**
 	 * Used for building collections from parallel mapping results.
 	 * Used in mapping operations that may fail fully or partially.
 	 * @param _newBuilder A function for generating new collection-builders
-	 * @param isEmpty A function for testing whether a built collection is empty.
-	 *                Determines how partial success cases are determined.
 	 * @tparam A Type of the *successful* mapping results / collected items
 	 * @tparam To Type of the collections built
 	 */
-	class FlattenParallelTryCatchesUsing[A, +To](_newBuilder: => mutable.Builder[A, To])(isEmpty: To => Boolean)
+	class FlattenParallelTryCatchesUsing[A, +To](_newBuilder: => mutable.Builder[A, To])
 		extends FlattenParallelResults[A, TryCatch[A], To]
 	{
-		override def newBuilder =
-			TryCatchBuilder.wrapCustom(_newBuilder)(isEmpty).catching
+		override def newBuilder = TryCatchBuilder.wrap(_newBuilder).catching
 		
-		override def usingCustom[To2](newBuilder: => mutable.Builder[A, To2])
-		                             (isEmpty: To2 => Boolean): FlattenParallelResults[A, TryCatch[A], To2] =
-			new FlattenParallelTryCatchesUsing[A, To2](newBuilder)(isEmpty)
+		override def using[To2](newBuilder: => mutable.Builder[A, To2]): FlattenParallelResults[A, TryCatch[A], To2] =
+			new FlattenParallelTryCatchesUsing[A, To2](newBuilder)
 		
 		override def apply(futures: IterableOnce[Future[TryCatch[A]]])
 		                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-			futures.customFutureUsing(_newBuilder)(isEmpty)
+			futures.futureUsing(_newBuilder)
 	}
 }
 
@@ -749,21 +688,17 @@ object FlattenParallelResultsUsing
  * Used for building collections from parallel mapping results.
  * Used in mapping operations always succeed (unless they throw).
  * @param _newBuilder A function for generating new collection-builders
- * @param isEmpty A function for testing whether a built collection is empty.
- *                Determines how partial success cases are determined.
  * @tparam A Type of the *successful* mapping results / collected items
  * @tparam To Type of the collections built
  */
-class FlattenParallelResultsUsing[A, +To](_newBuilder: => mutable.Builder[A, To])(isEmpty: To => Boolean)
+class FlattenParallelResultsUsing[A, +To](_newBuilder: => mutable.Builder[A, To])
 	extends FlattenParallelResults[A, A, To]
 {
-	override def newBuilder =
-		TryCatchBuilder.wrapCustom(_newBuilder)(isEmpty).fromSuccesses
+	override def newBuilder = TryCatchBuilder.wrap(_newBuilder).fromSuccesses
 	
-	override def usingCustom[To2](newBuilder: => mutable.Builder[A, To2])
-	                             (isEmpty: To2 => Boolean): FlattenParallelResults[A, A, To2] =
-		new FlattenParallelResultsUsing[A, To2](newBuilder)(isEmpty)
+	override def using[To2](newBuilder: => mutable.Builder[A, To2]): FlattenParallelResults[A, A, To2] =
+		new FlattenParallelResultsUsing[A, To2](newBuilder)
 	
 	override def apply(futures: IterableOnce[Future[A]])(implicit exc: ExecutionContext): Future[TryCatch[To]] =
-		futures.customFutureUsing(_newBuilder)(isEmpty)
+		futures.futureUsing(_newBuilder)
 }

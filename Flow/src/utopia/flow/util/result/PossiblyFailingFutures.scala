@@ -133,7 +133,7 @@ trait PossiblyFailingFutures[+A, T] extends Any
 	 *              - Failure: If all these futures failed
 	 */
 	def completionFuture(implicit context: ExecutionContext) =
-		customFutureUsing(BuildNothing.nonEmptyFlag) { !_ }
+		futureUsing(BuildNothing.nonEmptyFlag)
 	
 	
 	// OTHER    ------------------------
@@ -172,21 +172,18 @@ trait PossiblyFailingFutures[+A, T] extends Any
 	 *         Will yield a failure if all these futures failed.
 	 *         Will yield a partial failure if some, but not all, of these futures failed.
 	 */
-	def futureUsing[To <: Iterable[_]](builder: mutable.Builder[A, To])
-	                                  (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-		customFutureUsing[To](builder) { _.isEmpty }
+	def futureUsing[To](builder: mutable.Builder[A, To])(implicit exc: ExecutionContext): Future[TryCatch[To]] =
+		_collectResults[T, A, To](wrapped.iterator, TryCatchBuilder.wrap(builder))(appendTo)
 	/**
 	 * Asynchronously collects the results of these futures into a single collection
 	 * @param builder A builder for forming the resulting collection from successful results
-	 * @param isEmpty A function used for determining whether the built collection is empty.
-	 *                May be used for determining whether the result should be a failure or a success.
 	 * @param exc Implicit execution context
 	 * @tparam To Type of the resulting collection
 	 * @return A future that resolves into the collected items once all these futures have resolved.
 	 *         Will yield a failure if all these futures failed.
 	 *         Will yield a partial failure if some, but not all, of these futures failed.
 	 */
-	def customFutureUsing[To](builder: mutable.Builder[A, To])(isEmpty: To => Boolean)
-	                         (implicit exc: ExecutionContext): Future[TryCatch[To]] =
-		_collectResults[T, A, To](wrapped.iterator, new TryCatchBuilder(builder)(isEmpty))(appendTo)
+	@deprecated("Deprecated for removal. This interface is identical to .futureUsing(...)", "v2.9")
+	def customFutureUsing[To](builder: mutable.Builder[A, To])(implicit exc: ExecutionContext): Future[TryCatch[To]] =
+		futureUsing(builder)
 }

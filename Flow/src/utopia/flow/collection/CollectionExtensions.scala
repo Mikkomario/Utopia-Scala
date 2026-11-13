@@ -1203,8 +1203,8 @@ object CollectionExtensions
 		 *         Wraps the result in a [[TryCatch]], catching errors thrown by 'f'.
 		 * @see [[parallel]], if you want the mapping to be performed in parallel
 		 */
-		def mapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[B])
-		                                    (implicit exc: ExecutionContext) =
+		def mapAsyncTo[B, To](builder: mutable.Builder[B, To])(f: A => Future[B])
+		                     (implicit exc: ExecutionContext) =
 			i.iterator.map(f).futureUsing(builder)
 		
 		/**
@@ -1237,8 +1237,8 @@ object CollectionExtensions
 		 *         Wraps the result in a [[TryCatch]], catching errors thrown by 'f'.
 		 * @see [[parallel]], if you want the mapping to be performed in parallel
 		 */
-		def flatMapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[IterableOnce[B]])
-		                                        (implicit exc: ExecutionContext) =
+		def flatMapAsyncTo[B, To](builder: mutable.Builder[B, To])(f: A => Future[IterableOnce[B]])
+		                         (implicit exc: ExecutionContext) =
 			mapAsyncTo(builder.flatten)(f)
 		
 		/**
@@ -1271,8 +1271,8 @@ object CollectionExtensions
 		 *         Wraps the result in a [[TryCatch]], catching the failures yielded by 'f'.
 		 * @see [[parallel]], if you want the mapping to be performed in parallel
 		 */
-		def tryMapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(f: A => Future[MayHaveFailed[B]])
-		                                       (implicit exc: ExecutionContext) =
+		def tryMapAsyncTo[B, To](builder: mutable.Builder[B, To])(f: A => Future[MayHaveFailed[B]])
+		                        (implicit exc: ExecutionContext) =
 			PossiblyFailingFutures.wrap(i.iterator.map(f)).futureUsing(builder)
 		
 		/**
@@ -1307,9 +1307,9 @@ object CollectionExtensions
 		 *         Wraps the result in a [[TryCatch]], catching the failures yielded by 'f'.
 		 * @see [[parallel]], if you want the mapping to be performed in parallel
 		 */
-		def tryFlatMapAsyncTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])
-		                                           (f: A => Future[MayHaveFailed[IterableOnce[B]]])
-		                                           (implicit exc: ExecutionContext) =
+		def tryFlatMapAsyncTo[B, To](builder: mutable.Builder[B, To])
+		                            (f: A => Future[MayHaveFailed[IterableOnce[B]]])
+		                            (implicit exc: ExecutionContext) =
 			tryMapAsyncTo(builder.flatten)(f)
 	}
 	
@@ -2064,7 +2064,7 @@ object CollectionExtensions
 		 *         If this collection was empty, also yields a success.
 		 *         However, if all mapping operations failed, yields a failure.
 		 */
-		def tryMapEach[B, To <: Iterable[_]](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]) =
+		def tryMapEach[B, To](f: iter.A => Try[B])(implicit bf: BuildFrom[Repr, B, To]) =
 			ops.iterator.map(f).toTryCatchUsing(bf.newBuilder(coll))
 		/**
 		 * Maps every item in this collection, and collects and flattens the mapping results into a TryCatch.
@@ -2077,8 +2077,7 @@ object CollectionExtensions
 		 *         If this collection was empty, also yields a success.
 		 *         However, if all mapping operations failed, yields a failure.
 		 */
-		def tryFlatMapEach[B, To <: Iterable[_]](f: iter.A => Try[IterableOnce[B]])
-		                                        (implicit bf: BuildFrom[Repr, B, To]) =
+		def tryFlatMapEach[B, To](f: iter.A => Try[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]) =
 			ops.iterator.map(f).flattenCatchingTo(bf.newBuilder(coll))
 		/**
 		 * Maps every item in this collection and collects the mapping results into a TryCatch.
@@ -2091,7 +2090,7 @@ object CollectionExtensions
 		 *         If this collection was empty, also yields a success.
 		 *         However, if all mapping operations failed, yields a failure.
 		 */
-		def mapCatching[B, To <: Iterable[_]](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]) =
+		def mapCatching[B, To](f: iter.A => TryCatch[B])(implicit bf: BuildFrom[Repr, B, To]) =
 			ops.iterator.map(f).toTryCatchUsing(bf.newBuilder(coll))
 		/**
 		 * Maps every item in this collection, and collects and flattens the mapping results into a TryCatch.
@@ -2104,8 +2103,7 @@ object CollectionExtensions
 		 *         If this collection was empty, also yields a success.
 		 *         However, if all mapping operations failed, yields a failure.
 		 */
-		def flatMapCatching[B, To <: Iterable[_]](f: iter.A => TryCatch[IterableOnce[B]])
-		                                         (implicit bf: BuildFrom[Repr, B, To]) =
+		def flatMapCatching[B, To](f: iter.A => TryCatch[IterableOnce[B]])(implicit bf: BuildFrom[Repr, B, To]) =
 			ops.iterator.map(f).flattenCatchingTo(bf.newBuilder(coll))
 		
 		/**
@@ -2122,8 +2120,7 @@ object CollectionExtensions
 		 *         where 'f' threw or some other exception occurred.
 		  */
 		@deprecated("Deprecated for removal. Please use .parallel functions", "v2.8")
-		def mapAllParallel[B, To <: Iterable[_]](f: iter.A => B)
-		                                        (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext) =
+		def mapAllParallel[B, To](f: iter.A => B)(implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext) =
 			ops.parallel.map(f).to(bf.newBuilder(coll)).all
 		/**
 		 * Maps items in this collection in parallel, limiting the parallel mapping operations to a certain amount.
@@ -2142,8 +2139,8 @@ object CollectionExtensions
 		 *         Yields a failure if all mapping operations failed.
 		 */
 		@deprecated("Deprecated for removal. Please use .parallel functions", "v2.8")
-		def mapParallel[B, To <: Iterable[_]](maxWidth: Int, bufferSize: => Int = 8)(f: iter.A => B)
-		                                     (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext, log: Logger) =
+		def mapParallel[B, To](maxWidth: Int, bufferSize: => Int = 8)(f: iter.A => B)
+		                      (implicit bf: BuildFrom[Repr, B, To], exc: ExecutionContext, log: Logger) =
 			ops.parallel.map(f).to(bf.newBuilder(coll))(maxWidth, bufferSize)
 	}
 	

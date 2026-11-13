@@ -1,6 +1,8 @@
 package utopia.flow.collection.mutable.builder
 
+import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.OptimizedIndexedSeq
+import utopia.flow.operator.MaybeEmpty
 import utopia.flow.util.result.MayHaveFailed.AlwaysSuccess
 import utopia.flow.util.result.TryExtensions.RichTry
 import utopia.flow.util.result.{MayHaveFailed, TryCatch}
@@ -18,7 +20,8 @@ object TryCatchBuilder
 	 * @return A new builder
 	 */
 	def apply[A](alwaysSucceed: Boolean = false) =
-		new TryCatchBuilder[A, IndexedSeq[A]](OptimizedIndexedSeq.newBuilder[A], alwaysSucceed)(_.isEmpty)
+		new TryCatchBuilder[A, IndexedSeq[A]](OptimizedIndexedSeq.newBuilder[A],
+			testEmpty = if (alwaysSucceed) None else Some({ _.isEmpty }), alwaysSucceed = alwaysSucceed)
 	
 	/**
 	 * Creates a new TryCatch-builder
@@ -27,9 +30,12 @@ object TryCatchBuilder
 	 * @tparam Coll Type of the resulting wrapped collection
 	 * @return A new builder
 	 */
-	 // TODO: Remove Iterable type requirement
-	def wrap[A, Coll <: Iterable[_]](builder: mutable.Builder[A, Coll]) =
-		wrapCustom[A, Coll](builder) { _.isEmpty }
+	def wrap[A, Coll](builder: mutable.Builder[A, Coll]) =
+		wrapCustom[A, Coll](builder) {
+			case c: Iterable[_] => c.isEmpty
+			case m: MaybeEmpty[_] => m.isEmpty
+			case _ => true
+		}
 	/**
 	 * Creates a new TryCatch-builder which always yields successful values
 	 * @param builder Builder that will be used for creating wrapped collection
@@ -38,7 +44,7 @@ object TryCatchBuilder
 	 * @return A new builder
 	 */
 	def wrapAlwaysSucceeding[A, Coll](builder: mutable.Builder[A, Coll]) =
-		new TryCatchBuilder[A, Coll](builder, alwaysSucceed = true)(_ => false)
+		new TryCatchBuilder[A, Coll](builder, alwaysSucceed = true)
 	
 	/**
 	 * Creates a new TryCatch-builder by wrapping another builder
@@ -50,16 +56,18 @@ object TryCatchBuilder
 	 * @return A new builder
 	 */
 	def wrapCustom[A, Coll](builder: mutable.Builder[A, Coll])(isEmpty: Coll => Boolean) =
-		new TryCatchBuilder[A, Coll](builder)(isEmpty)
+		new TryCatchBuilder[A, Coll](builder, Some(isEmpty))
 }
 
 /**
  * A builder that generates collections wrapped in [[TryCatch]]
+ * @tparam A Type of successful items accepted
+ * @tparam Coll Type of the resulting collection on success
  * @author Mikko Hilpinen
  * @since 08.12.2025, v2.8
  */
-class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSucceed: Boolean = false)
-                                (testEmpty: Coll => Boolean)
+class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], testEmpty: Option[Coll => Boolean] = None,
+                                 alwaysSucceed: Boolean = false)
 	extends mutable.Builder[Try[A], TryCatch[Coll]]
 {
 	// ATTRIBUTES   -----------------------
@@ -100,7 +108,7 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 		val items = wrapped.result()
 		val failures = failuresBuilder.result()
 		
-		if (succeedFlag || failures.isEmpty || !testEmpty(items))
+		if (succeedFlag || failures.isEmpty || testEmpty.exists { !_(items) })
 			TryCatch.Success(items, failures)
 		else
 			TryCatch.Failure(failures.head)
@@ -108,7 +116,9 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 	
 	override def addOne(elem: Try[A]) = {
 		elem match {
-			case Success(item) => wrapped += item
+			case Success(item) =>
+				succeedFlag = true
+				wrapped += item
 			case Failure(error) => failuresBuilder += error
 		}
 		this
@@ -126,6 +136,7 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 		item match {
 			case TryCatch.Success(item, partialFailures) =>
 				wrapped += item
+				succeedFlag = true
 				failuresBuilder ++= partialFailures
 			
 			case TryCatch.Failure(error) => failuresBuilder += error
@@ -141,6 +152,7 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 		case t: RichTry[A] => this += t.t
 		case r: TryCatch[A] => this += r
 		case AlwaysSuccess(value) =>
+			succeedFlag = true
 			wrapped += value
 			this
 		case failure: MayHaveFailed.Failure => this += failure.cause
@@ -223,11 +235,15 @@ class TryCatchBuilder[-A, +Coll](wrapped: mutable.Builder[A, Coll], alwaysSuccee
 		override def clear(): Unit = TryCatchBuilder.this.clear()
 		
 		override def addOne(elem: A): Successes.this.type = {
+			succeedFlag = true
 			wrapped += elem
 			this
 		}
 		override def addAll(elems: IterableOnce[A]): Successes.this.type = {
-			wrapped ++= elems
+			elems.nonEmptyCollection.foreach { elems =>
+				succeedFlag = true
+				wrapped ++= elems
+			}
 			this
 		}
 	}

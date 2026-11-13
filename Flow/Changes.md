@@ -118,6 +118,7 @@
   - Added `.mergeOrAppend(...)`
   - Added `.incompleteMapFirstWhere(...)`
   - Added `.completion` to parallel mapping output options
+  - Added `.toEmptyTryCatch` to collections containing **Try**
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
   - Added `.emptyOneOrMany()`

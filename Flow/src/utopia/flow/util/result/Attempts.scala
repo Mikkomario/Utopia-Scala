@@ -142,7 +142,6 @@ trait Attempts[+A, T, +R[_]] extends Any
 	def tryFlattenEach[B](implicit ev: A <:< IterableOnce[B]) =
 		tryFlattenEachTo(OptimizedIndexedSeq.newBuilder[B])
 	
-	// TODO: Add a version of toTryCatch that doesn't collect successful results
 	/**
 	 * Converts this collection into a TryCatch by separating the successful & failed results
 	 * @return If this collection contained one or more successes, yields TryCatch.Success,
@@ -151,6 +150,14 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 *         If this collection only contained failures, yields TryCatch.Failure.
 	 */
 	def toTryCatch = toTryCatchUsing(OptimizedIndexedSeq.newBuilder)
+	/**
+	 * Converts this collection into a [[TryCatch]] by collecting all failed results.
+	 * Skips / doesn't collect successful entries.
+	 * @return If this collection contained one or more successes, or was empty, yields TryCatch.Success,
+	 *         including encountered failures as partial failures.
+	 *         If this collection only contained failures, yields TryCatch.Failure.
+	 */
+	def toEmptyTryCatch = toTryCatchUsing(BuildNothing.unit)
 	/**
 	 * Converts this collection into a TryCatch by separating the successful & failed results.
 	 * Flattens the successful values into a single collection.
@@ -200,7 +207,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 *         If this collection was empty, yields an empty TryCatch.Success.
 	 *         If this collection only contained failures, yields TryCatch.Failure.
 	 */
-	def toTryCatchUsing[To <: Iterable[_]](builder: mutable.Builder[A, To]) = {
+	def toTryCatchUsing[To](builder: mutable.Builder[A, To]) = {
 		val resultBuilder = TryCatch.builder.wrap(builder)
 		resultBuilder.generic ++= iterator.map(wrap)
 		resultBuilder.result()
@@ -215,7 +222,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 *         If this collection was empty, yields an empty TryCatch.Success.
 	 *         If this collection only contained failures, yields TryCatch.Failure.
 	 */
-	def flattenCatchingTo[B, To <: Iterable[_]](builder: mutable.Builder[B, To])(implicit ev: A <:< IterableOnce[B]) = {
+	def flattenCatchingTo[B, To](builder: mutable.Builder[B, To])(implicit ev: A <:< IterableOnce[B]) = {
 		val resultBuilder = TryCatch.builder.wrap(builder)
 		iterator.foreach { result =>
 			val r = wrap(result)

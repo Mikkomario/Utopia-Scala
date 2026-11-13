@@ -248,7 +248,7 @@ object TryExtensions
 		override protected def wrap(result: Try[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
 		
-		override def toTryCatchUsing[To <: Iterable[_]](builder: mutable.Builder[A, To]) = {
+		override def toTryCatchUsing[To](builder: mutable.Builder[A, To]) = {
 			val resultBuilder = TryCatch.builder.wrap(builder)
 			resultBuilder ++= tries
 			resultBuilder.result()
@@ -265,7 +265,7 @@ object TryExtensions
 		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): TryCatch[B] = result.toTryCatch
 		
-		override def toTryCatchUsing[To <: Iterable[_]](builder: mutable.Builder[A, To]): TryCatch[To] = {
+		override def toTryCatchUsing[To](builder: mutable.Builder[A, To]): TryCatch[To] = {
 			val resultBuilder = TryCatch.builder.wrap(builder)
 			resultBuilder.catching ++= tries
 			resultBuilder.result()
