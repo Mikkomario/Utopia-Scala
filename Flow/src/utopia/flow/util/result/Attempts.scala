@@ -142,6 +142,7 @@ trait Attempts[+A, T, +R[_]] extends Any
 	def tryFlattenEach[B](implicit ev: A <:< IterableOnce[B]) =
 		tryFlattenEachTo(OptimizedIndexedSeq.newBuilder[B])
 	
+	// TODO: Add a version of toTryCatch that doesn't collect successful results
 	/**
 	 * Converts this collection into a TryCatch by separating the successful & failed results
 	 * @return If this collection contained one or more successes, yields TryCatch.Success,

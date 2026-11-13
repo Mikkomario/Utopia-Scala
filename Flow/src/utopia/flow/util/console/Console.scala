@@ -25,6 +25,10 @@ object Console
 {
 	// TYPES    ------------------------------
 	
+	/**
+	 * A tree where keys are full namespaces and values are commands that exist in that namespace.
+	 * E.g. Command "top:lower:command" would be located at node top -> top:lower.
+	 */
 	private type Commands = ValueTree[(Seq[String], Iterable[Command])]
 	
 	
@@ -38,7 +42,7 @@ object Console
 	 *                         (default = empty = no close command is used)
 	 * @param testTermination A function called between commands to see whether this console should close.
 	 *                        Returns true when it's time for this console to close.
-	 * @param jsonParser jsonParser jsonParser Implicit json parser for command argument handling
+	 * @param jsonParser Implicit JSON parser for command argument handling
 	 * @return A new console
 	 */
 	@deprecated("Deprecated for removal", "v2.8")
@@ -275,16 +279,12 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 		// Converts the specified command-sets into a list of namespace-command pairs
 		val commandsWithNamespaces = OptimizedIndexedSeq.concat(
 			namespaced.view.flatMap { case (ns, commands) =>
-				val nsElements = {
-					if (ns.isEmpty)
-						Empty
-					else
-						ns.split(Command.namespaceSplitRegex)
-				}
+				val nsElements = if (ns.isEmpty) Empty else ns.split(Command.namespaceSplitRegex)
 				// Prepends the external namespace to the command's internal namespace
 				commands.map { c => (nsElements ++ c.namespace) -> c }
 			},
-			other.view.map { c => c.namespace -> c })
+			other.view.map { c => c.namespace -> c }
+		)
 		
 		// Commands without namespace are placed at the root node
 		val (nonNamespacedCommands, namespacedCommands) = commandsWithNamespaces.divideBy { _._1.nonEmpty }.toTuple
@@ -425,7 +425,7 @@ class Console(commandsPointer: Changing[Map[String, Iterable[Command]]], prompt:
 		commands.follow(namespace) { (node, namespace) => node._1.last == namespace }.orElse {
 			// Option 2: Checks for a partial / relative namespace match
 			namespace.headOption.flatMap { firstElem =>
-				commands.topDownNodesBelowIterator.find { _.value._1.headOption.contains(firstElem) }
+				commands.topDownNodesBelowIterator.find { _.value._1.lastOption.contains(firstElem) }
 					.flatMap { targetNamespace(_, namespace) }
 			}
 		}

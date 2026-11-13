@@ -27,6 +27,7 @@ object TryCatchBuilder
 	 * @tparam Coll Type of the resulting wrapped collection
 	 * @return A new builder
 	 */
+	 // TODO: Remove Iterable type requirement
 	def wrap[A, Coll <: Iterable[_]](builder: mutable.Builder[A, Coll]) =
 		wrapCustom[A, Coll](builder) { _.isEmpty }
 	/**
