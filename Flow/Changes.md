@@ -93,6 +93,8 @@
   - Added `.getOrElseUpdate(...)`
 - **CachingSeq**
   - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
+- **ConsoleExtensions**
+  - Added `.resolvePath(...)`, an interactive function for determining the targeted file or directory
 - **FromModelFactory**
   - Added `&&(FromModelFactory)`
   - Added `.preparingWith(...)`
