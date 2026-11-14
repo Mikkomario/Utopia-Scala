@@ -9,6 +9,7 @@
 ### Deprecations
 - Deprecated **DatabaseCache** (class); Added new constructors that yield **DbValue** **Cache**s
 ### Bugfixes
+- Fixed a bug that caused `Select.distinctIf(...)` to behave opposite to what was requested
 - **Store** now ensures that input is distinct
 - Added more detailed handling for situations where a table references another table from multiple columns; 
   In these instances, NOT NULL columns are now preferred.

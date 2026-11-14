@@ -94,7 +94,7 @@ object Select
       * @return Either a SELECT DISTINCT or a SELECT query, depending on 'condition'
       */
     def distinctIf(target: SqlTarget, column: Column, condition: Boolean) =
-        if (condition) apply(target, column) else distinct(target, column)
+        if (condition) distinct(target, column) else apply(target, column)
     
     /**
      * Creates an sql segment that selects the primary key of a table
