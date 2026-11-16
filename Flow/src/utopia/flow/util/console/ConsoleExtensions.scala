@@ -320,7 +320,7 @@ object ConsoleExtensions
 		 */
 		def ask(question: String, default: Boolean = false) = {
 			val yesNo = if (default) "Y/n" else "y/N"
-			val suffix = if (question.contains('\n') || question.length > 80) "" else ":"
+			val suffix = if (question.contains('\n') || question.length <= 80) ":" else ""
 			readNonEmptyLine(s"$question $yesNo$suffix") match {
 				case Some(answer) =>
 					answer.head.toLower match {

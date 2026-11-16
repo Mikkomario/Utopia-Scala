@@ -39,6 +39,21 @@ object LogicalOperator
 	val values = PositiveLogicalOperator.values ++ NegativeLogicalOperator.values
 	
 	
+	// OTHER    ------------------------
+	
+	/**
+	 * @param code A code representing the targeted operator. E.g. "&&" or "AND"
+	 * @return The logical operator that matched the specified string. None if no operator matched that string.
+	 */
+	def parse(code: String): Option[LogicalOperator] = code.toLowerCase match {
+		case "&&" | "and" => Some(And)
+		case "||" | "or" => Some(Or)
+		case "!&&" | "nand" => Some(NotBoth)
+		case "!||" | "nor" => Some(Nor)
+		case _ => None
+	}
+	
+	
 	// NESTED   ------------------------
 	
 	object PositiveLogicalOperator
@@ -47,9 +62,20 @@ object LogicalOperator
 	}
 	sealed trait PositiveLogicalOperator extends LogicalOperator
 	{
-		override def unary_! : NegativeLogicalOperator
+		// ABSTRACT --------------------
 		
+		/**
+		 * @return A code representing this operator (e.g. "&&" or "||")
+		 */
+		def code: String
+		
+		override def unary_! : NegativeLogicalOperator
 		override def unary_- = !this
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def toString: String = code
 	}
 	object NegativeLogicalOperator
 	{
@@ -57,9 +83,15 @@ object LogicalOperator
 	}
 	sealed trait NegativeLogicalOperator extends LogicalOperator
 	{
-		override def unary_! : PositiveLogicalOperator
+		// ABSTRACT ---------------------
 		
+		override def unary_! : PositiveLogicalOperator
 		override def unary_- : PositiveLogicalOperator = !this
+		
+		
+		// IMPLEMENTED  -----------------
+		
+		override def toString: String = s"!${ (-this).code }"
 	}
 	/*
 	sealed trait LogicalEqualityOperator extends LogicalOperator
@@ -74,6 +106,11 @@ object LogicalOperator
 	
 	case object And extends PositiveLogicalOperator
 	{
+		// ATTRIBUTES   -------------------
+		
+		override val code: String = "&&"
+		
+		
 		// IMPLEMENTED  -------------------
 		
 		override def unary_! = NotBoth
@@ -88,6 +125,11 @@ object LogicalOperator
 	}
 	case object Or extends PositiveLogicalOperator
 	{
+		// ATTRIBUTES   -----------------
+		
+		override val code: String = "||"
+		
+		
 		// IMPLEMENTED  -----------------
 		
 		override def unary_! = Nor
