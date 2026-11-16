@@ -38,6 +38,7 @@
   - Separators are now characters instead **Regex**es
   - **CsvReader** (which is now deprecated) now requires access to an implicit **JsonParser** 
     and parses individual values with it
+- Renamed **Iterator**'s `.mapCatching(...)` to `.mapLogging(...)`
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
@@ -91,6 +92,11 @@
   - Added `.currentSize`
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+- **Attempts**
+  - Object
+    - Added new generic constructor: `.apply(IterableOnce[MayHaveFailed])`
+  - Instance
+    - Added `.tryAny`
 - **CachingSeq**
   - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
 - **ConsoleExtensions**
@@ -118,6 +124,7 @@
   - Added `.mergeOrAppend(...)`
   - Added `.incompleteMapFirstWhere(...)`
   - Added `.completion` to parallel mapping output options
+  - Added `.tryMapAny` and `.tryMapAnyCatching`
   - Added `.toEmptyTryCatch` to collections containing **Try**
 - **Iterator** (via **CollectionExtensions**)
   - Added `.only()`
@@ -189,9 +196,10 @@
   - Also, if a cyclic reference is detected, the JSON conversion will now throw a **CyclicalIterationException**.
 - When using **ConsoleExtensions** and prompting the user, if the prompt ends with `:`, 
   won't include a newline between the prompt and the user input
-- Changed `StdIn.selectFrom(...)`'s default list size from 20 to 25
+- Rewrote `StdIn.selectFrom(...)` variants
 - **BasicValueCaster**'s to **Duration** conversion now supports model property `"amount"` 
   as an alternative for `"value"`
+- Moved try-mapping functions from **Iterable** to **IterableOnce**
 - Refactored **KeptOpenWriter** using **ClosesAfterIdle**
 - Rewrote **StringFrom** to no longer depend on **Source** (except for the `.take(Int)` implementation)
 - `.reduceLeftIterator` in **IterableOnce** now uses **ReducingIterator** internally

@@ -6,6 +6,31 @@ import utopia.flow.collection.mutable.builder.BuildNothing
 
 import scala.collection.mutable
 
+object Attempts
+{
+	// OTHER    -------------------------
+	
+	/**
+	 * @param coll A collection of attempts to process
+	 * @tparam A Type of successful collection elements
+	 * @return An Attempts interface for that collection
+	 */
+	def apply[A](coll: IterableOnce[MayHaveFailed[A]]): Attempts[A, MayHaveFailed[A], MayHaveFailed] =
+		new GenericAttempts[A](coll)
+	
+	
+	// NESTED   -------------------------
+	
+	private class GenericAttempts[A](coll: IterableOnce[MayHaveFailed[A]])
+		extends Attempts[A, MayHaveFailed[A], MayHaveFailed]
+	{
+		override protected def iterator: Iterator[MayHaveFailed[A]] = coll.iterator
+		
+		override protected def wrap(result: MayHaveFailed[A]): MayHaveFailed[A] = result
+		override protected def unwrap[B](result: MayHaveFailed[B]): MayHaveFailed[B] = result
+	}
+}
+
 /**
  * Common trait for collections / collection-extensions that provide functions
  * for dealing with multiple possibly failed attempts at once.
@@ -52,6 +77,31 @@ trait Attempts[+A, T, +R[_]] extends Any
 	 */
 	def firstFailure = iterator.findMap { wrap(_).failure }
 	
+	/**
+	 * Attempts to find a single successful value from this collection
+	 * @return Returns either:
+	 *         - Right: The first successful value acquired
+	 *         - Left: All failures in this collection, if no successful values were present
+	 */
+	def tryAny = {
+		val iter = iterator
+		val failuresBuilder = OptimizedIndexedSeq.newBuilder[Throwable]
+		var success: Option[A] = None
+		// Resolves items until a success is found
+		while (success.isEmpty && iter.hasNext) {
+			val result = wrap(iter.next())
+			result.success match {
+				case Some(value) => success = Some(value)
+				case None => failuresBuilder ++= result.failures
+			}
+		}
+		success match {
+			// Case: Success found => Yields it as Right
+			case Some(value) => Right(value)
+			// Case: No success found => Yields all failures as Left
+			case None => Left(failuresBuilder.result())
+		}
+	}
 	/**
 	 * @return The first success in this collection.
 	 *         All failures before that success are collected as partial failures, and included in the result.
