@@ -92,6 +92,7 @@
   - Added `.currentSize`
 - **AppConfig**
   - Added `.getOrElseUpdate(...)`
+  - Added `.clear()`
 - **Attempts**
   - Object
     - Added new generic constructor: `.apply(IterableOnce[MayHaveFailed])`

@@ -200,6 +200,10 @@ class AppConfig private(path: Path, initialState: Model)(implicit exc: Execution
 	 * @param key Key of the value to remove
 	 */
 	def clear(key: String) = update(key, Value.empty)
+	/**
+	 * Clears all stored values from this config
+	 */
+	def clear() = modelP.value = Model.empty
 	
 	/**
 	 * Modifies the value of a single nested property
