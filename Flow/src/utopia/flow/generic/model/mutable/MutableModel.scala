@@ -4,7 +4,7 @@ import utopia.flow.collection.CollectionExtensions._
 import utopia.flow.collection.immutable.{Empty, OptimizedIndexedSeq}
 import utopia.flow.event.listener.{ChangeListener, PropertyChangeListener}
 import utopia.flow.event.model.PropertyChangeEvent.{PropertyAdded, PropertyRemoved, PropertySwapped, PropertyValueChange}
-import utopia.flow.event.model.{ChangeEvent, PropertyChangeEvent}
+import utopia.flow.event.model.{ChangeEvent, ChangeResponse, PropertyChangeEvent}
 import utopia.flow.generic.factory.PropertyFactory
 import utopia.flow.generic.model.immutable.{Constant, Model, Value}
 import utopia.flow.generic.model.template.HasPropertiesLike
@@ -101,7 +101,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
         }
         // Case: Last listener removed => stops listening
         else if (newListeners.isEmpty) {
-            propertiesIterator.foreach { p => valueListeners.get(p).foreach(p.removeListener) }
+            valueListeners.foreach { case (p, listener) => p.removeListener(listener) }
             valueListeners = Map()
         }
         _listeners = newListeners
@@ -162,6 +162,7 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
         existingProperty(lowerName) match {
             // Case: There already exists a property with that name => replaces it (generates a property change event)
             case Some(oldProp) =>
+                stopListeningTo(oldProp)
                 propMap += lowerName -> prop
 	            _properties = _properties.mapFirstWhere { _ == oldProp } { _ => prop }
                 // May start listening to value changes
@@ -234,6 +235,9 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
 		_properties :+= generated
 		propMap += (name.toLowerCase -> generated)
 		
+		if (listeners.nonEmpty)
+			startListeningTo(generated)
+		
 		lazy val event = PropertyAdded(generated)
 		listeners.foreach { _.onPropertyChange(event) }
 		
@@ -241,17 +245,24 @@ class MutableModel[V <: Variable](initialProps: Iterable[V], propFactory: Proper
 	}
     
     private def startListeningTo(prop: V) = {
-        val listener = ChangeListener[Value] { e =>
-            val propEvent = PropertyValueChange(prop, e)
-            listeners.foreach { _.onPropertyChange(propEvent) }
-        }
+        stopListeningTo(prop)
+        val listener = new ValueChangeListener(prop)
         valueListeners += (prop -> listener)
         prop.addListener(listener)
     }
-    private def stopListeningTo(prop: V) = {
-        valueListeners.get(prop).foreach { listener =>
-            prop.removeListener(listener)
-            valueListeners -= prop
-        }
+    private def stopListeningTo(prop: V) = valueListeners.get(prop).foreach { listener =>
+        prop.removeListener(listener)
+        valueListeners -= prop
     }
+	
+	
+	// NESTED   ---------------------
+	
+	private class ValueChangeListener(prop: V) extends ChangeListener[Value]
+	{
+		override def onChangeEvent(event: ChangeEvent[Value]): ChangeResponse = {
+			val propEvent = PropertyValueChange(prop, event)
+			listeners.foreach { _.onPropertyChange(propEvent) }
+		}
+	}
 }
