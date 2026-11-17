@@ -3,7 +3,7 @@ package utopia.flow.time
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.MayBeAboutZero
 import utopia.flow.operator.combine.Combinable.SelfCombinable
-import utopia.flow.operator.combine.LinearScalable
+import utopia.flow.operator.combine.{LinearScalable, Subtractable}
 import utopia.flow.operator.equality.{ApproxSelfEquals, EqualsBy, EqualsFunction}
 import utopia.flow.operator.ordering.SelfComparable
 import utopia.flow.operator.sign.Sign.{Negative, Positive}
@@ -256,7 +256,8 @@ object Duration
 //      3. A Java Duration (Left -> Left)
 class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 	extends Equals with ApproxSelfEquals[Duration] with SelfComparable[Duration] with LinearScalable[Duration]
-		with SelfCombinable[Duration] with MayBeAboutZero[Duration, Duration] with HasSign
+		with SelfCombinable[Duration] with Subtractable[Duration, Duration] with MayBeAboutZero[Duration, Duration]
+		with HasSign
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -689,6 +690,7 @@ class Duration(wrapped: Either[Either[JDuration, SDuration], (Long, TimeUnit)])
 				(a, b, unit) => Duration(a + b, unit) } { _.merge { _ + _ } } { _.merge { _ plus _ } } {
 				if (sign == other.sign) Duration.infiniteOf(sign) else Duration.undefined }
 	}
+	override def -(other: Duration): Duration = this + (-other)
 	
 	override def *(mod: Double): Duration = {
 		// Case: Multiplication by zero => 0
