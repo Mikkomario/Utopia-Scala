@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter
 import scala.concurrent.ExecutionContext
 import scala.io.Codec
 
+// TODO: Add factory-based constructors
 object ConsoleScribe
 {
 	// ATTRIBUTES   -------------------------
@@ -47,14 +48,18 @@ object ConsoleScribe
 	  *                     Default = System.err
 	  * @param defaultSeverity Severity to assign to issues by default (default = Recoverable)
 	  * @param defaultDetails Details to assign to issues by default (default = empty)
-	  * @param exc Implicit execution context (only used for file operations)
+	 * @param printStack Whether to print the stack trace to the console.
+	 *                   False if stack trace should only be printed to the file, if applicable (default).
+	 * @param exc Implicit execution context (only used for file operations)
 	  * @return A new Scribe instance
 	  */
 	def apply(context: String, bundleDuration: Duration = 5.seconds, logDirectory: Option[Path] = None,
 	          backupLogger: Logger = SysErrLogger.includingTime,
-	          defaultSeverity: Severity = Severity.default, defaultDetails: Model = Model.empty)
+	          defaultSeverity: Severity = Severity.default, defaultDetails: Model = Model.empty,
+	          printStack: Boolean = false)
 	         (implicit exc: ExecutionContext, scheduler: Scheduler) =
-		new ConsoleScribe(context, bundleDuration, logDirectory, backupLogger, defaultSeverity, defaultDetails)
+		new ConsoleScribe(context, bundleDuration, logDirectory, backupLogger, defaultSeverity, defaultDetails,
+			printStack)
 	
 	/**
 	  * Creates a new Scribe instance that writes issue data to the console
@@ -67,14 +72,17 @@ object ConsoleScribe
 	  *                     Default = System.err
 	  * @param defaultSeverity Severity to assign to issues by default (default = Recoverable)
 	  * @param defaultDetails Details to assign to issues by default (default = empty)
-	  * @param exc Implicit execution context
+	  * @param printStack Whether to print the stack trace to the console.
+	 *                   False if stack trace should only be printed to the file (default).
+	 * @param exc Implicit execution context
 	  * @return A new Scribe instance
 	  */
 	def copyingToFile(logDirectory: Path, context: String, backupLogger: Logger = SysErrLogger.includingTime,
 	                  bundleDuration: Duration = 5.seconds, defaultSeverity: Severity = Severity.default,
-	                  defaultDetails: Model = Model.empty)
+	                  defaultDetails: Model = Model.empty, printStack: Boolean = false)
 	                 (implicit exc: ExecutionContext, scheduler: Scheduler) =
-		new ConsoleScribe(context, bundleDuration, Some(logDirectory), backupLogger, defaultSeverity, defaultDetails)
+		new ConsoleScribe(context, bundleDuration, Some(logDirectory), backupLogger, defaultSeverity, defaultDetails,
+			printStack)
 }
 
 /**
@@ -84,7 +92,8 @@ object ConsoleScribe
   */
 class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.seconds,
                     logDirectory: Option[Path] = None, backupLogger: Logger = SysErrLogger.includingTime,
-                    severity: Severity = Severity.default, variantDetails: Model = Model.empty)
+                    severity: Severity = Severity.default, variantDetails: Model = Model.empty,
+                    printStack: Boolean = false)
                    (implicit exc: ExecutionContext, scheduler: Scheduler)
 	extends Scribe with ConcreteScribeLike[Scribe]
 {
@@ -130,19 +139,22 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		
 		// Logs to the console
 		writeWith(writers(if (severity >= Warning) Last else First), t, d, context, error, message, occurrenceDetails,
-			severity, variantDetails)
+			severity, variantDetails, isConsole = true)
 		
 		// May also log to a file
 		fileWriter.foreach { lazyWriter =>
-			lazyWriter.value._1 { writer =>
-				writeWith(writer, t, d, context, error, message, occurrenceDetails, severity, variantDetails)
-			}.log(backupLogger)
+			lazyWriter.value._1
+				.apply { writer =>
+					writeWith(writer, t, d, context, error, message, occurrenceDetails, severity, variantDetails,
+						isConsole = false)
+				}
+				.log(backupLogger)
 		}
 	}
 	
 	private def writeWith(out: BufferedPrintWriter, time: LocalDateTime, duration: Duration, context: String,
 	                      error: Option[Throwable], message: String,
-	                      occurrenceDetails: Model, severity: Severity, variantDetails: Model) =
+	                      occurrenceDetails: Model, severity: Severity, variantDetails: Model, isConsole: Boolean) =
 	{
 		val baseHeader = s"$severity @$context${ message.prependIfNotEmpty(": ") }"
 		
@@ -158,7 +170,8 @@ class ConsoleScribe(override val context: String, bundleDuration: Duration = 5.s
 		}
 		
 		// Writes the stack trace, if applicable
-		error.flatMap(RecordableError.apply).foreach { _.logLinesIterator.foreach(out.println) }
+		if (!isConsole || printStack)
+			error.flatMap(RecordableError.apply).foreach { _.logLinesIterator.foreach(out.println) }
 	}
 	
 	

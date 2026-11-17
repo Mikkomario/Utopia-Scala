@@ -101,6 +101,6 @@ class TokenTemplatesNode(requiredScope: ScopeTarget) extends LeafNode[AuthContex
 		TokenDb.createTemplate(template.name, template.scopeGrantType,
 			template.accessibleScopes.map { key => scopeByKey(key.toLowerCase) },
 			template.forwardedScopes.map { key => scopeByKey(key.toLowerCase) }, grantedTemplateIds, template.duration,
-			template.revokesOriginal, template.revokesEarlier)
+			template.canSelfRevoke, template.parentCanRevoke, template.revokesOriginal, template.revokesEarlier)
 	}
 }

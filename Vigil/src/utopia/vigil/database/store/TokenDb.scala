@@ -131,11 +131,13 @@ object TokenDb
 	 * Creates a template for permanent API-keys
 	 * @param scope Granted scope
 	 * @param name Name of this token type (optional)
+	 * @param parentCanRevoke Whether a parent token can revoke this token. Default = false.
 	 * @param connection Implicit DB connection
 	 * @return A new token template
 	 */
-	def createApiKeyTemplate(scope: Seq[ScopeTarget], name: String = "")(implicit connection: Connection) =
-		createTemplate(name, accessibleScopes = scope)
+	def createApiKeyTemplate(scope: Seq[ScopeTarget], name: String = "", parentCanRevoke: Boolean = false)
+	                        (implicit connection: Connection) =
+		createTemplate(name, accessibleScopes = scope, parentCanRevoke = parentCanRevoke)
 	
 	/**
 	 * Creates a new refresh token template
@@ -143,6 +145,8 @@ object TokenDb
 	 * @param sessionDuration Duration of the created session tokens
 	 * @param name Name of this token template (optional)
 	 * @param sessionTokenName Name given to the session token template (optional)
+	 * @param canRevokeSelf Whether this token can revoke itself. Default = false.
+	 * @param parentCanRevoke Whether a parent token can revoke this token. Default = false.
 	 * @param revokesEarlier Whether previously generated session tokens should be revoked when starting a new session.
 	 *                       Uncertain if this should be toggled manually.
 	 *                       Default = true.
@@ -150,11 +154,13 @@ object TokenDb
 	 * @return Created refresh token template + created session token template
 	 */
 	def createRefreshTokenTemplate(scope: Seq[ScopeTarget], sessionDuration: Duration, name: String = "",
-	                               sessionTokenName: String = "", revokesEarlier: UncertainBoolean = CertainlyTrue)
+	                               sessionTokenName: String = "", canRevokeSelf: Boolean = false,
+	                               parentCanRevoke: Boolean = false, revokesEarlier: UncertainBoolean = CertainlyTrue)
 	                              (implicit connection: Connection) =
 	{
 		val session = createSimpleSessionTemplate(sessionDuration, sessionTokenName)
-		val refresh = createRefreshTokenTemplateFor(session.id, scope, name, revokesEarlier)
+		val refresh = createRefreshTokenTemplateFor(session.id, scope, name, canRevokeSelf, parentCanRevoke,
+			revokesEarlier)
 		
 		refresh -> session
 	}
@@ -164,6 +170,8 @@ object TokenDb
 	 * @param scope Scope forwarded by this token.
 	 *              Default = empty (assumes that the session token already specifies scope)
 	 * @param name Name of this token template (optional)
+	 * @param canRevokeSelf Whether this token can revoke itself. Default = false.
+	 * @param parentCanRevoke Whether a parent token can revoke this token. Default = false.
 	 * @param revokesEarlier Whether previously generated session tokens should be revoked when starting a new session.
 	 *                       Uncertain if this should be toggled manually.
 	 *                       Default = true.
@@ -171,10 +179,11 @@ object TokenDb
 	 * @return Created refresh token template
 	 */
 	def createRefreshTokenTemplateFor(sessionTemplateId: Int, scope: Iterable[ScopeTarget] = Empty, name: String = "",
+	                                  canRevokeSelf: Boolean = false, parentCanRevoke: Boolean = false,
 	                                  revokesEarlier: UncertainBoolean = CertainlyTrue)
 	                                 (implicit connection: Connection) =
 		createTemplate(name, forwardedScopes = scope, grantsTokensOfTemplates = Single(sessionTemplateId),
-			revokesEarlier = revokesEarlier)
+			canRevokeSelf = canRevokeSelf, parentCanRevoke = parentCanRevoke, revokesEarlier = revokesEarlier)
 	
 	/**
 	 * Creates a new single-use swap token template
@@ -210,7 +219,7 @@ object TokenDb
 	                          name: String = "")
 	                         (implicit connection: Connection) =
 		createTemplate(name, forwardedScopes = scope, grantsTokensOfTemplates = Single(acquiredTokenTemplateId),
-			duration = duration, revokesOriginal = true)
+			duration = duration, canRevokeSelf = true, parentCanRevoke = true, revokesOriginal = true)
 	
 	/**
 	 * Creates a simple session token with no authentication scope of its own
@@ -220,7 +229,8 @@ object TokenDb
 	 * @return Created session token template
 	 */
 	def createSimpleSessionTemplate(sessionDuration: Duration, name: String = "")(implicit connection: Connection) =
-		createTemplate(name, scopeGrantType = Copy, duration = sessionDuration)
+		createTemplate(name, scopeGrantType = Copy, duration = sessionDuration, canRevokeSelf = true,
+			parentCanRevoke = true)
 	
 	/**
 	 * Creates a new token template
@@ -233,6 +243,8 @@ object TokenDb
 	 *                                I.e. templates of tokens that may be generated using this kind of token.
 	 *                                Default = empty.
 	 * @param duration Duration how long generated tokens should remain usable. Default = infinite.
+	 * @param canRevokeSelf Whether this token can revoke itself. Default = false.
+	 * @param parentCanRevoke Whether a parent token can revoke this token. Default = false.
 	 * @param revokesOriginal Whether this type of token is swapped / revoked, when granting new tokens.
 	 *                        Default = false = These tokens will remain usable afterwards.
 	 * @param revokesEarlier Whether the earlier generated tokens should get revoked when generating new tokens.
@@ -244,12 +256,14 @@ object TokenDb
 	def createTemplate(name: String = "", scopeGrantType: ScopeGrantType = Dictate,
 	                   accessibleScopes: Seq[ScopeTarget] = Empty,
 	                   forwardedScopes: Iterable[ScopeTarget] = Empty, grantsTokensOfTemplates: Iterable[Int] = Empty,
-	                   duration: Duration = Duration.infinite, revokesOriginal: Boolean = false,
+	                   duration: Duration = Duration.infinite, canRevokeSelf: Boolean = false,
+	                   parentCanRevoke: Boolean = false, revokesOriginal: Boolean = false,
 	                   revokesEarlier: UncertainBoolean = CertainlyFalse)
 	                  (implicit connection: Connection) =
 	{
 		// Inserts the template
-		val template = TokenTemplateDbModel.insert(TokenTemplateData(name, scopeGrantType, duration.ifFinite))
+		val template = TokenTemplateDbModel.insert(TokenTemplateData(name, scopeGrantType, duration.ifFinite,
+			canRevokeSelf = canRevokeSelf, parentCanRevoke = parentCanRevoke))
 		
 		// Assigns the scopes
 		val scopeLinks = TokenTemplateScopeDbModel.insert(

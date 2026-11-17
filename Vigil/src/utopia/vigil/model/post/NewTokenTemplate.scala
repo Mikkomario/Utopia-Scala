@@ -48,8 +48,14 @@ object NewTokenTemplate extends FromModelFactory[NewTokenTemplate]
 										}
 									} }
 									.map { grantedTokenTypes =>
+										val (canRevokeSelf, parentCanRevoke) = {
+											if (model("irrevokable").getBoolean)
+												false -> false
+											else
+												model("canRevokeSelf", "can_revoke_self").getBoolean -> true
+										}
 										apply(model("name").getString, grantType, accessibleScopes, forwardedScopes,
-											grantedTokenTypes, duration,
+											grantedTokenTypes, duration, canRevokeSelf, parentCanRevoke,
 											model("swaps", "singleUse", "single_use",
 												"revokesOriginal", "revokes_original").getBoolean,
 											model("revokesEarlier", "revokes_earlier").boolean)
@@ -70,6 +76,8 @@ object NewTokenTemplate extends FromModelFactory[NewTokenTemplate]
  *               - Left: New token templates
  *               - Right: Names of existing token templates
  * @param duration Maximum duration of generated tokens
+ * @param canSelfRevoke Whether this token can revoke itself.
+ * @param parentCanRevoke Whether a parent token can revoke this token.
  * @param revokesOriginal Whether this token is revoked when a new token is constructed using it
  * @param revokesEarlier Whether previously generated tokens are to be revoked
  *                       when a new token is constructed using this kind of token.
@@ -79,7 +87,8 @@ object NewTokenTemplate extends FromModelFactory[NewTokenTemplate]
  */
 case class NewTokenTemplate(name: String, scopeGrantType: ScopeGrantType, accessibleScopes: Seq[String],
                             forwardedScopes: Seq[String], grants: Seq[Either[NewTokenTemplate, String]],
-                            duration: Duration, revokesOriginal: Boolean, revokesEarlier: UncertainBoolean)
+                            duration: Duration, canSelfRevoke: Boolean, parentCanRevoke: Boolean,
+                            revokesOriginal: Boolean, revokesEarlier: UncertainBoolean)
 {
 	/**
 	 * @return Names of these new templates
