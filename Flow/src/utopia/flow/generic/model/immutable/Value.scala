@@ -255,8 +255,7 @@ case class Value(content: Option[Any], dataType: DataType)
 		else {
 			// Converts first to the type that is more close to this value's original data type
 			val targetTypes = Pair(leftType, rightType)
-			val conversions = targetTypes.map { ConversionHandler.conversionRouteBetween(dataType, _)
-				.map { route => route.foldLeft(0) { _ + _.cost } } }
+			val conversions = targetTypes.map(dataType.conversionCostTo)
 			val rightIsFirst = conversions.second.exists { cost => conversions.first.forall { _ > cost } }
 			
 			// If the first conversion fails, attempts with the other data type
@@ -298,11 +297,7 @@ case class Value(content: Option[Any], dataType: DataType)
 		// Case: Conversion required => Attempts conversions in order of least cost
 		else
 			targetTypes.iterator
-				.map { targetType =>
-					val cost = ConversionHandler.conversionRouteBetween(dataType, targetType)
-						.map { route => route.foldLeft(0) { _ + _.cost } }
-					targetType -> cost
-				}
+				.map { targetType => targetType -> dataType.conversionCostTo(targetType) }
 				.toOptimizedSeq.sortBy { _._2 }
 				// Takes the first successful result
 				.findMap { case (targetType, _) => castTo(targetType) }

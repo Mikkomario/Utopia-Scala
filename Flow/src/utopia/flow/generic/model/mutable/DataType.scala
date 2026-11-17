@@ -489,6 +489,14 @@ trait DataType
 	 */
 	def superTypesIterator = OptionsIterator.iterate(superType) { _.superType }
 	
+	/**
+	 * @param targetType Data conversion target type
+	 * @return Conversion cost from this type to the specified target type (in some arbitrary unit).
+	 *         None if no conversion is possible.
+	 */
+	def conversionCostTo(targetType: DataType) =
+		ConversionHandler.conversionRouteBetween(this, targetType).map { route => route.foldLeft(0) { _ + _.cost } }
+	
 	
 	// IMPLEMENTED  ---------------------------
 	

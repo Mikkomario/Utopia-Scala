@@ -7,7 +7,7 @@ import utopia.flow.generic.model.mutable.DataType
 import utopia.flow.generic.model.mutable.DataType._
 import utopia.flow.time.Month.{August, February}
 import utopia.flow.time.TimeExtensions._
-import utopia.flow.time.{Today, Year}
+import utopia.flow.time.{Now, Today, Year}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime}
@@ -154,6 +154,15 @@ object DataTypeTest extends App
 	assert("01.02.2021".getYearMonth == Year(2021)/February)
 	
 	assert(LocalDate.of(2021, 9, 12).getString == "2021-09-12")
+	
+	// Tests instant to double -conversion
+	{
+		val t1 = Now.toInstant
+		val t2 = t1 + 10.seconds
+		
+		assert((t1: Value).getLong == t1.toEpochMilli)
+		assert(t2.getDouble - t1.getDouble ~== 10000.0, s"${ t1.getDouble } vs. ${ t2.getDouble }")
+	}
 	
 	println("Success")
 }

@@ -89,7 +89,7 @@ object ConversionHandler
 	  * @return A route used to cast the value from the origin to target data type. None if no valid route was found.
 	  */
 	def conversionRouteBetween(originType: DataType, targetType: DataType) =
-		optimalRouteTo(originType, targetType).map { route => route.steps.map { _.conversion }.toVector }
+		optimalRouteTo(originType, targetType).map { route => route.steps.map { _.conversion }.toOptimizedSeq }
 	
 	private def _cast(value: Value, targetTypes: IterableOnce[DataType]) = {
 		// Only works if at least a single conversion was found

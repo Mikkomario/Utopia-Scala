@@ -102,6 +102,8 @@
   - Added `.appendIfDistinct(...)` and `.appendAllIfDistinct(...)`
 - **ConsoleExtensions**
   - Added `.resolvePath(...)`, an interactive function for determining the targeted file or directory
+- **DataType**
+  - Added `.conversionCostTo(DataType)`
 - **FromModelFactory**
   - Added `&&(FromModelFactory)`
   - Added `.preparingWith(...)`
