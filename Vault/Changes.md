@@ -11,6 +11,7 @@
 ### Bugfixes
 - Fixed a bug that caused `Select.distinctIf(...)` to behave opposite to what was requested
 - **Store** now ensures that input is distinct
+- Fixed a bug that caused **References** to sometimes fail after being cleared by **ColumnLengthRules**, for example.
 - Added more detailed handling for situations where a table references another table from multiple columns; 
   In these instances, NOT NULL columns are now preferred.
 - Added handling for special (buggy) cases, where **ReplaceHandler** can't access the referenced items

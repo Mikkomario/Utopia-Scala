@@ -27,12 +27,12 @@ object References
 	// ATTRIBUTES    ---------------------
 	
 	/**
-	  * A pointer that contains all initialized references, mapped by database name
+	  * A pointer that contains all initialized references, mapped by **lower case** database name
 	  */
 	private val referencesP = Pointer.eventful(Map[String, Set[Reference]]())
 	/**
 	  * A deep cache with the following keys:
-	  *     1. Database name
+	  *     1. Database name (lower case)
 	  *     1. Table name
 	  *     1. Column (property) name
 	  *
@@ -50,15 +50,13 @@ object References
 					}
 					.toMap
 			
-			// FIXME: Somehow we arrive here sometimes at program startup
-			//  (although we shouldn't have any Table instances before the setup function is called)
 			case None =>
 				throw new EnvironmentNotSetupException(s"References for database '$dbName' haven't been specified")
 		}
 	}
 	/**
 	  * A deep cache with the following keys:
-	  *     1. Database name
+	  *     1. Database name (lower case)
 	  *     1. Table name
 	  *     1. Column (property) name
 	  *
@@ -120,9 +118,6 @@ object References
 	}
 	
 	
-	// COMPUTED --------------------------
-	
-	
 	// IMPLEMENTED  ----------------------
 	
 	override def toString = {
@@ -142,7 +137,7 @@ object References
 	  * @param references a set of references in the database
 	  */
 	def setup(databaseName: String, references: IterableOnce[Reference]) = referencesP.update { current =>
-		current.updatedWith(databaseName) {
+		current.updatedWith(databaseName.toLowerCase) {
 			case Some(existing) => Some(existing ++ references)
 			case None => Some(Set.from(references))
 		}
@@ -161,7 +156,7 @@ object References
 	  * @param table Table from which references are made
 	  * @return All references originating from the specified table
 	  */
-	def from(table: Table) = fromIndex(table.databaseName).get(table.name) match {
+	def from(table: Table) = fromIndex(table.databaseName.toLowerCase).get(table.name) match {
 		case Some(refs) => refs.values
 		case None => Empty
 	}
@@ -170,7 +165,7 @@ object References
 	  * @return Reference made from that column. None if the specified column didn't refer to another column.
 	  */
 	def findFrom(column: TableColumn) =
-		fromIndex(column.table.databaseName).get(column.table.name).flatMap { _.get(column.name) }
+		fromIndex(column.table.databaseName.toLowerCase).get(column.table.name).flatMap { _.get(column.name) }
 	
 	/**
 	  * @param column A column
@@ -199,12 +194,14 @@ object References
 	  * @param column A column
 	  * @return All references that refer to the specified column
 	  */
-	def to(column: TableColumn) = toIndex(column.table.databaseName)(column.table.name)(column.name)
+	def to(column: TableColumn) =
+		toIndex(column.table.databaseName.toLowerCase)(column.table.name)(column.name)
 	/**
 	  * @param table Targeted table
 	 * @return An iterator that yields all references that point to the specified table
 	  */
-	def to(table: Table) = toIndex(table.databaseName)(table.name).valuesIterator.flatten
+	def to(table: Table) =
+		toIndex(table.databaseName.toLowerCase)(table.name).valuesIterator.flatten
 	/**
 	  * @param column A column
 	  * @return Columns that refer to the specified column
@@ -325,7 +322,10 @@ object References
 	  * Clears all cached reference data concerning a single database
 	  * @param databaseName Name of the database whose references should be cleared
 	  */
-	def clear(databaseName: String) = referencesP.update { _ - databaseName }
+	def clear(databaseName: String) = {
+		fromIndex.clear(databaseName.toLowerCase)
+		toIndex.clear(databaseName.toLowerCase)
+	}
 	
 	/**
 	  * Replaces all references to an individual row to point to another row

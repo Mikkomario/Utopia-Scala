@@ -1,5 +1,7 @@
 package utopia.vault.database
 
+import utopia.flow.collection.immutable.Empty
+
 /**
   * Keeps track & setups of all database tables and their references by reading data directly from the database.
   * @author Mikko Hilpinen
@@ -18,7 +20,7 @@ class Tables(connectionPool: ConnectionPool)
 	
 	/**
 	 * @return The method used when converting column names in the database to column attribute names in code (by default converts
-	 *         from underscore style to camel case style, eg. "column_name" to "columnName")
+	 *         from underscore style to camel case style, e.g. "column_name" to "columnName")
 	 */
 	def columnNameConversion = _columnNameConversion
 	/**
@@ -75,11 +77,14 @@ class Tables(connectionPool: ConnectionPool)
 		val tables = connectionPool { implicit connection =>
 			connection.dbName = dbName
 			// First finds out table names using "show tables"
-			val tableNames = connection.executeQuery("show tables").flatMap { _.values.headOption }
+			val tableNames = connection.executeQuery("SHOW TABLES").flatMap { _.values.headOption }
 			// Reads data for each table
 			val tables = tableNames.map { DatabaseTableReader(dbName, _, columnNameConversion) }
 			// Sets up references between the tables
-			DatabaseReferenceReader.setupReferences(tables)
+			if (tables.isEmpty)
+				References.setup(dbName, Empty)
+			else
+				DatabaseReferenceReader.setupReferences(tables)
 			
 			tables.iterator.map { t => t.name.toLowerCase -> t }.toMap
 		}
