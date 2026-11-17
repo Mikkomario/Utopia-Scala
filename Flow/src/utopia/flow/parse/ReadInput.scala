@@ -1,8 +1,10 @@
 package utopia.flow.parse
 
+import utopia.flow.parse.AutoClose._
 import utopia.flow.parse.ReadInput.ReadMappedInput
+import utopia.flow.parse.StreamExtensions._
 
-import java.io.{File, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File, InputStream}
 import java.nio.charset.Charset
 import java.nio.file.Path
 import scala.io.Codec
@@ -134,6 +136,20 @@ trait ReadInput[+A]
 	 * @return Processed result. Failure if file-reading failed.
 	 */
 	def path(path: Path, encoding: Charset): Try[A] = this.file(path.toFile)(Codec(encoding))
+	
+	/**
+	 * Reads content produced by a writing function
+	 * @param f A function that writes content using a [[BufferedPrintWriter]]
+	 * @param codec Character encoding used (implicit)
+	 * @tparam U Arbitrary 'f' result type
+	 * @return Processed result. Failure if writing or reading failed.
+	 */
+	def writer[U](f: BufferedPrintWriter => U)(implicit codec: Codec): Try[A] = new ByteArrayOutputStream()
+		.tryConsume { output =>
+			output.writeUsing(f)
+			new ByteArrayInputStream(output.toByteArray).consume { this.stream(_) }
+		}
+		.flatten
 	
 	/**
 	 * @param f A mapping function to apply to this interface's output

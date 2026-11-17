@@ -91,16 +91,11 @@ object ConversionHandler
 	def conversionRouteBetween(originType: DataType, targetType: DataType) =
 		optimalRouteTo(originType, targetType).map { route => route.steps.map { _.conversion }.toVector }
 	
-	private def _cast(value: Value, targetTypes: IterableOnce[DataType]) =
-	{
-		val routes = targetTypes.iterator.flatMap { optimalRouteTo(value.dataType, _) }.toVector
-		
+	private def _cast(value: Value, targetTypes: IterableOnce[DataType]) = {
 		// Only works if at least a single conversion was found
-		if (routes.isEmpty)
-			None
-		else {
+		targetTypes.iterator.flatMap { optimalRouteTo(value.dataType, _) }.notEmpty.flatMap { routesIter =>
 			// Casts the value using the optimal route / target type
-			val bestRoute = routes.minBy { _.cost }
+			val bestRoute = routesIter.minBy { _.cost }
 			bestRoute(value)
 		}
 	}
@@ -184,7 +179,7 @@ object ConversionHandler
 		
 		// Casts the value through each of the steps
 		@throws(classOf[DataTypeException])
-		def apply(value: Value) = steps.foldLeft(Some(value): Option[Value]) {
+		def apply(value: Value): Option[Value] = steps.foldLeft(Some(value): Option[Value]) {
 			(value, step) => value.flatMap { step(_) }
 		}
 	}

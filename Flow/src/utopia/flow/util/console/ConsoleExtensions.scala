@@ -558,7 +558,7 @@ object ConsoleExtensions
 			val resultsIter = Iterator
 				.continually {
 					readNonEmptyLine("Selected index or item:") match {
-						case None => Empty -> false
+						case None => Empty -> true
 						case Some(target) =>
 							resolveTarget(target, optionsP, moreIndexP, addNew, targetsStr, maxListCount, multiSelect)
 					}
