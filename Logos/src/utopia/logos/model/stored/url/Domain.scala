@@ -108,20 +108,13 @@ object Domain extends StandardStoredFactory[DomainData, Domain]
 		else {
 			val noControl = url.stripControlCharacters.trim.toLowerCase.replace('\\', '/')
 			// Case: Http(s) found or skipped => Valid
-			val modified = {
-				if (skipProtocol || httpRegex.existsIn(noControl))
-					noControl
-				// Case: No http(s) => Adds it
-				else {
-					val httpPart = s"http${ if (preferHttps) "s" else "" }://"
-					s"$httpPart$noControl"
-				}
+			if (skipProtocol || httpRegex.existsIn(noControl))
+				noControl
+			// Case: No http(s) => Adds it
+			else {
+				val httpPart = s"http${ if (preferHttps) "s" else "" }://"
+				s"$httpPart$noControl"
 			}
-			// Removes the trailing forward slash, also
-			if (modified.endsWith("/"))
-				modified.dropRight(1)
-			else
-				modified
 		}
 	}
 }

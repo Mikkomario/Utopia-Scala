@@ -3,6 +3,7 @@
 ## v0.8 (in development)
 ### Breaking changes
 - **DbRequestPath**'s `.storeFrom(...)` now yields **StoreResult** instead of **Either**
+- `Domain.standardize(String)` no longer removes the trailing forward slash
 ### New methods
 - **DomainDb**
   - Added `.store(String)`
