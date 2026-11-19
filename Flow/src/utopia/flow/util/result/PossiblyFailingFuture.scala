@@ -4,7 +4,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.time.Duration
 import TryExtensions._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -39,6 +39,11 @@ trait PossiblyFailingFuture[A, T, +R[+_]] extends Any
 	 * @return The unwrapped result
 	 */
 	protected def unwrap[B](result: MayHaveFailed[B]): R[B]
+	/**
+	 * @param result An acquired result
+	 * @return The specified result in the output type
+	 */
+	protected def toResult(result: T): R[A]
 	
 	/**
 	 * Creates a new failure result
@@ -142,6 +147,24 @@ trait PossiblyFailingFuture[A, T, +R[+_]] extends Any
 		wrapped.flatMap { r => resultToFuture(wrap(r).map(f)) }
 	
 	/**
+	 * Asynchronously Maps the result of this future, whether successful or failed
+	 * @param f A function that receives the result of this future (success or a failure) and yields another future
+	 * @param exc Implicit execution context
+	 * @tparam B The result type of the other future
+	 * @return Result of 'f'
+	 */
+	def flatMapResult[B](f: R[A] => Future[B])(implicit exc: ExecutionContext) = {
+		val resultPromise = Promise[B]()
+		// Waits for this future to complete and passes the result to the specified mapping function
+		wrapped.onComplete {
+			case Success(result) => resultPromise.completeWith(f(toResult(result)))
+			case Failure(error) => resultPromise.completeWith(f(failure(error)))
+		}
+		// Returns the result of the mapping function
+		resultPromise.future
+	}
+	
+	/**
 	 * Maps the result of this future, if successful.
 	 * @param f A mapping function to apply, may yield a failure.
 	 * @param exc Implicit execution context
@@ -239,7 +262,7 @@ trait PossiblyFailingFuture[A, T, +R[+_]] extends Any
 	                            (implicit executionContext: ExecutionContext): Future[R[A]] =
 	{
 		if (maxAttempts <= 0)
-			wrapped.map { r => unwrap(wrap(r)) }
+			wrapped.map(toResult)
 		else
 			_flatMapFailureRepeatedly(wrapped.map(wrap), maxAttempts)(f).map(unwrap)
 	}

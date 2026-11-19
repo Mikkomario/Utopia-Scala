@@ -19,8 +19,7 @@ import utopia.echo.model.response.openai.BufferedOpenAiReply
 import utopia.echo.model.tokenization.{RequestCount, TokenCount}
 import utopia.echo.model.unit.ByteCount
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading, Unknown}
-import utopia.echo.model.vastai.instance.offer.Offer
-import utopia.echo.model.vastai.instance.{NewInstanceFoundation, VastAiInstance}
+import utopia.echo.model.vastai.instance.{BasicInstanceInfo, NewInstanceFoundation, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiServiceState.Hosting
 import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.{NotStarted, Serving, Stopping}
 import utopia.echo.model.vastai.process.{VastAiVllmChatExecutorStatus, VastAiVllmProcessorStatus}
@@ -90,12 +89,19 @@ object VastAiVllmChatExecutor
 		 *                  If multiple models are used, the size of the largest model should be returned.
 		 * @param assumedVram VRAM amount assumed before any instances have been reserved.
 		 *                    Used for calculating the default maximum context size.
-		 * @param chooseImage A function for choosing the image or Vast AI template to use.
-		 *                    Accepts the selected offer and the applied maximum context size, yields:
-		 *                          1. Instance-creation settings
-		 *                          1. Expected initial vLLM service state at the remote instance
-		 *                          1. Name of the model to start vLLM with.
-		 *                             Optional if vLLM is started automatically by the image / template.
+		 * @param chooseSetup A function for choosing the image or Vast AI template to use
+		 *                    and for specifying vLLM-related settings.
+		 *
+		 *                    Accepts three values:
+		 *                    1. Selected offer or the reused Vast AI instance
+		 *                    1. Applied maximum context size
+		 *                    1. Whether an instance was reused
+		 *
+		 *                    Yields three values:
+		 *                    1. Instance-creation settings. These are ignored in instance reuse.
+		 *                    1. Expected initial vLLM service state at the remote instance
+		 *                    1. Name of the model to start vLLM with.
+		 *                       Optional if vLLM is started automatically by the image / template.
 		 * @param exc Implicit execution context
 		 * @param scheduler Implicit Scheduler
 		 * @param vastAiClient Implicit Vast AI -interfacing client
@@ -103,10 +109,10 @@ object VastAiVllmChatExecutor
 		 * @return A new chat-executor
 		 */
 		def apply(selectOffer: SelectOffer, modelSize: LlmVramUse, assumedVram: ByteCount)
-		         (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
+		         (chooseSetup: (BasicInstanceInfo, TokenCount, Boolean) => (NewInstanceFoundation, ServiceState, String))
 		         (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
 		          log: Logger) =
-			new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram)(chooseImage)
+			new VastAiVllmChatExecutor(selectOffer, modelSize, assumedVram, executorSettings)(chooseSetup)
 	}
 }
 
@@ -118,12 +124,19 @@ object VastAiVllmChatExecutor
  * @param assumedVram VRAM amount assumed before any instances have been reserved.
  *                    Used for calculating the default maximum context size.
  * @param settings Applied settings. Default = use default settings.
- * @param chooseImage A function for choosing the image or Vast AI template to use.
- *                    Accepts the selected offer and the applied maximum context size, yields:
- *                          1. Instance-creation settings
- *                          1. Expected initial vLLM service state at the remote instance
- *                          1. Name of the model to start vLLM with.
- *                             Optional if vLLM is started automatically by the image / template.
+ * @param chooseSetup A function for choosing the image or Vast AI template to use
+ *                    and for specifying vLLM-related settings.
+ *
+ *                    Accepts three values:
+ *                    1. Selected offer or the reused Vast AI instance
+ *                    1. Applied maximum context size
+ *                    1. Whether an instance was reused
+ *
+ *                    Yields three values:
+ *                    1. Instance-creation settings. These are ignored in instance reuse.
+ *                    1. Expected initial vLLM service state at the remote instance
+ *                    1. Name of the model to start vLLM with.
+ *                       Optional if vLLM is started automatically by the image / template.
  * @param exc Implicit execution context
  * @param vastAiClient Implicit Vast AI -interfacing client
  * @param log Implicit logging implementation
@@ -132,7 +145,7 @@ object VastAiVllmChatExecutor
  */
 class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: LlmVramUse, assumedVram: ByteCount,
                              settings: VastAiVllmChatExecutorSettings = VastAiVllmChatExecutorSettings.default)
-                            (chooseImage: (Offer, TokenCount) => (NewInstanceFoundation, ServiceState, String))
+                            (chooseSetup: (BasicInstanceInfo, TokenCount, Boolean) => (NewInstanceFoundation, ServiceState, String))
                             (implicit exc: ExecutionContext, scheduler: Scheduler, vastAiClient: VastAiApiClient,
                              log: Logger)
 	extends BufferingChatRequestExecutor[BufferedOpenAiReply] with Breakable
@@ -879,11 +892,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		debugLog("Starting a new instance")
 		// Creates and starts the process of setting up vLLM on Vast AI
 		val process = VastAiVllmProcess.withSettings(vllmSettings).apply(selectOffer, modelVramRequirements.modelSize) {
-			// Choose image
-			offer =>
-				// Delegates image-choosing to the custom 'chooseImage' function
-				val maxContextSize = contextSizeOn(offer.gpu.ram)
-				val (image, initialVllmState, model) = chooseImage(offer, maxContextSize)
+			// Choose setup
+			(instanceInfo, reusing) =>
+				// Delegates image-choosing to the custom 'chooseSetup' function
+				val maxContextSize = contextSizeOn(instanceInfo.gpu.ram)
+				val (image, initialVllmState, model) = chooseSetup(instanceInfo, maxContextSize, reusing)
 				(image, initialVllmState, maxContextSize, model)
 		}
 		processorsP :+= new Processor(process)

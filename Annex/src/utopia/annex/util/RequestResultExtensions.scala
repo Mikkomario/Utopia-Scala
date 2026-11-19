@@ -37,6 +37,7 @@ object RequestResultExtensions
 		
 		override protected def wrap(result: RequestResult[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): RequestResult[B] = RequestResult.from(result)
+		override protected def toResult(result: RequestResult[A]): RequestResult[A] = result
 		
 		override protected def failure[B](cause: Throwable): RequestResult[B] = RequestSendingFailed(cause)
 		override protected def flatten(result: Try[RequestResult[A]]): RequestResult[A] = result.getOrMap(failure)

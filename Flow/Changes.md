@@ -43,6 +43,8 @@
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
 - **AssignableOnce** now requires the implementation of `setFlag: Flag`
+- **PossiblyFailingFuture** now requires the implementation of `toResult(...)`
+  - This function is usually trivially easy to implement
 - **NumericSpan**'s `.length` can no longer yield negative values
 - **PossiblyFailingFuture**'s generic type parameter **R**'s generic type must now be covariant
 ### Bugfixes
@@ -82,6 +84,9 @@
   which are more rich and more general interfaces for the existing **OpenSource** and **FromSource**
   - Also added **OpenInputWrapper**
 - Added NDJSON parsing support to **JsonParser**
+- Added **ShiftingBuffer** collection that buffers up to n elements, dropping oldest elements afterwards
+- Added **BufferingProcessLogger** and **BufferingProcessErrorLoggerr** for capturing stdout and stderr of 
+  started system processes.
 - Added `+`, `-` and negation support to **Value**
   - Additional support may be added by registering new implementations to **ValueOperator**
 - Parallel mapping now supports custom builders
@@ -155,6 +160,11 @@
   - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` for **Seq**-based **Pointer**s
 - **PossiblyFailingFuture**
   - Added `.mapFailure(...)`, `.flatMapFailure(...)`, `.flatMapFailureRepeatedly(...)` and `.recoverFromFailureWith(...)`
+- **scala.sys.process.Process** (via **AsyncExtensions**)
+  - Added two new `.asyncWith(...)` functions that allow capturing of stdout and stderr
+- **scala.sys.process.ProcessBuilder** (via **AsyncExtensions**)
+  - Added two new `.runAsync(...)` that automatically constructs an **AsyncSystemProcess** 
+    and allows capturing of stdout and stderr
 - **QueuedAction** (object)
   - Added `.started(Future)`
 - **Regex**
@@ -182,6 +192,12 @@
   - Added a new `.castTo(Iterable)` variant
 ### Other changes
 - Built with Scala v2.13.18
+- Added `failFast: Boolean = false` parameter to **Future**'s `.raceWith(Future)` function, 
+  allowing for early termination in case of failures
+- Multiple changes to **AsyncSystemProcess**:
+  - The constructor now accepts two new optional call-by-name parameters: `readOut` and `readErr`
+  - .future now returns `readOut` content on success and includes `readErr` content on failure
+  - Also added `.output` and `.err` functions for accessing the captured stdout and stderr values at any time
 - **KeptOpenWriter** now accepts 2 new constructor parameters:
   1. `rethrows: Boolean` - Whether to rethrow original errors (default = false)
   2. `logFailures: Boolean` - Whether to automatically log all yielded failures (default = false)

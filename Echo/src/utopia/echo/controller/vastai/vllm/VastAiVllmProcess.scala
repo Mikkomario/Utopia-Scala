@@ -8,13 +8,14 @@ import utopia.echo.model.request.openai.ListOpenAiModels
 import utopia.echo.model.response.openai.OpenAiModelInfo
 import utopia.echo.model.tokenization.TokenCount
 import utopia.echo.model.unit.ByteCount
-import utopia.echo.model.vastai.instance.NewInstanceFoundation
+import utopia.echo.model.vastai.instance.{BasicInstanceInfo, NewInstanceFoundation, VastAiInstance}
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.echo.model.vastai.settings.VastAiVllmSettings
 import utopia.echo.model.vastai.settings.VastAiVllmSettings.VastAiVllmSettingsWrapper
 import utopia.flow.async.context.Scheduler
 import utopia.flow.async.process.LoopingProcess
 import utopia.flow.collection.CollectionExtensions._
+import utopia.flow.collection.immutable.Pair
 import utopia.flow.time.Now
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.StringExtensions._
@@ -59,13 +60,19 @@ object VastAiVllmProcess
 		 * @param selectOffer Logic for selecting a Vast AI instance offer
 		 * @param modelSize Size of the used model. Used for calculating the reserved disk space.
 		 *                  If various model sizes are used, specify the largest.
-		 * @param chooseImage A function for choosing the image or Vast AI template to use.
-		 *                    Accepts the selected offer, yields:
-		 *                          1. Instance-creation settings
-		 *                          1. Expected initial vLLM service state at the remote instance
-		 *                          1. Maximum context size applied or applicable
-		 *                          1. Name of the model to start vLLM with.
-		 *                             Optional if vLLM is started automatically by the image / template.
+		 * @param chooseSetup A function for choosing the image or Vast AI template to use
+		 *                    and for determining the starting state.
+		 *
+		 *                    Receives two values:
+		 *                    1. The accepted offer or the reused instance
+		 *                    1. Whether an instance was reused (boolean)
+		 *
+		 *                    Yields four values:
+		 *                    1. Instance-creation settings. These are ignored when reusing instances.
+		 *                    1. Expected initial vLLM service state at the remote instance
+		 *                    1. Maximum context size applied or applicable
+		 *                    1. Name of the model to start vLLM with.
+		 *                       Optional if vLLM is started automatically by the image / template.
 		 * @param exc Implicit execution context to use
 		 * @param scheduler Implicit scheduler used
 		 * @param log Implicit logging interface used
@@ -73,9 +80,9 @@ object VastAiVllmProcess
 		 * @return A new Vast AI + vLLM process (not started)
 		 */
 		def apply(selectOffer: SelectOffer, modelSize: ByteCount)
-		         (chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
+		         (chooseSetup: (BasicInstanceInfo, Boolean) => (NewInstanceFoundation, ServiceState, TokenCount, String))
 		         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger, vastAiClient: VastAiApiClient) =
-			new VastAiVllmProcess(selectOffer, modelSize, vllmSettings)(chooseImage)
+			new VastAiVllmProcess(selectOffer, modelSize, vllmSettings)(chooseSetup)
 	}
 }
 
@@ -85,19 +92,26 @@ object VastAiVllmProcess
  * @param modelSize Size of the used model. Used for calculating the reserved disk space.
  *                  If various model sizes are used, specify the largest.
  * @param settings Settings to apply. Default = use default settings.
- * @param _chooseImage A function for choosing the image or Vast AI template to use.
- *                    Accepts the selected offer, yields:
- *                          1. Instance-creation settings
- *                          1. Expected initial vLLM service state at the remote instance
- *                          1. Maximum context size applied or applicable
- *                          1. Name of the model to start vLLM with.
- *                             Optional if vLLM is started automatically by the image / template.
+ * @param chooseSetup A function for choosing the image or Vast AI template to use
+ *                    and for determining the starting state.
+ *
+ *                    Receives two values:
+ *                    1. The accepted offer or the reused instance
+ *                    1. Whether an instance was reused (boolean)
+ *
+ *                    Yields four values:
+ *                    1. Instance-creation settings. These are ignored when reusing instances.
+ *                    1. Expected initial vLLM service state at the remote instance
+ *                    1. Maximum context size applied or applicable
+ *                    1. Name of the model to start vLLM with.
+ *                       Optional if vLLM is started automatically by the image / template.
+ *
  * @author Mikko Hilpinen
  * @since 26.02.2026, v1.5
  */
 class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount,
                         settings: VastAiVllmSettings = VastAiVllmSettings.default)
-                       (_chooseImage: Offer => (NewInstanceFoundation, ServiceState, TokenCount, String))
+                       (chooseSetup: (BasicInstanceInfo, Boolean) => (NewInstanceFoundation, ServiceState, TokenCount, String))
                        (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger,
                         vastAiClient: VastAiApiClient)
 	extends VastAiServiceProcess[LlmServiceClient, (LockingRequestQueue, OpenAiModelInfo, TokenCount), OpenAiModelInfo](
@@ -105,18 +119,12 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount,
 {
 	// ATTRIBUTES   ------------------------
 	
-	// Only requests the port once it is actually needed
-	private lazy val (localPort, remotePort) = settings.serviceSettings.forwardedPorts match {
-		case Some(ports) => ports.value.toTuple
-		case None => (8000, 8000)
-	}
-	
 	/**
-	 * Name of the model to serve. Specified when creating the instance.
+	 * Name of the model to serve. Specified when creating or reusing an instance.
 	 */
 	private var modelToServe: String = ""
 	/**
-	 * Applied maximum context size. Specified when creating the instance.
+	 * Applied maximum context size. Specified when creating or reusing an instance.
 	 */
 	private var _maxContextSize: TokenCount = TokenCount.zero
 	
@@ -133,14 +141,21 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount,
 	// IMPLEMENTED  ----------------------
 	
 	override protected def chooseImage(acceptedOffer: Offer): (NewInstanceFoundation, ServiceState) = {
-		val (base, vllmDefaultState, contextSize, model) = _chooseImage(acceptedOffer)
+		val (base, vllmDefaultState, contextSize, model) = chooseSetup(acceptedOffer, false)
 		modelToServe = model
 		_maxContextSize = contextSize
 		
 		base -> vllmDefaultState
 	}
+	override protected def onInstanceReuse(instance: VastAiInstance): ServiceState = {
+		val (_, vllmDefaultState, contextSize, model) = chooseSetup(instance, true)
+		modelToServe = model
+		_maxContextSize = contextSize
+		vllmDefaultState
+	}
 	
 	override protected def initializeService(ssh: SshExecutor): (LlmServiceClient, String) = {
+		val (localPort, remotePort) = forwardedPorts.getOrElse(Pair.twice(8000)).toTuple
 		val internalClient = new LlmServiceClient(settings.gateway, s"http://127.0.0.1:$localPort/v1",
 			maxParallelRequests = settings.maxParallelRequests)
 		
@@ -169,21 +184,26 @@ class VastAiVllmProcess(selectOffer: SelectOffer, modelSize: ByteCount,
 	
 	override protected def attemptServiceConnection(service: LlmServiceClient,
 	                                                deprecationView: View[Boolean]): Future[Either[Boolean, OpenAiModelInfo]] =
-		service.push(ListOpenAiModels.withDeprecationView(deprecationView)).map { result =>
-			result.success.flatMap { _.headOption } match {
-				// Case: Models are available => Finishes successfully
-				case Some(model) => Right(model)
+	{
+		// Also fails the request if it takes too long
+		val requestDeprecates = Now + 90.seconds
+		service.push(ListOpenAiModels.withDeprecationView(View { deprecationView.value || Now >= requestDeprecates }))
+			.map { result =>
+				result.success.flatMap { _.headOption } match {
+					// Case: Models are available => Finishes successfully
+					case Some(model) => Right(model)
 					
-				// Case: No models are available yet => Signals to continue attempts
-				case None =>
-					if (result.isSuccess)
-						debugLog("No models are available yet")
-					else
-						result.failure.foreach { log(_, "GET /models failed") }
-						
-					Left(true)
+					// Case: No models are available yet => Signals to continue attempts
+					case None =>
+						if (result.isSuccess)
+							debugLog("No models are available yet")
+						else
+							result.failure.foreach { log(_, "GET /models failed") }
+							
+						Left(true)
+				}
 			}
-		}
+	}
 	
 	override protected def initializeClient(service: LlmServiceClient, setupResult: OpenAiModelInfo,
 	                                        stopFlag: Flag): (LockingRequestQueue, OpenAiModelInfo, TokenCount) =

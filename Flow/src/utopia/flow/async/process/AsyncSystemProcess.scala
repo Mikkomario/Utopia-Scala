@@ -3,25 +3,33 @@ package utopia.flow.async.process
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.Process
 import scala.util.{Failure, Success}
+import utopia.flow.util.StringExtensions._
 
 /**
- * Wraps a scala.sys.process.Process, offering a few utility functions
+ * Wraps a [[scala.sys.process.Process]], offering a few utility functions
+ * @param process The process to wrap
+ * @param readOut The captured stdout & stderr content (call-by-name). Default = empty.
+ * @param readErr The captured stderr content (call-by-name). Default = empty.
  * @author Mikko Hilpinen
  * @since 02.03.2026, v2.8
  */
-class AsyncSystemProcess(process: Process)(implicit exc: ExecutionContext) extends Breakable
+class AsyncSystemProcess(process: Process, readOut: => String = "", readErr: => String = "")
+                        (implicit exc: ExecutionContext)
+	extends Breakable
 {
 	// ATTRIBUTES   -------------------------
 	
 	/**
-	 * A future that resolves once this process completes
+	 * A future that resolves once this process completes.
+	 * Includes the captured output, if applicable.
 	 */
 	val future = Future {
 		val exitCode = process.exitValue()
 		if (exitCode == 0)
-			Success(())
+			Success(output)
 		else
-			Failure(new IllegalStateException(s"Process exited with code $exitCode"))
+			Failure(new IllegalStateException(s"Process exited with code $exitCode${
+				err.prependIfNotEmpty("\nErr: ") }"))
 	}
 	
 	
@@ -35,6 +43,15 @@ class AsyncSystemProcess(process: Process)(implicit exc: ExecutionContext) exten
 	 * @return Whether this process is yet to complete
 	 */
 	def isPending = !isCompleted
+	
+	/**
+	 * @return The (stdout + stderr) output of the wrapped process, if captured
+	 */
+	def output = readOut
+	/**
+	 * @return The stderr output of the wrapped process, if captured
+	 */
+	def err = readErr
 	
 	
 	// IMPLEMENTED  -------------------------

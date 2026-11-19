@@ -20,8 +20,7 @@ case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	private val address = s"root@${ config.host }"
 	
 	private val prefixArgs = s"-i $privateKeyPath -p ${ config.port }"
-	private val suffixArgs =
-		s"-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+	private val suffixArgs = "-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 	
 	private val sshBase = s"ssh $prefixArgs $address $suffixArgs"
 	
@@ -62,8 +61,5 @@ case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	def portForwarding(localPort: Int, remotePort: Int, remoteHost: String = "127.0.0.1") =
 		_apply(s"ssh -N $prefixArgs -L $localPort:$remoteHost:$remotePort $address $suffixArgs -o ServerAliveInterval=60 -o ServerAliveCountMax=5")
 		
-	private def _apply(command: String) = {
-		println(command)
-		Process(command)
-	}
+	private def _apply(command: String) = Process(command)
 }

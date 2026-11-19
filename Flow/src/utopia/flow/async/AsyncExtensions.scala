@@ -5,7 +5,7 @@ import utopia.flow.collection.immutable.{OptimizedIndexedSeq, Single}
 import utopia.flow.collection.mutable.builder.TryCatchBuilder
 import utopia.flow.operator.MaybeEmpty
 import utopia.flow.time.Duration
-import utopia.flow.util.logging.SysErrLogger
+import utopia.flow.util.logging.{BufferingProcessErrorLogger, BufferingProcessLogger, SysErrLogger}
 import utopia.flow.util.result.MayHaveFailed.AlwaysSuccess
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.result.{MayHaveFailed, PossiblyFailingFuture, PossiblyFailingFutures, TryCatch}
@@ -50,6 +50,7 @@ object AsyncExtensions
 		
 		override protected def wrap(result: A): MayHaveFailed[A] = AlwaysSuccess(result)
 		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
+		override protected def toResult(result: A): Try[A] = Success(result)
 		
 		override protected def failure[B](cause: Throwable): Try[B] = Failure(cause)
 		
@@ -225,42 +226,73 @@ object AsyncExtensions
 		/**
 		 * Makes this future "race" with another future so that only the earliest result is returned
 		 * @param other Another future
+		 * @param failFast Whether to yield a failed future immediately one either of these futures fails.
+		 *                 Default = false = on failure, the other result is waited for first.
 		 * @param exc Execution context (implicit)
 		 * @tparam B Type of return value
 		 * @return A future for the first completion of these two futures.
-		  *         The resulting future will fail if both of these futures fail.
+		 *
+		 *         If 'failFast' was set to true, the resulting future will fail when either of these futures fails.
+		 *         If 'failFast' was set to false, the resulting future will fail if both of these futures fail.
 		 */
-		def raceWith[B >: A](other: => Future[B])(implicit exc: ExecutionContext): Future[B] = {
+		def raceWith[B >: A](other: => Future[B], failFast: Boolean = false)
+		                    (implicit exc: ExecutionContext): Future[B] =
+		{
 			// Case: This already completed => Returns this
 			if (wrapped.hasSucceeded)
 				wrapped
 			else {
 				val _other = other
-				// Case: Other already completed => Returns the other
+				// Case: Other already succeeded => Returns the other
 				if (_other.hasSucceeded)
 					_other
-				// Case: Neither completed => Waits
+				// Case: Accepts early failures & this already failed => Yields this
+				else if (failFast && wrapped.isCompleted)
+					wrapped
+				// Case: Accepts early failures & other already failed => Yields other
+				else if (failFast && other.isCompleted)
+					other
+				// Case: Neither successfully completed => Waits
 				else
-					_mergeWith(_other) { (a, b) =>
-						a match {
+					_mergeWith(_other) { (currentResultA, currentResultB) =>
+						currentResultA match {
 							case Some(resultA) =>
 								resultA match {
 									// Case: This succeeded => Returns this
 									case Success(a) => Some(a)
+									// Case: This failed
 									case Failure(error) =>
-										b.map {
-											// Case: This failed but other succeeded => Returns other
-											case Success(b) => b
-											// Case: Both failed => Throws
-											case Failure(_) => throw error
+										currentResultB match {
+											// Case: The other future didn't resolve yet
+											//       => If fails fast, fails;
+											//          Otherwise waits for the other future to resolve.
+											case None =>
+												if (failFast)
+													throw error
+												else
+													None
+													
+											// Case: Other future also resolved
+											//       => If successfully, returns the successful result; Otherwise fails.
+											case Some(resultB) =>
+												resultB match {
+													case Success(b) => Some(b)
+													case _ => throw error
+												}
 										}
 								}
+							// Case: This future is still pending
+							//       => Checks whether a result may be acquired based on the other future
 							case None =>
-								b match {
+								currentResultB.flatMap {
 									// Case: Other succeeded => Returns other
-									case Some(Success(b)) => Some(b)
-									// Case: Neither completed yet
-									case _ => None
+									case Success(b) => Some(b)
+									// Case: Other failed => Fails immediately or waits for the other result
+									case Failure(error) =>
+										if (failFast)
+											throw error
+										else
+											None
 								}
 						}
 					}
@@ -281,8 +313,22 @@ object AsyncExtensions
 				wrapped.zipWith(another) { (result, _) => result }
 		}
 		
-		// Assumes that neither of these futures has completed yet (handle those cases separately)
-		// tryJoin should throw if the resulting future should fail
+		/**
+		 * Merges this future with another.
+		 * The current values of both futures should be evaluated for immediate resolution before calling this function
+		 * (in order to avoid unnecessary resource use).
+		 * @param other Another future
+		 * @param tryJoin A function that receives the current result of both of these futures.
+		 *                Returns None if we should wait for another result.
+		 *                Returns Some if we should resolve successfully.
+		 *                Throws if we should fail the resulting future.
+		 *
+		 *                Should NEVER return None in situations where both results are available.
+		 * @param exc Implicit execution context
+		 * @tparam B Type of the results of the other future
+		 * @tparam R Type of the join results on success
+		 * @return A future that resolves once 'tryJoin' returns Some or throws.
+		 */
 		private def _mergeWith[B, R](other: Future[B])(tryJoin: (Option[Try[A]], Option[Try[B]]) => Option[R])
 		                            (implicit exc: ExecutionContext) =
 		{
@@ -296,7 +342,7 @@ object AsyncExtensions
 				resultsPointer.update { case (otherResult, _) => otherResult -> Some(result2) }
 			}
 			
-			// Completes the future once either future successfully completes, or once both have failed
+			// Finds the first accepted pointer value
 			resultsPointer.findMapFuture { case (left, right) => tryJoin(left, right) }
 		}
 	}
@@ -342,6 +388,7 @@ object AsyncExtensions
 		
 		override protected def wrap(result: Try[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): Try[B] = result.toTry
+		override protected def toResult(result: Try[A]): Try[A] = result
 		
 		override protected def failure[B](cause: Throwable): Try[B] = Failure(cause)
 		override protected def flatten(result: Try[Try[A]]): Try[A] = result.flatten
@@ -454,6 +501,7 @@ object AsyncExtensions
 		
 		override protected def wrap(result: TryCatch[A]): MayHaveFailed[A] = result
 		override protected def unwrap[B](result: MayHaveFailed[B]): TryCatch[B] = result.toTryCatch
+		override protected def toResult(result: TryCatch[A]): TryCatch[A] = result
 		
 		override protected def failure[B](cause: Throwable): TryCatch[B] = TryCatch.Failure(cause)
 		
@@ -642,6 +690,34 @@ object AsyncExtensions
 		}
 	}
 	
+	implicit class RichProcessBuilder(val p: scala.sys.process.ProcessBuilder) extends AnyVal
+	{
+		/**
+		 * Runs a process, potentially capturing stderr and stdout content
+		 * @param captureStdErrLines Number of stderr lines to capture (only the last n lines will be kept).
+		 *                           Default = 24.
+		 *                           Stderr content will be included with a process failure message on termination.
+		 * @param captureStdOutLines Number of stdout (+ stderr) lines to capture (only the last n lines will be kept).
+		 *                           Default = 0.
+		 * @param exc Implicit execution context
+		 * @return An interface for managing the process asynchronously
+		 */
+		def runAsync(captureStdErrLines: Int = 24, captureStdOutLines: Int = 0)(implicit exc: ExecutionContext) = {
+			if (captureStdOutLines <= 0) {
+				if (captureStdErrLines <= 0)
+					p.run().async
+				else {
+					val logger = new BufferingProcessErrorLogger(captureStdErrLines)
+					p.run(logger).asyncWith(logger)
+				}
+			}
+			else {
+				val logger = new BufferingProcessLogger(captureStdOutLines max captureStdErrLines)
+				p.run(logger).asyncWith(logger)
+			}
+		}
+	}
+	
 	implicit class RichProcess(val p: scala.sys.process.Process) extends AnyVal
 	{
 		/**
@@ -649,5 +725,20 @@ object AsyncExtensions
 		 * @return An interface for managing this process asynchronously
 		 */
 		def async(implicit exc: ExecutionContext) = new AsyncSystemProcess(p)
+		
+		/**
+		 * @param logger A logger used for capturing the stderr output
+		 * @param exc Implicit execution context
+		 * @return An interface for managing this process asynchronously. Includes the captured stderr.
+		 */
+		def asyncWith(logger: BufferingProcessErrorLogger)(implicit exc: ExecutionContext) =
+			new AsyncSystemProcess(p, readOut = logger.toString, readErr = logger.toString)
+		/**
+		 * @param logger A logger used for capturing the stdout and stderr output
+		 * @param exc Implicit execution context
+		 * @return An interface for managing this process asynchronously. Includes the captured output.
+		 */
+		def asyncWith(logger: BufferingProcessLogger)(implicit exc: ExecutionContext) =
+			new AsyncSystemProcess(p, readOut = logger.toString, readErr = logger.errorIterator.mkString("\n"))
 	}
 }

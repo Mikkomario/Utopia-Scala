@@ -35,6 +35,7 @@ import utopia.flow.util.logging.Logger
 import utopia.flow.util.result.TryExtensions._
 import utopia.flow.util.{Env, NotEmpty}
 import utopia.flow.view.immutable.View
+import utopia.flow.view.immutable.caching.Lazy
 import utopia.flow.view.mutable.Settable
 import utopia.flow.view.mutable.async.{Volatile, VolatileFlag}
 import utopia.flow.view.mutable.eventful.{AssignableOnce, MayBeAssignedOnce, SettableFlag}
@@ -106,6 +107,13 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	val offerPointer = offerP.readOnly
 	
 	/**
+	 * A lazily initialized view that contains the forwarded ports (local, then remote).
+	 * None if no port forwarding is applied.
+	 */
+	// Makes sure the forwarded ports don't change after retrieved
+	private val forwardedPortsView = settings.forwardedPorts.map { portsView => Lazy { portsView.value } }
+	
+	/**
 	 * A pointer that will store an interface to the hosted service, if one is successfully created.
 	 */
 	private val clientP = AssignableOnce[Try[Client]]()
@@ -161,7 +169,11 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 									None
 								// Case: Unused instances exist => Checks whether any are accepted
 								else
-									settings.instanceReuseLogic.findReusableFrom(unused).map { _.id }
+									settings.instanceReuseLogic.findReusableFrom(unused).map { instance =>
+										// Initializes the assumed service state
+										assumedServiceState = onInstanceReuse(instance)
+										instance.id
+									}
 							}
 						// Case: Failed to check for reusable instances => Logs and skips reuse
 						case failure: RequestFailure =>
@@ -256,6 +268,12 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	 *         1. Expected initial service state at the remote instance
 	 */
 	protected def chooseImage(acceptedOffer: Offer): (NewInstanceFoundation, ServiceState)
+	/**
+	 * Called instead of [[chooseImage]] when an existing Vast AI instance is being reused.
+	 * @param instance The reused Vast AI instance
+	 * @return Service state to assume
+	 */
+	protected def onInstanceReuse(instance: VastAiInstance): ServiceState
 	
 	/**
 	 * Initializes the internal service instance.
@@ -416,6 +434,11 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	 */
 	protected def serviceAutoRuns = assumedServiceState.hasStarted
 	
+	/**
+	 * @return The forwarded ports (local, then remote). None if no port forwarding is applied.
+	 */
+	protected def forwardedPorts = forwardedPortsView.map { _.value }
+	
 	
 	// IMPLEMENTED  ----------------------
 	
@@ -428,11 +451,11 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			val stopFuture = this.stopFuture.map { _ => false }
 			val timeoutOrStopFuture = {
 				if (settings.setupTimeout.isFinite)
-					stopFuture.raceWith(Delay(settings.setupTimeout)(false))
+					stopFuture.raceWith(Delay(settings.setupTimeout)(false), failFast = true)
 				else
 					stopFuture
 			}
-			val instanceLoadedFuture = vastAiProcess.liveInstanceFuture.flatMap {
+			val instanceLoadedFuture = vastAiProcess.liveInstanceFuture.flatMapResult {
 				// Case: Instance-acquisition succeeded => Checks when it's fully loaded
 				case Success(instance) =>
 					debugLog(s"Instance ${ instance.id } acquired")
@@ -468,7 +491,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			}
 			
 			// Case: Instance successfully loaded => Starts hosting the service, if possible (blocks extensively)
-			if (instanceLoadedFuture.raceWith(timeoutOrStopFuture).waitFor()
+			if (instanceLoadedFuture.raceWith(timeoutOrStopFuture, failFast = true).waitFor()
 				.logWithMessage("Failure while waiting for instance to load, timeout or stop").getOrElse(false))
 				vastAiProcess.instancePointerFuture.waitForResult()
 					.flatMap { instancePointer =>
@@ -656,8 +679,12 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 						}
 					}
 					
-					// Starts monitoring request timeouts in order to automatically shut down this service, if necessary
+					// Prepares a flag that may be used to mark the request as timed out from inside
+					// monitorRequestTimeouts
 					val exposedTimeoutFlag = SettableFlag()
+					exposedTimeoutFlag.onceSet { requestTimedOutStateP.trySet(instancePointer.value.status) }
+					
+					// Starts monitoring request timeouts in order to automatically shut down this service, if necessary
 					monitorRequestTimeouts(client, service, exposedTimeoutFlag,
 						continueView = View { requestTimedOutStateP.unlocked && !shouldHurry })
 					
@@ -698,7 +725,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 		val (serviceProcess, portForwardingProcess) = startServiceAndPortForwarding(ssh, startupCommand)
 		val processes = Pair(serviceProcess, portForwardingProcess).flatten
 		val hostingEndFuture = NotEmpty(processes) match {
-			case Some(processes) => processes.map { _.future }.reduce { _ raceWith _ }
+			case Some(processes) => processes.map { _.future.unwrapped }.reduce { _.raceWith(_, failFast = true) }
 			case None => stopFuture
 		}
 		
@@ -723,20 +750,28 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 		// After a short delay, starts checking whether the service becomes usable
 		val resultFuture = Delay
 			.future(10.seconds) {
-				serviceReadyFuture(service, setupTimeoutFuture = setupTimeoutOrStopFuture.raceWith(hostingEndFuture))
+				debugLog(s"${ instancePointer.value.id }: Starts monitoring when the service becomes available")
+				serviceReadyFuture(service,
+					terminateAttemptsFuture = setupTimeoutOrStopFuture.raceWith(hostingEndFuture, failFast = true))
 			}
-			.flatMap {
+			.flatMapResult {
 				// Case: The service is usable => Remembers it (if not already known) and waits for the hosting to end
 				case Success(connectResult) =>
 					debugLog(s"${ instancePointer.value.id }: Hosting the service")
 					resultPromise.trySuccess(Success(connectResult))
-					hostingEndFuture.flatMap { _ =>
+					hostingEndFuture.flatMapResult { hostingResult =>
 						// Case: Hosting ended because this process was requested to stop => Completes
 						if (processes.isEmpty || shouldHurry)
 							TryFuture.successCompletion
 						// Case: Hosting failed because of some other reason (network issues, crash, or instance failure)
 						//       => Reattempts hosting after a short delay (with limited recovery timeout)
 						else {
+							// Logs the encountered error, if applicable
+							hostingResult.failure.foreach { error =>
+								log(error, "Hosting attempt failed => Retries")
+								debugLog(s"${ instancePointer.value.id }: Hosting attempt failed: ${ error.getMessage }")
+							}
+							
 							// Makes sure the existing processes are killed before attempting restart
 							debugLog(s"${ instancePointer.value.id }: Stopping the service")
 							stopHosting()
@@ -747,7 +782,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 								tryHost(ssh, service, startupCommand, exposedClientView, resultPromise,
 									shutdownProgressPromise, instancePointer,
 									setupTimeoutOrStopFuture = Delay(settings.recoveryTimeout) { () }
-										.raceWith(stopFuture))
+										.raceWith(stopFuture, failFast = true))
 							}
 						}
 					}
@@ -769,19 +804,18 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	 *              1. The started process. None if no separate process was necessary.
 	 *              1. The port-forwarding process. None if no port-forwarding was used.
 	 */
-	// TODO: Add process logging for SSH
 	private def startServiceAndPortForwarding(ssh: SshExecutor, startupCommand: String) = {
 		// Starts the service in the background, unless it should be assumed to be running already
 		val serviceProcess = {
 			if (serviceAutoRuns)
 				None
 			else
-				startupCommand.ifNotEmpty.map { command => ssh(s"-- '$command'").run().async }
+				startupCommand.ifNotEmpty.map { command => ssh(s"-- '$command'").runAsync(captureStdErrLines = 128) }
 		}
 		// Also starts port forwarding, if appropriate
-		val forwardingProcess = settings.forwardedPorts.map { portsView =>
+		val forwardingProcess = forwardedPortsView.map { portsView =>
 			val ports = portsView.value
-			ssh.portForwarding(localPort = ports.first, remotePort = ports.second).run().async
+			ssh.portForwarding(localPort = ports.first, remotePort = ports.second).runAsync(captureStdErrLines = 128)
 		}
 		
 		serviceProcess -> forwardingProcess
@@ -887,18 +921,27 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			.flattenToFuture
 	}
 	
-	private def serviceReadyFuture(service: Service, setupTimeoutFuture: Future[_]) = {
+	private def serviceReadyFuture(service: Service, terminateAttemptsFuture: Future[_]) = {
 		val resultPromise = Promise[Try[R]]()
-		// Completes the promise on timeout
-		setupTimeoutFuture.onComplete { _ =>
-			if (!resultPromise.isCompleted)
-				resultPromise.trySuccess(Failure(new TimeoutException(
-					"The setup process timed out while waiting for the service to respond")))
+		// Completes the promise on timeout / hosting failure
+		terminateAttemptsFuture.onComplete { result =>
+			if (!resultPromise.isCompleted) {
+				resultPromise.trySuccess(Failure(result.failure.getOrElse {
+					new IllegalStateException(
+						"The setup process failed, timed out, or was stopped while waiting for the service to respond")
+				}))
+			}
 		}
 		// Also sets up a process for testing whether the service is usable,
 		// possibly completing the result promise before the timeout
 		tryCompletePromiseWhenServiceIsReady(service, resultPromise, View { resultPromise.isCompleted })
-			.onComplete { _.logWithMessage("Unexpected failure while attempting to connect to the service") }
+			// Handles cases where the promise-completion fails
+			.onComplete { result =>
+				result.failure.foreach { error =>
+					log(error, "Unexpected failure while attempting to connect to the service")
+					resultPromise.tryFailure(error)
+				}
+			}
 		
 		// Resolves once either the timeout is reached, or when a successful request has completed
 		resultPromise.future

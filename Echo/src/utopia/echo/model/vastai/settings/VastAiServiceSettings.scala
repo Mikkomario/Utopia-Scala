@@ -73,6 +73,10 @@ object VastAiServiceSettings
 		 *                  (where the service will be accessed/used)
 		 *                  and the second value matches the remote (internal) port,
 		 *                  where it is hosted on the remote server.
+		 *
+		 *                  Note: Changes in this view only affect the service before port forwarding
+		 *                        is actually started; Afterwards, the values present at that time will be used.
+		 *
 		 * @return A copy of this instance applying port forwarding over the specified ports.
 		 */
 		def withPortForwarding(portsView: View[Pair[Int]]): Repr

@@ -10,11 +10,13 @@
 - Rewrote **VastAiProcess**, **VastAiVllmProcess** and **VastAiChatExecutor** constructors to use settings 
   and factories.
 - Refactored **VastAiVllmProcess** to extend the new **VastAiServiceProcess** class
+  - Also added support for reusing previously rented instances
   - Also refactored the associated enumeration / state models.
     - Removed **StartingApi** state altogether.
     - The hosting state (now **Hosting**) no longer contains client, model, and max context information
 - Partially rewrote **VastAiChatExecutor**, so that it uses a large max context size on all instances but manages 
   the number of processed tokens more carefully.
+  - Also added support for reusing previously rented instances
   - The return value of `.status` is also different
   - Accepted process recorder is also different
 - **LlmServiceClient**'s `maxParallelRequests` parameter is now **Option** instead of **Int**, 
