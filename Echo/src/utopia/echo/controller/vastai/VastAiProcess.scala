@@ -4,6 +4,7 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.annex.util.RequestResultExtensions._
 import utopia.echo.controller.client.VastAiApiClient
 import utopia.echo.model.request.vastai.{DestroyInstance, ShowInstance, StopOrStartInstance}
+import utopia.echo.model.vastai.instance.InstanceState.Stopped
 import utopia.echo.model.vastai.instance.{LiveInstance, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiProcessState
 import utopia.echo.model.vastai.process.VastAiProcessState._
@@ -167,7 +168,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 		_stateP.value = Starting
 		instanceIdFutureP.setOne(acquireInstance(hurryFlag)).waitForResult() match {
 			case Success(instanceId) =>
-				debugLog("Instance selected")
+				debugLog(s"Instance #$instanceId selected")
 				// Prepares to terminate the contract once this process completes or is requested to stop,
 				// or if the instance becomes inaccessible
 				val terminationStartPromise = Promise[(Boolean, Future[RequestResult[_]])]()
@@ -177,7 +178,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 						if (!terminationRequested) {
 							val destroys = forceKill || instanceState.orElse(instance).forall(shouldDestroy)
 							debugLog(s"Terminating the Vast AI process and ${
-								if (destroys) "destroying" else "stopping" } the instance")
+								if (destroys) "destroying" else "stopping" } the instance #$instanceId")
 							val resultFuture = client.send(
 								if (destroys) DestroyInstance(instanceId) else StopOrStartInstance(instanceId).stop)
 							terminationStartPromise.success(destroys -> resultFuture)
@@ -205,12 +206,13 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 					
 					// Sets up the instance in the background
 					// Attempts to retrieve the instance multiple times, in case of {"instances": null} result
-					debugLog("Requests initial instance information")
-					client.send(ShowInstance(instanceId, deprecationView = View { terminationRequested }))
+					debugLog(s"Requests initial instance #$instanceId information")
+					val terminationRequestedView = View { terminationRequested }
+					client.send(ShowInstance(instanceId, deprecationView = terminationRequestedView))
 						.forResult {
 							// Case: Instance acquired => Prepares it for use and starts monitoring it
 							case Response.Success(instance, _, _) =>
-								debugLog("Initial instance version loaded")
+								debugLog(s"Initial instance #$instanceId version loaded")
 								val instanceP = Volatile.lockable(instance)
 								instancePointerP.setOne(Success(instanceP.readOnly))
 								_stateP.update { previousState =>
@@ -220,17 +222,30 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 										Running(instance.status)
 								}
 								// Once monitoring completes, locks the instance pointer
-								debugLog("Starts monitoring the instance status")
+								debugLog(s"Starts monitoring the instance #$instanceId status")
 								monitorInstance(instanceId, instanceP) {
 									() => terminate(instanceState = Some(instanceP.value), forceKill = true) }
 									.onComplete { result =>
 										instanceP.lock()
 										result.logWithMessage("Unexpected failure during the monitoring process")
 									}
+								
+								// If the instance was stopped (reused), starts it
+								if (instance.status.actual.value == Stopped)
+									client.send(StopOrStartInstance(instance.id)
+										.deprecatingIf(terminationRequestedView).start)
+										.forResult {
+											case _: Response.Success[Unit] =>
+												debugLog(s"Instance #$instanceId was requested to start")
+											// Case: Failed to request the instance to start => Terminates this process
+											case failure: RequestFailure =>
+												log(failure.cause, "Failed to start the instance")
+												terminate(instanceState = Some(instanceP.value), forceKill = true)
+										}
 							
 							// Case: Failed to acquire the initial instance => Proceeds to destroy the instance
 							case failure: RequestFailure =>
-								debugLog("Failed to acquire the initial instance version")
+								debugLog(s"Failed to acquire the initial instance #$instanceId version")
 								instancePointerP.setOne(failure.toFailure)
 								terminate(forceKill = true)
 						}

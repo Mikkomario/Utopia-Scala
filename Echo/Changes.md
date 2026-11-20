@@ -42,6 +42,8 @@
 - Token counting implementation may now be customized by extending and defining an implicit **TokenCounter**
 - Vast AI instances can now be stopped instead of destroyed and may be reused automatically
 - Added **VastAiServiceProcess**, an abstract base class for implementing services similar to **VastAiVllmProcess**
+- Added **VastAiSshProcess** for (only) opening an SSH connection to a rented instance
+- Added factory-based construction for **SelectOffer**
 ### New methods
 - **StatelessBufferedReplyGeneratorLike**
   - Added `.mapExpectedReplySize(...)` and `.mapExpectedThinkSize(...)`
@@ -57,6 +59,7 @@
 - **StatelessBufferedReplyGeneratorLike** now supports request-deprecation
 - Added multiple new `.toModel` implementations and model parsing functions
 - Model-parsing now supports camel-case
+- **SshExecutor**'s `.sshBase` is now public
 - Modified **TokenUsage**'s `.toString` implementation
 
 ## v1.5 - 15.03.2026

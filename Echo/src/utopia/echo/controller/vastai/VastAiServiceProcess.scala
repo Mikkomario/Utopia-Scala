@@ -186,6 +186,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			}
 			reuseResultFuture.flatMap {
 				// Case: Reusing an instance => Success
+				// FIXME: The instance must also be started!
 				case Some(reusableInstanceId) => TryFuture.success(reusableInstanceId)
 				// Case: Renting a new instance
 				case None =>
@@ -458,12 +459,17 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			val instanceLoadedFuture = vastAiProcess.liveInstanceFuture.flatMapResult {
 				// Case: Instance-acquisition succeeded => Checks when it's fully loaded
 				case Success(instance) =>
-					debugLog(s"Instance ${ instance.id } acquired")
+					debugLog(s"Instance #${ instance.id } acquired")
+					// TODO: Remove test prints
+					println("Locking offer pointer")
 					offerP.lock()
 					val machineId = instance.wrapped.machineId
+					println("Marking the machine as taken")
 					takenMachineIdsP.update { _ + machineId }
+					println("Updating state")
 					stateP.value = InstanceLoading(instance)
 					// Starts tracking the instance state
+					println("Starts tracking instance state")
 					instance.instancePointer.addListener { e =>
 						stateP.update { _.atInstanceState(e.newValue) }
 						// If the instance goes offline or disconnects, stops this process immediately

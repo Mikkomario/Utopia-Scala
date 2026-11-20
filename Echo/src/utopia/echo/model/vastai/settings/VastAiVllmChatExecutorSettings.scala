@@ -278,17 +278,6 @@ object VastAiVllmChatExecutorSettings
 		 */
 		def usingBackupExecutor(backupExecutor: BufferingChatRequestExecutor[BufferedOpenAiReply]): Repr =
 			usingBackupExecutor(Some(backupExecutor))
-		
-		/**
-		 * @param logDirectory Directory where debug log entries will be placed.
-		 * @param exc Implicit execution context
-		 * @param scheduler Implicit scheduler
-		 * @param log Implicit logging implementation for logging errors (default = System.err).
-		 * @return A copy of this instance debug-logging to a file in the specified directory.
-		 */
-		def withDebugLogDirectory(logDirectory: Path)
-		                         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger = SysErrLogger): Repr =
-			debugLoggingWith(KeptOpenWriter(30.seconds).to((logDirectory/s"$Today-Vast-AI-log.txt").unique))
 	}
 	
 	trait VastAiVllmChatExecutorSettingsWrapper[+Repr] extends VastAiVllmChatExecutorSettingsFactory[Repr]

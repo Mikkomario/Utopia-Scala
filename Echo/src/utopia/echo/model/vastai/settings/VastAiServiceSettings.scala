@@ -4,15 +4,19 @@ import utopia.echo.controller.vastai.InstanceReuseLogic
 import utopia.echo.controller.vastai.InstanceReuseLogic.NeverReuse
 import utopia.echo.model.vastai.instance.VastAiInstance
 import utopia.echo.model.vastai.settings.VastAiServiceSettings.VastAiServiceSettingsFactory
+import utopia.flow.async.context.Scheduler
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.parse.file.FileExtensions._
 import utopia.flow.parse.file.KeptOpenWriter
-import utopia.flow.time.Duration
+import utopia.flow.time.{Duration, Today}
 import utopia.flow.time.TimeExtensions._
 import utopia.flow.util.Mutate
+import utopia.flow.util.logging.{Logger, SysErrLogger}
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 
 import java.nio.file.Path
+import scala.concurrent.ExecutionContext
 
 object VastAiServiceSettings
 {
@@ -130,6 +134,29 @@ object VastAiServiceSettings
 		def withPortForwarding(localPort: => Int, remotePort: => Int): Repr =
 			withPortForwarding(Lazy { Pair(localPort, remotePort) })
 		
+		/**
+		 * Enables file-based debug logging
+		 * @param logDirectory Directory where debug log entries will be placed.
+		 * @param exc Implicit execution context
+		 * @param scheduler Implicit scheduler
+		 * @param log Implicit logging implementation for logging errors (default = System.err).
+		 * @return A copy of this instance debug-logging to a file in the specified directory.
+		 */
+		def withDebugLogDirectory(logDirectory: Path, keepOpenDuration: Duration = 30.seconds)
+		                         (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger = SysErrLogger): Repr =
+			debugLoggingTo((logDirectory/s"$Today-Vast-AI-log.txt").unique, keepOpenDuration)
+		/**
+		 * Enables file-based debug logging
+		 * @param path Path to where debug logs should be placed
+		 * @param keepOpenDuration Duration how long the file should be kept open after writing. Default = 30 seconds.
+		 * @param exc Implicit execution context
+		 * @param scheduler Implicit scheduler
+		 * @param log Implicit logging interface for write failures. Default = System.err.
+		 * @return Copy of this instance
+		 */
+        def debugLoggingTo(path: Path, keepOpenDuration: Duration = 30.seconds)
+                          (implicit exc: ExecutionContext, scheduler: Scheduler, log: Logger = SysErrLogger) =
+	        debugLoggingWith(KeptOpenWriter(keepOpenDuration).to(path))
 		/**
 		 * Enables debug logging
 		 * @param writer Interface for making debug log entries.

@@ -22,7 +22,10 @@ case class SshExecutor(config: SshConnection, privateKeyPath: Path)
 	private val prefixArgs = s"-i $privateKeyPath -p ${ config.port }"
 	private val suffixArgs = "-o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 	
-	private val sshBase = s"ssh $prefixArgs $address $suffixArgs"
+	/**
+	 * SSH command (string) used for connecting to the remote instance
+	 */
+	val sshBase = s"ssh $prefixArgs $suffixArgs $address"
 	
 	
 	// OTHER    ---------------------------
