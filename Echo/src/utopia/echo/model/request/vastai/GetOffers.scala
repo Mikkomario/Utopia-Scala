@@ -31,7 +31,7 @@ object GetOffers
 	 * @param deprecationView A view that contains true if this request should be retracted (default = always false)
 	 * @return A new request for listing available offers
 	 */
-	def forSelector(selector: SelectOffer, allocatedStorage: ByteCount = 8.gb,
+	def forSelector(selector: SelectOffer, allocatedStorage: ByteCount = 8.gib,
 	                deprecationView: View[Boolean] = AlwaysFalse) =
 		apply(allocatedStorage, selector.filters, selector.ordering, selector.limit, selector.offerType, deprecationView)
 }
@@ -47,7 +47,7 @@ object GetOffers
  * @author Mikko Hilpinen
  * @since 24.02.2026, v1.5
  */
-case class GetOffers(allocatedStorage: ByteCount = 8.gb, filters: Seq[SearchFilter] = Empty,
+case class GetOffers(allocatedStorage: ByteCount = 8.gib, filters: Seq[SearchFilter] = Empty,
                      order: Seq[(OfferProperty[_], Sign)] = Empty, limit: Option[Int] = None,
                      offerType: OfferType = OnDemand, deprecationView: View[Boolean] = AlwaysFalse)
 	extends ApiRequest[Seq[Offer]]

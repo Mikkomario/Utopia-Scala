@@ -61,7 +61,7 @@ object AcceptOffer
  * @since 24.02.2026, v1.5
  */
 case class AcceptOffer(offerId: Long, foundation: NewInstanceFoundation, runType: RunType = Ssh,
-                       reservedDiskSpace: ByteCount = 10.gb, label: String = "",
+                       reservedDiskSpace: ByteCount = 10.gib, label: String = "",
                        bidPrice: Option[Double] = None, jupyterDirectory: String = "",
                        deprecatedView: View[Boolean] = AlwaysFalse,
                        cancelIfUnavailable: UncertainBoolean = UncertainBoolean,

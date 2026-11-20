@@ -1,10 +1,10 @@
 package utopia.echo.model.enumeration
 
-import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes, TeraBytes}
+import utopia.echo.model.enumeration.ByteCountUnit.{GibiBytes, MebiBytes, TebiBytes}
 import utopia.flow.operator.ordering.SelfComparable
 
 /**
- * An enumeration for different byte count units (MB, GB, etc.)
+ * An enumeration for different byte count units (MiB, GiB, etc.)
  * @author Mikko Hilpinen
  * @since 25.02.2026, v1.5
  */
@@ -13,11 +13,16 @@ sealed trait ByteCountUnit extends SelfComparable[ByteCountUnit]
 	// ABSTRACT -------------------------
 	
 	/**
-	 * @return Multiplier applied to values of this unit in order to get MB
+	 * @return Code representing this unit. E.g. "GiB"
+	 */
+	def code: String
+	
+	/**
+	 * @return Multiplier applied to values of this unit in order to get MiB
 	 */
 	def toMegaMultiplier: Int
 	/**
-	 * @return Multiplier applied to values of this unit in order to get GB
+	 * @return Multiplier applied to values of this unit in order to get GiB
 	 */
 	def toGigaMultiplier: Double
 	
@@ -26,8 +31,10 @@ sealed trait ByteCountUnit extends SelfComparable[ByteCountUnit]
 	
 	override def self: ByteCountUnit = this
 	
-	// Smaller multiplier => Larger unit
-	override def compareTo(o: ByteCountUnit): Int = o.toMegaMultiplier.compareTo(toMegaMultiplier)
+	override def toString: String = code
+	
+	// Larger multiplier => Larger unit
+	override def compareTo(o: ByteCountUnit): Int = toMegaMultiplier.compareTo(o.toMegaMultiplier)
 	
 	
 	// OTHER    -------------------------
@@ -41,9 +48,9 @@ sealed trait ByteCountUnit extends SelfComparable[ByteCountUnit]
 			1
 		else
 			targetUnit match {
-				case MegaBytes => toMegaMultiplier
-				case GigaBytes => toGigaMultiplier
-				case TeraBytes => toGigaMultiplier / 1000
+				case MebiBytes => toMegaMultiplier
+				case GibiBytes => toGigaMultiplier
+				case TebiBytes => toGigaMultiplier / 1024
 			}
 	}
 }
@@ -52,21 +59,24 @@ object ByteCountUnit
 {
 	// VALUES   -------------------------
 	
-	case object MegaBytes extends ByteCountUnit
+	case object MebiBytes extends ByteCountUnit
 	{
+		override val code: String = "MiB"
 		override val toMegaMultiplier = 1
-		override val toGigaMultiplier: Double = 0.001
+		override val toGigaMultiplier: Double = 0.0009765625
 	}
 	
-	case object GigaBytes extends ByteCountUnit
+	case object GibiBytes extends ByteCountUnit
 	{
-		override val toMegaMultiplier = 1000
+		override val code: String = "GiB"
+		override val toMegaMultiplier = 1024
 		override val toGigaMultiplier: Double = 1
 	}
 	
-	case object TeraBytes extends ByteCountUnit
+	case object TebiBytes extends ByteCountUnit
 	{
-		override val toMegaMultiplier = 1000000
-		override val toGigaMultiplier: Double = 1000
+		override val code: String = "TiB"
+		override val toMegaMultiplier = 1024 * 1024
+		override val toGigaMultiplier: Double = 1024
 	}
 }

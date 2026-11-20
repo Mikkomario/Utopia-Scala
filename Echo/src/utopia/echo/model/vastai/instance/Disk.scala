@@ -16,7 +16,7 @@ object Disk extends FromModelFactoryWithSchema[Disk]
 	// IMPLEMENTED  ---------------------
 	
 	override protected def fromValidatedModel(model: Model): Disk =
-		apply(model("disk_bw").getInt.mb, model("disk_space").getInt.gb, model("disk_name").getString)
+		apply(model("disk_bw").getInt.mib, model("disk_space").getInt.gib, model("disk_name").getString)
 }
 
 /**

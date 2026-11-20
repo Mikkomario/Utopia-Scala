@@ -154,7 +154,7 @@ object VastAiVllmSettings
  * @author Mikko Hilpinen
  * @since 05.11.2026, v1.6
  */
-case class VastAiVllmSettings(additionalReservedDisk: ByteCount = 5.gb,
+case class VastAiVllmSettings(additionalReservedDisk: ByteCount = 5.gib,
                               lazyGateway: View[Gateway] = Lazy(defaultGateway), maxGpuUtil: Double = 0.9,
                               maxParallelRequests: Option[Int] = None,
                               extraStartupArgs: String = "", noResponseTimeout: Duration = 10.minutes,

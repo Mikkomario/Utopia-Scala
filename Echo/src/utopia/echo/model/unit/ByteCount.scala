@@ -1,7 +1,7 @@
 package utopia.echo.model.unit
 
 import utopia.echo.model.enumeration.ByteCountUnit
-import utopia.echo.model.enumeration.ByteCountUnit.MegaBytes
+import utopia.echo.model.enumeration.ByteCountUnit.MebiBytes
 import utopia.flow.operator.Reversible
 import utopia.flow.operator.combine.Combinable.SelfCombinable
 import utopia.flow.operator.combine.LinearScalable
@@ -11,7 +11,7 @@ object ByteCount
 	/**
 	 * A byte count representing zero, using megabytes as the unit.
 	 */
-	lazy val zero = apply(0, MegaBytes)
+	lazy val zero = apply(0, MebiBytes)
 }
 
 /**
@@ -41,12 +41,14 @@ case class ByteCount(amount: Int, unit: ByteCountUnit)
 	override def self: ByteCount = this
 	override def unary_- : ByteCount = copy(amount = -amount)
 	
+	override def toString: String = s"$amount $unit"
+	
 	override def +(other: ByteCount): ByteCount = {
 		val appliedUnit = unit min other.unit
 		ByteCount((to(appliedUnit) + other.to(appliedUnit)).round.toInt, appliedUnit)
 	}
 	
-	override def *(mod: Double): ByteCount = ByteCount((megas * mod).round.toInt, MegaBytes)
+	override def *(mod: Double): ByteCount = ByteCount((megas * mod).round.toInt, MebiBytes)
 	
 	
 	// OTHER    -------------------

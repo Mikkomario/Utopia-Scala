@@ -9,5 +9,5 @@ import utopia.echo.model.unit.ByteCountExtensions._
  */
 object ByteCountTest extends App
 {
-	assert((10.gb + 5.gb).gigas == 15)
+	assert((10.gib + 5.gib).gigas == 15)
 }

@@ -18,7 +18,7 @@ object GpuLimits extends FromModelFactoryWithSchema[GpuLimits]
 	// IMPLEMENTED  ----------------------
 	
 	override protected def fromValidatedModel(model: Model): GpuLimits =
-		apply(model("gpu_total_ram").getInt.mb, model("gpu_max_power"), model("gpu_max_temp"), model("num_gpus").intOr(1),
+		apply(model("gpu_total_ram").getInt.mib, model("gpu_max_power"), model("gpu_max_temp"), model("num_gpus").intOr(1),
 			model("gpu_frac").doubleOr(1.0))
 }
 

@@ -19,7 +19,7 @@ object Gpu extends FromModelFactoryWithSchema[Gpu]
 	
 	override protected def fromValidatedModel(model: Model): Gpu =
 		apply(model("gpu_arch"), model("gpu_name"), model("driver_version"),
-			model("compute_cap").getDouble / 100, model("cuda_max_good"), model("gpu_ram").getInt.mb,
+			model("compute_cap").getDouble / 100, model("cuda_max_good"), model("gpu_ram").getInt.mib,
 			model("gpu_display_active"))
 }
 

@@ -1,7 +1,7 @@
 package utopia.echo.model.unit
 
 import utopia.echo.model.enumeration.ByteCountUnit
-import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes}
+import utopia.echo.model.enumeration.ByteCountUnit.{GibiBytes, MebiBytes}
 
 /**
  * Common trait for factories that accept byte count units
@@ -24,9 +24,9 @@ trait FromByteCountUnitFactory[+A]
 	/**
 	 * @return A value in/using GB
 	 */
-	def gigas = apply(GigaBytes)
+	def gigas = apply(GibiBytes)
 	/**
 	 * @return A value in/using MB
 	 */
-	def megas = apply(MegaBytes)
+	def megas = apply(MebiBytes)
 }

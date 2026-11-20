@@ -1,6 +1,6 @@
 package utopia.echo.model.vastai.instance.offer
 
-import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes, TeraBytes}
+import utopia.echo.model.enumeration.ByteCountUnit.{GibiBytes, MebiBytes, TebiBytes}
 import utopia.echo.model.enumeration.NetworkTrafficDirection.{Download, Upload}
 import utopia.echo.model.enumeration.{ByteCountUnit, NetworkTrafficDirection}
 import utopia.echo.model.unit.ByteCount
@@ -222,7 +222,7 @@ object OfferProperty
 		// ATTRIBUTES   -------------------
 		
 		override val key: String = "gpu_ram"
-		override protected val targetUnit: ByteCountUnit = MegaBytes
+		override protected val targetUnit: ByteCountUnit = MebiBytes
 		override protected val rounds: Boolean = true
 		
 		
@@ -236,7 +236,7 @@ object OfferProperty
 	case object GpuTotalRam extends ByteCountProperty
 	{
 		override val key: String = "gpu_total_ram"
-		override protected val targetUnit: ByteCountUnit = MegaBytes
+		override protected val targetUnit: ByteCountUnit = MebiBytes
 		override protected val rounds: Boolean = true
 	}
 	case object GpuFraction extends DoubleOfferProperty
@@ -294,7 +294,7 @@ object OfferProperty
 	case class NetworkSpeed(direction: NetworkTrafficDirection) extends ByteCountProperty
 	{
 		override val key: String = s"inet_${ direction.key }"
-		override protected val targetUnit: ByteCountUnit = MegaBytes
+		override protected val targetUnit: ByteCountUnit = MebiBytes
 		override protected val rounds: Boolean = true
 	}
 	object NetworkCost
@@ -309,7 +309,7 @@ object OfferProperty
 	case class NetworkCost(direction: NetworkTrafficDirection) extends ByteCountProperty
 	{
 		override val key: String = s"inet_${direction.key}_cost"
-		override protected val targetUnit: ByteCountUnit = GigaBytes
+		override protected val targetUnit: ByteCountUnit = GibiBytes
 		override protected val rounds: Boolean = false
 	}
 
@@ -344,9 +344,9 @@ object OfferProperty
 	}
 	object StorageCost
 	{
-		val perTera = per(TeraBytes)
-		val perGiga = per(GigaBytes)
-		val perMega = per(MegaBytes)
+		val perTera = per(TebiBytes)
+		val perGiga = per(GibiBytes)
+		val perMega = per(MebiBytes)
 		
 		def per(unit: ByteCountUnit) = StorageCostFactory(unit)
 	}

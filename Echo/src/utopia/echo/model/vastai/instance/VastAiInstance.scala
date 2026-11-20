@@ -48,8 +48,8 @@ object VastAiInstance extends FromModelFactory[VastAiInstance]
 					apply(model("id"), info, status, model("client_run_time").getDouble.hours,
 						model("host_run_time").getDouble.hours, image, template, model("label"),
 						model("credit_balance"), model("uptime_mins").double.map { _.minutes }, model("cpu_util"),
-						model("mem_limit").int.map { _.mb }, model("mem_usage").int.map { _.mb }, model("gpu_util"),
-						model("vmem_usage").int.map { _.mb }, model("gpu_temp"),
+						model("mem_limit").int.map { _.mib }, model("mem_usage").int.map { _.mib }, model("gpu_util"),
+						model("vmem_usage").int.map { _.mib }, model("gpu_temp"),
 						model("disk_usage").double.map { _ / 100 },
 						model("local_ipaddrs").getString
 							.splitIterator(Regex.comma).map { _.stripControlCharacters.trim }

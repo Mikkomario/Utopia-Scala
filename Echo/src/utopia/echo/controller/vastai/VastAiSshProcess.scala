@@ -38,7 +38,7 @@ object VastAiSshProcess
 	// NESTED   ----------------------------
 	
 	case class VastAiSshProcessFactory(selectOffer: SelectOffer = SelectOffer.cheapestFirst.head(),
-	                                   requiredDiskSpace: ByteCount = 5.gb,
+	                                   requiredDiskSpace: ByteCount = 5.gib,
 	                                   override val serviceSettings: VastAiServiceSettings = VastAiServiceSettings.default)
 		extends VastAiServiceSettingsWrapper[VastAiSshProcessFactory]
 	{

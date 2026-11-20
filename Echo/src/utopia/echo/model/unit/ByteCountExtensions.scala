@@ -1,6 +1,6 @@
 package utopia.echo.model.unit
 
-import utopia.echo.model.enumeration.ByteCountUnit.{GigaBytes, MegaBytes, TeraBytes}
+import utopia.echo.model.enumeration.ByteCountUnit.{GibiBytes, MebiBytes, TebiBytes}
 
 /**
  * Provides utility functions for constructing byte counts
@@ -12,16 +12,16 @@ object ByteCountExtensions
 	implicit class ByteCountInt(val i: Int) extends AnyVal
 	{
 		/**
-		 * @return This amount in MB
+		 * @return This amount in MiB
 		 */
-		def mb = ByteCount(i, MegaBytes)
+		def mib = ByteCount(i, MebiBytes)
 		/**
-		 * @return This amount in GB
+		 * @return This amount in GiB
 		 */
-		def gb = ByteCount(i, GigaBytes)
+		def gib = ByteCount(i, GibiBytes)
 		/**
-		 * @return This amount in TB
+		 * @return This amount in TiB
 		 */
-		def tb = ByteCount(i, TeraBytes)
+		def tib = ByteCount(i, TebiBytes)
 	}
 }

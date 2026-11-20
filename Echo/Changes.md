@@ -6,6 +6,7 @@
 - Token-counting is now based on an implicit **TokenCounter** parameter instead of **EstimateTokenCount**
 - **TokenUsage** now extends **ModelConvertible**
 - **LlmRequestCount** is now named **LlmRequestCounts**
+- **ByteCount** is now calculated in MiB and GiB instead of MB and GB
 - **BufferingChatRequestExecutor** now yields **RequestResult** instead of **Try**
 - Rewrote **VastAiProcess**, **VastAiVllmProcess** and **VastAiChatExecutor** constructors to use settings 
   and factories.
@@ -43,6 +44,7 @@
 - Vast AI instances can now be stopped instead of destroyed and may be reused automatically
 - Added **VastAiServiceProcess**, an abstract base class for implementing services similar to **VastAiVllmProcess**
 - Added **VastAiSshProcess** for (only) opening an SSH connection to a rented instance
+- Added optional `requestBufferSize` and `requestTokenRounding` parameters to **LlmVramUse**
 - Added factory-based construction for **SelectOffer**
 ### New methods
 - **StatelessBufferedReplyGeneratorLike**

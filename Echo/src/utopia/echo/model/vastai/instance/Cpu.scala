@@ -18,7 +18,7 @@ object Cpu extends FromModelFactoryWithSchema[Cpu]
 	// IMPLEMENTED  ----------------------
 	
 	override protected def fromValidatedModel(model: Model): Cpu = apply(model("cpu_arch"), model("cpu_name"),
-		model("cpu_ram").getInt.mb, model("cpu_cores_effective"), model("cpu_cores"))
+		model("cpu_ram").getInt.mib, model("cpu_cores_effective"), model("cpu_cores"))
 }
 
 /**
