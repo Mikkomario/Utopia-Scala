@@ -48,7 +48,8 @@ trait BufferedOpenAiChatCompletionRequestLike[+Reply, +Repr]
 				"reasoning_effort" -> params.reasoningEffort,
 				"frequency_penalty" -> params.get(FrequencyPenalty), "max_tokens" -> params.get(PredictTokens),
 				"presence_penalty" -> params.get(PresencePenalty), "stop" -> params.get(Stop), "stream" -> false,
-				"temperature" -> params.get(Temperature), "top_p" -> params.get(TopP), "tools" -> params.tools
+				"temperature" -> params.get(Temperature), "top_p" -> params.get(TopP),
+				"tools" -> (if (params.tools.isEmpty) Value.empty else params.tools)
 			)
 			.withoutEmptyValues)
 		)
