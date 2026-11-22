@@ -54,6 +54,7 @@
 - Bugfixes to **MutableModel**'s event handling
 - Bugfix to **DelayedProcess**'s shut-down reaction; The previous version didn't always trigger the effects correctly.
 - Bugfix to **OptimizedChanging** `.declareChangingStopped()`, which previously could throw in multithreaded use-cases.
+- Bugfix to **Pair** to **String** -**Value**-converstion
 ### Deprecations
 - Deprecated **CsvReader** in favor of the new **CsvRows** object
   - The new interface supports a wider range of use-cases

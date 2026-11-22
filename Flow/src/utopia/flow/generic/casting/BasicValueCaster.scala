@@ -16,7 +16,7 @@ import utopia.flow.util.StringExtensions._
 
 import java.time.{Instant, LocalDate, LocalDateTime, LocalTime, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
 /**
   * This value caster handles the basic data types
@@ -194,7 +194,9 @@ object BasicValueCaster extends ValueCaster
 			// This is in order to form JSON -compatible output
 			case VectorType =>
 				val vector = value.getVector
-				Some(if (vector.isEmpty) "[]" else s"[${ vector.map { _.toJson }.mkString(", ") }]")
+				Some(if (vector.isEmpty) "[]" else s"[${ vector.iterator.map { _.toJson }.mkString(", ") }]")
+			// Same thing with Pair
+			case PairType => Some(value.getPair.mapAndMerge { _.toJson } { (a, b) => s"[$a, $b]" })
 			// Durations use a custom .toString defined in TimeExtensions
 			case DurationType => Some(value.getDuration.description)
 			case _ => value.content.map { _.toString() }

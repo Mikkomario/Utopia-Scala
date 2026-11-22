@@ -64,7 +64,7 @@ case class Days(length: Int) extends SelfComparable[Days] with ValueConvertible 
 	/**
 	  * @return A duration of time equal to this instance
 	  */
-	def toDuration = Duration(length, Day)
+	def toDuration: Duration = Duration(length, Day)
 	
 	/**
 	  * @return The absolute value of this length of days
