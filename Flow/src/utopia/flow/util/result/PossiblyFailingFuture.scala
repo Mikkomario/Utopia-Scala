@@ -147,6 +147,22 @@ trait PossiblyFailingFuture[A, T, +R[+_]] extends Any
 		wrapped.flatMap { r => resultToFuture(wrap(r).map(f)) }
 	
 	/**
+	 * Maps the result of this future, whether successful or failed.
+	 * Handles both failure results and failed futures.
+	 * @param f A mapping function applied to the result of this future
+	 * @param exc Implicit execution context
+	 * @tparam B Type of mapping results
+	 * @return A future that resolves with the result of 'f', once this future has resolved
+	 */
+	def mapResult[B](f: R[A] => B)(implicit exc: ExecutionContext) = {
+		val resultPromise = Promise[B]()
+		wrapped.onComplete {
+			case Success(result) => resultPromise.success(f(toResult(result)))
+			case Failure(error) => resultPromise.success(f(failure(error)))
+		}
+		resultPromise.future
+	}
+	/**
 	 * Asynchronously Maps the result of this future, whether successful or failed
 	 * @param f A function that receives the result of this future (success or a failure) and yields another future
 	 * @param exc Implicit execution context

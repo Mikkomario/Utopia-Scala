@@ -162,7 +162,7 @@
   - Added new functions for **Pointer**s that contain **Map**s
   - Added `.filterCurrent(...)` and `.filterNotCurrent(...)` for **Seq**-based **Pointer**s
 - **PossiblyFailingFuture**
-  - Added `.flatMapResult(...)`
+  - Added `.mapResult(...)` and `.flatMapResult(...)`
   - Added `.mapFailure(...)`, `.flatMapFailure(...)`, `.flatMapFailureRepeatedly(...)` and `.recoverFromFailureWith(...)`
 - **scala.sys.process.Process** (via **AsyncExtensions**)
   - Added two new `.asyncWith(...)` functions that allow capturing of stdout and stderr
