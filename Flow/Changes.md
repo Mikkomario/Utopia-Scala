@@ -198,7 +198,7 @@
     - Added `.getModelOrString`
     - Added a new `.castTo(Iterable)` variant
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - Added `failFast: Boolean = false` parameter to **Future**'s `.raceWith(Future)` function, 
   allowing for early termination in case of failures
 - Multiple changes to **AsyncSystemProcess**:

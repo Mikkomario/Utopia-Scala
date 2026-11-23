@@ -12,7 +12,7 @@
   - Added `.forSuccess(...)`, `.replaceDeprecationWith(RequestResult)` and `.succeedingOnDeprecation(...)` 
     for **Future**'s containing **RequestResult**
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 
 ## v1.12 - 15.03.2026
 This update focuses on the **RequestResult** trait, especially in combination with **Future**. 

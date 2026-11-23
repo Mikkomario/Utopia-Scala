@@ -849,7 +849,7 @@ class Connection(initialDBName: Option[String] = None)(implicit log: Logger)
 		// Sets up the driver
 		settings.driver.foreach { driver =>
 			if (Connection.driver.isEmpty)
-				Connection.driver = Some(Class.forName(driver).newInstance())
+				Connection.driver = Some(Class.forName(driver).getDeclaredConstructor().newInstance())
 		}
 		val targetNoForwardSlash = settings.connectionTarget.notEndingWith("/")
 		val fullTarget = targetDbName match {

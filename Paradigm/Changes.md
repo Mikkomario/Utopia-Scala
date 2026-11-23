@@ -17,7 +17,7 @@
 - **HasBounds**
   - Added `.extremeAlong(Extreme, Axis2D)`
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - **ColorContrastStandard** now extends **ColorContrastRequirement**
 
 ## v1.8.1 - 15.03.2026

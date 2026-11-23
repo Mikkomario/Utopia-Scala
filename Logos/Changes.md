@@ -10,7 +10,7 @@
 - **RequestPath**
   - Added `.withDomain(Domain)`
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 
 ## v0.7.1
 ### New methods

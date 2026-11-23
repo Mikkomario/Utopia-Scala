@@ -43,7 +43,7 @@
 - **TargetingLike**
   - Added `+(Join)`
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - Added automatic joining logic to cases where the two tables/columns reference the same external column
 - **AccessGroupedLike** now applies a primary row ID -based default ordering for SELECT queries that apply joins
   - This is in order to ensure that **ParseGroupedRows** receives an ordered iterator

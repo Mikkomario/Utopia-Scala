@@ -4,7 +4,7 @@
 ### New features
 - Added **ServiceUnavailableLogic** to use as a placeholder **ServletLogic** implementation.
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - Added an implicit conversion from a function to **ServletLogic** 
 
 ## v1.3.4 - 15.03.2026

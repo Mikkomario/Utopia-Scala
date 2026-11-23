@@ -13,7 +13,7 @@
 - **RequestRateLimiter** now supports temporary lockdowns using `.lockUntil(Instant)` and `.removeLocking()`
 - **Request** now supports more customized body implementation, accepting **HttpEntityConvertible** instead of **Body**
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - **RequestRateLimiter** now extends **ScopeUsable**
 - Rewrote **StringBody** and **FileBody** implementations
 - Improved **Gateway**'s connection management

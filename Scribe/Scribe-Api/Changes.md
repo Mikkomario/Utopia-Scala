@@ -10,7 +10,7 @@
 - **AccessErrorRecordRows**
   - Added `.recursiveToMapById`
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - Removed previously deprecated classes:
   - DbIssue, DbSingleIssue, UniqueIssueAccess
   - DbErrorRecord, DbSingleErrorRecord, UniqueErrorRecordAccess

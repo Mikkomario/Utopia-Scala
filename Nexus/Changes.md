@@ -28,7 +28,7 @@
 - **WriteResponseBody** (object)
   - Added `.ndJson(...)`
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - `WriteResponseBody.jsonArray(...)` now starts streaming the content only if it's long enough.
   - This behavior is configurable via the new `minBufferSize: Int` and `minBufferLength: Int` parameters.
 - Removed **BaseContext** that was deprecated in v2.0

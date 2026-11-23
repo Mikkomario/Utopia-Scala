@@ -12,7 +12,7 @@
 - Added **DelegatingScribe**
 ### Other changes
 - **ConsoleScribe**'s stack trace -printing is now optional and off by default
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 
 ## v1.2.1 - 15.03.2026
 A new build supporting **Flow v2.8**

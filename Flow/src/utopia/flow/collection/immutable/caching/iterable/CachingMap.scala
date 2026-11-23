@@ -120,8 +120,7 @@ class CachingMap[K, +V] private(source: Iterator[(K, V)] = Iterator.empty[(K, V)
 				new CachingMap[K, V](iterator.filterNot { case (key, _) => k.contains(key) })
 		}
 	}
-	
-	override def keys = if (isFullyCached) builder.currentState.keys else map { _._1 }
+
 	override def values = if (isFullyCached) builder.currentState.values else map { _._2 }
 	
 	override def contains(key: K) = builder.contains(key) || cacheIterator.exists { _._1 == key }

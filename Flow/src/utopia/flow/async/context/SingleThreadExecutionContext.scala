@@ -39,7 +39,7 @@ class SingleThreadExecutionContext(name: String, keepAliveDuration: Duration = D
 	override def execute(runnable: Runnable) = {
 		// Creates a new thread, if necessary. Assigns the specified task to the worker thread.
 		threadPointer.update { current =>
-			val thread = current.filter { _.alive } match {
+			val thread = current.filterNot { _.killed } match {
 				// Case: There was a thread ready to receive the new task
 				// NB: There's a very slight chance that the thread dies between these two lines of code...
 				case Some(thread) =>
@@ -83,7 +83,7 @@ class SingleThreadExecutionContext(name: String, keepAliveDuration: Duration = D
 		
 		// COMPUTED --------------------------
 		
-		def alive = killedFlag.isNotSet
+		def killed = killedFlag.isSet
 		
 		
 		// IMPLEMENTED  ----------------------

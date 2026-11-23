@@ -57,7 +57,7 @@
 - **VastAiVllmProcessState**
   - Added `.isUnusable`
 ### Other changes
-- Built with Scala v2.13.18
+- Built with Scala v2.13.18 and JDK 21
 - **StatelessBufferedReplyGeneratorLike** now supports request-deprecation
 - Added multiple new `.toModel` implementations and model parsing functions
 - Model-parsing now supports camel-case
