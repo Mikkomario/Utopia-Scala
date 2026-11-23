@@ -1,11 +1,11 @@
 package utopia.flow.util
 
 import utopia.flow.collection.immutable.Pair
+import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Value
 import utopia.flow.generic.model.template.ValueConvertible
-import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.operator.Reversible
-import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
+import utopia.flow.util.UncertainBoolean.{CertainlyFalse, CertainlyTrue}
 import utopia.flow.view.immutable.View
 
 import scala.language.implicitConversions
@@ -80,27 +80,19 @@ sealed trait UncertainBoolean
 	 * @param other Another known boolean value (call-by-name)
 	 * @return AND of these two values (known if other is false or this value is known)
 	 */
-	def &&(other: => Boolean): UncertainBoolean = {
-		if (isCertainlyFalse)
-			this
-		else {
-			val o = other
-			if (o)
-				exact match {
-					case Some(known) => CertainBoolean(known && o)
-					case None => UncertainBoolean
-				}
-			else
-				CertainlyFalse
-		}
-	}
+	def &&(other: => Boolean): UncertainBoolean = if (isCertainlyFalse || other) this else CertainlyFalse
 	/**
 	 * @param other Another boolean value
 	 * @return AND of these two values (known if either of these is known to be false or if both are known)
 	 */
-	def &&(other: UncertainBoolean): UncertainBoolean = other match {
-		case c: CertainBoolean => this && c.value
-		case uncertain => uncertain
+	def &&(other: View[UncertainBoolean]): UncertainBoolean = exact match {
+		case Some(true) => other.value
+		case Some(false) => this
+		case None =>
+			if (other.value == CertainlyFalse)
+				CertainlyFalse
+			else
+				UncertainBoolean
 	}
 	/**
 	 * @param other Another known boolean value
@@ -111,9 +103,14 @@ sealed trait UncertainBoolean
 	 * @param other Another boolean value
 	 * @return OR of these two values (known if either of these is known to be true or if both are known)
 	 */
-	def ||(other: UncertainBoolean): UncertainBoolean = other.exact match {
-		case Some(known) => this || known
-		case None => UncertainBoolean
+	def ||(other: View[UncertainBoolean]): UncertainBoolean = exact match {
+		case Some(true) => this
+		case Some(false) => other.value
+		case None =>
+			if (other.value == CertainlyTrue)
+				CertainlyTrue
+			else
+				UncertainBoolean
 	}
 	
 	/**

@@ -13,6 +13,7 @@ import utopia.flow.operator.equality.EqualsExtensions._
 import utopia.flow.operator.equality.EqualsFunction
 import utopia.flow.util.UncertainBoolean.{CertainBoolean, CertainlyFalse, CertainlyTrue}
 import utopia.flow.util.{Mutate, UncertainBoolean}
+import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.caching.Lazy
 
 import scala.collection.mutable
@@ -437,7 +438,7 @@ object Model
 		override def contains(propName: String): Boolean = renames.yields(propName) || source.contains(propName)
 		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
 		override def knownContains(propName: String): UncertainBoolean =
-			CertainBoolean(renames.yields(propName)) || source.knownContains(propName)
+			CertainBoolean(renames.yields(propName)) || View { source.knownContains(propName) }
 		
 		override def existingProperty(propName: String): Option[Constant] =
 			renames.originalOption(propName) match {
@@ -473,10 +474,10 @@ object Model
 				case None => source.containsNonEmpty(propName)
 			}
 		override def knownContains(propName: String): UncertainBoolean =
-			source.knownContains(propName) || (lazyAddedPropMap.current match {
+			source.knownContains(propName) || View { lazyAddedPropMap.current match {
 				case Some(map) => CertainBoolean(map.contains(propName.toLowerCase))
 				case None => UncertainBoolean
-			})
+			} }
 		
 		override def existingProperty(propName: String): Option[Constant] = lazyAddedPropMap.current match {
 			case Some(map) => map.get(propName.toLowerCase).orElse(source.existingProperty(propName))
@@ -507,7 +508,7 @@ object Model
 		override def contains(propName: String): Boolean = added.contains(propName) || source.contains(propName)
 		override def containsNonEmpty(propName: String): Boolean = existingProperty(propName).exists { _.nonEmpty }
 		override def knownContains(propName: String): UncertainBoolean =
-			added.knownContains(propName) || source.knownContains(propName)
+			added.knownContains(propName) || View { source.knownContains(propName) }
 		
 		override def existingProperty(propName: String): Option[Constant] =
 			added.existingProperty(propName).orElse { source.existingProperty(propName) }

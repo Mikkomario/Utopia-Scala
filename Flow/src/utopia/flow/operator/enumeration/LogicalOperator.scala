@@ -2,6 +2,9 @@ package utopia.flow.operator.enumeration
 
 import utopia.flow.collection.immutable.Pair
 import utopia.flow.operator.Reversible
+import utopia.flow.util.UncertainBoolean
+import utopia.flow.util.UncertainBoolean.CertainlyFalse
+import utopia.flow.view.immutable.View
 
 /**
   * Represents a symmetric logical operator that combines two (boolean) values
@@ -25,6 +28,13 @@ sealed trait LogicalOperator extends Reversible[LogicalOperator]
 	  * @return Logical result of the two values
 	  */
 	def apply(a: Boolean, b: => Boolean): Boolean
+	/**
+	 * Applies this operator to two uncertain boolean values
+	 * @param a The first value
+	 * @param b The second value (call-by-name, only called if logically necessary)
+	 * @return Logical result of the two values
+	 */
+	def apply(a: UncertainBoolean, b: => UncertainBoolean): UncertainBoolean
 	
 	
 	// IMPLEMENTED  ------------------
@@ -116,6 +126,7 @@ object LogicalOperator
 		override def unary_! = NotBoth
 		
 		override def apply(a: Boolean, b: => Boolean) = a && b
+		override def apply(a: UncertainBoolean, b: => UncertainBoolean): UncertainBoolean = a && View(b)
 		
 		
 		// OTHER    ----------------------
@@ -135,6 +146,7 @@ object LogicalOperator
 		override def unary_! = Nor
 		
 		override def apply(a: Boolean, b: => Boolean) = a || b
+		override def apply(a: UncertainBoolean, b: => UncertainBoolean): UncertainBoolean = a || View(b)
 		
 		
 		// OTHER    --------------------
@@ -152,6 +164,7 @@ object LogicalOperator
 		override def unary_! = And
 		
 		override def apply(a: Boolean, b: => Boolean) = !a || !b
+		override def apply(a: UncertainBoolean, b: => UncertainBoolean): UncertainBoolean = !a || View { !b }
 		
 		
 		// OTHER    --------------------
@@ -172,6 +185,7 @@ object LogicalOperator
 		override def unary_! = Or
 		
 		override def apply(a: Boolean, b: => Boolean) = !a && !b
+		override def apply(a: UncertainBoolean, b: => UncertainBoolean): UncertainBoolean = !a && View { !b }
 	}
 	/*
 	case object DifferentFrom extends LogicalEqualityOperator

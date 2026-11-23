@@ -39,6 +39,8 @@
   - **CsvReader** (which is now deprecated) now requires access to an implicit **JsonParser** 
     and parses individual values with it
 - Renamed **Iterator**'s `.mapCatching(...)` to `.mapLogging(...)`
+- **UncertainBoolean**'s `||` and `&&` functions now accept a **View** instead of **UncertainBoolean** directly
+  - Call-by-name implementation was not available since the **Boolean** parameter versions use the same syntax
 - **EnvironmentNotSetupException** is no longer a case class
 - **Seq**'s `.findAndPop(Extreme)` is now named `.findAndPopExtreme(Extreme)`
 - **LockablePointer** now requires the implementation of `restrictLockingWhile(...)`
