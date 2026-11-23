@@ -28,6 +28,11 @@ object Value
      * An empty value with no data type
      */
     val empty: Value = emptyWithType(AnyType)
+	
+	/**
+	 * An empty vector value ([])
+	 */
+	lazy val emptyVector = apply(Some(Vector.empty[Value]), VectorType)
     
     /**
       * Returns true if the two values are both empty or convert into an equal value.

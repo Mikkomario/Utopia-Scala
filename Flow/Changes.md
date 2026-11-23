@@ -192,8 +192,11 @@
     - Added `.isFullSuccess`
     - Added `.mapFailure(...)`
 - **Value**
-  - Added `.getModelOrString`
-  - Added a new `.castTo(Iterable)` variant
+  - Object
+    - Added `.emptyVector`
+  - Instance
+    - Added `.getModelOrString`
+    - Added a new `.castTo(Iterable)` variant
 ### Other changes
 - Built with Scala v2.13.18
 - Added `failFast: Boolean = false` parameter to **Future**'s `.raceWith(Future)` function, 
