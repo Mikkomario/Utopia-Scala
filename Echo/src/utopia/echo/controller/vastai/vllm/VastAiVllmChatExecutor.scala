@@ -344,9 +344,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					(loading.nonEmpty && remaining.size == settings.coreInstanceCount))
 				{
 					lazy val partialUseThreshold = now - settings.partialUseShutdownThreshold
-					remaining.find { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
+					remaining.iterator.zipWithIndex
+						.find { case (p, _) => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
 						// Case: A partially used processor found
-						.foreach { partiallyUsedProcessor =>
+						.foreach { case (partiallyUsedProcessor, processorIndex) =>
 							// Shuts down the loading processes (we don't need more processes at this time)
 							if (loading.nonEmpty) {
 								debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
@@ -357,36 +358,54 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 								shutdownTriggered = true
 							}
 							
-							// Makes sure we're really above the core processor count
-							// before shutting down active processes
-							val shouldTerminateActive = targetInstanceCountP.mutate { target =>
-								if (target > settings.coreInstanceCount)
-									true -> (target - 1)
-								else
-									false -> target
-							}
-							if (shouldTerminateActive) {
-								debugLog("Shutting down a partially used processor")
-								// Terminates the partially used instance
-								partiallyUsedProcessor.stop()
-									.forFailure { log(_, "Failure while stopping a partially used processor") }
-								queueSizeCheckThresholdP.value = 0
-								pendingTokensCheckThresholdP.value = 0
-								shutdownTriggered = true
+							// There must be more than one partially used process
+							// in order for this processor to be terminated
+							if (remaining.view.drop(processorIndex + 1)
+								.exists { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold })
+							{
+								// Makes sure we're really above the core processor count
+								// before shutting down active processes
+								val shouldTerminateActive = targetInstanceCountP.mutate { target =>
+									if (target > settings.coreInstanceCount)
+										true -> (target - 1)
+									else
+										false -> target
+								}
+								if (shouldTerminateActive) {
+									debugLog("Shutting down a partially used processor")
+									// Terminates the partially used instance
+									partiallyUsedProcessor.stop()
+										.forFailure { log(_, "Failure while stopping a partially used processor") }
+									queueSizeCheckThresholdP.value = 0
+									pendingTokensCheckThresholdP.value = 0
+									shutdownTriggered = true
+								}
 							}
 						}
 				}
 				
 				// Schedules the next check
+				val stillRemaining = {
+					if (shutdownTriggered)
+						remaining.filterNot { _.wasRequestedToStop }
+					else
+						remaining
+				}
 				val nextCheck = Pair[Option[Instant]](
-					remaining.iterator.map { _.lastRequestTime }.minOption.map { _ + settings.idleShutdownThreshold },
-					remaining.iterator.filter { _.notFullyUtilized }.map { _.lastPendingEndTime }.minOption
+					// Option A: The next idle shutdown threshold
+					stillRemaining.iterator.map { _.lastRequestTime }
+						.minOption.map { _ + settings.idleShutdownThreshold },
+					// Option B: The next partial use shutdown threshold (applied to the second partially used instance)
+					stillRemaining.iterator.filter { _.notFullyUtilized }
+						.map { _.lastPendingEndTime }.toOptimizedSeq.sorted.lift(1)
 						.map { _ + settings.partialUseShutdownThreshold })
 					.iterator.flatten.minOption match
 				{
 					case Some(earliestThreshold) =>
 						if (shutdownTriggered)
 							earliestThreshold.max(now + settings.maxInstanceShutdownFrequency)
+						else if (earliestThreshold <= now)
+							now + settings.maxInstanceShutdownFrequency
 						else
 							earliestThreshold
 							
@@ -739,6 +758,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		client.push(apiRequest).future.flatMap {
 			// Case: Request was marked as deprecated at a lower process level => Attempts that request again
 			case RequestWasDeprecated if !apiRequest.deprecated && stopFlag.isNotSet =>
+				debugLog("Processor became unavailable while processing a request => Redirects it")
 				request.asRetryIfPossible match {
 					case Some(retry) => push(retry)
 					// Case: Can't retry anymore => Returns a failure or a deprecation, depending on earlier results
@@ -881,12 +901,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					}
 					
 					// After a short delay, continues to unqueue more tasks
-					// Applies a longer delay, if all processors are busy
+					// Applies a longer delay if all processors are busy
 					val delay = {
-						if (processors.exists { p => p.maxContextSize.exists { p.pending.tokens < _.value } })
-							1.seconds
+						if (processors.exists { _.notFullyUtilized })
+							5.seconds
 						else
-							10.seconds
+							20.seconds
 					}
 					Delay.future(delay) { clearQueue() }
 				}
@@ -1087,26 +1107,31 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					counter.update { case (pending, active) => (pending - counterAdjust) -> (active + counterAdjust) }
 					
 					// Executes the request, if possible
+					val requestStarted = Now.toInstant
 					val resultFuture = {
 						// Case: Processor is usable => Gives it this request
 						if (process.detailedState.isUsable) {
-							_lastRequestTime = Now
+							_lastRequestTime = requestStarted
+							debugLog("Sending a request")
 							push(request, queue, model.name, safeMaxContextSize)
 						}
 						// Case: The used Vast AI instance is not usable at this time
 						//       => Attempts to forward the request to another processor
-						else
+						else {
+							debugLog(s"${ instanceId.mkString }: Redirects a request since the processor is unusable")
 							request.asRetryWith(
 								new IllegalStateException(s"Unusable process state: ${ process.detailedState }")) match
 							{
 								case Success(retry) => push(retry)
 								case Failure(error) => Future.successful(RequestSendingFailed(error))
 							}
+						}
 					}
 					
 					// Once the request completes, marks it as no longer active
 					resultFuture.onComplete { _ =>
 						counter.update { case (pending, active) => pending -> (active - counterAdjust) }
+						debugLog(s"Finished a request in ${ (Now.toInstant - requestStarted).description }")
 					}
 					
 					resultFuture
