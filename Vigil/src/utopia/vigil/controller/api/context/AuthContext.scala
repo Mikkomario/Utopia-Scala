@@ -181,6 +181,22 @@ trait AuthContext[+A] extends RequestContext[A]
 		}
 	
 	/**
+	 * @param scope Targeted scope
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token
+	 * @return Whether the current authorization grants the specified scope
+	 */
+	def hasScope(scope: ScopeTarget)(implicit connection: Connection, token: TokenIdRefs): Boolean =
+		hasScope(Scopes(scope))
+	/**
+	 * @param scope Targeted scope(s)
+	 * @param connection Implicit DB connection
+	 * @param token Implicit auth token
+	 * @return Whether the current authorization grants the specified scope
+	 */
+	def hasScope(scope: Scopes)(implicit connection: Connection, token: TokenIdRefs) = testScopes(scope).isEmpty
+	
+	/**
 	 * Checks whether the request has access to a specific auth scope
 	 * @param scope Scope to test
 	 * @param connection Implicit DB connection
