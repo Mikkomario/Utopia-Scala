@@ -10,6 +10,7 @@ import utopia.echo.model.vastai.instance.SshKey
 import utopia.flow.generic.factory.FromModelFactory
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.HasPropertiesLike.HasProperties
+import utopia.flow.util.StringExtensions._
 import utopia.flow.view.immutable.View
 import utopia.flow.view.immutable.eventful.AlwaysFalse
 
@@ -26,7 +27,7 @@ object GetSshKeys
 			// The ssh_keys property is a string value, representing an array of JSON objects
 			if (model("success").booleanOr(true))
 				model.tryGet("ssh_keys") {
-					_.tryString.flatMap { JsonBunny(_) }
+					_.tryString.flatMap { str => JsonBunny(str.stripControlCharacters) }
 						.flatMap { _.tryVectorWith { _.tryModel.flatMap(SshKey.apply) } }
 				}
 			else

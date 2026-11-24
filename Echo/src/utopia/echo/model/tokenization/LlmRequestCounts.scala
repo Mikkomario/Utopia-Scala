@@ -52,8 +52,8 @@ case class LlmRequestCounts(requests: Int, completed: Int, failures: Int, confir
 	
 	override def unary_- : LlmRequestCounts = LlmRequestCounts(-requests, -completed, -failures, -confirmedTokens)
 	
-	override def toModel: Model = Model.from("requests" -> requests, "completed" -> completed,
-		"failures" -> failures, "tokens" -> confirmedTokens)
+	override def toModel: Model = Model.from("total" -> requests,
+		"completed" -> Model.from("requests" -> completed, "tokens" -> confirmedTokens), "failures" -> failures)
 	
 	override def +(other: LlmRequestCounts): LlmRequestCounts =
 		LlmRequestCounts(requests + other.requests, completed + other.completed, failures + other.failures,

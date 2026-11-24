@@ -59,13 +59,11 @@ object ChatMessage
 	private object OpenAiMessageParser extends FromModelFactory[ChatMessage]
 	{
 		// TODO: Add support for refusals
-		override def apply(model: HasProperties): Try[ChatMessage] = {
-			parse(model) {
-				// NB: Open AI doesn't provide reasoning_content, but DeepSeek does.
-				// We're also preparing for the possible <think> element, in case of QWEN models
-				val (text, thoughtsFromContent) = ReplyParseUtils.separateThinkFrom(model("content").getString)
-				text -> (model("reasoning_content", "reasoningContent").getString + thoughtsFromContent)
-			}
+		override def apply(model: HasProperties): Try[ChatMessage] = parse(model) {
+			// NB: Open AI doesn't provide reasoning_content, but DeepSeek and vLLM do.
+			// We're also preparing for the possible <think> element, in case of QWEN models
+			val (text, thoughtsFromContent) = ReplyParseUtils.separateThinkFrom(model("content").getString)
+			text -> (model("reasoning", "reasoning_content", "reasoningContent").getString + thoughtsFromContent)
 		}
 	}
 }

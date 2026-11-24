@@ -1,6 +1,7 @@
 package utopia.echo.controller.vastai
 
 import utopia.echo.controller.vastai.InstanceReuseLogic.{AlternativeReuseLogic, FilteredReuseLogic}
+import utopia.echo.model.vastai.instance.InstanceState.Stopped
 import utopia.echo.model.vastai.instance.VastAiInstance
 import utopia.flow.util.Mutate
 
@@ -109,10 +110,9 @@ trait InstanceReuseLogic
 	// COMPUTED ---------------------------
 	
 	/**
-	 * @return Copy of this logic that only includes reusable instances.
-	 *         I.e. excludes instances that are offline, for example.
+	 * @return Copy of this logic that only includes reusable (i.e. stopped) instances.
 	 */
-	def onlyReusable = filter { _.filter { _.status.current.value.instanceMayBeReused } }
+	def onlyReusable = filter { _.filter { _.status.current.value == Stopped } }
 	
 	
 	// OTHER    ---------------------------

@@ -24,10 +24,10 @@ object MappingFunnel
 	 *                Default = false = items will be processed in an order which maximizes the utilized capacity.
 	 * @param prioritizeLarger Whether to prioritize larger items in the queue,
 	 *                         delaying some smaller items in the process.
-	 *                         Set this to true, if queue-usage is continuous / long-term,
+	 *                         Set this to true if queue-usage is continuous / long-term,
 	 *                         in which use-cases the larger items are easily delayed, normally.
 	 *
-	 *                         Default = false = larger items have no special handling,
+	 *                         Default = false = larger items have no special handling
 	 *                         and the maximum throughput takes priority instead.
 	 *
 	 *                         NB: This parameter has no effect, if 'ordered' is set to true.

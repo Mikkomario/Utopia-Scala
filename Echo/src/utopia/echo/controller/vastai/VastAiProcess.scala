@@ -227,7 +227,9 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 									() => terminate(instanceState = Some(instanceP.value), forceKill = true) }
 									.onComplete { result =>
 										instanceP.lock()
-										result.logWithMessage("Unexpected failure during the monitoring process")
+										// Ignores failures after process completion
+										if (state.isRunning)
+										    result.logWithMessage("Unexpected failure during the monitoring process")
 									}
 								
 								// If the instance was stopped (reused), starts it

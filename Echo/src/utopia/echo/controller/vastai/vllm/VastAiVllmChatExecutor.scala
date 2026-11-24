@@ -321,11 +321,13 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		if (settings.idleShutdownThreshold.isFinite || settings.partialUseShutdownThreshold.isFinite)
 			Some(LoopingProcess.restartable.after(settings.idleShutdownThreshold) { _ =>
 				// Checks whether any processes are currently idle or only partially used
+				// Doesn't count stopping processors in this equation
 				val now = Now.toInstant
 				val idleThreshold = now - settings.idleShutdownThreshold
-				val (loading, active) = processors.divideBy { p => p.phase == Serving && !p.wasRequestedToStop }
-					.toTuple
+				val (loading, active) = processors.filterNot { _.wasRequestedToStop }
+					.divideBy { _.phase == Serving}.toTuple
 				val (remaining, idle) = active.divideBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
+				var shutdownTriggered = false
 				
 				// Case: Some processes were idle => Stops them and reduces the target count accordingly
 				if (idle.nonEmpty) {
@@ -335,6 +337,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 						.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
 					queueSizeCheckThresholdP.value = 0
 					pendingTokensCheckThresholdP.value = 0
+					shutdownTriggered = true
 				}
 				// Case: No idle processes => Checks whether some have not been fully utilized for some time
 				else if (remaining.size > settings.coreInstanceCount ||
@@ -351,6 +354,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 								loading.foreach {
 									_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
 								}
+								shutdownTriggered = true
 							}
 							
 							// Makes sure we're really above the core processor count
@@ -368,6 +372,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 									.forFailure { log(_, "Failure while stopping a partially used processor") }
 								queueSizeCheckThresholdP.value = 0
 								pendingTokensCheckThresholdP.value = 0
+								shutdownTriggered = true
 							}
 						}
 				}
@@ -377,7 +382,16 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					remaining.iterator.map { _.lastRequestTime }.minOption.map { _ + settings.idleShutdownThreshold },
 					remaining.iterator.filter { _.notFullyUtilized }.map { _.lastPendingEndTime }.minOption
 						.map { _ + settings.partialUseShutdownThreshold })
-					.iterator.flatten.minOption.getOrElse { now + settings.idleShutdownThreshold }
+					.iterator.flatten.minOption match
+				{
+					case Some(earliestThreshold) =>
+						if (shutdownTriggered)
+							earliestThreshold.max(now + settings.maxInstanceShutdownFrequency)
+						else
+							earliestThreshold
+							
+					case None => now + settings.idleShutdownThreshold
+				}
 				Some(nextCheck)
 			})
 		// Case: Idle shutdown is disabled => No process needed
@@ -1061,13 +1075,12 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 						log("WARNING: No offer accepted when creating a request funnel.")
 						assumedVram
 				}
-				// Adds a safety marging to max VRAM usage
-				total - modelVramRequirements.modelSize -
-					modelVramRequirements.kiloTokenCost * (settings.contextSafetyMargin / 1000).value
+				// Adds a safety margin to max VRAM usage
+				total * settings.maxGpuUtil - modelVramRequirements.modelSize -
+					modelVramRequirements.kiloTokenCost * (settings.contextSafetyMargin.value / 1000)
 			}
 			debugLog(s"Starting a funnel of $safeMaxContextSize tokens / $availableVram VRAM")
-			val funnel = MappingFunnel(availableVram.megas) {
-				request: Request => request.vramConsumption.megas } {
+			val funnel = MappingFunnel(availableVram.megas) { request: Request => request.vramConsumption.megas } {
 				request =>
 					// Marks the request as no longer pending
 					val counterAdjust = RequestCount.unit(request.tokens)
@@ -1075,6 +1088,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					
 					// Executes the request, if possible
 					val resultFuture = {
+						// Case: Processor is usable => Gives it this request
 						if (process.detailedState.isUsable) {
 							_lastRequestTime = Now
 							push(request, queue, model.name, safeMaxContextSize)
@@ -1100,8 +1114,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 			
 			// Takes notice when the funnel becomes full or only partially filled
 			funnel.pendingFlag.addListener { e =>
+				// Case: Funnel became full
 				if (e.newValue)
 					_lastPendingStartTime = Now
+				// Case: Funnel became partially used
 				else
 					_lastPendingEndTime = Now
 				
@@ -1147,7 +1163,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		def lastPendingEndTime = _lastPendingEndTime
 		
 		def status = {
-			val (active, pending) = counter.value
+			val (pending, active) = counter.value
 			VastAiVllmProcessorStatus(phase, instanceStatus, active, pending,
 				maxContextSize.getOrElse(defaultMaxContextSize), started, _lastRequestTime, _lastPendingStartTime,
 				_lastPendingEndTime)
@@ -1158,7 +1174,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		 *         None if no funnel is available at this time.
 		 *
 		 *         When defined, contains 3 values:
-		 *         1. The usable mapping funnnel
+		 *         1. The usable mapping funnel
 		 *         1. Maximum context size
 		 *         1. Maximum VRAM for request use
 		 */
@@ -1199,7 +1215,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 			funnel
 				// Makes sure the funnel can handle this request
 				.filter { case (_, maxContextSize, _) =>
-					!stopped && request.tokens <= maxContextSize && process.detailedState.isUsable }
+					!stopped && request.tokens <= maxContextSize && process.detailedState.isUsable
+				}
 				.map { case (funnel, _, _) =>
 					// Marks the request as pending
 					counter.update { case (pending, active) => (pending + RequestCount.unit(request.tokens), active) }

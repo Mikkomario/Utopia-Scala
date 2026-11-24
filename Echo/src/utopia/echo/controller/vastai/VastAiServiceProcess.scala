@@ -379,6 +379,11 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	 */
 	def instanceId = vastAiProcess.instanceId
 	/**
+	 * @return The currently used Vast AI instance. None if no instance has been loaded yet.
+	 *         Notice that this value is a snapshot, and that the instance status (for example) is subject to change.
+	 */
+	def instance = vastAiProcess.instance
+	/**
 	 * @return Status of the currently active Vast AI instance.
 	 *         None if no instance is currently active.
 	 */
@@ -572,7 +577,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 				val hostingResult = state match {
 					case StoppingInstance(hostingResult, _, _) => hostingResult
 					case state =>
-						log(s"${ vastAiProcess.instanceId.mkString }:Unexpected state after instance-destruction: $state")
+						log(s"${ vastAiProcess.instanceId.mkString }: Unexpected state after instance-destruction: $state")
 						HostingResult.Failed(new IllegalStateException("Unexpected state at instance destruction"))
 				}
 				hostingResult -> Stopped(hostingResult, vastAiProcess.detailedState, vastAiProcess.instance,
@@ -585,7 +590,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			debugLog(s"${ vastAiProcess.instanceId.mkString }: Records process completion")
 			recordP.set(VastAiVllmProcessRecord(
 				hostingResult, started = startTime, terminated = Now, loaded = _loadCompletionTime,
-				serviceStarted = hostingStartTime, stopped = stopTime, offer = offerP.value))
+				serviceStarted = hostingStartTime, stopped = stopTime, offer = offerP.value, instance = instance))
 		}
 	}
 	
@@ -906,12 +911,14 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 		// Reads the public SSH key
 		StringFrom.path(publicSshKeyPath)
 			.map { sshKey =>
+				val cleanSshKey = sshKey.stripControlCharacters
 				// Makes sure that key is attached to the rented instance
 				vastAiClient.send(GetSshKeys(instanceId, deprecationView)).mapOrFail { keysOnInstance =>
-					if (keysOnInstance.exists { _.publicKey == sshKey })
+					if (keysOnInstance.exists { _.publicKey ~== cleanSshKey })
 						Success("Key was already attached")
 					else {
-						val result = vastAiClient.send(AttachSshKey(instanceId, sshKey, deprecationView)).waitForResult()
+						val result = vastAiClient.send(AttachSshKey(instanceId, cleanSshKey, deprecationView))
+							.waitForResult()
 						debugLog(s"$instanceId: Waiting 40 more seconds in order for the SSH key to be registered on the remote device")
 						// TODO: We need a more dynamic approach
 						Wait(40.seconds)

@@ -1,5 +1,6 @@
 package utopia.echo.model.vastai.process
 
+import utopia.echo.model.vastai.instance.VastAiInstance
 import utopia.echo.model.vastai.instance.offer.Offer
 import utopia.flow.time.Duration
 import utopia.flow.time.TimeExtensions._
@@ -14,14 +15,16 @@ import java.time.Instant
  * @param loaded Time when the instance was fully loaded. None if it didn't fully load.
  * @param serviceStarted Time when the service became usable. None if it didn't.
  * @param stopped Time when the process was requested to stop. None if no request to stop was received.
- * @param offer Selected offer. None if the process failed before an offer was selected
- *              (e.g. if no offers were available).
+ * @param offer The selected offer. None if the process failed before an offer was selected,
+ *              or if an instance was reused.
+ * @param instance The loded Vast AI instance. None if no instance could be acquired.
  * @author Mikko Hilpinen
  * @since 03.03.2026, v1.5
  */
 case class VastAiVllmProcessRecord(hostingResult: HostingResult, started: Instant, terminated: Instant,
                                    loaded: Option[Instant] = None, serviceStarted: Option[Instant] = None,
-                                   stopped: Option[Instant] = None, offer: Option[Offer] = None)
+                                   stopped: Option[Instant] = None, offer: Option[Offer] = None,
+                                   instance: Option[VastAiInstance] = None)
 {
 	// ATTRIBUTES   --------------------------
 	

@@ -31,43 +31,41 @@ object BufferedOpenAiReply extends FromModelFactory[BufferedOpenAiReply]
 	
 	// IMPLEMENTED  -------------------------
 	
-	override def apply(model: HasProperties): Try[BufferedOpenAiReply] = {
-		schema.validate(model).flatMap { model =>
-			// Parses the "choices" (messages)
-			model("choices").tryVector
-				.flatMap { values =>
-					values.zipWithIndex.tryMapAll { case (value, index) =>
-						value.tryModel.flatMap { choiceModel =>
-							choiceModel.tryGet("message") { _.tryModel.flatMap(ChatMessage.openAiMessageParser.apply) }
-								.map { (_, choiceModel, choiceModel("index").intOr(index)) }
-						}
+	override def apply(model: HasProperties): Try[BufferedOpenAiReply] = schema.validate(model).flatMap { model =>
+		// Parses the "choices" (messages)
+		model("choices").tryVector
+			.flatMap { values =>
+				values.zipWithIndex.tryMapAll { case (value, index) =>
+					value.tryModel.flatMap { choiceModel =>
+						choiceModel.tryGet("message") { _.tryModel.flatMap(ChatMessage.openAiMessageParser.apply) }
+							.map { (_, choiceModel, choiceModel("index").intOr(index)) }
 					}
 				}
-				.flatMap { choices =>
-					// Parses the token usage
-					model.tryGet("usage") {
-							_.tryModel.flatMap(OpenAiTokenUsageStatistics.chatCompletionParser.apply) }
-						.map { tokenUsage =>
-							val orderedChoices = choices.sortBy { _._3 }
-							// Determines the last stop choice
-							val stopChoice = orderedChoices.reverseIterator.findMap { case (_, model, _) =>
-								model("finish_reason").string.flatMap {
-									case "stop" => Some(MessageCompleted)
-									case "length" => Some(LengthLimitReached)
-									case "content_filter" => Some(Censored)
-									case "tool_calls" | "function_call" => Some(ToolCalled)
-									case "insufficient_system_resource" => Some(ServerError)
-									case _ => None
-								}
+			}
+			.flatMap { choices =>
+				// Parses the token usage
+				model.tryGet("usage") {
+						_.tryModel.flatMap(OpenAiTokenUsageStatistics.chatCompletionParser.apply) }
+					.map { tokenUsage =>
+						val orderedChoices = choices.sortBy { _._3 }
+						// Determines the last stop choice
+						val stopChoice = orderedChoices.reverseIterator.findMap { case (_, model, _) =>
+							model("finish_reason").string.flatMap {
+								case "stop" => Some(MessageCompleted)
+								case "length" => Some(LengthLimitReached)
+								case "content_filter" => Some(Censored)
+								case "tool_calls" | "function_call" => Some(ToolCalled)
+								case "insufficient_system_resource" => Some(ServerError)
+								case _ => None
 							}
-							apply(model("id").getString, orderedChoices.map { _._1 }, tokenUsage,
-								stopChoice.getOrElse(MessageCompleted),
-								model("created").long
-									.flatMap { unixSeconds => Try { Instant.ofEpochSecond(unixSeconds) }.toOption }
-									.getOrElse(Now))
 						}
-				}
-		}
+						apply(model("id").getString, orderedChoices.map { _._1 }, tokenUsage,
+							stopChoice.getOrElse(MessageCompleted),
+							model("created").long
+								.flatMap { unixSeconds => Try { Instant.ofEpochSecond(unixSeconds) }.toOption }
+								.getOrElse(Now))
+					}
+			}
 	}
 }
 

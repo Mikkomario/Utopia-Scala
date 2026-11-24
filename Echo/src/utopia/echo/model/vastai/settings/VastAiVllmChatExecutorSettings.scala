@@ -203,6 +203,12 @@ object VastAiVllmChatExecutorSettings
 		 * @see [[closingIdleProcessorsAfter]]
 		 */
 		def closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold: Duration): Repr
+		/**
+		 * @param minDelay Minimum delay between two instance shutdowns.
+		 *                 Affects shutdowns triggered by idle and/or partially used processors.
+		 * @return A copy of this instance applying the specified maximum frequency.
+		 */
+		def withMaxInstanceShutdownFrequency(minDelay: Duration): Repr
 		
 		/**
 		 * @param thinks A function that receives name of the hosted LLM and yields whether that model uses
@@ -334,6 +340,8 @@ object VastAiVllmChatExecutorSettings
 			mapExecutorSettings { _.closingIdleProcessorsAfter(idleShutdownThreshold) }
 		override def closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold: Duration): Repr =
 			mapExecutorSettings { _.closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold) }
+		override def withMaxInstanceShutdownFrequency(minDelay: Duration): Repr =
+			mapExecutorSettings { _.withMaxInstanceShutdownFrequency(minDelay) }
 		override def detectingThinkUsing(thinks: String => Boolean): Repr =
 			mapExecutorSettings { _.detectingThinkUsing(thinks) }
 		override def withStartupIsLazy(startupLazily: Boolean): Repr =
@@ -431,6 +439,7 @@ case class VastAiVllmChatExecutorSettings(vllmSettings: VastAiVllmSettings = Vas
                                           reuseSetupTimeout: Duration = 5.minutes,
                                           idleShutdownThreshold: Duration = 15.minutes,
                                           partialUseShutdownThreshold: Duration = 25.minutes,
+                                          maxInstanceShutdownFrequency: Duration = 1.minutes,
                                           thinks: String => Boolean = { _ => false },
                                           startsLazily: Boolean = false, preservesStoppedInstances: Boolean = false)
 	extends VastAiVllmChatExecutorSettingsFactory[VastAiVllmChatExecutorSettings]
@@ -479,6 +488,8 @@ case class VastAiVllmChatExecutorSettings(vllmSettings: VastAiVllmSettings = Vas
 		copy(idleShutdownThreshold = idleShutdownThreshold)
 	override def closingPartiallyUsedProcessorsAfter(partiallyUsedShutdownThreshold: Duration): VastAiVllmChatExecutorSettings =
 		copy(partialUseShutdownThreshold = partiallyUsedShutdownThreshold)
+	override def withMaxInstanceShutdownFrequency(minDelay: Duration): VastAiVllmChatExecutorSettings =
+		copy(maxInstanceShutdownFrequency = minDelay)
 	
 	override def detectingThinkUsing(thinks: String => Boolean): VastAiVllmChatExecutorSettings =
 		copy(thinks = thinks)

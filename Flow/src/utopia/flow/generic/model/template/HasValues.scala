@@ -211,6 +211,7 @@ trait HasValues extends MapAccess[String, Value]
 			if (value.isEmpty)
 				new IllegalArgumentException(s"\"$propName\" was not specified", cause)
 			else
-				new IllegalArgumentException(s"Value of \"$propName\" could not be accepted", cause)
+				new IllegalArgumentException(s"Value of \"$propName\" (${
+					value.valueDescription }) was not accepted", cause)
 		})
 }
