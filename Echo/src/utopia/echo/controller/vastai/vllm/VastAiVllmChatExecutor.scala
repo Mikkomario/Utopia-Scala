@@ -214,7 +214,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		.withDestructionLogic { (instance, runTime, apiHosted) =>
 			// Checks the custom logic first
 			if (settings.shouldDestroy(instance, runTime, apiHosted)) {
-				// Case: Stopping is not enabled or already requested to stop without keeping stopped instances
+				// Case: Stopping is not enabled or this system has already been requested to stop
+				//       without keeping stopped instances
 				//       => Destroys all instances
 				if (settings.stopInstanceCount <= 0 || (stopFlag.isSet && !settings.preservesStoppedInstances))
 					true
@@ -227,18 +228,28 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 						case _ => false
 					}
 					// Case: Stops the instance instead of destroying it => Remembers the instance ID
-					if (stops)
+					if (stops) {
+						debugLog(s"Stops #${ instance.id } instead of destroying it.")
 						stoppedInstanceIdsP :+= instance.id
+					}
+					else
+						debugLog(s"Destroys ${ instance.id } instead of stopping it.")
 					!stops
 				}
 				// Case: Enough reserved instances as is => Destroys this instance
-				else
+				else {
+					debugLog(s"Destroys instance #${ instance.id } because there's enough reserved instances.")
 					true
+				}
 			}
 			// Case: Custom logic override => Stops the instance instead of destroying it.
 			//                                Also, these don't count towards the reserved instances.
-			else
+			else {
+				debugLog(s"Custom logic determined that instance #${
+					instance.id } should be stopped instead of destroyed.")
+				stoppedInstanceIdsP :+= instance.id
 				false
+			}
 		}
 	
 	/**
@@ -323,98 +334,37 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	private val idleShutdownProcess = {
 		if (settings.idleShutdownThreshold.isFinite || settings.partialUseShutdownThreshold.isFinite)
 			Some(LoopingProcess.restartable.after(settings.idleShutdownThreshold) { _ =>
-				// Checks whether any processes are currently idle or only partially used
-				// Doesn't count stopping processors in this equation
-				val now = Now.toInstant
-				val idleThreshold = now - settings.idleShutdownThreshold
-				val (loading, active) = processors.filterNot { _.wasRequestedToStop }
-					.divideBy { _.phase == Serving}.toTuple
-				val (remaining, idle) = active.divideBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
-				var shutdownTriggered = false
-				
-				// Case: Some processes were idle => Stops them and reduces the target count accordingly
-				if (idle.nonEmpty) {
-					targetInstanceCountP.update { target => (target - idle.size - loading.size) max 0 }
-					debugLog(s"Shutting down ${ idle.size } idle processors and ${ loading.size } loading processors")
-					(idle.iterator ++ loading)
-						.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
-					queueSizeCheckThresholdP.value = 0
-					pendingTokensCheckThresholdP.value = 0
-					shutdownTriggered = true
+				// Case: Queue is not empty => Waits before shutting down any instances
+				if (hasQueueFlag.isSet)
+					Some(30.seconds)
+				else {
+					val shutdownTriggered = shutdownUnusedProcessors()
+					
+					// Schedules the next check
+					val stillRemaining = processors.filter { p => p.phase == Serving && !p.wasRequestedToStop }
+					val nextCheck = Pair[Option[Instant]](
+						// Option A: The next idle shutdown threshold
+						stillRemaining.iterator.map { _.lastRequestTime }
+							.minOption.map { _ + settings.idleShutdownThreshold },
+						// Option B: The next partial use shutdown threshold (applied to the second partially used instance)
+						stillRemaining.iterator.filter { _.notFullyUtilized }
+							.map { _.lastPendingEndTime }.toOptimizedSeq.sorted.lift(1)
+							.map { _ + settings.partialUseShutdownThreshold })
+						.iterator.flatten.minOption match
+					{
+						case Some(earliestThreshold) =>
+							val now = Now.toInstant
+							if (shutdownTriggered)
+								earliestThreshold.max(now + settings.maxInstanceShutdownFrequency)
+							else if (earliestThreshold <= now)
+								now + settings.maxInstanceShutdownFrequency
+							else
+								earliestThreshold
+						
+						case None => Now + settings.idleShutdownThreshold
+					}
+					Some(nextCheck)
 				}
-				// Case: No idle processes => Checks whether some have not been fully utilized for some time
-				else if (remaining.size > settings.coreInstanceCount ||
-					(loading.nonEmpty && remaining.size == settings.coreInstanceCount))
-				{
-					lazy val partialUseThreshold = now - settings.partialUseShutdownThreshold
-					remaining.iterator.zipWithIndex
-						.find { case (p, _) => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
-						// Case: A partially used processor found
-						.foreach { case (partiallyUsedProcessor, processorIndex) =>
-							// Shuts down the loading processes (we don't need more processes at this time)
-							if (loading.nonEmpty) {
-								debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
-								targetInstanceCountP.update { target => (target - loading.size) max 0 }
-								loading.foreach {
-									_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
-								}
-								shutdownTriggered = true
-							}
-							
-							// There must be more than one partially used process
-							// in order for this processor to be terminated
-							if (remaining.view.drop(processorIndex + 1)
-								.exists { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold })
-							{
-								// Makes sure we're really above the core processor count
-								// before shutting down active processes
-								val shouldTerminateActive = targetInstanceCountP.mutate { target =>
-									if (target > settings.coreInstanceCount)
-										true -> (target - 1)
-									else
-										false -> target
-								}
-								if (shouldTerminateActive) {
-									debugLog("Shutting down a partially used processor")
-									// Terminates the partially used instance
-									partiallyUsedProcessor.stop()
-										.forFailure { log(_, "Failure while stopping a partially used processor") }
-									queueSizeCheckThresholdP.value = 0
-									pendingTokensCheckThresholdP.value = 0
-									shutdownTriggered = true
-								}
-							}
-						}
-				}
-				
-				// Schedules the next check
-				val stillRemaining = {
-					if (shutdownTriggered)
-						remaining.filterNot { _.wasRequestedToStop }
-					else
-						remaining
-				}
-				val nextCheck = Pair[Option[Instant]](
-					// Option A: The next idle shutdown threshold
-					stillRemaining.iterator.map { _.lastRequestTime }
-						.minOption.map { _ + settings.idleShutdownThreshold },
-					// Option B: The next partial use shutdown threshold (applied to the second partially used instance)
-					stillRemaining.iterator.filter { _.notFullyUtilized }
-						.map { _.lastPendingEndTime }.toOptimizedSeq.sorted.lift(1)
-						.map { _ + settings.partialUseShutdownThreshold })
-					.iterator.flatten.minOption match
-				{
-					case Some(earliestThreshold) =>
-						if (shutdownTriggered)
-							earliestThreshold.max(now + settings.maxInstanceShutdownFrequency)
-						else if (earliestThreshold <= now)
-							now + settings.maxInstanceShutdownFrequency
-						else
-							earliestThreshold
-							
-					case None => now + settings.idleShutdownThreshold
-				}
-				Some(nextCheck)
 			})
 		// Case: Idle shutdown is disabled => No process needed
 		else
@@ -559,7 +509,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	/**
 	 * @return The current status of this executor
 	 */
-	def status = VastAiVllmChatExecutorStatus(processors.map { _.status }, _queue.size)
+	def status = VastAiVllmChatExecutorStatus(processors.map { _.status }.sorted, _queue.size)
 	
 	/**
 	 * Maximum request (context) size that is possible to handle without using backup executors
@@ -684,7 +634,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 			}
 			
 			// Attempts to give the request to one of the processors, preferring those least used
-			targetProcessors.sortBy { _.pendingToActiveRatio }
+			targetProcessors.sortBy { _.utilizationRatio }
 				.findMap { processor =>
 					processor.tryPush(request).map { resultFuture =>
 						// Activates more instances, if appropriate
@@ -803,7 +753,11 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	                                              thresholdIncrement: => Int, thresholdAtMaxInstances: => Int,
 	                                              current: => Int)
 	                                             (thresholdFrom: Int => Int) =
-		if (checkThresholdP.updateAndGet { _ - adjustment } <= 0) {
+	{
+		// Will not adjust the target as long as there's remaining capacity in the current processors
+		if (checkThresholdP.updateAndGet { _ - adjustment } <= 0 &&
+			!processors.exists { p => p.usable && p.notFullyUtilized })
+		{
 			// Checks whether new instances should be generated
 			checkThresholdP.value = targetInstanceCountP.mutate { currentTarget =>
 				// Case: Already at max instances => Keeps the current target
@@ -826,6 +780,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 				}
 			}
 		}
+	}
 	
 	/**
 	 * Schedules the next queue-clearance, which is initiated when at least one processor becomes usable.
@@ -907,7 +862,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					// Applies a longer delay if all processors are busy
 					val delay = {
 						if (processors.exists { _.notFullyUtilized })
-							5.seconds
+							1.seconds
 						else
 							20.seconds
 					}
@@ -1002,6 +957,80 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 						Delay(10.seconds) { process }
 				}
 			}
+	}
+	
+	/**
+	 * Shuts down idle and/or partially used processors, if appropriate
+	 * @return Whether at least one processor was stopped
+	 */
+	private def shutdownUnusedProcessors() = {
+		// Checks whether any processes are currently idle or only partially used
+		// Doesn't count stopping processors in this equation
+		val now = Now.toInstant
+		val idleThreshold = now - settings.idleShutdownThreshold
+		val (loading, active) = processors.filterNot { _.wasRequestedToStop }.divideBy { _.phase == Serving }.toTuple
+		val (remaining, idle) = active.divideBy { p => p.lastRequestTime < idleThreshold && p.isEmpty }.toTuple
+		
+		// Case: Some processes were idle => Stops them and reduces the target count accordingly
+		if (idle.nonEmpty) {
+			targetInstanceCountP.update { target => (target - idle.size - loading.size) max 0 }
+			debugLog(s"Shutting down ${ idle.size } idle processors and ${ loading.size } loading processors")
+			(idle.iterator ++ loading)
+				.foreach { _.stop().forFailure { log(_, "Failure while stopping an idle processor") } }
+			queueSizeCheckThresholdP.value = 0
+			pendingTokensCheckThresholdP.value = 0
+			true
+		}
+		// Case: No idle processes => Checks whether some have not been fully utilized for some time
+		else if (remaining.size > settings.coreInstanceCount ||
+			(loading.nonEmpty && remaining.size == settings.coreInstanceCount))
+		{
+			lazy val partialUseThreshold = now - settings.partialUseShutdownThreshold
+			remaining.iterator.zipWithIndex
+				.find { case (p, _) => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
+				// Case: A partially used processor found
+				.exists { case (partiallyUsedProcessor, processorIndex) =>
+					var shutdownTriggered = false
+					
+					// Shuts down the loading processes (we don't need more processes at this time)
+					if (loading.nonEmpty) {
+						debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
+						targetInstanceCountP.update { target => (target - loading.size) max 0 }
+						loading.foreach {
+							_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
+						}
+						shutdownTriggered = true
+					}
+					
+					// There must be more than one partially used process
+					// in order for this processor to be terminated
+					if (remaining.view.drop(processorIndex + 1)
+						.exists { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold })
+					{
+						// Makes sure we're really above the core processor count
+						// before shutting down active processes
+						val shouldTerminateActive = targetInstanceCountP.mutate { target =>
+							if (target > settings.coreInstanceCount)
+								true -> (target - 1)
+							else
+								false -> target
+						}
+						if (shouldTerminateActive) {
+							debugLog("Shutting down a partially used processor")
+							// Terminates the partially used instance
+							partiallyUsedProcessor.stop()
+								.forFailure { log(_, "Failure while stopping a partially used processor") }
+							queueSizeCheckThresholdP.value = 0
+							pendingTokensCheckThresholdP.value = 0
+							shutdownTriggered = true
+						}
+					}
+					
+					shutdownTriggered
+				}
+		}
+		else
+			false
 	}
 	
 	/**
@@ -1177,8 +1206,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		}
 		
 		def pending = counter.value._1
-		def pendingToActiveRatio = funnel match {
-			case Some((funnel, _, maxVram)) => funnel.queuedCapacity / maxVram.megas
+		def utilizationRatio = funnel match {
+			case Some((funnel, _, maxVram)) => funnel.utilization / maxVram.megas
 			case None => 1000000
 		}
 		

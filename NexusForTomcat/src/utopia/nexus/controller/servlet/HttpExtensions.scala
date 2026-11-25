@@ -93,13 +93,16 @@ object HttpExtensions
 								
 								// Case: Writing not completed yet => Closes the stream once writing finishes
 								case None =>
-									writeCompletionFuture.onComplete { _ =>
-										Try { stream.flush() }
-											.logWithMessage("Failure while flushing the response stream")
-										stream.closeQuietly()
-											.logWithMessage("Failure while attempting to close the response stream")
-									}
-									Success(writeCompletionFuture)
+									Success(writeCompletionFuture.mapResult { writeResult =>
+										writeResult.logWithMessage("Failure while writing the response body",
+											Model.from("contentType" -> r.body.contentType.map { _.toString }))
+										val flushResult = Try { stream.flush() }
+										flushResult.logWithMessage("Failure while flushing the response stream")
+										val closeResult = stream.closeQuietly()
+										closeResult.logWithMessage("Failure while attempting to close the response stream")
+										
+										writeResult.failIf { flushResult.failure.orElse(closeResult.failure) }
+									})
 							}
 						// Case: Failed to start writing => Closes the stream & yields a failure
 						case Failure(error) =>

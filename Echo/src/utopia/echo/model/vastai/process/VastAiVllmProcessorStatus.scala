@@ -7,8 +7,17 @@ import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.Se
 import utopia.flow.generic.casting.ValueConversions._
 import utopia.flow.generic.model.immutable.Model
 import utopia.flow.generic.model.template.ModelConvertible
+import utopia.flow.operator.ordering.CombinedOrdering
 
 import java.time.Instant
+
+object VastAiVllmProcessorStatus
+{
+	// ATTRIBUTES   ----------------------
+	
+	implicit val ord: Ordering[VastAiVllmProcessorStatus] =
+		CombinedOrdering(Ordering.by { _.phase.index }, Ordering.by { _.started })
+}
 
 /**
  * Represents the status of a single Vast AI instance -based request-processor
