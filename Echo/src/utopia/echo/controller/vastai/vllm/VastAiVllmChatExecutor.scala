@@ -7,7 +7,7 @@ import utopia.annex.model.response.{RequestFailure, RequestResult, Response}
 import utopia.disciple.controller.Gateway
 import utopia.echo.controller.chat.BufferingChatRequestExecutor
 import utopia.echo.controller.client.VastAiApiClient
-import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.maxRetries
+import utopia.echo.controller.vastai.vllm.VastAiVllmChatExecutor.{maxRetries, timestampFormat}
 import utopia.echo.controller.vastai.{InstanceReuseLogic, SelectOffer}
 import utopia.echo.model.enumeration.ModelParameter.ContextTokens
 import utopia.echo.model.enumeration.ServiceState
@@ -51,6 +51,7 @@ import utopia.flow.view.mutable.{Pointer, Settable}
 
 import java.net.ServerSocket
 import java.time.Instant
+import java.time.format.DateTimeFormatter
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -60,6 +61,8 @@ object VastAiVllmChatExecutor
 	// ATTRIBUTES   --------------------
 	
 	private val maxRetries = 8
+	
+	private val timestampFormat = DateTimeFormatter.ofPattern("HH:mm:ss")
 	
 	val factory = new VastAiVllmChatExecutorFactory(VastAiVllmChatExecutorSettings.default)
 	
@@ -1029,7 +1032,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		
 	private def debugLog(entry: => String) = debugLogger.foreach { debugLogUsing(_, entry) }
 	private def debugLogUsing(logger: KeptOpenWriter, entry: String) =
-		logger { _.println(s"${ Now.toLocalTime }: $entry") }
+		logger { _.println(s"${ Now.toLocalTime.format(timestampFormat) }: $entry") }
 	
 	
 	// NESTED   ---------------------------
@@ -1112,7 +1115,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 						// Case: Processor is usable => Gives it this request
 						if (process.detailedState.isUsable) {
 							_lastRequestTime = requestStarted
-							debugLog("Sending a request")
 							push(request, queue, model.name, safeMaxContextSize)
 						}
 						// Case: The used Vast AI instance is not usable at this time
@@ -1131,7 +1133,6 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 					// Once the request completes, marks it as no longer active
 					resultFuture.onComplete { _ =>
 						counter.update { case (pending, active) => pending -> (active - counterAdjust) }
-						debugLog(s"Finished a request in ${ (Now.toInstant - requestStarted).description }")
 					}
 					
 					resultFuture
