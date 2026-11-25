@@ -10,6 +10,7 @@
 - Deprecated **DatabaseCache** (class); Added new constructors that yield **DbValue** **Cache**s
 ### Bugfixes
 - Fixed a bug that caused `Select.distinctIf(...)` to behave opposite to what was requested
+- Bugfix to **TimelineView**'s `.activeDuring(Instant)` function
 - **Store** now ensures that input is distinct
 - Fixed a bug that caused **References** to sometimes fail after being cleared by **ColumnLengthRules**, for example.
 - Added more detailed handling for situations where a table references another table from multiple columns; 

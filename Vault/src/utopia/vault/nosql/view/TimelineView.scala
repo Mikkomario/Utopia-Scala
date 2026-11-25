@@ -23,9 +23,9 @@ object TimelineView
 			val deprCol = v.model.deprecationColumn
 			val deprecationCondition = {
 				if (deprCol.allowsNull)
-					deprCol.isNull || deprCol < instant
+					deprCol.isNull || deprCol > instant
 				else
-					deprCol < instant
+					deprCol > instant
 			}
 			v.filter(v.timestampColumn <= instant && deprecationCondition)
 		}
