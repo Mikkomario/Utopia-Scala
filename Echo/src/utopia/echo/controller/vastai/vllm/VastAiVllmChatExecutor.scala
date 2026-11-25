@@ -1121,8 +1121,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 			// Prepares a funnel for the incoming requests
 			val safeMaxContextSize = maxContextSize - settings.contextSafetyMargin
 			val availableVram = {
-				val total = process.acceptedOffer match {
-					case Some(offer) => offer.gpu.ram
+				val total = process.acceptedOffer.orElse { process.instance } match {
+					case Some(instanceInfo) => instanceInfo.gpu.ram
 					case None =>
 						log("WARNING: No offer accepted when creating a request funnel.")
 						assumedVram
