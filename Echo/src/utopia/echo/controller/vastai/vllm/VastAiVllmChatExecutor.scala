@@ -418,10 +418,8 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 			None
 		else {
 			// Checks how much capacity there is for new processes
-			val capacity = cleanProcesses()
-			
 			// Case: No capacity => Waits until the next call (or checks after 5 mins)
-			if (capacity <= 0) {
+			if (remainingProcessorCapacity <= 0) {
 				debugLog("No capacity for generating")
 				Some(WaitDuration(5.minutes).breakable)
 			}
@@ -440,7 +438,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 				
 				// Schedules the next loop
 				// Case: More capacity is available => Continues to generate the next instance after a short delay
-				if (cleanProcesses() > 0)
+				if (remainingProcessorCapacity > 0)
 					Some(WaitDuration(continueDelay))
 				// Case: No more capacity => Waits until one of the processes completes (checks after 5 mins anyway)
 				else
@@ -509,7 +507,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	/**
 	 * @return The current status of this executor
 	 */
-	def status = VastAiVllmChatExecutorStatus(processors.map { _.status }.sorted, _queue.size)
+	def status = VastAiVllmChatExecutorStatus(cleanProcesses().map { _.status }.sorted, _queue.size)
 	
 	/**
 	 * Maximum request (context) size that is possible to handle without using backup executors
@@ -528,6 +526,10 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	 * @return Number of currently usable Vast AI instances / vLLM APIs
 	 */
 	def usableProcessorsCount = usableProcessorsP.value.count { _.usable }
+	/**
+	 * @return Number of processors that may still be added at current supply & demand levels
+	 */
+	private def remainingProcessorCapacity = targetInstanceCountP.value - cleanProcesses().size
 	
 	private def processors = processorsP.value
 	
@@ -1037,18 +1039,16 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	 * Removes completed processes from the pool
 	 * @return Currently remaining capacity (i.e. how many more processes may be started)
 	 */
-	private def cleanProcesses() = processorsP.mutate { processes =>
-		val remaining = processes.filterNot { _.terminated }
-		debugLogger.foreach { log =>
-			val removed = processes.filterNot(remaining.contains)
-			if (removed.nonEmpty) {
+	private def cleanProcesses() = processorsP.updateAndGet { processors =>
+		val (remaining, removed) = processors.divideBy { _.terminated }.toTuple
+		if (removed.nonEmpty)
+			debugLogger.foreach { log =>
 				log { writer =>
 					writer.println(s"${ Now.toLocalTime }: Removed ${ removed.size } completed Vast AI processes:")
 					removed.foreach { p => writer.println(s"\t- ${ p.instanceId.mkString }: ${ p.vastAiState }") }
 				}
 			}
-		}
-		(targetInstanceCountP.value - remaining.size) -> remaining
+		remaining
 	}
 	
 	/**
