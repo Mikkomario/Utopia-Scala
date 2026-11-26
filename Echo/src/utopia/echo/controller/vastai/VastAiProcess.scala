@@ -185,8 +185,9 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 							_stateP.update { previous => Stopping(previous.instanceStatus, destroying = destroys) }
 						}
 					}
-				val terminator = ChangeListener[Boolean] { e =>
+				val terminateOnStop = ChangeListener[Boolean] { e =>
 					if (e.newValue) {
+						debugLog(s"$instanceId: Terminates instance after requested to stop")
 						terminate()
 						Detach
 					}
@@ -196,13 +197,14 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 				
 				// Case: Already requested to stop => Destroys or stops the instance immediately
 				if (shouldHurry) {
+					debugLog(s"$instanceId: This process was requested to stop before the instance was acquired")
 					terminate(forceKill = true)
 					instancePointerP.setOne(Failure(
 						new IllegalStateException("Requested to stop before the instance was acquired")))
 				}
 				else {
 					// Prepares to terminate this contract if this process is requested to stop
-					hurryFlag.addListener(terminator)
+					hurryFlag.addListener(terminateOnStop)
 					
 					// Sets up the instance in the background
 					// Attempts to retrieve the instance multiple times, in case of {"instances": null} result
@@ -228,7 +230,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 									.onComplete { result =>
 										instanceP.lock()
 										// Ignores failures after process completion
-										if (state.isRunning)
+										if (state.isRunning && hurryFlag.isNotSet)
 										    result.logWithMessage("Unexpected failure during the monitoring process")
 									}
 								
@@ -242,6 +244,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 											// Case: Failed to request the instance to start => Terminates this process
 											case failure: RequestFailure =>
 												log(failure.cause, "Failed to start the instance")
+												debugLog(s"$instanceP: Failed to start a reused instance => Terminates")
 												terminate(instanceState = Some(instanceP.value), forceKill = true)
 										}
 							
@@ -274,7 +277,7 @@ class VastAiProcess(statusUpdateInterval: Duration = 10.seconds, maxConsecutiveS
 						_stateP.update { previousState => Failed(error, previousState, Some(instanceId)) }
 				}
 				// Finalizes the state
-				hurryFlag.removeListener(terminator)
+				hurryFlag.removeListener(terminateOnStop)
 				_stateP.lock()
 				_destroyedFlag.lock()
 			

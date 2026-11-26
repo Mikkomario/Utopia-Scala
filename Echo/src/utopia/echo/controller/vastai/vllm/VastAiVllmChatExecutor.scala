@@ -423,6 +423,13 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 				debugLog("No capacity for generating")
 				Some(WaitDuration(5.minutes).breakable)
 			}
+			// Case: The current processor capacity meets the ongoing demand
+			//       => Instead of activating a new processor, decreases the target count
+			else if (processors.exists { p => p.usable && p.notFullyUtilized }) {
+				debugLog("Decreases processor target instead of starting a new instance (not enough demand)")
+				targetInstanceCountP.update { _ - 1 }
+				Some(WaitDuration(5.minutes).breakable)
+			}
 			// Case: Capacity available => Starts a new instance
 			else {
 				// Waits until the new instance has been created
@@ -757,30 +764,32 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 	                                             (thresholdFrom: Int => Int) =
 	{
 		// Will not adjust the target as long as there's remaining capacity in the current processors
-		if (checkThresholdP.updateAndGet { _ - adjustment } <= 0 &&
-			!processors.exists { p => p.usable && p.notFullyUtilized })
-		{
-			// Checks whether new instances should be generated
-			checkThresholdP.value = targetInstanceCountP.mutate { currentTarget =>
-				// Case: Already at max instances => Keeps the current target
-				if (currentTarget >= settings.maxInstanceCount)
-					thresholdAtMaxInstances -> currentTarget
-				// Case: Below the core instance level => Activates the core instances
-				else if (currentTarget < settings.coreInstanceCount)
-					thresholdIncrement -> settings.coreInstanceCount
-				else {
-					// If there are instances which are getting ready, uses a different activation threshold
-					val threshold = thresholdFrom(currentTarget)
-					val overThreshold = current - threshold
-					
-					// Case: Enough for activation => Adjusts the target instance count
-					if (overThreshold >= 0)
-						(thresholdIncrement - overThreshold, currentTarget + 1)
-					// Case: Not enough => Keeps the current target
-					else
-						-overThreshold -> currentTarget
+		if (checkThresholdP.updateAndGet { _ - adjustment } <= 0) {
+			// Case: Not fully utilized => Skips this adjustment and resets the check threshold
+			if (processors.exists { p => p.usable && p.notFullyUtilized })
+				checkThresholdP.value = thresholdIncrement
+			// Case: Fully utilized => Checks whether new instances should be generated
+			else
+				checkThresholdP.value = targetInstanceCountP.mutate { currentTarget =>
+					// Case: Already at max instances => Keeps the current target
+					if (currentTarget >= settings.maxInstanceCount)
+						thresholdAtMaxInstances -> currentTarget
+					// Case: Below the core instance level => Activates the core instances
+					else if (currentTarget < settings.coreInstanceCount)
+						thresholdIncrement -> settings.coreInstanceCount
+					else {
+						// If there are instances which are getting ready, uses a different activation threshold
+						val threshold = thresholdFrom(currentTarget)
+						val overThreshold = current - threshold
+						
+						// Case: Enough for activation => Adjusts the target instance count
+						if (overThreshold >= 0)
+							(thresholdIncrement - overThreshold, currentTarget + 1)
+						// Case: Not enough => Keeps the current target
+						else
+							-overThreshold -> currentTarget
+					}
 				}
-			}
 		}
 	}
 	
@@ -988,48 +997,55 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 			(loading.nonEmpty && remaining.size == settings.coreInstanceCount))
 		{
 			lazy val partialUseThreshold = now - settings.partialUseShutdownThreshold
-			remaining.iterator.zipWithIndex
-				.find { case (p, _) => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold }
-				// Case: A partially used processor found
-				.exists { case (partiallyUsedProcessor, processorIndex) =>
-					var shutdownTriggered = false
-					
-					// Shuts down the loading processes (we don't need more processes at this time)
-					if (loading.nonEmpty) {
-						debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
-						targetInstanceCountP.update { target => (target - loading.size) max 0 }
-						loading.foreach {
-							_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
+			val partiallyUsedProcessors = remaining.filter { p =>
+				p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold
+			}
+			// Case: A partially used processor found
+			if (partiallyUsedProcessors.nonEmpty) {
+				var shutdownTriggered = false
+				
+				// Shuts down the loading processes (we don't need more processes at this time)
+				if (loading.nonEmpty) {
+					debugLog(s"Shutting down ${ loading.size } loading processors (not enough demand)")
+					targetInstanceCountP.update { target => (target - loading.size) max 0 }
+					loading.foreach {
+						_.stop().forFailure { log(_, "Failure while stopping a loading processor") }
+					}
+					shutdownTriggered = true
+				}
+				
+				// There must be more than one partially used process
+				// in order for this processor to be terminated
+				if (partiallyUsedProcessors.hasSize > 1) {
+					// Makes sure we're really above the core processor count
+					// before shutting down active processes
+					val shouldTerminateActive = targetInstanceCountP.mutate { target =>
+						if (target > settings.coreInstanceCount)
+							true -> (target - 1)
+						else
+							false -> target
+					}
+					if (shouldTerminateActive) {
+						debugLog("Shutting down a partially used processor")
+						// Terminates the most expensive partially used instance
+						val processorToStop = partiallyUsedProcessors.maxBy { p =>
+							p.instance match {
+								case Some(instance) => instance.details.cost.total
+								case None => 99999
+							}
 						}
+						processorToStop.stop()
+							.forFailure { log(_, "Failure while stopping a partially used processor") }
+						queueSizeCheckThresholdP.value = 0
+						pendingTokensCheckThresholdP.value = 0
 						shutdownTriggered = true
 					}
-					
-					// There must be more than one partially used process
-					// in order for this processor to be terminated
-					if (remaining.view.drop(processorIndex + 1)
-						.exists { p => p.notFullyUtilized && p.lastPendingEndTime < partialUseThreshold })
-					{
-						// Makes sure we're really above the core processor count
-						// before shutting down active processes
-						val shouldTerminateActive = targetInstanceCountP.mutate { target =>
-							if (target > settings.coreInstanceCount)
-								true -> (target - 1)
-							else
-								false -> target
-						}
-						if (shouldTerminateActive) {
-							debugLog("Shutting down a partially used processor")
-							// Terminates the partially used instance
-							partiallyUsedProcessor.stop()
-								.forFailure { log(_, "Failure while stopping a partially used processor") }
-							queueSizeCheckThresholdP.value = 0
-							pendingTokensCheckThresholdP.value = 0
-							shutdownTriggered = true
-						}
-					}
-					
-					shutdownTriggered
 				}
+				
+				shutdownTriggered
+			}
+			else
+				false
 		}
 		else
 			false
@@ -1186,6 +1202,7 @@ class VastAiVllmChatExecutor(selectOffer: SelectOffer, modelVramRequirements: Ll
 		// COMPUTED ---------------------
 		
 		def instanceId = process.instanceId
+		def instance = process.instance
 		
 		def phase = process.detailedState.phase
 		def vastAiState = process.vastAiState

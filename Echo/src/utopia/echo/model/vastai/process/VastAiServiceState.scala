@@ -2,7 +2,7 @@ package utopia.echo.model.vastai.process
 
 import utopia.echo.model.vastai.instance.InstanceState.{Active, Loading}
 import utopia.echo.model.vastai.instance.offer.Offer
-import utopia.echo.model.vastai.instance.{InstanceState, VastAiInstance}
+import utopia.echo.model.vastai.instance.{BasicInstanceInfo, InstanceState, VastAiInstance}
 import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase
 import utopia.echo.model.vastai.process.VastAiServiceState.VastAiServicePhase.{InstanceAcquisition, Serving, Setup, Stopping}
 import utopia.flow.operator.ordering.SelfComparable
@@ -197,11 +197,12 @@ object VastAiServiceState
 		override def atInstanceState(instance: VastAiInstance): VastAiServiceState = this
 	}
 	/**
-	 * State at which an offer has been selected, and it's being converted to an instance.
+	 * State at which an offer or a reusable instance has been selected,
+	 * and it's being converted to an instance / started.
 	 * This may include extensive loading, as the instance is being set up.
-	 * @param offer Selected offer
+	 * @param instanceInfo Selected offer or reused instance
 	 */
-	case class AcquiringInstance(offer: Offer) extends VastAiServiceState
+	case class AcquiringInstance(instanceInfo: BasicInstanceInfo) extends VastAiServiceState
 	{
 		override val phase: VastAiServicePhase = InstanceAcquisition
 		override val isUsable: Boolean = false
@@ -209,7 +210,12 @@ object VastAiServiceState
 		
 		override def toString = "acquiring instance"
 		
-		override def atInstanceState(instance: VastAiInstance): VastAiServiceState = InstanceLoading(instance)
+		override def atInstanceState(instance: VastAiInstance): VastAiServiceState =
+			instance.status.actual.value match {
+				case Loading => InstanceLoading(instance)
+				case Active => SettingUp(instance)
+				case _ => AcquiringInstance(instance)
+			}
 	}
 	/**
 	 * State at which an instance has been created, but is still loading
@@ -224,7 +230,12 @@ object VastAiServiceState
 		
 		override def toString = s"loading: ${ instance.status }"
 		
-		override def atInstanceState(instance: VastAiInstance): VastAiServiceState = InstanceLoading(instance)
+		override def atInstanceState(instance: VastAiInstance): VastAiServiceState = {
+			if (instance.status.actual.value == Active)
+				SettingUp(instance)
+			else
+				InstanceLoading(instance)
+		}
 	}
 	/**
 	 * State at which the wrapped instance has loaded, but SSH and the service may still need to be set up.

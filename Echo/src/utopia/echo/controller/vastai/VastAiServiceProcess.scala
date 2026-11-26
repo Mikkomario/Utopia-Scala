@@ -145,6 +145,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 	 */
 	private val vastAiProcess = VastAiProcess(settings.statusCheckInterval, maxConsecutiveStatusCheckFailures = Some(5),
 		debugLogger = settings.debugLogger) {
+		// Acquire instance -function
 		hurryFlag =>
 			// Checks for instance-reuse
 			val reuseResultFuture: Future[Option[Int]] = {
@@ -172,6 +173,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 									settings.instanceReuseLogic.findReusableFrom(unused).map { instance =>
 										// Initializes the assumed service state
 										assumedServiceState = onInstanceReuse(instance)
+										stateP.value = AcquiringInstance(instance)
 										instance.id
 									}
 							}
@@ -206,19 +208,21 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 							.toTryFuture
 					}
 			}
-	} { instance =>
-		// Includes the service state for the destroy-check
-		val runtime = Now - _startTime
-		detailedState match {
-			case _ :Hosting => settings.shouldDestroy(instance, runtime, true)
-			// Case: API is being stopped => If timed out, always destroys the instance (because it's unstable)
-			case StoppingService(_, _, timedOut) =>
-				if (timedOut)
-					false
-				else
-					settings.shouldDestroy(instance, runtime, true)
-			case _ => settings.shouldDestroy(instance, runtime, false)
-		}
+	} {
+		// Should destroy -function
+		instance =>
+			// Includes the service state for the destroy-check
+			val runtime = Now - _startTime
+			detailedState match {
+				case _ :Hosting => settings.shouldDestroy(instance, runtime, true)
+				// Case: API is being stopped => If timed out, always destroys the instance (because it's unstable)
+				case StoppingService(_, _, timedOut) =>
+					if (timedOut)
+						true
+					else
+						settings.shouldDestroy(instance, runtime, true)
+				case _ => settings.shouldDestroy(instance, runtime, false)
+			}
 	}
 	
 	/**
@@ -475,8 +479,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 						// If the instance goes offline or disconnects, stops this process immediately
 						val status = e.newValue.status
 						if (status.actual.value == Disconnected || unsupportedStatuses.contains(status.message)) {
-							debugLog(s"${e.newValue.id}: Status became ${
-								e.newValue.status } => Starts the termination process")
+							debugLog(s"${e.newValue.id}: Status became $status => Starts the termination process")
 							stop()
 						}
 						Continue.onlyIf(state.isRunning)
@@ -572,7 +575,7 @@ abstract class VastAiServiceProcess[Service, Client, R](selectOffer: SelectOffer
 			debugLog(s"${ vastAiProcess.instanceId.mkString }: Destroying or stopping the Vast AI instance")
 			vastAiProcess.stop().waitFor()
 				.logWithMessage("Failure while waiting for the Vast AI instance to be destroyed / stopped")
-			// Finalizes the state
+			// Finalizes the state as Stopped
 			val hostingResult = stateP.mutate { state =>
 				val hostingResult = state match {
 					case StoppingInstance(hostingResult, _, _) => hostingResult

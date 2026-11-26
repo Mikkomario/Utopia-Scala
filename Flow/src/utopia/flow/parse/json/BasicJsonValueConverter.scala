@@ -33,6 +33,8 @@ object BasicJsonValueConverter extends ValueConverter[JsonAppendix]
 					.replace("\"", "\\\"")
 					.replace("\n", "\\n")
 					.replace("\t", "  ")
+					// Control characters outside newlines and tabs are stripped
+					.stripControlCharacters
 				builder += '\"'
 			}
 		// Case: Vector type => Wraps the content within square brackets and separates the values with commas
